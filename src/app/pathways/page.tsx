@@ -62,13 +62,13 @@ export default function PathwaysPage() {
             src="/images/pathways_earth_horizon_nights.png"
             alt="Earth at night from space"
             fill
-            className="object-cover object-[center_40%]"
+            className="object-cover object-[center_30%]"
             priority
           />
 
 
           {/* Quote overlay on top */}
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl z-10">
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl z-10">
             <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
               &ldquo;Every day they continued to meet together in the temple
               courts. They broke bread in their homes and ate together with glad
@@ -214,17 +214,19 @@ export default function PathwaysPage() {
             </div>
 
             {/* Right - Stats */}
-            <div className="flex flex-col items-end justify-start pt-8">
-              <div className="text-right">
-                <div className="text-8xl md:text-9xl font-bold text-white mb-4">
-                  {newGroupsCount}
-                </div>
-                <div className="text-sm md:text-base text-gray-400 uppercase tracking-wider leading-relaxed">
-                  New Pathway
-                  <br />
-                  Groups Starting
-                  <br />
-                  Soon
+            <div className="relative w-full overflow-hidden">
+              <div className="w-full max-w-full flex flex-col items-end justify-start pt-8 px-2">
+                <div className="text-right">
+                  <div className="text-7xl sm:text-8xl md:text-9xl font-bold text-white mb-4">
+                    {newGroupsCount}
+                  </div>
+                  <div className="text-sm md:text-base text-gray-400 uppercase tracking-wider leading-relaxed">
+                    New Pathway
+                    <br />
+                    Groups Starting
+                    <br />
+                    Soon
+                  </div>
                 </div>
               </div>
             </div>
