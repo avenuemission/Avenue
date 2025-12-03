@@ -68,8 +68,8 @@ export default function PathwaysPage() {
 
 
           {/* Quote overlay on top */}
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-6 z-10">
-            <p className="text-white italic text-center max-w-3xl text-sm md:text-lg drop-shadow-lg">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl z-10">
+            <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
               &ldquo;Every day they continued to meet together in the temple
               courts. They broke bread in their homes and ate together with glad
               and sincere hearts.&rdquo; – Apostle Paul
@@ -111,15 +111,15 @@ export default function PathwaysPage() {
       </section>
 
       {/* Find a Pathway Section */}
-      <section className="bg-gradient-to-b from-blue-950/40 via-blue-900/30 to-blue-950/50 py-16">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
+      <section className="bg-gradient-to-b from-blue-950/40 via-blue-900/30 to-blue-950/50 py-16 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             {/* Left Content */}
-            <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+            <div className="space-y-6 px-2">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
                 FIND A PATHWAY COMMUNITY NEAR YOU
               </h2>
-              <p className="text-gray-300 text-base md:text-lg leading-relaxed max-w-lg">
+              <p className="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-lg">
                 Pathway groups are house church communities growing together,
                 empowered by the Spirit of God. We meet in homes, libraries,
                 schools, wherever the LORD has sent us. We eat together, read
@@ -129,8 +129,10 @@ export default function PathwaysPage() {
             </div>
 
             {/* Right Content - Globe */}
-            <div className="relative">
-              <PathwayGlobe />
+            <div className="relative w-full overflow-hidden">
+              <div className="w-full max-w-full">
+                <PathwayGlobe />
+              </div>
             </div>
           </div>
         </div>

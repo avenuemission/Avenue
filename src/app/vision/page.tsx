@@ -20,8 +20,8 @@ export default function VisionPage() {
           />
 
           {/* TOP-ALIGNED QUOTE */}
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-6">
-            <p className="text-white italic text-center max-w-3xl text-sm md:text-lg drop-shadow-lg">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl">
+            <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
               &ldquo;Therefore go and make disciples of all nations, baptizing
               them in the name of the Father and of the Son and of the Holy
               Spirit, and teaching them to obey everything I have commanded you.

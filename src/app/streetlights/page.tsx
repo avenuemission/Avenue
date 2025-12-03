@@ -72,8 +72,8 @@ export default function StreetlightsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-black via-black/70 to-transparent pointer-events-none"></div>
 
           {/* Quote overlay on top */}
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-6 z-10">
-            <p className="text-white italic text-center max-w-3xl text-sm md:text-lg drop-shadow-lg">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl z-10">
+            <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
               &ldquo;The King will reply, &apos;Truly I tell you, whatever you did
               for one of the least of these brothers and sisters of mine, you did
               for me&apos;&rdquo; – Jesus
