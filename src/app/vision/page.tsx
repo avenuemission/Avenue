@@ -102,8 +102,7 @@ export default function VisionPage() {
                   divine-inspired initiatives.
                 </p>
                 <p>
-                  Each pathway group is connected through one orbit—the
-                  intersection orbit, a place for worshipping God in one spirit.
+                  Each pathway group is connected through one intersection orbit, a place for worshipping God in one spirit.
                 </p>
               </div>
             </div>
