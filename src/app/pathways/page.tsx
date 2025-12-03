@@ -145,7 +145,7 @@ export default function PathwaysPage() {
 
             {/* Left - Form */}
             <div className="space-y-6 px-2">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white whitespace-nowrap">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white">
                 START YOUR OWN PATHWAY
               </h2>
 
