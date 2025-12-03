@@ -70,14 +70,14 @@ export default function IntersectionPage() {
             src="/images/saturn_rings.jpg"
             alt="Saturn rings"
             fill
-            className="object-cover rotate-180 opacity-40"
+            className="object-cover opacity-40"
             priority
           />
 
 
 
           {/* Quote overlay on top */}
-          <div className="absolute top-30 left-1/2 -translate-x-1/2 px-6 z-10">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-6 z-10">
             <p className="text-white italic text-center max-w-3xl text-sm md:text-lg drop-shadow-lg">
               &ldquo;May the God of endurance and encouragement grant you to
               live in such harmony with one another, in accord with Christ
