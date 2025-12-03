@@ -139,17 +139,17 @@ export default function PathwaysPage() {
       </section>
       
       {/* Start Your Own Pathway Section */}
-      <section className="bg-gradient-to-b from-blue-950/50 via-blue-950/60 to-black py-20">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="grid md:grid-cols-2 gap-16 items-start">
+      <section className="bg-gradient-to-b from-blue-950/50 via-blue-950/60 to-black py-20 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-start">
 
             {/* Left - Form */}
-            <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white whitespace-nowrap">
+            <div className="space-y-6 px-2">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white whitespace-nowrap">
                 START YOUR OWN PATHWAY
               </h2>
 
-              <p className="text-gray-300 text-base md:text-lg leading-relaxed">
+              <p className="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed">
                 Avenue believes in empowering people from all walks of life to
                 be disciples and to grow the kingdom and make it on earth as in
                 heaven. We provide guidance, support and resources for emerging

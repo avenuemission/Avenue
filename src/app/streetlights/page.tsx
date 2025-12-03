@@ -215,7 +215,7 @@ export default function StreetlightsPage() {
 
           <p className="text-white italic text-sm md:text-base max-w-2xl mx-auto">
             As humanity carries the breath of God, we also carry the breath of
-            creativity. We love ideas, both big and small and are keen to
+            creativity. We love ideas, both big and small, and are keen to
             support and facilitate. Please let us know your ideas below:
           </p>
         </div>

@@ -11,9 +11,9 @@ export default function Home() {
 
         <div className="relative z-10 w-full h-full flex flex-col md:flex-row items-center justify-center md:justify-start">
           {/* Mobile Layout - Stacked */}
-          <div className="md:hidden flex flex-col items-center justify-center h-full px-6 text-center">
+          <div className="md:hidden flex flex-col items-center justify-start h-full px-6 text-center pt-24">
             {/* Earth Image - Top */}
-            <div className="relative w-[400px] h-[400px] mb-8">
+            <div className="relative w-[350px] h-[350px] mb-6">
               <Image
                 src="/images/home_page_earth.jpg"
                 alt="Earth from space"
@@ -24,13 +24,13 @@ export default function Home() {
             </div>
             
             {/* Text Content - Below Earth */}
-            <div className="max-w-md">
-              <h1 className="text-4xl font-bold text-white leading-tight mb-6">
+            <div className="max-w-xs">
+              <h1 className="text-4xl font-bold text-white leading-tight mb-4">
                 ON EARTH
                 <br />
                 AS IN HEAVEN
               </h1>
-              <p className="text-gray-300 text-base mb-8">
+              <p className="text-gray-300 text-sm mb-6 px-2">
                 Avenue is a democratized movement of people following Jesus,
                 convinced that disciple-making doesn&apos;t require more church
                 buildings, just the willingness to open the spaces we already
