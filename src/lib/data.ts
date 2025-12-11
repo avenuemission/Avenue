@@ -3,10 +3,39 @@
 // Edit these values to update the website
 // ============================================
 
+// Helper to get next Wednesday at 7PM AEDT
+const getNextWednesday7PM = (): Date => {
+  const now = new Date();
+  // Create date in AEDT (UTC+11)
+  const aedtOffset = 11 * 60; // minutes
+  const localOffset = now.getTimezoneOffset();
+  const aedtNow = new Date(now.getTime() + (aedtOffset + localOffset) * 60 * 1000);
+  
+  const dayOfWeek = aedtNow.getDay();
+  const daysUntilWednesday = (3 - dayOfWeek + 7) % 7;
+  
+  // If it's Wednesday, check if 7PM has passed
+  const target = new Date(aedtNow);
+  if (daysUntilWednesday === 0) {
+    target.setHours(19, 0, 0, 0);
+    if (aedtNow >= target) {
+      // Wednesday 7PM has passed, go to next Wednesday
+      target.setDate(target.getDate() + 7);
+    }
+  } else {
+    target.setDate(target.getDate() + daysUntilWednesday);
+    target.setHours(19, 0, 0, 0);
+  }
+  
+  // Convert back to local time for the Date object
+  const targetUTC = new Date(target.getTime() - (aedtOffset + localOffset) * 60 * 1000);
+  return targetUTC;
+};
+
 // Next Intersection Event (used for countdown across all pages)
 export const NEXT_INTERSECTION_EVENT = {
   name: "Prayer & Praise",
-  date: new Date("2025-12-10T19:00:00+11:00"), // Wednesday 10th December 2025, 7:00 PM AEDT
+  date: getNextWednesday7PM(), // Automatically calculates next Wednesday 7:00 PM AEDT
 };
 
 // Statistics for Pathways page (easily updatable)

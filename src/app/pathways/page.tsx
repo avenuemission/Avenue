@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import PathwayGlobe from "@/components/PathwayGlobe";
+import PathwayMap from "@/components/PathwayMap";
 import { PATHWAY_STATS } from "@/lib/data";
 
 // Counter animation hook
@@ -138,11 +138,9 @@ export default function PathwaysPage() {
               </p>
             </div>
 
-            {/* Right Content - Globe */}
-            <div className="relative w-full overflow-hidden">
-              <div className="w-full max-w-full">
-                <PathwayGlobe />
-              </div>
+            {/* Right Content - Map and Form */}
+            <div className="relative w-full">
+              <PathwayMap />
             </div>
           </div>
         </div>

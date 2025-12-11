@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import CountdownTimer from "./CountdownTimer";
+import { LogIn } from "lucide-react";
 
 const navLinks = [
   { href: "/vision", label: "VISION" },
@@ -50,9 +51,18 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Countdown Timer */}
-          <div className="hidden sm:block">
+          {/* Countdown Timer and Login */}
+          <div className="hidden sm:flex items-center space-x-3">
             <CountdownTimer variant="navbar" />
+            <Link
+              href="/login"
+              className="flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
+            >
+              <LogIn className="w-4 h-4 text-white" />
+              <span className="text-xs font-medium text-white uppercase tracking-wider">
+                Login
+              </span>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -116,9 +126,19 @@ export default function Navbar() {
               </Link>
             ))}
             
-            {/* Mobile Countdown Timer */}
-            <div className="px-3 py-4">
+            {/* Mobile Countdown Timer and Login */}
+            <div className="px-3 py-4 space-y-3">
               <CountdownTimer variant="navbar" />
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
+              >
+                <LogIn className="w-4 h-4 text-white" />
+                <span className="text-xs font-medium text-white uppercase tracking-wider">
+                  Login
+                </span>
+              </Link>
             </div>
           </div>
         </div>
