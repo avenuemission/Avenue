@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import CountdownTimer from "@/components/CountdownTimer";
 import { INTERSECTION_EVENTS, SOCIAL_LINKS } from "@/lib/data";
-import { saveEmailSubscription } from "@/lib/storage";
 import {
   Instagram,
   Facebook,
@@ -17,13 +16,24 @@ export default function IntersectionPage() {
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.email) {
-      saveEmailSubscription(formData.name, formData.email);
-      setSubmitted(true);
-      setFormData({ name: "", email: "" });
-      setTimeout(() => setSubmitted(false), 3000);
+      try {
+        await fetch("/__forms.html", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            "form-name": "email-subscription",
+            ...formData,
+          }).toString(),
+        });
+        setSubmitted(true);
+        setFormData({ name: "", email: "" });
+        setTimeout(() => setSubmitted(false), 3000);
+      } catch (error) {
+        console.error("Form submission error:", error);
+      }
     }
   };
 

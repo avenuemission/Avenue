@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form Definitions</title>
+</head>
+<body>
+  <!-- Netlify Forms Detection File -->
+  <!-- These hidden forms allow Netlify to detect form names during build -->
+  
+  <!-- Email Subscription Form (Intersection page) -->
+  <form name="email-subscription" netlify netlify-honeypot="bot-field" hidden>
+    <input type="text" name="name" />
+    <input type="email" name="email" />
+  </form>
+
+  <!-- Pathway Expression of Interest Form (Pathways page) -->
+  <form name="pathway-eoi" netlify netlify-honeypot="bot-field" hidden>
+    <input type="text" name="name" />
+    <input type="email" name="email" />
+  </form>
+
+  <!-- Idea Submission Form (Streetlights page) -->
+  <form name="idea-submission" netlify netlify-honeypot="bot-field" hidden>
+    <input type="text" name="name" />
+    <input type="email" name="email" />
+    <textarea name="idea"></textarea>
+  </form>
+</body>
+</html>

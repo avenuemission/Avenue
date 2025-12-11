@@ -8,7 +8,6 @@ import {
   MISSION_INITIATIVES,
   PRAYER_HOTLINE,
 } from "@/lib/data";
-import { saveIdeaSubmission } from "@/lib/storage";
 import { Phone, MessageSquare, Mail } from "lucide-react";
 
 interface Song {
@@ -27,13 +26,24 @@ export default function StreetlightsPage() {
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.idea) {
-      saveIdeaSubmission(formData.idea, formData.name, formData.email);
-      setSubmitted(true);
-      setFormData({ name: "", email: "", idea: "" });
-      setTimeout(() => setSubmitted(false), 3000);
+      try {
+        await fetch("/__forms.html", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            "form-name": "idea-submission",
+            ...formData,
+          }).toString(),
+        });
+        setSubmitted(true);
+        setFormData({ name: "", email: "", idea: "" });
+        setTimeout(() => setSubmitted(false), 3000);
+      } catch (error) {
+        console.error("Form submission error:", error);
+      }
     }
   };
 

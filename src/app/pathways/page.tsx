@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import PathwayGlobe from "@/components/PathwayGlobe";
 import { PATHWAY_STATS } from "@/lib/data";
-import { savePathwayEOI } from "@/lib/storage";
 
 // Counter animation hook
 function useCountUp(end: number, duration: number = 2000) {
@@ -42,13 +41,24 @@ export default function PathwaysPage() {
   const languagesCount = useCountUp(PATHWAY_STATS.languages);
   const newGroupsCount = useCountUp(PATHWAY_STATS.newGroupsStartingSoon);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.email) {
-      savePathwayEOI(formData.name, formData.email);
-      setSubmitted(true);
-      setFormData({ name: "", email: "" });
-      setTimeout(() => setSubmitted(false), 3000);
+      try {
+        await fetch("/__forms.html", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            "form-name": "pathway-eoi",
+            ...formData,
+          }).toString(),
+        });
+        setSubmitted(true);
+        setFormData({ name: "", email: "" });
+        setTimeout(() => setSubmitted(false), 3000);
+      } catch (error) {
+        console.error("Form submission error:", error);
+      }
     }
   };
 
