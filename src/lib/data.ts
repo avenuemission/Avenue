@@ -159,11 +159,31 @@ export const CREATIVE_INITIATIVES = {
         youtubeUrl: "https://www.youtube.com/watch?v=RpNYwOE1F00",
         spotifyUrl: "",
       },
-      { title: "Song 3 (Coming Soon)", youtubeUrl: "", spotifyUrl: "" },
-      { title: "Song 4 (Coming Soon)", youtubeUrl: "", spotifyUrl: "" },
-      { title: "Song 5 (Coming Soon)", youtubeUrl: "", spotifyUrl: "" },
-      { title: "Song 6 (Coming Soon)", youtubeUrl: "", spotifyUrl: "" },
-      { title: "Song 7 (Coming Soon)", youtubeUrl: "", spotifyUrl: "" },
+      {
+        title: "Song 3",
+        youtubeUrl: "https://www.youtube.com/watch?v=iuSSYmhcn6Y",
+        spotifyUrl: "",
+      },
+      {
+        title: "Song 4",
+        youtubeUrl: "https://www.youtube.com/watch?v=2c7kPLRzQ-o",
+        spotifyUrl: "",
+      },
+      {
+        title: "Song 5",
+        youtubeUrl: "https://www.youtube.com/watch?v=cPZRxCwpS-A",
+        spotifyUrl: "",
+      },
+      {
+        title: "Song 6",
+        youtubeUrl: "https://www.youtube.com/watch?v=ZuOSWbjgK6g",
+        spotifyUrl: "",
+      },
+      {
+        title: "Song 7",
+        youtubeUrl: "https://www.youtube.com/watch?v=4Gg0x-TNFw8",
+        spotifyUrl: "",
+      },
     ],
   },
   pathwaysPodcast: {

@@ -2,15 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { PATHWAY_GROUPS } from "@/lib/data";
-
-interface PathwayGroup {
-  id: number;
-  name: string;
-  coordinates: [number, number];
-  time: string;
-  coordinator: string;
-  phone: string;
-}
+import { loadPathwayGroups, PathwayGroup } from "@/lib/loadPathwayGroups";
 
 interface SelectedGroup extends PathwayGroup {
   description: string;
@@ -36,35 +28,18 @@ function calculateDistance(
   return R * c;
 }
 
-// Find nearest neighbor connections (each group connects to its nearest neighbor)
-function findNearestNeighborConnections(
+// Create full web connections - connect every group to every other group
+function findAllConnections(
   groups: PathwayGroup[]
 ): Array<[PathwayGroup, PathwayGroup]> {
   const connections: Array<[PathwayGroup, PathwayGroup]> = [];
-  const connected = new Set<string>();
-
-  for (const group of groups) {
-    let nearestDistance = Infinity;
-    let nearestGroup: PathwayGroup | null = null;
-
-    for (const other of groups) {
-      if (other.id === group.id) continue;
-      const distance = calculateDistance(group.coordinates, other.coordinates);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestGroup = other;
-      }
-    }
-
-    if (nearestGroup) {
-      const connectionKey = [group.id, nearestGroup.id].sort().join("-");
-      if (!connected.has(connectionKey)) {
-        connected.add(connectionKey);
-        connections.push([group, nearestGroup]);
-      }
+  
+  for (let i = 0; i < groups.length; i++) {
+    for (let j = i + 1; j < groups.length; j++) {
+      connections.push([groups[i], groups[j]]);
     }
   }
-
+  
   return connections;
 }
 
@@ -87,6 +62,16 @@ export default function PathwayMap() {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [formData, setFormData] = useState({ name: "", phone: "", group: "" });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [pathwayGroups, setPathwayGroups] = useState<PathwayGroup[]>(PATHWAY_GROUPS);
+
+  // Load pathway groups from CSV on mount
+  useEffect(() => {
+    loadPathwayGroups().then((groups) => {
+      if (groups.length > 0) {
+        setPathwayGroups(groups);
+      }
+    });
+  }, []);
 
   const initMap = useCallback(() => {
     if (!mapRef.current || !window.google) return;
@@ -115,9 +100,9 @@ export default function PathwayMap() {
 
     mapInstanceRef.current = map;
 
-    // Create cross-shaped marker icon using SVG
+    // Create Christian cross marker icon using SVG (taller vertical bar)
     const crossIcon = {
-      path: "M-2,-8 L2,-8 L2,-2 L8,-2 L8,2 L2,2 L2,8 L-2,8 L-2,2 L-8,2 L-8,-2 L-2,-2 Z",
+      path: "M-2,-12 L2,-12 L2,-4 L6,-4 L6,0 L2,0 L2,12 L-2,12 L-2,0 L-6,0 L-6,-4 L-2,-4 Z",
       fillColor: "#3b82f6",
       fillOpacity: 1,
       strokeColor: "#ffffff",
@@ -127,7 +112,7 @@ export default function PathwayMap() {
     };
 
     // Add markers for each pathway group
-    PATHWAY_GROUPS.forEach((group) => {
+    pathwayGroups.forEach((group) => {
       const marker = new window.google.maps.Marker({
         position: { lat: group.coordinates[0], lng: group.coordinates[1] },
         map: map,
@@ -147,8 +132,8 @@ export default function PathwayMap() {
       markersRef.current.push(marker);
     });
 
-    // Draw network lines between nearest neighbors
-    const connections = findNearestNeighborConnections(PATHWAY_GROUPS);
+    // Draw network lines connecting all groups (web pattern)
+    const connections = findAllConnections(pathwayGroups);
     connections.forEach(([group1, group2]) => {
       const polyline = new window.google.maps.Polyline({
         path: [
@@ -165,7 +150,7 @@ export default function PathwayMap() {
     });
 
     setMapLoaded(true);
-  }, []);
+  }, [pathwayGroups]);
 
   useEffect(() => {
     // Check if Google Maps is already loaded
@@ -336,7 +321,7 @@ export default function PathwayMap() {
               <option value="" className="bg-gray-900">
                 Select a pathway group...
               </option>
-              {PATHWAY_GROUPS.map((group) => (
+              {pathwayGroups.map((group) => (
                 <option key={group.id} value={group.name} className="bg-gray-900">
                   {group.name} - {group.time}
                 </option>

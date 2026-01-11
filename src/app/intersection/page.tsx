@@ -148,8 +148,19 @@ export default function IntersectionPage() {
       </section>
 
       {/* Event Countdown Section */}
-      <section className="bg-gradient-to-b from-blue-950/40 via-blue-900/30 to-blue-950/50 py-16">
-        <div className="max-w-6xl mx-auto px-6 sm:px-10">
+      <section className="relative py-16">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/prayer_and_praise.png"
+            alt="Prayer and Praise"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center mb-12">
             EVENT COUNTDOWN
           </h2>
@@ -240,8 +251,19 @@ export default function IntersectionPage() {
       </section>
 
       {/* Stay in the Loop Section */}
-      <section className="bg-gradient-to-b from-blue-950/50 via-blue-950/60 to-black py-20">
-        <div className="max-w-5xl mx-auto px-6 sm:px-10 text-center">
+      <section className="relative py-20">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/lookout.png"
+            alt="Lookout"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
+        <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 text-center">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-12">
             STAY IN THE LOOP
           </h2>

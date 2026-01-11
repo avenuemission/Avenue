@@ -31,7 +31,7 @@ export default function Home() {
                 AS IN HEAVEN
               </h1>
               <p className="text-gray-300 text-xs mb-4 px-2 leading-relaxed">
-                Avenue is a democratized movement of people following Jesus,
+                Avenue is a decentralised movement of people following Jesus,
                 convinced that disciple-making doesn&apos;t require more church
                 buildings, just the willingness to open the spaces we already
                 have
@@ -55,7 +55,7 @@ export default function Home() {
                 AS IN HEAVEN
               </h1>
               <p className="text-gray-400 text-sm md:text-base max-w-md mb-8">
-                Avenue is a democratized movement of people following Jesus,
+                Avenue is a decentralised movement of people following Jesus,
                 convinced that disciple-making doesn&apos;t require more church
                 buildings, just the willingness to open the spaces we already
                 have

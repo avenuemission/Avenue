@@ -123,8 +123,19 @@ export default function StreetlightsPage() {
       </section>
 
       {/* Mission Initiatives Section */}
-      <section className="bg-gradient-to-b from-blue-950/50 via-blue-950/60 to-blue-950/60 py-16">
-        <div className="max-w-6xl mx-auto px-6 sm:px-10">
+      <section className="relative py-16">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/beach.png"
+            alt="Beach"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center mb-12">
             MISSION INITIATIVES
           </h2>
@@ -172,8 +183,19 @@ export default function StreetlightsPage() {
       </section>
 
       {/* Creative Initiatives Section */}
-      <section className="bg-gradient-to-b from-blue-950/60 via-blue-950/60 to-blue-950/60 py-20">
-        <div className="max-w-5xl mx-auto px-6 sm:px-10 text-center">
+      <section className="relative py-20">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/ocean_grove_night.png"
+            alt="Ocean Grove at Night"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
+        <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 text-center">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-12">
             CREATIVE INITIATIVES
           </h2>
@@ -296,6 +318,36 @@ export default function StreetlightsPage() {
 
           <p className="text-white italic text-sm md:text-base text-center mt-12">
             &ldquo;In the beginning God created the heavens and the earth.&rdquo;
+          </p>
+        </div>
+      </section>
+
+      {/* Tithe Section */}
+      <section className="bg-gradient-to-b from-black via-blue-950/40 to-black py-20">
+        <div className="max-w-3xl mx-auto px-6 sm:px-10 text-center">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-8">
+            SUPPORT AVENUE
+          </h2>
+
+          <p className="text-gray-300 text-base md:text-lg leading-relaxed mb-8">
+            Your generous giving helps Avenue Streetlights bless people in our
+            communities and beyond. Together, we can continue to serve, create,
+            and share the love of Jesus with those in need.
+          </p>
+
+          <a
+            href="https://tithe.ly/give_new/www/#/tithely/give-one-time/1827900"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-blue-700 hover:bg-blue-600 text-white px-12 py-4 rounded-full font-medium transition-colors uppercase tracking-wider text-lg mb-10"
+          >
+            Give Now
+          </a>
+
+          <p className="text-white italic text-sm md:text-base max-w-xl mx-auto">
+            &ldquo;Each of you should give what you have decided in your heart
+            to give, not reluctantly or under compulsion, for God loves a
+            cheerful giver.&rdquo; – 2 Corinthians 9:7
           </p>
         </div>
       </section>

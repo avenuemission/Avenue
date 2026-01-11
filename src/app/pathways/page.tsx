@@ -147,8 +147,19 @@ export default function PathwaysPage() {
       </section>
       
       {/* Start Your Own Pathway Section */}
-      <section className="bg-gradient-to-b from-blue-950/50 via-blue-950/60 to-black py-20 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+      <section className="relative py-20 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/monash_bbq.png"
+            alt="Monash BBQ"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-start">
 
             {/* Left - Form */}
