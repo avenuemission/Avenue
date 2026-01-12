@@ -82,7 +82,7 @@ export default function PathwaysPage() {
             <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
               &ldquo;Every day they continued to meet together in the temple
               courts. They broke bread in their homes and ate together with glad
-              and sincere hearts.&rdquo; – Apostle Paul
+              and sincere hearts.&rdquo; – Doctor Luke
             </p>
           </div>
         </div>

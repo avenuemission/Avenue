@@ -150,37 +150,37 @@ export const CREATIVE_INITIATIVES = {
     title: "Homebound Album",
     songs: [
       {
-        title: "Song 1",
+        title: "Just Like Fruit Salad",
         youtubeUrl: "https://www.youtube.com/watch?v=vAdf3qHxXfI",
         spotifyUrl: "",
       },
       {
-        title: "Song 2",
+        title: "Delivery",
         youtubeUrl: "https://www.youtube.com/watch?v=RpNYwOE1F00",
         spotifyUrl: "",
       },
       {
-        title: "Song 3",
+        title: "Luke 18 (Like the Others)",
         youtubeUrl: "https://www.youtube.com/watch?v=iuSSYmhcn6Y",
         spotifyUrl: "",
       },
       {
-        title: "Song 4",
+        title: "Home to Zion",
         youtubeUrl: "https://www.youtube.com/watch?v=2c7kPLRzQ-o",
         spotifyUrl: "",
       },
       {
-        title: "Song 5",
+        title: "Back to Eden",
         youtubeUrl: "https://www.youtube.com/watch?v=cPZRxCwpS-A",
         spotifyUrl: "",
       },
       {
-        title: "Song 6",
+        title: "Reigns Supreme",
         youtubeUrl: "https://www.youtube.com/watch?v=ZuOSWbjgK6g",
         spotifyUrl: "",
       },
       {
-        title: "Song 7",
+        title: "Send Me Out",
         youtubeUrl: "https://www.youtube.com/watch?v=4Gg0x-TNFw8",
         spotifyUrl: "",
       },
