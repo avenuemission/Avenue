@@ -243,6 +243,19 @@ export default function StreetlightsPage() {
                 Club
               </span>
             </a>
+
+            {/* APEST Quiz Button */}
+            <a
+              href="/apest-quiz"
+              className="bg-blue-800 hover:bg-blue-700 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px] flex flex-col items-center justify-center"
+            >
+              <span className="block text-xl uppercase tracking-wider">
+                APEST
+              </span>
+              <span className="block text-sm uppercase tracking-wider mt-1">
+                Quiz
+              </span>
+            </a>
           </div>
 
           <p className="text-white italic text-sm md:text-base max-w-2xl mx-auto">
