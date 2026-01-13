@@ -49,14 +49,8 @@ const emailWrapper = (content: string) => `
               </tr>
               <!-- Content Card -->
               <tr>
-                <td bgcolor="#0f172a" style="background-color: #0f172a; border-radius: 12px; padding: 40px; border: 1px solid #1e3a5f;">
-                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0f172a">
-                    <tr>
-                      <td bgcolor="#0f172a" style="background-color: #0f172a;">
-                        ${content}
-                      </td>
-                    </tr>
-                  </table>
+                <td style="background-color: #0a0f1a; border-radius: 12px; padding: 40px; border: 1px solid #1e3a5f;">
+                  ${content}
                 </td>
               </tr>
               <!-- Footer -->
