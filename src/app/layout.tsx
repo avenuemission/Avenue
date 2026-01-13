@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Avenue - On Earth As In Heaven",
   description:
     "Avenue is a decentralised movement of people following Jesus, convinced that disciple-making doesn’t require more church buildings, just the willingness to open the spaces we already have",
+  icons: {
+    icon: "/images/favicon.png",
+  },
 };
 
 export default function RootLayout({
