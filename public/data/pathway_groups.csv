@@ -1,8 +1,7 @@
-id,name,latitude,longitude,time,coordinator,phone
-1,Donvale,-37.769,145.149,Saturday 10:00 am,Matt,0477110098
-2,Heathmont,-37.854,145.225,Saturday 12:00 pm,Racquel,0477110098
-3,Clyde,-38.047,145.306,Saturday 1:30 pm,Sam,0477110098
-4,Monash Pathways,-37.915,145.13,Saturday 4:00 pm,Olivia,0477110098
-5,Blackburn,-37.815,145.193,Saturday 4:00 pm,Henry,0477110098
-6,Ringwood,-37.813,145.225,Saturday 4:00 pm,Ash,0477110098
-7,Nunawading,-37.817,145.126,Saturday 4:00 pm,Aaron,0477110098
+id,name,latitude,longitude,time,coordinator,phone,running,description
+1,Clyde,-38.047,145.306,Saturday 1:30 pm,Sam,477110098,1,"Meeting in Clyde, this group is known for its strong sense of community and passionate, thoughtful discussions. It also actively blesses the disability community through partnerships with various not-for-profit organisations."
+2,Monash Pathways,-37.915,145.13,Saturday 4:00 pm,Henry,477110098,1,"Meeting at Monash University, this group provides a welcoming space for support, encouragement, and spiritual exploration during university life. It’s a place to ask questions, grow in faith, and walk the journey together."
+3,Nunawading,-37.817,145.126,Saturday 10:00 am,Aaron,477110098,1,"Meeting at Nannawading Christian College, this group focuses on discipling high school students and helping them grow in their faith. It equips them to confidently step into the wider world beyond school."
+4,Richmond,-37.8239,144.9983,Saturday 2:00 pm,Jeremy,477110098,0,"An upcoming group meeting in a café setting, Richmond offers a relaxed and vibrant space with a strong young professional atmosphere. It’s ideal for building community and faith alongside others in a similar stage of life."
+5,Mernda,-37.5997,145.0887,Saturday 3:00 pm,TBD,477110098,0,"This new group starting in Mernda is passionate about blessing and serving the local community. It’s a welcoming space for connection, growth, and making a positive impact together."
+6,Uni Melb,-37.7983,144.961,Saturday 3:00 pm,TBD,477110098,0,"Located in the heart of the city, the UniMelb group walks alongside students through the different stages of university life. It’s focused on guidance, community, and spiritual growth during the uni journey."

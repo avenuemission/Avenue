@@ -4,9 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { PATHWAY_GROUPS } from "@/lib/data";
 import { loadPathwayGroups, PathwayGroup } from "@/lib/loadPathwayGroups";
 
-interface SelectedGroup extends PathwayGroup {
-  description: string;
-}
+type SelectedGroup = PathwayGroup;
 
 // Calculate distance between two coordinates using Haversine formula
 function calculateDistance(
@@ -43,8 +41,6 @@ function findAllConnections(
   return connections;
 }
 
-const GROUP_DESCRIPTION =
-  "Pathway groups are house church communities growing together, empowered by the Spirit of God. We meet in homes, libraries, schools, wherever the LORD has sent us. We eat together, read the bible together, discuss and encourage others through friendship and prayer.";
 
 declare global {
   interface Window {
@@ -100,31 +96,31 @@ export default function PathwayMap() {
 
     mapInstanceRef.current = map;
 
-    // Create Christian cross marker icon using SVG (taller vertical bar)
-    const crossIcon = {
+    // Create cross icon function with color parameter
+    const createCrossIcon = (color: string) => ({
       path: "M-2,-12 L2,-12 L2,-4 L6,-4 L6,0 L2,0 L2,12 L-2,12 L-2,0 L-6,0 L-6,-4 L-2,-4 Z",
-      fillColor: "#3b82f6",
+      fillColor: color,
       fillOpacity: 1,
       strokeColor: "#ffffff",
       strokeWeight: 2,
       scale: 1.5,
       anchor: new window.google.maps.Point(0, 0),
-    };
+    });
 
     // Add markers for each pathway group
     pathwayGroups.forEach((group) => {
+      // Blue for running groups, purple for coming soon
+      const iconColor = group.running ? "#3b82f6" : "#8b5cf6";
+      
       const marker = new window.google.maps.Marker({
         position: { lat: group.coordinates[0], lng: group.coordinates[1] },
         map: map,
-        title: group.name,
-        icon: crossIcon,
+        title: group.running ? group.name : `${group.name} - Coming Soon!`,
+        icon: createCrossIcon(iconColor),
       });
 
       marker.addListener("click", () => {
-        setSelectedGroup({
-          ...group,
-          description: GROUP_DESCRIPTION,
-        });
+        setSelectedGroup(group);
         map.panTo({ lat: group.coordinates[0], lng: group.coordinates[1] });
         map.setZoom(12);
       });
@@ -227,7 +223,7 @@ export default function PathwayMap() {
 
         {/* Selected Group Info Panel */}
         {selectedGroup && (
-          <div className="absolute bottom-4 left-4 z-20 bg-gray-900/95 border border-gray-700 rounded-xl p-4 max-w-xs">
+          <div className={`absolute bottom-4 left-4 z-20 bg-gray-900/95 border rounded-xl p-4 max-w-xs ${selectedGroup.running ? 'border-gray-700' : 'border-purple-500'}`}>
             <button
               onClick={() => setSelectedGroup(null)}
               className="absolute top-2 right-2 text-gray-400 hover:text-white"
@@ -237,6 +233,11 @@ export default function PathwayMap() {
             <h3 className="text-lg font-semibold text-white mb-2">
               {selectedGroup.name}
             </h3>
+            {!selectedGroup.running && (
+              <p className="text-purple-400 font-semibold text-sm mb-2">
+                Coming soon!
+              </p>
+            )}
             <div className="space-y-2 text-sm">
               <p className="text-gray-300 text-xs leading-relaxed">
                 {selectedGroup.description}
@@ -247,15 +248,6 @@ export default function PathwayMap() {
               <p className="text-gray-400">
                 <span className="text-gray-500">Coordinator:</span>{" "}
                 {selectedGroup.coordinator}
-              </p>
-              <p className="text-gray-400">
-                <span className="text-gray-500">Contact:</span>{" "}
-                <a
-                  href={`tel:${selectedGroup.phone}`}
-                  className="text-blue-400 hover:underline"
-                >
-                  {selectedGroup.phone}
-                </a>
               </p>
             </div>
           </div>

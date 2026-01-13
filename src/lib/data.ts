@@ -40,7 +40,7 @@ export const NEXT_INTERSECTION_EVENT = {
 
 // Statistics for Pathways page (easily updatable)
 export const PATHWAY_STATS = {
-  communities: 7,
+  communities: 6,
   countries: 1,
   languages: 5,
   newGroupsStartingSoon: 3,
@@ -55,6 +55,8 @@ export const PATHWAY_GROUPS = [
     time: "Saturday 10:00 am",
     coordinator: "Matt",
     phone: "0477110098",
+    running: true,
+    description: "Pathway groups are house church communities growing together empowered by the Spirit of God.",
   },
   {
     id: 2,
@@ -63,6 +65,8 @@ export const PATHWAY_GROUPS = [
     time: "Saturday 12:00 pm",
     coordinator: "Racquel",
     phone: "0477110098",
+    running: true,
+    description: "Pathway groups are house church communities growing together empowered by the Spirit of God.",
   },
   {
     id: 3,
@@ -71,6 +75,8 @@ export const PATHWAY_GROUPS = [
     time: "Saturday 1:30 pm",
     coordinator: "Sam",
     phone: "0477110098",
+    running: true,
+    description: "Pathway groups are house church communities growing together empowered by the Spirit of God.",
   },
   {
     id: 4,
@@ -79,6 +85,8 @@ export const PATHWAY_GROUPS = [
     time: "Saturday 4:00 pm",
     coordinator: "Olivia",
     phone: "0477110098",
+    running: true,
+    description: "Pathway groups are house church communities growing together empowered by the Spirit of God.",
   },
   {
     id: 5,
@@ -87,6 +95,8 @@ export const PATHWAY_GROUPS = [
     time: "Saturday 4:00 pm",
     coordinator: "Henry",
     phone: "0477110098",
+    running: true,
+    description: "Pathway groups are house church communities growing together empowered by the Spirit of God.",
   },
   {
     id: 6,
@@ -95,6 +105,8 @@ export const PATHWAY_GROUPS = [
     time: "Saturday 4:00 pm",
     coordinator: "Ash",
     phone: "0477110098",
+    running: true,
+    description: "Pathway groups are house church communities growing together empowered by the Spirit of God.",
   },
   {
     id: 7,
@@ -103,6 +115,8 @@ export const PATHWAY_GROUPS = [
     time: "Saturday 4:00 pm",
     coordinator: "Aaron",
     phone: "0477110098",
+    running: true,
+    description: "Pathway groups are house church communities growing together empowered by the Spirit of God.",
   },
 ];
 

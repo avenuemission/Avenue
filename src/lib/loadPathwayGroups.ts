@@ -5,6 +5,8 @@ export interface PathwayGroup {
   time: string;
   coordinator: string;
   phone: string;
+  running: boolean;
+  description: string;
 }
 
 export async function loadPathwayGroups(): Promise<PathwayGroup[]> {
@@ -13,13 +15,12 @@ export async function loadPathwayGroups(): Promise<PathwayGroup[]> {
     const csvText = await response.text();
     
     const lines = csvText.trim().split("\n");
-    const headers = lines[0].split(",");
     
     const groups: PathwayGroup[] = [];
     
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(",");
-      if (values.length >= 7) {
+      if (values.length >= 9) {
         groups.push({
           id: parseInt(values[0]),
           name: values[1],
@@ -27,6 +28,8 @@ export async function loadPathwayGroups(): Promise<PathwayGroup[]> {
           time: values[4],
           coordinator: values[5],
           phone: values[6],
+          running: values[7] === "1",
+          description: values.slice(8).join(","), // Join remaining values in case description has commas
         });
       }
     }
