@@ -30,13 +30,14 @@ export default function StreetlightsPage() {
     e.preventDefault();
     if (formData.idea) {
       try {
-        await fetch("/__forms.html", {
+        // Send email notification
+        await fetch("/api/send-email", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            "form-name": "idea-submission",
-            ...formData,
-          }).toString(),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "ideaSubmission",
+            data: formData,
+          }),
         });
         setSubmitted(true);
         setFormData({ name: "", email: "", idea: "" });

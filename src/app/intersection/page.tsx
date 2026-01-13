@@ -20,13 +20,14 @@ export default function IntersectionPage() {
     e.preventDefault();
     if (formData.name && formData.email) {
       try {
-        await fetch("/__forms.html", {
+        // Send email notification
+        await fetch("/api/send-email", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            "form-name": "email-subscription",
-            ...formData,
-          }).toString(),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "eventUpdates",
+            data: { email: formData.email },
+          }),
         });
         setSubmitted(true);
         setFormData({ name: "", email: "" });

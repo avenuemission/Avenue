@@ -60,7 +60,7 @@ export default function PathwayMap() {
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<SelectedGroup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [formData, setFormData] = useState({ name: "", phone: "", group: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", group: "" });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [pathwayGroups, setPathwayGroups] = useState<PathwayGroup[]>(PATHWAY_GROUPS);
 
@@ -191,16 +191,17 @@ export default function PathwayMap() {
     e.preventDefault();
     if (formData.name && formData.phone && formData.group) {
       try {
-        await fetch("/__forms.html", {
+        // Send email notification
+        await fetch("/api/send-email", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            "form-name": "pathway-connect",
-            ...formData,
-          }).toString(),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "joinPathway",
+            data: formData,
+          }),
         });
         setFormSubmitted(true);
-        setFormData({ name: "", phone: "", group: "" });
+        setFormData({ name: "", email: "", phone: "", group: "" });
         setTimeout(() => setFormSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -286,6 +287,21 @@ export default function PathwayMap() {
               }
               className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 

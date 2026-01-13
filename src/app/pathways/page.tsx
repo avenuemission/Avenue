@@ -32,7 +32,7 @@ function useCountUp(end: number, duration: number = 2000) {
 }
 
 export default function PathwaysPage() {
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", suburb: "" });
   const [submitted, setSubmitted] = useState(false);
 
   // Animated counters
@@ -45,16 +45,17 @@ export default function PathwaysPage() {
     e.preventDefault();
     if (formData.name && formData.email) {
       try {
-        await fetch("/__forms.html", {
+        // Send email notification
+        await fetch("/api/send-email", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            "form-name": "pathway-eoi",
-            ...formData,
-          }).toString(),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "startPathway",
+            data: formData,
+          }),
         });
         setSubmitted(true);
-        setFormData({ name: "", email: "" });
+        setFormData({ name: "", email: "", phone: "", suburb: "" });
         setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -209,6 +210,35 @@ export default function PathwaysPage() {
                       }
                       className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
                       required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
+                      Suburb
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.suburb}
+                      onChange={(e) =>
+                        setFormData({ ...formData, suburb: e.target.value })
+                      }
+                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                      placeholder="Where would you like to start a group?"
                     />
                   </div>
 

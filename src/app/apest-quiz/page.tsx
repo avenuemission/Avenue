@@ -82,6 +82,8 @@ export default function ApestQuizPage() {
   const [emailForm, setEmailForm] = useState({ email: "", name: "" });
   const [emailSent, setEmailSent] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [personalizedResponse, setPersonalizedResponse] = useState<string | null>(null);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
 
   const handleAnswer = (value: number) => {
     const newAnswers = [...answers];
@@ -103,7 +105,7 @@ export default function ApestQuizPage() {
     }
   };
 
-  const calculateResults = () => {
+  const calculateResults = async () => {
     const scores: Results = {
       apostle: 0,
       prophet: 0,
@@ -128,6 +130,25 @@ export default function ApestQuizPage() {
 
     setResults(percentages);
     setShowResults(true);
+    setIsLoadingAI(true);
+
+    // Fetch personalized response from OpenAI
+    try {
+      const response = await fetch("/api/apest-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ results: percentages }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPersonalizedResponse(data.response);
+      }
+    } catch (error) {
+      console.error("Error fetching personalized results:", error);
+    } finally {
+      setIsLoadingAI(false);
+    }
   };
 
   const getTopRole = (): RoleKey => {
@@ -140,21 +161,19 @@ export default function ApestQuizPage() {
     e.preventDefault();
     if (emailForm.email && results) {
       try {
-        const topRole = getTopRole();
-        await fetch("/__forms.html", {
+        // Send email with results and personalized message
+        await fetch("/api/send-email", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            "form-name": "apest-results",
-            name: emailForm.name,
-            email: emailForm.email,
-            topRole: APEST_ROLES[topRole].name,
-            apostle: `${results.apostle}%`,
-            prophet: `${results.prophet}%`,
-            evangelist: `${results.evangelist}%`,
-            shepherd: `${results.shepherd}%`,
-            teacher: `${results.teacher}%`,
-          }).toString(),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "apestResults",
+            data: {
+              name: emailForm.name,
+              email: emailForm.email,
+              results,
+              personalizedMessage: personalizedResponse || APEST_ROLES[getTopRole()].leadershipBenefit,
+            },
+          }),
         });
         setEmailSent(true);
       } catch (error) {
@@ -337,14 +356,33 @@ export default function ApestQuizPage() {
                 ))}
             </div>
 
-            {/* Top Role Description */}
+            {/* Personalized AI Response */}
             <div className="bg-gray-900/60 backdrop-blur-sm border border-gray-700 rounded-xl p-8">
               <h2 className="text-2xl font-semibold text-white mb-4">
-                Your Strongest Gift: <span className="text-blue-400 capitalize">{getTopRole()}</span>
+                Your Personalized Insights
               </h2>
-              <p className="text-gray-300 leading-relaxed">
-                {APEST_ROLES[getTopRole()].leadershipBenefit}
-              </p>
+              {isLoadingAI ? (
+                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                  <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
+                  </div>
+                  <p className="text-gray-400 text-sm animate-pulse">Generating your personalized insights...</p>
+                </div>
+              ) : personalizedResponse ? (
+                <div className="text-gray-300 leading-relaxed whitespace-pre-line">
+                  {personalizedResponse}
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-xl font-medium text-blue-400 capitalize mb-3">
+                    Your Strongest Gift: {getTopRole()}
+                  </h3>
+                  <p className="text-gray-300 leading-relaxed">
+                    {APEST_ROLES[getTopRole()].leadershipBenefit}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Call to Action */}
@@ -422,6 +460,8 @@ export default function ApestQuizPage() {
                   setAnswers(Array(QUESTIONS.length).fill(0));
                   setResults(null);
                   setEmailSent(false);
+                  setPersonalizedResponse(null);
+                  setIsLoadingAI(false);
                 }}
                 className="text-blue-400 hover:text-blue-300 text-sm uppercase tracking-wider"
               >
