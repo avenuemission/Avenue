@@ -164,6 +164,55 @@ const emailTemplates = {
     };
   },
 
+  leaderSupport: (leaderName: string, formattedDate: string, zoomLink: string, meetingId: string, passcode: string) => ({
+    subject: "Leader Support Call Confirmed - Avenue",
+    html: emailWrapper(`
+      <h2 style="color: #ffffff; font-size: 24px; margin: 0 0 20px 0; font-weight: 600;">Call Confirmed!</h2>
+      <p style="color: #d1d5db; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+        Hi ${leaderName}, your leader support call has been scheduled for:
+      </p>
+      <div style="background-color: #1e3a5f; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <p style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0;">${formattedDate}</p>
+      </div>
+      <h3 style="color: #ffffff; font-size: 18px; margin: 30px 0 15px 0; font-weight: 600;">Zoom Details</h3>
+      <div style="background-color: #0a0f1a; border-radius: 8px; padding: 20px; border: 1px solid #1e3a5f;">
+        <p style="color: #d1d5db; font-size: 14px; margin: 0 0 10px 0;">
+          <strong style="color: #9ca3af;">Join Link:</strong><br>
+          <a href="${zoomLink}" style="color: #3b82f6; text-decoration: none; word-break: break-all;">${zoomLink}</a>
+        </p>
+        <p style="color: #d1d5db; font-size: 14px; margin: 0 0 10px 0;">
+          <strong style="color: #9ca3af;">Meeting ID:</strong> ${meetingId}
+        </p>
+        <p style="color: #d1d5db; font-size: 14px; margin: 0;">
+          <strong style="color: #9ca3af;">Passcode:</strong> ${passcode}
+        </p>
+      </div>
+      <p style="color: #9ca3af; font-size: 14px; margin: 20px 0 0 0;">
+        Please ensure your device has a microphone and webcam ready.
+      </p>
+      <p style="color: #9ca3af; font-size: 14px; margin: 15px 0 0 0;">
+        Need to rebook or cancel? Contact us at <a href="mailto:info@avenuemission.com" style="color: #3b82f6; text-decoration: none;">info@avenuemission.com</a>
+      </p>
+    `),
+  }),
+
+  leaderSupportCustom: (leaderName: string, requestedDate: string, requestedTime: string) => ({
+    subject: "Custom Time Request Received - Avenue Leader Support",
+    html: emailWrapper(`
+      <h2 style="color: #ffffff; font-size: 24px; margin: 0 0 20px 0; font-weight: 600;">Request Received!</h2>
+      <p style="color: #d1d5db; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+        Hi ${leaderName}, we've received your request for a custom support call time.
+      </p>
+      <div style="background-color: #1e3a5f; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <p style="color: #9ca3af; font-size: 14px; margin: 0 0 5px 0;">Requested Time:</p>
+        <p style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0;">${requestedDate} at ${requestedTime}</p>
+      </div>
+      <p style="color: #d1d5db; font-size: 16px; line-height: 1.6; margin: 0;">
+        We'll be in touch shortly to confirm this time or suggest an alternative.
+      </p>
+    `),
+  }),
+
   adminNotification: (formType: string, data: Record<string, string>) => {
     const dataRows = Object.entries(data)
       .map(([key, value]) => `<tr><td style="padding: 10px; border-bottom: 1px solid #1e3a5f; color: #9ca3af; text-transform: capitalize;">${key}</td><td style="padding: 10px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">${value}</td></tr>`)
@@ -276,6 +325,45 @@ export async function POST(request: NextRequest) {
           name: name || "Anonymous", 
           email: email || "Not provided", 
           idea 
+        });
+        emails.push(sendEmail(ADMIN_EMAIL, adminTemplate.subject, adminTemplate.html));
+        break;
+      }
+
+      case "leaderSupport": {
+        const { leaderName, leaderEmail, formattedDate, zoomLink, meetingId, passcode } = data;
+        
+        // Send confirmation email to leader
+        const template = emailTemplates.leaderSupport(leaderName, formattedDate, zoomLink, meetingId, passcode);
+        if (leaderEmail) {
+          emails.push(sendEmail(leaderEmail, template.subject, template.html));
+        }
+        
+        // Send admin notification
+        const adminTemplate = emailTemplates.adminNotification("Leader Support Call Booking", { 
+          leader: leaderName,
+          email: leaderEmail || "Not provided",
+          scheduledTime: formattedDate,
+        });
+        emails.push(sendEmail(ADMIN_EMAIL, adminTemplate.subject, adminTemplate.html));
+        break;
+      }
+
+      case "leaderSupportCustom": {
+        const { leaderName, leaderEmail, requestedDate, requestedTime } = data;
+        
+        // Send confirmation email to leader
+        const template = emailTemplates.leaderSupportCustom(leaderName, requestedDate, requestedTime);
+        if (leaderEmail) {
+          emails.push(sendEmail(leaderEmail, template.subject, template.html));
+        }
+        
+        // Send admin notification
+        const adminTemplate = emailTemplates.adminNotification("Leader Support - Custom Time Request", { 
+          leader: leaderName,
+          email: leaderEmail || "Not provided",
+          requestedDate,
+          requestedTime,
         });
         emails.push(sendEmail(ADMIN_EMAIL, adminTemplate.subject, adminTemplate.html));
         break;
