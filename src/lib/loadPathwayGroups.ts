@@ -9,6 +9,29 @@ export interface PathwayGroup {
   description: string;
 }
 
+// Parse CSV line handling quoted fields properly
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  
+  return result;
+}
+
 export async function loadPathwayGroups(): Promise<PathwayGroup[]> {
   try {
     const response = await fetch("/data/pathway_groups.csv");
@@ -19,7 +42,7 @@ export async function loadPathwayGroups(): Promise<PathwayGroup[]> {
     const groups: PathwayGroup[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(",");
+      const values = parseCSVLine(lines[i]);
       if (values.length >= 9) {
         groups.push({
           id: parseInt(values[0]),
@@ -29,7 +52,7 @@ export async function loadPathwayGroups(): Promise<PathwayGroup[]> {
           coordinator: values[5],
           phone: values[6],
           running: values[7] === "1",
-          description: values.slice(8).join(","), // Join remaining values in case description has commas
+          description: values[8] || "",
         });
       }
     }

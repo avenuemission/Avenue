@@ -96,8 +96,15 @@ export default function StreetlightsPage() {
 
 
       {/* Streetlights Description Section */}
-      <section className="bg-black py-12">
-        <div className="max-w-4xl mx-auto px-6 sm:px-10 text-center">
+      <section className="relative py-12 overflow-hidden">
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black animate-gradient-shift" style={{ backgroundSize: '200% 200%' }} />
+          <div className="absolute inset-0 bg-gradient-to-tl from-blue-900/20 via-transparent to-blue-950/30 animate-gradient-shift-reverse" style={{ backgroundSize: '200% 200%' }} />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl animate-pulse-slower" />
+        </div>
+        <div className="relative z-10 max-w-4xl mx-auto px-6 sm:px-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-8 text-center">
             STREETLIGHTS
           </h1>
@@ -124,7 +131,7 @@ export default function StreetlightsPage() {
       </section>
 
       {/* Mission Initiatives Section */}
-      <section className="relative py-16">
+      <section id="mission-initiatives" className="relative py-16 scroll-mt-20">
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
@@ -184,7 +191,7 @@ export default function StreetlightsPage() {
       </section>
 
       {/* Creative Initiatives Section */}
-      <section className="relative py-20">
+      <section id="creative-initiatives" className="relative py-20 scroll-mt-20">
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
@@ -337,7 +344,7 @@ export default function StreetlightsPage() {
       </section>
 
       {/* Tithe Section */}
-      <section className="bg-gradient-to-b from-black via-blue-950/40 to-black py-20">
+      <section id="giving" className="bg-gradient-to-b from-black via-blue-950/40 to-black py-20 scroll-mt-20">
         <div className="max-w-3xl mx-auto px-6 sm:px-10 text-center">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-8">
             SUPPORT AVENUE

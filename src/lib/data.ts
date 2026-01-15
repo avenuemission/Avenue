@@ -214,7 +214,7 @@ export const CREATIVE_INITIATIVES = {
 // Prayer Hotline Contact
 export const PRAYER_HOTLINE = {
   phone: "+61 477110098",
-  email: "henrymcmahon@avenuemission.com",
+  email: "info@avenuemission.com",
 };
 
 // Mission Initiatives

@@ -71,7 +71,7 @@ export const login = (email: string, password: string): User | null => {
 };
 
 // Signup function
-export const signup = (email: string, password: string, name: string): User | null => {
+export const signup = async (email: string, password: string, name: string): Promise<User | null> => {
   const users = getUsers();
   
   // Check if email already exists
@@ -89,6 +89,17 @@ export const signup = (email: string, password: string, name: string): User | nu
   users.push(newUser);
   if (typeof window !== "undefined") {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    
+    // Register leader in server-side CSV for access control
+    try {
+      await fetch("/api/leader-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: newUser.id, email, name }),
+      });
+    } catch (error) {
+      console.error("Failed to register leader access:", error);
+    }
   }
 
   // Auto-login after signup

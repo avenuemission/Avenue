@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import CountdownTimer from "@/components/CountdownTimer";
+import ImageCarousel from "@/components/PathwaysCarousel";
 import { INTERSECTION_EVENTS, SOCIAL_LINKS } from "@/lib/data";
 import {
   Instagram,
@@ -147,6 +148,9 @@ export default function IntersectionPage() {
           </div>
         </div>
       </section>
+
+      {/* Image Carousel - Scroll-linked */}
+      <ImageCarousel folder="intersection_carousel" />
 
       {/* Event Countdown Section */}
       <section className="relative py-16">

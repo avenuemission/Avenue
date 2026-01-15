@@ -21,9 +21,10 @@ export async function POST(request: NextRequest) {
 
 ${sortedResults.join("\n")}
 
-Please provide a personalized response (2 paragraphs) that includes:
-1. Their strongest gifting and what it means for them
-2. Their unique blend of gifts and how these work together
+Please provide a personalized response (4 short paragraphs) that includes:
+1. Their strongest gifting and what it means for them (core motivation and lens)
+2. Their second strongest gifting and how it works with their first (the secondary is usually the voice or expression of the strongest
+4. Gracefully mention the challenges and blind spots of their strongest giftings
 3. A biblical example of someone with a similar profile (e.g., Paul as Apostle/Teacher, Barnabas as Shepherd/Evangelist, etc.)
 
 Keep the tone warm, encouraging, and focused on how they can use these gifts to serve others and lead in community. Do not use markdown formatting - just plain text paragraphs.`;

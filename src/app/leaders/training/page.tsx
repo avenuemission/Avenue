@@ -71,6 +71,8 @@ export default function TrainingVideosPage() {
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
   const [expandedSeries, setExpandedSeries] = useState<string | null>("dna");
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -79,6 +81,20 @@ export default function TrainingVideosPage() {
       router.push("/login");
     } else {
       setUser(currentUser);
+      // Check leader access
+      fetch(`/api/leader-access?email=${encodeURIComponent(currentUser.email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setHasAccess(data.full_access === true);
+          setAccessChecked(true);
+          if (!data.full_access) {
+            router.push("/leaders");
+          }
+        })
+        .catch(() => {
+          setAccessChecked(true);
+          router.push("/leaders");
+        });
     }
   }, [router]);
 
@@ -91,7 +107,7 @@ export default function TrainingVideosPage() {
     setExpandedSeries(expandedSeries === id ? null : id);
   };
 
-  if (!mounted || !user) {
+  if (!mounted || !user || !accessChecked || !hasAccess) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>

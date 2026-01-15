@@ -29,7 +29,7 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
-        const user = signup(formData.email, formData.password, formData.name);
+        const user = await signup(formData.email, formData.password, formData.name);
         if (user) {
           router.push("/leaders");
         } else {

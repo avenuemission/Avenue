@@ -75,15 +75,33 @@ export default function ResourcesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const currentUser = getCurrentUser();
     if (!currentUser) {
       router.push("/login");
-    } else {
-      setUser(currentUser);
+      return;
     }
+    
+    setUser(currentUser);
+    
+    // Check leader access
+    fetch(`/api/leader-access?email=${encodeURIComponent(currentUser.email)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setHasAccess(data.full_access === true);
+        setAccessChecked(true);
+        if (!data.full_access) {
+          router.push("/leaders");
+        }
+      })
+      .catch(() => {
+        setAccessChecked(true);
+        router.push("/leaders");
+      });
   }, [router]);
 
   const handleLogout = () => {
@@ -91,7 +109,7 @@ export default function ResourcesPage() {
     router.push("/");
   };
 
-  if (!mounted || !user) {
+  if (!mounted || !user || !accessChecked || !hasAccess) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>

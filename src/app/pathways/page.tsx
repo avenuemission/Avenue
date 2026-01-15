@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import PathwayMap from "@/components/PathwayMap";
+import ImageCarousel from "@/components/PathwaysCarousel";
 import { PATHWAY_STATS } from "@/lib/data";
+
 
 // Counter animation hook
 function useCountUp(end: number, duration: number = 2000) {
@@ -120,6 +122,9 @@ export default function PathwaysPage() {
           </div>
         </div>
       </section>
+
+      {/* Image Carousel - Scroll-linked */}
+      <ImageCarousel folder="pathways_carousel" />
 
       {/* Find a Pathway Section */}
       <section className="bg-gradient-to-b from-blue-950/40 via-blue-900/30 to-blue-950/50 py-16 overflow-hidden">

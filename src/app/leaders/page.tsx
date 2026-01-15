@@ -26,6 +26,8 @@ export default function LeadersPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -34,6 +36,16 @@ export default function LeadersPage() {
       router.push("/login");
     } else {
       setUser(currentUser);
+      // Check leader access
+      fetch(`/api/leader-access?email=${encodeURIComponent(currentUser.email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setHasFullAccess(data.full_access === true);
+          setAccessChecked(true);
+        })
+        .catch(() => {
+          setAccessChecked(true);
+        });
     }
   }, [router]);
 
@@ -49,6 +61,9 @@ export default function LeadersPage() {
       </div>
     );
   }
+
+  // Cards that require full_access
+  const restrictedCards = ["training", "study", "resources"];
 
   const dashboardCards = [
     {
@@ -88,6 +103,8 @@ export default function LeadersPage() {
       iconColor: "text-purple-400",
     },
   ];
+
+  const isRestricted = (cardId: string) => !hasFullAccess && restrictedCards.includes(cardId);
 
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
@@ -145,28 +162,64 @@ export default function LeadersPage() {
 
         {/* Dashboard Grid - Liquid Glass Style */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {dashboardCards.map((card) => (
-            <Link
-              key={card.id}
-              href={card.href}
-              className={`group relative overflow-hidden rounded-2xl p-8 backdrop-blur-xl bg-gradient-to-br ${card.color} border border-white/10 ${card.borderColor} hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl`}
-            >
-              {/* Glass reflection effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50" />
-              <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-white/5 to-transparent rotate-12 group-hover:rotate-6 transition-transform duration-500" />
-              
-              <div className="relative z-10">
-                <card.icon className={`w-10 h-10 ${card.iconColor} mb-4 group-hover:text-white transition-colors`} />
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {card.title}
-                </h3>
-                <div className="flex items-center text-white/50 text-sm group-hover:text-white/70 transition-colors">
-                  <span>View →</span>
+          {dashboardCards.map((card) => {
+            const restricted = isRestricted(card.id);
+            
+            if (restricted) {
+              return (
+                <div
+                  key={card.id}
+                  className="group relative overflow-hidden rounded-2xl p-8 backdrop-blur-xl bg-gradient-to-br from-gray-800/20 to-gray-900/10 border border-white/5 opacity-60 cursor-not-allowed"
+                >
+                  {/* Glass reflection effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-30" />
+                  
+                  <div className="relative z-10">
+                    <card.icon className="w-10 h-10 text-gray-500 mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                      {card.title}
+                    </h3>
+                    <div className="flex items-center text-amber-500/80 text-sm font-medium">
+                      <span>Pending Authorization</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              );
+            }
+            
+            return (
+              <Link
+                key={card.id}
+                href={card.href}
+                className={`group relative overflow-hidden rounded-2xl p-8 backdrop-blur-xl bg-gradient-to-br ${card.color} border border-white/10 ${card.borderColor} hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl`}
+              >
+                {/* Glass reflection effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50" />
+                <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-white/5 to-transparent rotate-12 group-hover:rotate-6 transition-transform duration-500" />
+                
+                <div className="relative z-10">
+                  <card.icon className={`w-10 h-10 ${card.iconColor} mb-4 group-hover:text-white transition-colors`} />
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    {card.title}
+                  </h3>
+                  <div className="flex items-center text-white/50 text-sm group-hover:text-white/70 transition-colors">
+                    <span>View →</span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
+
+        {/* Pending Access Message */}
+        {accessChecked && !hasFullAccess && (
+          <div className="mt-6 max-w-4xl mx-auto text-center">
+            <p className="text-gray-400 text-sm italic">
+              Full access to training materials, study guides, and resources will be granted after your first Zoom call with our team. 
+              Please use the Leader Support section to schedule a meeting — we look forward to connecting with you!
+            </p>
+          </div>
+        )}
 
         {/* Quick Links */}
         <div className="mt-12 p-6 backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 max-w-4xl mx-auto">
