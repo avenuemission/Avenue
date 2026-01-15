@@ -181,11 +181,10 @@ export default function Navbar() {
                   {streetlightsOpen && (
                     <div className="pl-4 space-y-1">
                       {streetlightsDropdown.map((item) => (
-                        <a
+                        <button
                           key={item.href + item.label}
-                          href={item.href}
-                          onClick={(e) => {
-                            e.preventDefault();
+                          type="button"
+                          onClick={() => {
                             setStreetlightsOpen(false);
                             setMobileMenuOpen(false);
                             
@@ -214,10 +213,10 @@ export default function Navbar() {
                               router.push(item.href);
                             }
                           }}
-                          className="block px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors"
+                          className="block w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors touch-manipulation"
                         >
                           {item.label}
-                        </a>
+                        </button>
                       ))}
                     </div>
                   )}
