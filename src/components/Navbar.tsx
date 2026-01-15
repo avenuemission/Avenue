@@ -8,6 +8,7 @@ import CountdownTimer from "./CountdownTimer";
 import { LogIn, ChevronDown } from "lucide-react";
 
 const streetlightsDropdown = [
+  { href: "/streetlights", label: "Overview" },
   { href: "/streetlights#mission-initiatives", label: "Mission Initiatives" },
   { href: "/streetlights#creative-initiatives", label: "Creative Initiatives" },
   { href: "/streetlights#mission-initiatives", label: "Prayer Hotline" },
@@ -165,76 +166,22 @@ export default function Navbar() {
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-black/95 border-t border-gray-800">
             {navLinks.map((link) => (
-              link.hasDropdown ? (
-                <div key={link.href}>
-                  <button
-                    onClick={() => setStreetlightsOpen(!streetlightsOpen)}
-                    className={`flex items-center justify-between w-full px-3 py-2 text-base font-medium tracking-wider transition-colors ${
-                      pathname.startsWith("/streetlights") || pathname === "/apest-quiz"
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 text-base font-medium tracking-wider transition-colors ${
+                  link.hasDropdown 
+                    ? (pathname.startsWith("/streetlights") || pathname === "/apest-quiz"
                         ? "text-white bg-gray-800/50"
-                        : "text-gray-400 hover:text-white hover:bg-gray-800/30"
-                    }`}
-                  >
-                    <span>{link.label}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${streetlightsOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {streetlightsOpen && (
-                    <div className="pl-4 space-y-1">
-                      {streetlightsDropdown.map((item) => (
-                        <button
-                          key={item.href + item.label}
-                          type="button"
-                          onClick={() => {
-                            setStreetlightsOpen(false);
-                            setMobileMenuOpen(false);
-                            
-                            if (item.href.includes('#')) {
-                              const [path, hash] = item.href.split('#');
-                              if (window.location.pathname === '/streetlights') {
-                                // Already on streetlights page, just scroll
-                                const element = document.getElementById(hash);
-                                if (element) {
-                                  setTimeout(() => {
-                                    element.scrollIntoView({ behavior: 'smooth' });
-                                  }, 150);
-                                }
-                              } else {
-                                // Navigate to streetlights page, then scroll after load
-                                router.push(path);
-                                setTimeout(() => {
-                                  const element = document.getElementById(hash);
-                                  if (element) {
-                                    element.scrollIntoView({ behavior: 'smooth' });
-                                  }
-                                }, 500);
-                              }
-                            } else {
-                              // No hash, just navigate (e.g., APEST Quiz)
-                              router.push(item.href);
-                            }
-                          }}
-                          className="block w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors touch-manipulation"
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-3 py-2 text-base font-medium tracking-wider transition-colors ${
-                    pathname === link.href
-                      ? "text-white bg-gray-800/50"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800/30"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              )
+                        : "text-gray-400 hover:text-white hover:bg-gray-800/30")
+                    : (pathname === link.href
+                        ? "text-white bg-gray-800/50"
+                        : "text-gray-400 hover:text-white hover:bg-gray-800/30")
+                }`}
+              >
+                {link.label}
+              </Link>
             ))}
             
             {/* Mobile Countdown Timer and Login */}
