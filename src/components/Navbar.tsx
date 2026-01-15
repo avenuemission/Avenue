@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import CountdownTimer from "./CountdownTimer";
 import { LogIn, ChevronDown } from "lucide-react";
 
@@ -24,6 +24,7 @@ const navLinks = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [streetlightsOpen, setStreetlightsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -184,22 +185,33 @@ export default function Navbar() {
                           key={item.href + item.label}
                           href={item.href}
                           onClick={(e) => {
+                            e.preventDefault();
                             setStreetlightsOpen(false);
                             setMobileMenuOpen(false);
-                            // Handle hash navigation manually for better mobile support
+                            
                             if (item.href.includes('#')) {
                               const [path, hash] = item.href.split('#');
-                              if (window.location.pathname === path || window.location.pathname === '/streetlights') {
-                                // Same page, scroll to section
-                                e.preventDefault();
+                              if (window.location.pathname === '/streetlights') {
+                                // Already on streetlights page, just scroll
                                 const element = document.getElementById(hash);
                                 if (element) {
                                   setTimeout(() => {
                                     element.scrollIntoView({ behavior: 'smooth' });
-                                  }, 100);
+                                  }, 150);
                                 }
+                              } else {
+                                // Navigate to streetlights page, then scroll after load
+                                router.push(path);
+                                setTimeout(() => {
+                                  const element = document.getElementById(hash);
+                                  if (element) {
+                                    element.scrollIntoView({ behavior: 'smooth' });
+                                  }
+                                }, 500);
                               }
-                              // If different page, let the default navigation happen
+                            } else {
+                              // No hash, just navigate (e.g., APEST Quiz)
+                              router.push(item.href);
                             }
                           }}
                           className="block px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors"
