@@ -180,17 +180,32 @@ export default function Navbar() {
                   {streetlightsOpen && (
                     <div className="pl-4 space-y-1">
                       {streetlightsDropdown.map((item) => (
-                        <Link
+                        <a
                           key={item.href + item.label}
                           href={item.href}
-                          onClick={() => {
+                          onClick={(e) => {
                             setStreetlightsOpen(false);
                             setMobileMenuOpen(false);
+                            // Handle hash navigation manually for better mobile support
+                            if (item.href.includes('#')) {
+                              const [path, hash] = item.href.split('#');
+                              if (window.location.pathname === path || window.location.pathname === '/streetlights') {
+                                // Same page, scroll to section
+                                e.preventDefault();
+                                const element = document.getElementById(hash);
+                                if (element) {
+                                  setTimeout(() => {
+                                    element.scrollIntoView({ behavior: 'smooth' });
+                                  }, 100);
+                                }
+                              }
+                              // If different page, let the default navigation happen
+                            }
                           }}
                           className="block px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors"
                         >
                           {item.label}
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   )}

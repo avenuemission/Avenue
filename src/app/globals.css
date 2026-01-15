@@ -155,3 +155,17 @@ html {
 .animate-pulse-slower {
   animation: pulse 12s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Infinite scroll animation for mobile carousel */
+@keyframes scroll-infinite {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-infinite {
+  animation: scroll-infinite 30s linear infinite;
+}
