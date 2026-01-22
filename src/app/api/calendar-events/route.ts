@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const GOOGLE_API_KEY = "AIzaSyA5uTJsoY-E86EeDLnCwkEm1RKK-2AnpEE";
+const GOOGLE_API_KEY = process.env.GOOGLE_CALENDAR_API_KEY || "";
 const CALENDAR_ID = "c_f77b62d0efa5c8f706f97ed58b880dc6bdbd9ca0a67d4b413748de6f0b2f612e@group.calendar.google.com";
 
 interface CalendarEvent {
