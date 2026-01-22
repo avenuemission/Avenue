@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import CountdownTimer from "./CountdownTimer";
-import { LogIn, ChevronDown } from "lucide-react";
+import { LogIn, ChevronDown, Heart } from "lucide-react";
 
 const streetlightsDropdown = [
   { href: "/streetlights", label: "Overview" },
@@ -105,9 +105,20 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Countdown Timer and Login */}
+          {/* Countdown Timer, Giving and Login */}
           <div className="hidden sm:flex items-center space-x-3">
             <CountdownTimer variant="navbar" />
+            <a
+              href="https://tithe.ly/give_new/www/#/tithely/give-one-time/1827900"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
+            >
+              <Heart className="w-4 h-4 text-white" />
+              <span className="text-xs font-medium text-white uppercase tracking-wider">
+                Giving
+              </span>
+            </a>
             <Link
               href="/login"
               className="flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
@@ -184,9 +195,21 @@ export default function Navbar() {
               </Link>
             ))}
             
-            {/* Mobile Countdown Timer and Login */}
+            {/* Mobile Countdown Timer, Giving and Login */}
             <div className="px-3 py-4 space-y-3">
               <CountdownTimer variant="navbar" />
+              <a
+                href="https://tithe.ly/give_new/www/#/tithely/give-one-time/1827900"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
+              >
+                <Heart className="w-4 h-4 text-white" />
+                <span className="text-xs font-medium text-white uppercase tracking-wider">
+                  Giving
+                </span>
+              </a>
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}

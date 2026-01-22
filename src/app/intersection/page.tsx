@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import CountdownTimer from "@/components/CountdownTimer";
 import ImageCarousel from "@/components/PathwaysCarousel";
+import CalendarPopup from "@/components/CalendarPopup";
 import { INTERSECTION_EVENTS, SOCIAL_LINKS } from "@/lib/data";
 import {
   Instagram,
@@ -13,9 +14,52 @@ import {
   Calendar,
 } from "lucide-react";
 
+interface EventDates {
+  prayerAndPraise: Date | null;
+  quarterlySermon: Date | null;
+  weekOfWorship: Date | null;
+}
+
 export default function IntersectionPage() {
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [eventDates, setEventDates] = useState<EventDates>({
+    prayerAndPraise: null,
+    quarterlySermon: null,
+    weekOfWorship: null,
+  });
+  const [loading, setLoading] = useState(true);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchEventDates = async () => {
+      try {
+        const [prayerRes, quarterlyRes, weekOfWorshipRes] = await Promise.all([
+          fetch("/api/event-dates?event=prayer_and_praise"),
+          fetch("/api/event-dates?event=quarterly_sermon"),
+          fetch("/api/event-dates?event=week_of_worship"),
+        ]);
+
+        const [prayerData, quarterlyData, weekOfWorshipData] = await Promise.all([
+          prayerRes.json(),
+          quarterlyRes.json(),
+          weekOfWorshipRes.json(),
+        ]);
+
+        setEventDates({
+          prayerAndPraise: prayerData.nextDate ? new Date(prayerData.nextDate) : null,
+          quarterlySermon: quarterlyData.nextDate ? new Date(quarterlyData.nextDate) : null,
+          weekOfWorship: weekOfWorshipData.nextDate ? new Date(weekOfWorshipData.nextDate) : null,
+        });
+      } catch (error) {
+        console.error("Failed to fetch event dates:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventDates();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,38 +234,17 @@ export default function IntersectionPage() {
                 </p>
               </div>
               <div className="pt-4">
-                <CountdownTimer
-                  variant="event"
-                  targetDate={INTERSECTION_EVENTS.prayerAndPraise.nextDate}
-                  eventType="weekly"
-                />
-              </div>
-            </div>
-
-            {/* Combined Pathways */}
-            <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
-              <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                {INTERSECTION_EVENTS.combinedPathways.title}
-              </h3>
-              <p className="text-gray-300 text-sm md:text-base">
-                {INTERSECTION_EVENTS.combinedPathways.description}
-              </p>
-              <div className="space-y-1 text-sm">
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Location:</span>{" "}
-                  {INTERSECTION_EVENTS.combinedPathways.location}
-                </p>
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Time:</span>{" "}
-                  {INTERSECTION_EVENTS.combinedPathways.time}
-                </p>
-              </div>
-              <div className="pt-4">
-                <CountdownTimer
-                  variant="event"
-                  targetDate={INTERSECTION_EVENTS.combinedPathways.nextDate}
-                  eventType="firstSaturday"
-                />
+                {loading ? (
+                  <p className="text-gray-400 text-sm">Loading...</p>
+                ) : eventDates.prayerAndPraise ? (
+                  <CountdownTimer
+                    variant="event"
+                    targetDate={eventDates.prayerAndPraise}
+                    eventType="weekly"
+                  />
+                ) : (
+                  <p className="text-gray-400 text-sm">No upcoming date</p>
+                )}
               </div>
             </div>
 
@@ -244,11 +267,50 @@ export default function IntersectionPage() {
                 </p>
               </div>
               <div className="pt-4">
-                <CountdownTimer
-                  variant="event"
-                  targetDate={INTERSECTION_EVENTS.quarterlySermon.nextDate}
-                  eventType="quarterly"
-                />
+                {loading ? (
+                  <p className="text-gray-400 text-sm">Loading...</p>
+                ) : eventDates.quarterlySermon ? (
+                  <CountdownTimer
+                    variant="event"
+                    targetDate={eventDates.quarterlySermon}
+                    eventType="quarterly"
+                  />
+                ) : (
+                  <p className="text-gray-400 text-sm">No upcoming date</p>
+                )}
+              </div>
+            </div>
+
+            {/* Week of Worship */}
+            <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
+              <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
+                {INTERSECTION_EVENTS.weekOfWorship.title}
+              </h3>
+              <p className="text-gray-300 text-sm md:text-base">
+                {INTERSECTION_EVENTS.weekOfWorship.description}
+              </p>
+              <div className="space-y-1 text-sm">
+                <p className="text-gray-400">
+                  <span className="text-gray-500 uppercase">Location:</span>{" "}
+                  {INTERSECTION_EVENTS.weekOfWorship.location}
+                </p>
+                <p className="text-gray-400">
+                  <span className="text-gray-500 uppercase">Time:</span>{" "}
+                  {INTERSECTION_EVENTS.weekOfWorship.time}
+                </p>
+              </div>
+              <div className="pt-4">
+                {loading ? (
+                  <p className="text-gray-400 text-sm">Loading...</p>
+                ) : eventDates.weekOfWorship ? (
+                  <CountdownTimer
+                    variant="event"
+                    targetDate={eventDates.weekOfWorship}
+                    eventType="quarterly"
+                  />
+                ) : (
+                  <p className="text-gray-400 text-sm">No upcoming date</p>
+                )}
               </div>
             </div>
           </div>
@@ -275,20 +337,33 @@ export default function IntersectionPage() {
 
           {/* Social Media Buttons */}
           <div className="flex flex-wrap justify-center gap-6 mb-16">
-            {socialButtons.map((social) => (
-              <a
-                key={social.name}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`flex items-center justify-center gap-3 bg-blue-800 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:bg-blue-700 min-w-[180px]`}
-              >
-                <social.icon size={24} />
-                <span className="text-base uppercase tracking-wider">
-                  {social.name}
-                </span>
-              </a>
-            ))}
+            {socialButtons.map((social) =>
+              social.name === "Google Calendar" ? (
+                <button
+                  key={social.name}
+                  onClick={() => setCalendarOpen(true)}
+                  className={`flex items-center justify-center gap-3 bg-blue-800 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:bg-blue-700 min-w-[180px]`}
+                >
+                  <social.icon size={24} />
+                  <span className="text-base uppercase tracking-wider">
+                    {social.name}
+                  </span>
+                </button>
+              ) : (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center justify-center gap-3 bg-blue-800 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:bg-blue-700 min-w-[180px]`}
+                >
+                  <social.icon size={24} />
+                  <span className="text-base uppercase tracking-wider">
+                    {social.name}
+                  </span>
+                </a>
+              )
+            )}
           </div>
 
           {/* Email Subscription Form */}
@@ -341,6 +416,9 @@ export default function IntersectionPage() {
           </div>
         </div>
       </section>
+
+      {/* Calendar Popup */}
+      <CalendarPopup isOpen={calendarOpen} onClose={() => setCalendarOpen(false)} />
     </div>
   );
 }

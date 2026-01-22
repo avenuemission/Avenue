@@ -130,13 +130,13 @@ export const INTERSECTION_EVENTS = {
     time: "7:00 - 9:00 PM Wednesday",
     nextDate: new Date("2025-12-10T19:00:00+11:00"),
   },
-  combinedPathways: {
-    title: "Combined Pathways",
+  weekOfWorship: {
+    title: "Week of Worship",
     description:
-      "Once a month, the pathway groups come together and meet for a combined bible discussion. This allows pathways groups to connect and encourage each other.",
+      "A dedicated week of spiritual growth, prayer, and praise. Avenue comes together for an immersive experience of worship, reflection, and deepening our connection with God.",
     location: "Mont Albert Church",
-    time: "3:00 - 6:00 PM First Saturday",
-    nextDate: new Date("2026-01-04T16:00:00+11:00"), // First Saturday of January 2026
+    time: "7:00 PM Daily",
+    nextDate: new Date("2026-01-04T16:00:00+11:00"),
   },
   quarterlySermon: {
     title: "Quarterly Sermon",
@@ -233,6 +233,6 @@ export const MISSION_INITIATIVES = [
   {
     title: "Mission Trips",
     description:
-      "Avenue is planning upcoming mission trips to Philippines, Saudi Arabia and Nigeria.",
+      "Avenue is planning upcoming mission trips to the Philippines.",
   },
 ];
