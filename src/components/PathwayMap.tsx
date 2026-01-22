@@ -168,7 +168,7 @@ export default function PathwayMap() {
 
     // Load Google Maps script
     const script = document.createElement("script");
-    const apiKey = "AIzaSyA5uTJsoY-E86EeDLnCwkEm1RKK-2AnpEE";
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initPathwayMap`;
     script.async = true;
     script.defer = true;
