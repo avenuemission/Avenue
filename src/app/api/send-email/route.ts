@@ -369,6 +369,18 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "leaderSignup": {
+        const { name, email } = data;
+        
+        // Send admin notification only
+        const adminTemplate = emailTemplates.adminNotification("New Leader Account Created", { 
+          name,
+          email,
+        });
+        emails.push(sendEmail(ADMIN_EMAIL, adminTemplate.subject, adminTemplate.html));
+        break;
+      }
+
       default:
         return NextResponse.json(
           { error: "Invalid email type" },

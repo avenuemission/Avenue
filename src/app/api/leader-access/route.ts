@@ -148,6 +148,21 @@ export async function POST(request: NextRequest) {
     leaders.push(newLeader);
     writeLeaders(leaders);
 
+    // Send email notification to admin about new leader signup
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+      await fetch(`${baseUrl}/api/send-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "leaderSignup",
+          data: { name, email },
+        }),
+      });
+    } catch (emailError) {
+      console.error("Failed to send leader signup notification email:", emailError);
+    }
+
     return NextResponse.json({
       success: true,
       full_access: false,
