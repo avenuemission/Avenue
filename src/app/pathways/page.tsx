@@ -34,7 +34,7 @@ function useCountUp(end: number, duration: number = 2000) {
 }
 
 export default function PathwaysPage() {
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", suburb: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", suburb: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
 
   // Animated counters
@@ -47,17 +47,29 @@ export default function PathwaysPage() {
     e.preventDefault();
     if (formData.name && formData.email) {
       try {
+        // Submit to Netlify Forms
+        const netlifyData = new FormData();
+        netlifyData.append("form-name", "start-pathway");
+        netlifyData.append("name", formData.name);
+        netlifyData.append("email", formData.email);
+        netlifyData.append("phone", formData.phone);
+        netlifyData.append("suburb", formData.suburb);
+        await fetch("/", {
+          method: "POST",
+          body: netlifyData,
+        });
+
         // Send email notification
         await fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "startPathway",
-            data: formData,
+            data: { ...formData },
           }),
         });
         setSubmitted(true);
-        setFormData({ name: "", email: "", phone: "", suburb: "" });
+        setFormData({ name: "", email: "", phone: "", suburb: "", website: "" });
         setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -187,7 +199,23 @@ export default function PathwaysPage() {
                   set up a time to call and support your pathway mission.
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-6"
+                  data-netlify="true"
+                  name="start-pathway"
+                >
+                  <input type="hidden" name="form-name" value="start-pathway" />
+                  {/* Honeypot field - hidden from humans, bots will fill it */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
                   <div>
                     <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
                       Name

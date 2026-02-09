@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     leaders.push(newLeader);
     writeLeaders(leaders);
 
-    // Send email notification to admin about new leader signup
+    // Send email notification to admin about new leader signup via send-email API
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
       await fetch(`${baseUrl}/api/send-email`, {

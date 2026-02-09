@@ -239,6 +239,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { type, data } = body;
 
+    // Honeypot check - if this field is filled, it's likely a bot
+    if (data?.website || data?.url || data?.honeypot) {
+      // Silently reject but return success to not alert bots
+      return NextResponse.json({ success: true });
+    }
+
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
       return NextResponse.json(
         { error: "Email service not configured" },

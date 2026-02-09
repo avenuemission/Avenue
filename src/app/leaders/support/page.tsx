@@ -74,7 +74,7 @@ export default function LeaderSupportPage() {
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [customTime, setCustomTime] = useState({ date: "", time: "" });
+  const [customTime, setCustomTime] = useState({ date: "", time: "", website: "" });
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -101,6 +101,17 @@ export default function LeaderSupportPage() {
     setSubmitting(true);
 
     try {
+      // Submit to Netlify Forms
+      const netlifyData = new FormData();
+      netlifyData.append("form-name", "leader-support");
+      netlifyData.append("leaderName", user?.name || "");
+      netlifyData.append("leaderEmail", user?.email || "");
+      netlifyData.append("selectedDate", `${formatDate(date)} at ${formatTime(date)}`);
+      await fetch("/", {
+        method: "POST",
+        body: netlifyData,
+      });
+
       await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,6 +143,18 @@ export default function LeaderSupportPage() {
     setSubmitting(true);
 
     try {
+      // Submit to Netlify Forms
+      const netlifyData = new FormData();
+      netlifyData.append("form-name", "leader-support-custom");
+      netlifyData.append("leaderName", user?.name || "");
+      netlifyData.append("leaderEmail", user?.email || "");
+      netlifyData.append("requestedDate", customTime.date);
+      netlifyData.append("requestedTime", customTime.time);
+      await fetch("/", {
+        method: "POST",
+        body: netlifyData,
+      });
+
       await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -142,6 +165,7 @@ export default function LeaderSupportPage() {
             leaderEmail: user?.email,
             requestedDate: customTime.date,
             requestedTime: customTime.time,
+            website: customTime.website,
           },
         }),
       });
@@ -334,7 +358,23 @@ export default function LeaderSupportPage() {
               </button>
 
               {showCustomForm && (
-                <form onSubmit={handleCustomSubmit} className="mt-6 space-y-4">
+                <form
+                  onSubmit={handleCustomSubmit}
+                  className="mt-6 space-y-4"
+                  data-netlify="true"
+                  name="leader-support-custom"
+                >
+                  <input type="hidden" name="form-name" value="leader-support-custom" />
+                  {/* Honeypot field - hidden from humans, bots will fill it */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={customTime.website}
+                    onChange={(e) => setCustomTime({ ...customTime, website: e.target.value })}
+                    style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">
                       Preferred Date

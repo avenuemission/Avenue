@@ -21,7 +21,7 @@ interface EventDates {
 }
 
 export default function IntersectionPage() {
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
   const [eventDates, setEventDates] = useState<EventDates>({
     prayerAndPraise: null,
@@ -65,17 +65,27 @@ export default function IntersectionPage() {
     e.preventDefault();
     if (formData.name && formData.email) {
       try {
+        // Submit to Netlify Forms
+        const netlifyData = new FormData();
+        netlifyData.append("form-name", "event-updates");
+        netlifyData.append("name", formData.name);
+        netlifyData.append("email", formData.email);
+        await fetch("/", {
+          method: "POST",
+          body: netlifyData,
+        });
+
         // Send email notification
         await fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "eventUpdates",
-            data: { email: formData.email },
+            data: { email: formData.email, website: formData.website },
           }),
         });
         setSubmitted(true);
-        setFormData({ name: "", email: "" });
+        setFormData({ name: "", email: "", website: "" });
         setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -372,7 +382,23 @@ export default function IntersectionPage() {
               Receive Event Updates via Email
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6"
+              data-netlify="true"
+              name="event-updates"
+            >
+              <input type="hidden" name="form-name" value="event-updates" />
+              {/* Honeypot field - hidden from humans, bots will fill it */}
+              <input
+                type="text"
+                name="website"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                tabIndex={-1}
+                autoComplete="off"
+              />
               <div>
                 <label className="block text-gray-400 text-xs md:text-sm mb-2 text-left uppercase tracking-wider">
                   Name

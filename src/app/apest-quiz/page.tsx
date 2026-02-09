@@ -79,7 +79,7 @@ export default function ApestQuizPage() {
   const [answers, setAnswers] = useState<number[]>(Array(QUESTIONS.length).fill(0));
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<Results | null>(null);
-  const [emailForm, setEmailForm] = useState({ email: "", name: "" });
+  const [emailForm, setEmailForm] = useState({ email: "", name: "", website: "" });
   const [emailSent, setEmailSent] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [personalizedResponse, setPersonalizedResponse] = useState<string | null>(null);
@@ -161,6 +161,21 @@ export default function ApestQuizPage() {
     e.preventDefault();
     if (emailForm.email && results) {
       try {
+        // Submit to Netlify Forms
+        const netlifyData = new FormData();
+        netlifyData.append("form-name", "apest-results");
+        netlifyData.append("name", emailForm.name);
+        netlifyData.append("email", emailForm.email);
+        netlifyData.append("apostle", `${results.apostle}%`);
+        netlifyData.append("prophet", `${results.prophet}%`);
+        netlifyData.append("evangelist", `${results.evangelist}%`);
+        netlifyData.append("shepherd", `${results.shepherd}%`);
+        netlifyData.append("teacher", `${results.teacher}%`);
+        await fetch("/", {
+          method: "POST",
+          body: netlifyData,
+        });
+
         // Send email with results and personalized message
         await fetch("/api/send-email", {
           method: "POST",
@@ -172,6 +187,7 @@ export default function ApestQuizPage() {
               email: emailForm.email,
               results,
               personalizedMessage: personalizedResponse || APEST_ROLES[getTopRole()].leadershipBenefit,
+              website: emailForm.website,
             },
           }),
         });
@@ -409,8 +425,23 @@ export default function ApestQuizPage() {
                 Email Your Results
               </h3>
               {!emailSent ? (
-                <form onSubmit={handleEmailSubmit} className="space-y-4 max-w-md mx-auto">
+                <form
+                  onSubmit={handleEmailSubmit}
+                  className="space-y-4 max-w-md mx-auto"
+                  data-netlify="true"
+                  name="apest-results"
+                >
                   <input type="hidden" name="form-name" value="apest-results" />
+                  {/* Honeypot field - hidden from humans, bots will fill it */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={emailForm.website}
+                    onChange={(e) => setEmailForm({ ...emailForm, website: e.target.value })}
+                    style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
                   <div>
                     <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
                       Name (Optional)

@@ -21,6 +21,7 @@ export default function StreetlightsPage() {
     name: "",
     email: "",
     idea: "",
+    website: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [showAlbumModal, setShowAlbumModal] = useState(false);
@@ -30,17 +31,28 @@ export default function StreetlightsPage() {
     e.preventDefault();
     if (formData.idea) {
       try {
+        // Submit to Netlify Forms
+        const netlifyData = new FormData();
+        netlifyData.append("form-name", "idea-submission");
+        netlifyData.append("name", formData.name);
+        netlifyData.append("email", formData.email);
+        netlifyData.append("idea", formData.idea);
+        await fetch("/", {
+          method: "POST",
+          body: netlifyData,
+        });
+
         // Send email notification
         await fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "ideaSubmission",
-            data: formData,
+            data: { ...formData },
           }),
         });
         setSubmitted(true);
-        setFormData({ name: "", email: "", idea: "" });
+        setFormData({ name: "", email: "", idea: "", website: "" });
         setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -281,7 +293,23 @@ export default function StreetlightsPage() {
             Tell Us Your Ideas
           </h3>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            data-netlify="true"
+            name="idea-submission"
+          >
+            <input type="hidden" name="form-name" value="idea-submission" />
+            {/* Honeypot field - hidden from humans, bots will fill it */}
+            <input
+              type="text"
+              name="website"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+              tabIndex={-1}
+              autoComplete="off"
+            />
             <div>
               <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
                 Name (Optional)

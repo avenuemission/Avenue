@@ -56,7 +56,7 @@ export default function PathwayMap() {
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<SelectedGroup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", group: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", group: "", website: "" });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [pathwayGroups, setPathwayGroups] = useState<PathwayGroup[]>(PATHWAY_GROUPS);
 
@@ -187,17 +187,29 @@ export default function PathwayMap() {
     e.preventDefault();
     if (formData.name && formData.phone && formData.group) {
       try {
+        // Submit to Netlify Forms
+        const netlifyData = new FormData();
+        netlifyData.append("form-name", "join-pathway");
+        netlifyData.append("name", formData.name);
+        netlifyData.append("email", formData.email);
+        netlifyData.append("phone", formData.phone);
+        netlifyData.append("group", formData.group);
+        await fetch("/", {
+          method: "POST",
+          body: netlifyData,
+        });
+
         // Send email notification
         await fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "joinPathway",
-            data: formData,
+            data: { ...formData },
           }),
         });
         setFormSubmitted(true);
-        setFormData({ name: "", email: "", phone: "", group: "" });
+        setFormData({ name: "", email: "", phone: "", group: "", website: "" });
         setTimeout(() => setFormSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -263,8 +275,23 @@ export default function PathwayMap() {
           Fill out the form below to connect with a pathway group near you.
         </p>
 
-        <form onSubmit={handleFormSubmit} className="space-y-6">
-          <input type="hidden" name="form-name" value="pathway-connect" />
+        <form
+          onSubmit={handleFormSubmit}
+          className="space-y-6"
+          data-netlify="true"
+          name="join-pathway"
+        >
+          <input type="hidden" name="form-name" value="join-pathway" />
+          {/* Honeypot field - hidden from humans, bots will fill it */}
+          <input
+            type="text"
+            name="website"
+            value={formData.website}
+            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+            style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+            tabIndex={-1}
+            autoComplete="off"
+          />
 
           <div>
             <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
