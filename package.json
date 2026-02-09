@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.6.0",
     "@sendgrid/mail": "^8.1.6",
     "googleapis": "^168.0.0",
     "lucide-react": "^0.555.0",

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronDown, X } from "lucide-react";
 
 const valuesData = [
@@ -275,6 +276,28 @@ export default function VisionPage() {
               </div>
             </div>
 
+          </div>
+
+          {/* Explore More Buttons */}
+          <div className="flex flex-wrap justify-center gap-4 mt-12 lg:mt-16">
+            <Link
+              href="/pathways"
+              className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
+            >
+              Pathways
+            </Link>
+            <Link
+              href="/intersection"
+              className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
+            >
+              Intersection
+            </Link>
+            <Link
+              href="/streetlights"
+              className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
+            >
+              Streetlights
+            </Link>
           </div>
         </div>
       </section>

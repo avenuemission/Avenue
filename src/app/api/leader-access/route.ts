@@ -1,75 +1,50 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const LEADERS_CSV_PATH = path.join(process.cwd(), "data", "leaders.csv");
+import { getStore } from "@netlify/blobs";
+import { sendLeaderSignupNotification } from "@/lib/email";
 
 interface LeaderRecord {
   id: string;
   email: string;
   name: string;
-  full_access: string;
+  full_access: boolean;
+  created_at: string;
 }
 
-// Parse CSV line handling quoted fields
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
+// Get the Netlify Blobs store for leaders
+function getLeadersStore() {
+  return getStore({ name: "leaders", consistency: "strong" });
+}
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
+// Read a leader by email (normalized to lowercase)
+async function getLeader(email: string): Promise<LeaderRecord | null> {
+  const store = getLeadersStore();
+  const key = email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
+  const leader = await store.get(key, { type: "json" });
+  return leader as LeaderRecord | null;
+}
+
+// Save a leader record
+async function saveLeader(leader: LeaderRecord): Promise<void> {
+  const store = getLeadersStore();
+  const key = leader.email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
+  await store.setJSON(key, leader);
+}
+
+// List all leaders
+async function listLeaders(): Promise<LeaderRecord[]> {
+  const store = getLeadersStore();
+  const { blobs } = await store.list();
+  const leaders: LeaderRecord[] = [];
+  
+  for (const blob of blobs) {
+    const leader = await store.get(blob.key, { type: "json" });
+    if (leader) {
+      leaders.push(leader as LeaderRecord);
     }
   }
-  result.push(current.trim());
-  return result;
-}
-
-// Read all leaders from CSV
-function readLeaders(): LeaderRecord[] {
-  if (!fs.existsSync(LEADERS_CSV_PATH)) {
-    return [];
-  }
-
-  const content = fs.readFileSync(LEADERS_CSV_PATH, "utf-8");
-  const lines = content.split("\n").filter((line) => line.trim());
-
-  if (lines.length < 2) return [];
-
-  const headers = parseCSVLine(lines[0]);
-  const records: LeaderRecord[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
-    if (values.length >= 4) {
-      records.push({
-        id: values[headers.indexOf("id")] || "",
-        email: values[headers.indexOf("email")] || "",
-        name: values[headers.indexOf("name")] || "",
-        full_access: values[headers.indexOf("full_access")] || "0",
-      });
-    }
-  }
-
-  return records;
-}
-
-// Write leaders to CSV
-function writeLeaders(leaders: LeaderRecord[]): void {
-  const header = "id,email,name,full_access";
-  const rows = leaders.map(
-    (l) => `${l.id},${l.email},"${l.name}",${l.full_access}`
-  );
-  const content = [header, ...rows].join("\n") + "\n";
-  fs.writeFileSync(LEADERS_CSV_PATH, content, "utf-8");
+  
+  return leaders;
 }
 
 // GET: Check access for a specific email
@@ -82,10 +57,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Email required" }, { status: 400 });
     }
 
-    const leaders = readLeaders();
-    const leader = leaders.find(
-      (l) => l.email.toLowerCase() === email.toLowerCase()
-    );
+    const leader = await getLeader(email);
 
     if (!leader) {
       return NextResponse.json({
@@ -96,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       found: true,
-      full_access: leader.full_access === "1",
+      full_access: leader.full_access,
       name: leader.name,
     });
   } catch (error) {
@@ -121,44 +93,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const leaders = readLeaders();
-
     // Check if leader already exists
-    const existingIndex = leaders.findIndex(
-      (l) => l.email.toLowerCase() === email.toLowerCase()
-    );
+    const existingLeader = await getLeader(email);
 
-    if (existingIndex >= 0) {
+    if (existingLeader) {
       // Leader already exists, return their current access
       return NextResponse.json({
         success: true,
-        full_access: leaders[existingIndex].full_access === "1",
+        full_access: existingLeader.full_access,
         message: "Leader already registered",
       });
     }
 
-    // Add new leader with full_access = 0
+    // Add new leader with full_access = false
     const newLeader: LeaderRecord = {
       id: id || Date.now().toString(),
       email,
       name,
-      full_access: "0",
+      full_access: false,
+      created_at: new Date().toISOString(),
     };
 
-    leaders.push(newLeader);
-    writeLeaders(leaders);
+    await saveLeader(newLeader);
 
-    // Send email notification to admin about new leader signup via send-email API
+    // Send email notification to admin about new leader signup
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-      await fetch(`${baseUrl}/api/send-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "leaderSignup",
-          data: { name, email },
-        }),
-      });
+      await sendLeaderSignupNotification(name, email);
     } catch (emailError) {
       console.error("Failed to send leader signup notification email:", emailError);
     }
