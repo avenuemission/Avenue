@@ -207,7 +207,7 @@ export default function VisionPage() {
       {/* ===================== */}
       {/* AVENUE ORBIT SECTION */}
       {/* ===================== */}
-      <section className="bg-black py-2">
+      <section className="bg-black py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-6 sm:px-10">
 
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -274,30 +274,30 @@ export default function VisionPage() {
                   Each pathway group is connected through one intersection orbit, a place for worshipping God in one spirit.
                 </p>
               </div>
+
+              {/* Explore More Buttons */}
+              <div className="flex flex-wrap gap-3 pt-4">
+                <Link
+                  href="/pathways"
+                  className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
+                >
+                  Pathways
+                </Link>
+                <Link
+                  href="/intersection"
+                  className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
+                >
+                  Intersection
+                </Link>
+                <Link
+                  href="/streetlights"
+                  className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
+                >
+                  Streetlights
+                </Link>
+              </div>
             </div>
 
-          </div>
-
-          {/* Explore More Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mt-12 lg:mt-16">
-            <Link
-              href="/pathways"
-              className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
-            >
-              Pathways
-            </Link>
-            <Link
-              href="/intersection"
-              className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
-            >
-              Intersection
-            </Link>
-            <Link
-              href="/streetlights"
-              className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
-            >
-              Streetlights
-            </Link>
           </div>
         </div>
       </section>
@@ -305,7 +305,7 @@ export default function VisionPage() {
       {/* ===================== */}
       {/* MISSION / VISION / VALUES SECTION */}
       {/* ===================== */}
-      <section className="relative min-h-screen w-full">
+      <section className="relative w-full">
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
@@ -318,7 +318,7 @@ export default function VisionPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen py-20 px-6">
+        <div className="relative z-10 flex flex-col items-center justify-center py-24 md:py-32 px-6">
           {/* Three Bubbles */}
           <div className="flex flex-wrap justify-center gap-6 md:gap-10">
             {/* Mission Bubble */}
