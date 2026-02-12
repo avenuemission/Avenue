@@ -11,6 +11,20 @@ interface LeaderRecord {
   created_at: string;
 }
 
+// Check if running locally (not on Netlify)
+const isLocal = !process.env.NETLIFY;
+
+// In-memory store for local development
+const localLeaders: Map<string, LeaderRecord> = new Map([
+  ["info@avenuemission.com", {
+    id: "1",
+    email: "info@avenuemission.com",
+    name: "Avenue Admin",
+    full_access: true,
+    created_at: new Date().toISOString(),
+  }],
+]);
+
 // Get the Netlify Blobs store for leaders
 function getLeadersStore() {
   return getStore({ name: "leaders", consistency: "strong" });
@@ -18,21 +32,36 @@ function getLeadersStore() {
 
 // Read a leader by email (normalized to lowercase)
 async function getLeader(email: string): Promise<LeaderRecord | null> {
-  const store = getLeadersStore();
   const key = email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
+  
+  if (isLocal) {
+    return localLeaders.get(email.toLowerCase()) || null;
+  }
+  
+  const store = getLeadersStore();
   const leader = await store.get(key, { type: "json" });
   return leader as LeaderRecord | null;
 }
 
 // Save a leader record
 async function saveLeader(leader: LeaderRecord): Promise<void> {
-  const store = getLeadersStore();
   const key = leader.email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
+  
+  if (isLocal) {
+    localLeaders.set(leader.email.toLowerCase(), leader);
+    return;
+  }
+  
+  const store = getLeadersStore();
   await store.setJSON(key, leader);
 }
 
 // List all leaders
 async function listLeaders(): Promise<LeaderRecord[]> {
+  if (isLocal) {
+    return Array.from(localLeaders.values());
+  }
+  
   const store = getLeadersStore();
   const { blobs } = await store.list();
   const leaders: LeaderRecord[] = [];

@@ -12,6 +12,8 @@ import {
   BookOpen,
   GraduationCap,
   ExternalLink,
+  FileDown,
+  Download,
 } from "lucide-react";
 
 const RESOURCES = {
@@ -33,6 +35,11 @@ const RESOURCES = {
     },
   ],
   courses: [
+    {
+      title: "Avenue Discipleship Track",
+      description: "Avenue's comprehensive discipleship curriculum",
+      link: "https://docs.google.com/document/d/10N3905RihA0cYcA-qilrL7cnqWNVpdxgaT9QEspJ9lM/edit?tab=t.0",
+    },
     {
       title: "Discipleship Foundations",
       description: "Core principles of making disciples",
@@ -71,12 +78,22 @@ const RESOURCES = {
   ],
 };
 
+interface DownloadableResource {
+  name: string;
+  size: number;
+  modified: string;
+  category?: string;
+}
+
 export default function ResourcesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
+  const [downloads, setDownloads] = useState<DownloadableResource[]>([]);
+  const [musicDownloads, setMusicDownloads] = useState<DownloadableResource[]>([]);
+  const [loadingDownloads, setLoadingDownloads] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -96,6 +113,18 @@ export default function ResourcesPage() {
         setAccessChecked(true);
         if (!data.full_access) {
           router.push("/leaders");
+        } else {
+          // Fetch all downloadable resources
+          fetch(`/api/leader-resources?email=${encodeURIComponent(currentUser.email)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              const allResources = data.resources || [];
+              // Separate music files from general downloads
+              setMusicDownloads(allResources.filter((r: DownloadableResource) => r.category === "music"));
+              setDownloads(allResources.filter((r: DownloadableResource) => r.category !== "music"));
+              setLoadingDownloads(false);
+            })
+            .catch(() => setLoadingDownloads(false));
         }
       })
       .catch(() => {
@@ -107,6 +136,17 @@ export default function ResourcesPage() {
   const handleLogout = () => {
     logout();
     router.push("/");
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleDownload = (filename: string) => {
+    if (!user) return;
+    window.open(`/api/leader-resources/${encodeURIComponent(filename)}?email=${encodeURIComponent(user.email)}`, "_blank");
   };
 
   if (!mounted || !user || !accessChecked || !hasAccess) {
@@ -179,10 +219,11 @@ export default function ResourcesPage() {
               <h2 className="text-xl font-semibold text-white">Music</h2>
             </div>
             <div className="grid gap-3">
+              {/* External music links */}
               {RESOURCES.music.map((resource, index) => (
                 resource.link ? (
                   <a
-                    key={index}
+                    key={`link-${index}`}
                     href={resource.link}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -194,18 +235,21 @@ export default function ResourcesPage() {
                     </div>
                     <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-pink-400 transition-colors" />
                   </a>
-                ) : (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
-                  >
-                    <div>
-                      <p className="text-white font-medium">{resource.title}</p>
-                      <p className="text-gray-500 text-sm">{resource.description}</p>
-                    </div>
-                    <span className="text-gray-600 text-sm">Coming soon!</span>
+                ) : null
+              ))}
+              {/* Downloadable music files */}
+              {musicDownloads.map((file, index) => (
+                <button
+                  key={`download-${index}`}
+                  onClick={() => handleDownload(file.name)}
+                  className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-pink-500/30 rounded-xl transition-all group text-left w-full"
+                >
+                  <div>
+                    <p className="text-white font-medium">{file.name.split("/").pop()}</p>
+                    <p className="text-gray-500 text-sm">{formatFileSize(file.size)}</p>
                   </div>
-                )
+                  <Download className="w-4 h-4 text-gray-500 group-hover:text-pink-400 transition-colors" />
+                </button>
               ))}
             </div>
           </div>
@@ -286,6 +330,35 @@ export default function ResourcesPage() {
                 )
               ))}
             </div>
+          </div>
+
+          {/* Downloads Section */}
+          <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <FileDown className="w-6 h-6 text-purple-400" />
+              <h2 className="text-xl font-semibold text-white">Downloads</h2>
+            </div>
+            {loadingDownloads ? (
+              <p className="text-gray-500 text-sm">Loading resources...</p>
+            ) : downloads.length === 0 ? (
+              <p className="text-gray-500 text-sm">No downloadable resources available yet.</p>
+            ) : (
+              <div className="grid gap-3">
+                {downloads.map((file, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleDownload(file.name)}
+                    className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-xl transition-all group text-left w-full"
+                  >
+                    <div>
+                      <p className="text-white font-medium">{file.name}</p>
+                      <p className="text-gray-500 text-sm">{formatFileSize(file.size)}</p>
+                    </div>
+                    <Download className="w-4 h-4 text-gray-500 group-hover:text-purple-400 transition-colors" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>

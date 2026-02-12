@@ -1,0 +1,3 @@
+# This folder contains protected leader resources
+# Files here are served through the /api/leader-resources API
+# Only authenticated leaders with full_access can download these files
