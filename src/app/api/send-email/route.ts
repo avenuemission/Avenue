@@ -387,6 +387,20 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "missionSupport": {
+        const { name, email, supportType, message } = data;
+        
+        // Send admin notification
+        const adminTemplate = emailTemplates.adminNotification("Philippines Mission Trip - Support Interest", { 
+          name,
+          email,
+          "Support Type": supportType === "time" ? "Volunteering Time" : "Contributing Resources",
+          message: message || "No additional message",
+        });
+        emails.push(sendEmail(ADMIN_EMAIL, adminTemplate.subject, adminTemplate.html));
+        break;
+      }
+
       default:
         return NextResponse.json(
           { error: "Invalid email type" },

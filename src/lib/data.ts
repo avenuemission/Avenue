@@ -220,19 +220,28 @@ export const PRAYER_HOTLINE = {
 // Mission Initiatives
 export const MISSION_INITIATIVES = [
   {
+    id: "homeless-outreach",
     title: "Melbourne Homeless Outreach",
-    description:
-      "A pathway group that was meeting at Monash University has been blessing the homeless in Melbourne Australia. On saturday evenings, they go into the city, with the intention of being the hands and feet of Jesus.",
+    shortDescription: "Blessing the homeless in Melbourne every Saturday evening.",
+    fullDescription:
+      "A pathway group that was meeting at Monash University has been blessing the homeless in Melbourne Australia. On Saturday evenings, they go into the city, with the intention of being the hands and feet of Jesus. They provide food, warm clothing, and most importantly, genuine connection and prayer for those experiencing homelessness.",
   },
   {
+    id: "prayer-hotline",
     title: "Prayer Hotline",
-    description:
-      "Avenue provides a 24/7 prayer hotline to anyone in need of divine support.",
+    shortDescription: "24/7 prayer support for anyone in need.",
+    fullDescription:
+      "Avenue provides a 24/7 prayer hotline to anyone in need of divine support. Whether you're going through a difficult season, need encouragement, or simply want someone to pray with you, our team is here to listen and lift you up in prayer.",
     hasContact: true,
   },
   {
-    title: "Mission Trips",
-    description:
-      "Avenue is planning upcoming mission trips to the Philippines.",
+    id: "philippines-mission",
+    title: "Philippines Mission Trip",
+    shortDescription: "December 2026 mission to breathe revival into Filipino youth.",
+    fullDescription:
+      "Join us on a transformative mission trip to share Avenue's microchurch philosophy and breathe revival into Filipino youth. We will also provide medical resources and check-ups to those in rural communities, bringing both spiritual and physical healing to those in need.",
+    date: "2026-12-01",
+    image: "/images/Phillippines.png",
+    isFeatured: true,
   },
 ];

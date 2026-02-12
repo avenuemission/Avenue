@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import VideoModal from "@/components/VideoModal";
 import {
@@ -8,12 +8,23 @@ import {
   MISSION_INITIATIVES,
   PRAYER_HOTLINE,
 } from "@/lib/data";
-import { Phone, MessageSquare, Mail } from "lucide-react";
+import { Phone, MessageSquare, Mail, X, Calendar, Heart, Clock } from "lucide-react";
 
 interface Song {
   title: string;
   youtubeUrl: string;
   spotifyUrl: string;
+}
+
+interface MissionInitiative {
+  id: string;
+  title: string;
+  shortDescription: string;
+  fullDescription: string;
+  hasContact?: boolean;
+  date?: string;
+  image?: string;
+  isFeatured?: boolean;
 }
 
 export default function StreetlightsPage() {
@@ -26,6 +37,72 @@ export default function StreetlightsPage() {
   const [submitted, setSubmitted] = useState(false);
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [selectedMission, setSelectedMission] = useState<MissionInitiative | null>(null);
+  const [missionCountdown, setMissionCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [supportForm, setSupportForm] = useState({
+    name: "",
+    email: "",
+    supportType: "",
+    message: "",
+    website: "",
+  });
+  const [supportSubmitted, setSupportSubmitted] = useState(false);
+
+  // Countdown for Philippines mission trip
+  useEffect(() => {
+    const missionDate = new Date("2026-12-01T00:00:00");
+    
+    const updateCountdown = () => {
+      const now = new Date();
+      const diff = missionDate.getTime() - now.getTime();
+      
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setMissionCountdown({ days, hours, minutes, seconds });
+      }
+    };
+    
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSupportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (supportForm.name && supportForm.email && supportForm.supportType) {
+      try {
+        // Submit to Netlify Forms
+        const netlifyData = new FormData();
+        netlifyData.append("form-name", "mission-support");
+        netlifyData.append("name", supportForm.name);
+        netlifyData.append("email", supportForm.email);
+        netlifyData.append("supportType", supportForm.supportType);
+        netlifyData.append("message", supportForm.message);
+        await fetch("/", {
+          method: "POST",
+          body: netlifyData,
+        });
+
+        // Send email notification
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "missionSupport",
+            data: { ...supportForm },
+          }),
+        });
+        setSupportSubmitted(true);
+        setSupportForm({ name: "", email: "", supportType: "", message: "", website: "" });
+        setTimeout(() => setSupportSubmitted(false), 3000);
+      } catch (error) {
+        console.error("Form submission error:", error);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,43 +237,20 @@ export default function StreetlightsPage() {
             MISSION INITIATIVES
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {MISSION_INITIATIVES.map((initiative, index) => (
-              <div
-                key={index}
-                className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors"
+          <div className="flex flex-wrap justify-center gap-6">
+            {MISSION_INITIATIVES.map((initiative) => (
+              <button
+                key={initiative.id}
+                onClick={() => setSelectedMission(initiative as MissionInitiative)}
+                className="bg-blue-800 hover:bg-blue-700 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px] flex flex-col items-center justify-center"
               >
-                <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                  {initiative.title}
-                </h3>
-                <p className="text-gray-300 text-sm md:text-base">{initiative.description}</p>
-
-                {initiative.hasContact && (
-                  <div className="flex gap-4 pt-2">
-                    <a
-                      href={`tel:${PRAYER_HOTLINE.phone}`}
-                      className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
-                    >
-                      <Phone size={16} />
-                      CALL
-                    </a>
-                    <a
-                      href={`sms:${PRAYER_HOTLINE.phone}`}
-                      className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
-                    >
-                      <MessageSquare size={16} />
-                      TEXT
-                    </a>
-                    <a
-                      href={`mailto:${PRAYER_HOTLINE.email}`}
-                      className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
-                    >
-                      <Mail size={16} />
-                      EMAIL
-                    </a>
-                  </div>
-                )}
-              </div>
+                <span className="block text-xl uppercase tracking-wider text-center">
+                  {initiative.title.split(" ").slice(0, -1).join(" ")}
+                </span>
+                <span className="block text-sm uppercase tracking-wider mt-1">
+                  {initiative.title.split(" ").slice(-1)[0]}
+                </span>
+              </button>
             ))}
           </div>
         </div>
@@ -471,6 +525,217 @@ export default function StreetlightsPage() {
         youtubeUrl=""
         title=""
       />
+
+      {/* Mission Initiative Modal */}
+      {selectedMission && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setSelectedMission(null)}
+          />
+          <div className="relative z-10 w-full max-w-2xl mx-4 bg-gray-900 rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <h3 className="text-xl font-semibold text-white">
+                {selectedMission.title}
+              </h3>
+              <button
+                onClick={() => setSelectedMission(null)}
+                className="p-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {/* Image for Philippines Mission */}
+              {selectedMission.image && (
+                <div className="relative w-full h-48 md:h-64 rounded-xl overflow-hidden mb-6">
+                  <Image
+                    src={selectedMission.image}
+                    alt={selectedMission.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Countdown for Philippines Mission */}
+              {selectedMission.isFeatured && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 text-blue-400 mb-3">
+                    <Calendar size={20} />
+                    <span className="text-sm uppercase tracking-wider">December 2026</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3 text-center">
+                    <div className="bg-blue-900/50 rounded-xl p-3">
+                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.days}</div>
+                      <div className="text-xs text-gray-400 uppercase">Days</div>
+                    </div>
+                    <div className="bg-blue-900/50 rounded-xl p-3">
+                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.hours}</div>
+                      <div className="text-xs text-gray-400 uppercase">Hours</div>
+                    </div>
+                    <div className="bg-blue-900/50 rounded-xl p-3">
+                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.minutes}</div>
+                      <div className="text-xs text-gray-400 uppercase">Mins</div>
+                    </div>
+                    <div className="bg-blue-900/50 rounded-xl p-3">
+                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.seconds}</div>
+                      <div className="text-xs text-gray-400 uppercase">Secs</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              <p className="text-gray-300 text-base leading-relaxed mb-6">
+                {selectedMission.fullDescription}
+              </p>
+
+              {/* Prayer Hotline Contact */}
+              {selectedMission.hasContact && (
+                <div className="flex flex-wrap gap-4 mb-6">
+                  <a
+                    href={`tel:${PRAYER_HOTLINE.phone}`}
+                    className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition-colors"
+                  >
+                    <Phone size={16} />
+                    CALL
+                  </a>
+                  <a
+                    href={`sms:${PRAYER_HOTLINE.phone}`}
+                    className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition-colors"
+                  >
+                    <MessageSquare size={16} />
+                    TEXT
+                  </a>
+                  <a
+                    href={`mailto:${PRAYER_HOTLINE.email}`}
+                    className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition-colors"
+                  >
+                    <Mail size={16} />
+                    EMAIL
+                  </a>
+                </div>
+              )}
+
+              {/* Support Form for Philippines Mission */}
+              {selectedMission.isFeatured && (
+                <div className="border-t border-gray-800 pt-6">
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Heart size={20} className="text-blue-400" />
+                    Get Involved
+                  </h4>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Support this mission with your time or resources. Fill out the form below and we&apos;ll be in touch.
+                  </p>
+
+                  <form onSubmit={handleSupportSubmit} className="space-y-4" data-netlify="true" name="mission-support">
+                    <input type="hidden" name="form-name" value="mission-support" />
+                    {/* Honeypot */}
+                    <input
+                      type="text"
+                      name="website"
+                      value={supportForm.website}
+                      onChange={(e) => setSupportForm({ ...supportForm, website: e.target.value })}
+                      style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
+                          Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={supportForm.name}
+                          onChange={(e) => setSupportForm({ ...supportForm, name: e.target.value })}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
+                          Email *
+                        </label>
+                        <input
+                          type="email"
+                          value={supportForm.email}
+                          onChange={(e) => setSupportForm({ ...supportForm, email: e.target.value })}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
+                        How would you like to support? *
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setSupportForm({ ...supportForm, supportType: "time" })}
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border transition-colors ${
+                            supportForm.supportType === "time"
+                              ? "bg-blue-600 border-blue-500 text-white"
+                              : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"
+                          }`}
+                        >
+                          <Clock size={18} />
+                          My Time
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSupportForm({ ...supportForm, supportType: "resources" })}
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border transition-colors ${
+                            supportForm.supportType === "resources"
+                              ? "bg-blue-600 border-blue-500 text-white"
+                              : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"
+                          }`}
+                        >
+                          <Heart size={18} />
+                          Resources
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
+                        Message (Optional)
+                      </label>
+                      <textarea
+                        value={supportForm.message}
+                        onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
+                        rows={3}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                        placeholder="Tell us more about how you'd like to help..."
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-700 text-white py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm"
+                    >
+                      Submit
+                    </button>
+
+                    {supportSubmitted && (
+                      <p className="text-green-400 text-sm text-center">
+                        Thank you! We&apos;ll be in touch soon.
+                      </p>
+                    )}
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
