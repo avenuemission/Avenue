@@ -244,4 +244,12 @@ export const MISSION_INITIATIVES = [
     image: "/images/Phillippines.png",
     isFeatured: true,
   },
+  {
+    id: "red-frogs",
+    title: "Red Frogs",
+    shortDescription: "Supporting young people at festivals and events.",
+    fullDescription:
+      "Avenue partners with Red Frogs Australia to provide practical support and care for young people at music festivals, schoolies events, and university O-weeks. Our volunteers offer free pancakes, water, and a safe presence to help keep young people safe during celebrations. It's an opportunity to show God's love through simple acts of service and genuine care.",
+    image: "/images/red_frogs.png",
+  },
 ];
