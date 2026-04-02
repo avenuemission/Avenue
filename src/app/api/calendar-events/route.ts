@@ -24,7 +24,7 @@ export async function GET() {
     const oneMonthLater = new Date();
     oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
 
-    const timeMin = now.toISOString();
+    const timeMin = now.toISOString()here;
     const timeMax = oneMonthLater.toISOString();
 
     const baseUrl = "https://www.googleapis.com/calendar/v3/calendars";

@@ -427,7 +427,7 @@ export default function VisionPage() {
               BELIEFS
             </h2>
             <p className="text-gray-200 text-center text-lg md:text-xl mb-12 max-w-2xl mx-auto">
-              We are a church supported by the Seventh-Day Adventist Church. Here is a snapshot of what we believe:
+              Here is a snapshot of what we believe:
             </p>
 
             {/* Belief Cards */}
