@@ -1,0 +1,362 @@
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Helvetica:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-primary": "#05297a",
+                  "on-secondary-container": "#a1b1ff",
+                  "on-tertiary-fixed": "#24005b",
+                  "primary-fixed-dim": "#b6c4ff",
+                  "on-surface": "#e2e2e2",
+                  "on-surface-variant": "#c5c5d3",
+                  "inverse-on-surface": "#303030",
+                  "on-background": "#e2e2e2",
+                  "on-primary-fixed": "#00164e",
+                  "surface-container-lowest": "#0e0e0e",
+                  "secondary-fixed": "#dde1ff",
+                  "outline-variant": "#444651",
+                  "on-secondary-fixed-variant": "#0736ba",
+                  "surface-bright": "#393939",
+                  "on-error-container": "#ffdad6",
+                  "on-error": "#690005",
+                  "surface-container-low": "#1b1b1b",
+                  "background": "#131313",
+                  "error": "#ffb4ab",
+                  "on-secondary-fixed": "#001355",
+                  "secondary-fixed-dim": "#b8c3ff",
+                  "surface-variant": "#353535",
+                  "tertiary-fixed-dim": "#d1bcff",
+                  "surface-container": "#1f1f1f",
+                  "primary-container": "#1e3a8a",
+                  "on-primary-container": "#90a8ff",
+                  "on-tertiary": "#3d008f",
+                  "inverse-surface": "#e2e2e2",
+                  "primary-fixed": "#dce1ff",
+                  "on-primary-fixed-variant": "#264191",
+                  "secondary": "#b8c3ff",
+                  "inverse-primary": "#4059aa",
+                  "error-container": "#93000a",
+                  "outline": "#8f909d",
+                  "surface-container-highest": "#353535",
+                  "primary": "#b6c4ff",
+                  "surface-tint": "#b6c4ff",
+                  "tertiary-fixed": "#eaddff",
+                  "on-tertiary-fixed-variant": "#5800c8",
+                  "on-secondary": "#002388",
+                  "surface-container-high": "#2a2a2a",
+                  "secondary-container": "#0736ba",
+                  "tertiary": "#d1bcff",
+                  "on-tertiary-container": "#ba9bff",
+                  "tertiary-container": "#5000b7",
+                  "surface": "#131313",
+                  "surface-dim": "#131313"
+          },
+          "borderRadius": {
+                  "DEFAULT": "1rem",
+                  "lg": "2rem",
+                  "xl": "3rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "xs": "4px",
+                  "sm": "8px",
+                  "xl": "48px",
+                  "md": "16px",
+                  "unit": "4px",
+                  "xxl": "96px",
+                  "margin": "32px",
+                  "gutter": "24px",
+                  "lg": "24px"
+          },
+          "fontFamily": {
+                  "h3": ["Helvetica"],
+                  "label-caps": ["Helvetica"],
+                  "body-lg": ["Inter"],
+                  "h2": ["Helvetica"],
+                  "h1": ["Helvetica"],
+                  "body-md": ["Inter"]
+          },
+          "fontSize": {
+                  "h3": ["24px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                  "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                  "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                  "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                  "h1": ["48px", {"lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                  "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>body {
+    background-color: #000;
+    background-image: radial-gradient(circle at 50% -20%, rgba(182, 196, 255, 0.15) 0%, transparent 50%), url(https://lh3.googleusercontent.com/aida-public/AB6AXuABKBxoKCUGmofAgBbdNOvrPwuwsAipFIt7JppNeoYDd5cdUpvfXhXbXW9M4HQmg98CYZJnhsM4yB5dwbcWMx6ynqs14AVVAYqb3dYKoAqacWu762QiPsw9QjxMZR9Vc06-U70uaAdovSZYTSV0VdteiUJOYIvZeARIxTtEHNElwAW_tAbJdPgl5cAebJ1VW504XJxAYmpfZxmo6yP1HatQhPDeMg5BPMlmaQr07Fb7MWKDlMxYVFHc62PT0zP60FGrt83yN3CJffWf);
+    background-attachment: fixed;
+    background-size: cover;
+    color: #e2e2e2
+    }
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1)
+    }
+.cosmic-pulse {
+    box-shadow: 0 0 20px rgba(182, 196, 255, 0.2)
+    }
+.cosmic-pulse:hover {
+    box-shadow: 0 0 30px rgba(182, 196, 255, 0.4)
+    }
+.orbital-progress {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(#b6c4ff 75%, transparent 0);
+    display: flex;
+    align-items: center;
+    justify-content: center
+    }
+.orbital-progress::before {
+    content: "";
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    background: #0e0e0e;
+    border-radius: 50%
+    }
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }</style>
+</head>
+<body class="font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="sticky top-4 z-50 flex justify-between items-center px-lg py-sm rounded-full mt-4 mx-margin max-w-7xl border border-white/20 bg-surface/10 backdrop-blur-xl shadow-[0_0_20px_rgba(182,196,255,0.2)] mx-auto">
+<div class="flex items-center gap-md">
+<span class="font-h2 text-h2 font-bold text-primary tracking-tighter">Cosmos Leader</span>
+</div>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">Phases</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">Checkpoints</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">Resources</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors" href="#">Community</a>
+</nav>
+<div class="flex items-center gap-md">
+<div class="hidden sm:flex bg-white/5 px-md py-xs rounded-full border border-white/10">
+<span class="material-symbols-outlined text-primary text-md mr-xs">search</span>
+<input class="bg-transparent border-none text-body-md focus:ring-0 text-on-surface placeholder:text-outline w-32 lg:w-48" placeholder="Search orbit..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">account_circle</button>
+<button class="bg-primary text-on-primary font-label-caps text-label-caps px-md py-sm rounded-full hover:scale-105 transition-transform duration-300 cosmic-pulse">Mission Control</button>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-24 z-40 hidden md:flex flex-col gap-lg h-[calc(100vh-120px)] w-72 rounded-lg ml-margin mt-unit border-r border-white/10 bg-surface-container-lowest/40 backdrop-blur-2xl px-md py-lg">
+<div class="mb-lg">
+<h2 class="font-h3 text-h3 text-primary">Global Mission</h2>
+<p class="font-body-md text-body-md text-on-surface-variant opacity-70">Phase 3 in progress</p>
+</div>
+<div class="flex flex-col gap-sm">
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm opacity-70 hover:opacity-100 hover:bg-white/5 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">rocket_launch</span>
+<span class="font-label-caps text-label-caps">Phase 1: Genesis</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm opacity-70 hover:opacity-100 hover:bg-white/5 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">altitude</span>
+<span class="font-label-caps text-label-caps">Phase 2: Ascent</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm opacity-70 hover:opacity-100 hover:bg-white/5 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">language</span>
+<span class="font-label-caps text-label-caps">Phase 3: Orbit</span>
+</a>
+<a class="flex items-center gap-md bg-primary-container text-on-primary-container rounded-md px-md py-sm shadow-[0_0_15px_rgba(182,196,255,0.2)]" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-caps text-label-caps">Phase 4: Expansion</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm opacity-70 hover:opacity-100 hover:bg-white/5 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">stars</span>
+<span class="font-label-caps text-label-caps">Phase 5: Zenith</span>
+</a>
+</div>
+<div class="mt-auto">
+<button class="w-full bg-white/5 border border-white/10 text-on-surface font-label-caps text-label-caps py-md rounded-md hover:bg-white/10 transition-colors">View Star Map</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 md:ml-96 p-margin pt-xl">
+<div class="max-w-5xl mx-auto space-y-xl">
+<!-- Hero Header -->
+<section>
+<span class="bg-tertiary-container text-on-tertiary-container px-md py-xs rounded-full font-label-caps text-label-caps inline-block mb-md">ACTIVE DEPLOYMENT</span>
+<h1 class="font-h1 text-h1 text-primary-fixed mb-sm">Phase 4: Mission for the Mission</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Ongoing coaching and strategic expansion. You are now entering the parallel stage where leadership development meets operational scale.</p>
+</section>
+<!-- Progress Timeline (Collapsible) -->
+<section class="glass-card rounded-lg p-lg">
+<div class="flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-md">
+<div class="orbital-progress">
+<span class="z-10 font-label-caps text-label-caps text-primary">75%</span>
+</div>
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">Mission Trajectory</h3>
+<p class="font-body-md text-body-md text-outline">Ascent stable. Entering Expansion Orbit.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">expand_more</span>
+</div>
+<div class="mt-lg grid grid-cols-1 md:grid-cols-4 gap-gutter relative">
+<div class="absolute top-1/2 left-0 w-full h-[2px] bg-white/10 -translate-y-1/2 hidden md:block"></div>
+<!-- Stage 1 -->
+<div class="relative z-10 text-center space-y-sm bg-background/50 p-md rounded-lg">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center mx-auto mb-sm">
+<span class="material-symbols-outlined text-sm">check</span>
+</div>
+<p class="font-label-caps text-label-caps text-primary">Genesis</p>
+</div>
+<!-- Stage 2 -->
+<div class="relative z-10 text-center space-y-sm bg-background/50 p-md rounded-lg">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center mx-auto mb-sm">
+<span class="material-symbols-outlined text-sm">check</span>
+</div>
+<p class="font-label-caps text-label-caps text-primary">Ascent</p>
+</div>
+<!-- Stage 3 (Active) -->
+<div class="relative z-10 text-center space-y-sm glass-card p-md rounded-lg cosmic-pulse scale-105 border-primary/50">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center mx-auto mb-sm">
+<span class="material-symbols-outlined text-sm">satellite_alt</span>
+</div>
+<p class="font-label-caps text-label-caps text-primary">Expansion</p>
+</div>
+<!-- Stage 4 -->
+<div class="relative z-10 text-center space-y-sm bg-background/20 p-md rounded-lg opacity-40">
+<div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center mx-auto mb-sm">
+<span class="material-symbols-outlined text-sm">lock</span>
+</div>
+<p class="font-label-caps text-label-caps">Zenith</p>
+</div>
+</div>
+</section>
+<!-- Bento Grid Modules -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- RPMS Weekly Check-in -->
+<div class="md:col-span-7 glass-card rounded-lg overflow-hidden group hover:scale-[1.02] transition-all duration-300">
+<div class="p-lg flex flex-col h-full">
+<div class="flex justify-between items-start mb-xl">
+<div>
+<h3 class="font-h3 text-h3 text-on-surface mb-xs">RPMS Check-in</h3>
+<p class="font-body-md text-body-md text-outline">Metrics for spiritual and operational health.</p>
+</div>
+<div class="bg-primary/20 p-sm rounded-full">
+<span class="material-symbols-outlined text-primary">query_stats</span>
+</div>
+</div>
+<div class="mt-auto space-y-md">
+<div class="flex justify-between items-center bg-white/5 p-md rounded-md">
+<span class="font-body-md text-on-surface">Weekly Alignment Status</span>
+<span class="bg-success text-green-400 font-label-caps text-label-caps">COMPLETED</span>
+</div>
+<button class="w-full bg-primary text-on-primary py-md rounded-full font-label-caps text-label-caps cosmic-pulse">Launch RPMS Portal</button>
+</div>
+</div>
+</div>
+<!-- Pathways Huddles Portal -->
+<div class="md:col-span-5 glass-card rounded-lg overflow-hidden flex flex-col hover:scale-[1.02] transition-all duration-300">
+<img class="h-48 w-full object-cover grayscale hover:grayscale-0 transition-all duration-700" data-alt="A diverse group of professional leaders sitting in a circular, modern conference room with glass walls overlooking a futuristic cityscape at dusk. The lighting is moody with purple and blue atmospheric hues, creating a sense of deep focus and collaborative spiritual leadership. The overall aesthetic is sleek, high-tech, and cosmic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtZUV30S-7X6rQdQirfaa837p4T-SHjLdqc3E8QjyykTWelK98vRd8a_BU0f-_O2rX03XY3pnmUg_Yonlhry_NNDhpqGQ3yA6KBUAy7R1u_tioYeM4lX7VDoYBZ3vDwM8a3f1hUBUSWfTyiKWKA_hObdUg18GbOuGpohoppUqCm4po5-21JDJLIJbPIEMjcRdRAc_E974-3jK-EwWPjlAb4z_sguTcyGH5OCQerwdh8NVvR6LUEg-KEvCCpb7x85-wZgaJbMGxLJww"/>
+<div class="p-lg">
+<h3 class="font-h3 text-h3 text-on-surface mb-sm">Pathways Huddles</h3>
+<p class="font-body-md text-body-md text-outline mb-lg">Access exclusive leadership content releases and synchronize with your squad.</p>
+<a class="flex items-center gap-sm text-primary font-label-caps text-label-caps hover:gap-md transition-all" href="#">
+                ENTER HUDDLE PORTAL <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Trainings Library (Asymmetric Span) -->
+<div class="md:col-span-5 glass-card rounded-lg p-lg space-y-lg hover:scale-[1.02] transition-all duration-300">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-secondary text-h2">auto_stories</span>
+<h3 class="font-h3 text-h3 text-on-surface">Knowledge Core</h3>
+</div>
+<div class="space-y-sm">
+<div class="flex items-center justify-between p-sm hover:bg-white/5 rounded-md transition-colors border-b border-white/5 cursor-pointer">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline">podcasts</span>
+<div>
+<p class="font-body-md text-on-surface">Exponential: Part 4</p>
+<p class="text-[10px] text-outline">PODCAST • 42 MIN</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary">play_circle</span>
+</div>
+<div class="flex items-center justify-between p-sm hover:bg-white/5 rounded-md transition-colors border-b border-white/5 cursor-pointer">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline">graphic_eq</span>
+<div>
+<p class="font-body-md text-on-surface">Internal Sermons: Governance</p>
+<p class="text-[10px] text-outline">AUDIO • 18 MIN</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary">play_circle</span>
+</div>
+<div class="flex items-center justify-between p-sm hover:bg-white/5 rounded-md transition-colors cursor-pointer">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline">video_library</span>
+<div>
+<p class="font-body-md text-on-surface">Strategic Scale Workshops</p>
+<p class="text-[10px] text-outline">VIDEO SERIES</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Leaders Retreat Registration -->
+<div class="md:col-span-7 glass-card rounded-lg p-lg relative overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-all duration-300 border-l-4 border-tertiary">
+<div class="absolute top-0 right-0 w-32 h-32 bg-tertiary/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+<div>
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-h3 text-h3 text-on-surface">Leaders Retreat 2024</h3>
+<span class="bg-tertiary text-on-tertiary-fixed px-md py-xs rounded-full font-label-caps text-label-caps">SUMMIT</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-lg mb-xl">Join the global collective for the annual zenith gathering. Strategic planning, deep replenishment, and mission alignment under the stars.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-md items-center">
+<div class="flex -space-x-4">
+<img class="w-10 h-10 rounded-full border-2 border-background object-cover" data-alt="Close up portrait of a male leader with a thoughtful expression, warmly lit by golden hour sunlight, representing wisdom and connection." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH_skt0PdjGOP1lSIwHdeEMa6i3i4_0FgbzKbySsGkVpsICoq6LD2cv5sU9v8ihPxqgwd4Vor3-O1to5X6_22PJB0XV6gu9R2mgh1KZIy-udwDeAVn51obOn0ObV4szQsnZ2ZHcJE7t_Yywa_ng9Bex0Unq5x0tcyWYeJxeDVJrA1MyXzirLmhBtvjWNvemDuDKiMTABIayEFUe4bcHfVfZ6NJatm_QNiL9W2xxyIVs-9Wzb2n1_f2ep-GzOjos8lSAwQn34xpCv8y"/>
+<img class="w-10 h-10 rounded-full border-2 border-background object-cover" data-alt="Close up portrait of a female leader smiling confidently, softly lit by blue professional lighting, representing modern vision and empathy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0UjBN_OpYnPwQJvHm9yEear9OoynbBfjW8vKuE8U1XNjvw-vNqwI991QvGUThmRubZEk_xRn4jcOaPQvQtWVpWA66Ava7bFs1x_iJSRRgfZT0OZIOr7P4FBm40t44c8_i9_DcHM01SGZQ3Wh8TKlKkUIm3RNJeg4HePJyR4MkQJxpSsMTm5AFFfo6JFnGF-UHZXCBVauA0GnPwWELIQFx079xaZD6fzOgT4I7GZfskr-QtQNprBTjNIrpl12Suh1WAi0-cxzqOB-r"/>
+<img class="w-10 h-10 rounded-full border-2 border-background object-cover" data-alt="Close up portrait of an experienced global leader with diverse background, sharp professional look, against a dark space-inspired backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxW4UEd0sNTOTliYCYLedfw-_lhXBStzb8LjTp97J3uU96CtfiPT1Jy4FP0ankyTG1lCPseieIY3l3B4azr2nrMbq7cTPdyiVaH41GW3DWNhMaDaj9LAnjSiSss_i0agw66cm-XzcePopiAw6u7UMCvIgYT4OrYPFt8qfhXJvbmkud1fvzGGjoBvbcm93qWzQ-oQnFaF4NqUF07sUFUOTRJWdeFcnt_HYuiR2rqPMeeW_bVXwpul_NyfDyKyvmeKo5PhJpoYEHMyVv"/>
+<div class="w-10 h-10 rounded-full border-2 border-background bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-outline">+142</div>
+</div>
+<p class="text-[12px] text-outline">Leaders registered from your sector.</p>
+<button class="ml-auto bg-white/10 hover:bg-white/20 text-on-surface px-xl py-md rounded-full font-label-caps text-label-caps transition-all border border-white/20">Secure Your Slot</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest full-width py-xl mt-xxl border-t border-white/5">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin max-w-7xl mx-auto gap-lg">
+<div class="flex flex-col gap-sm">
+<span class="font-h3 text-h3 text-on-surface">Cosmos Leader</span>
+<p class="font-body-md text-body-md text-outline">© 2024 Global Church Leadership Institute. All Rights Reserved.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-lg">
+<a class="font-label-caps text-label-caps text-outline hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-caps text-label-caps text-outline hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-label-caps text-label-caps text-outline hover:text-primary transition-colors" href="#">Support Center</a>
+<a class="font-label-caps text-label-caps text-outline hover:text-primary transition-colors" href="#">Contact Mission Control</a>
+</div>
+</div>
+</footer>
+</body></html>
