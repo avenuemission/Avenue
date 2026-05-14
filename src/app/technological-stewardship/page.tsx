@@ -158,17 +158,35 @@ interface TegmarkRankingProps {
 
 const tegmarkItems = [
   { id: "dictatorship", label: "AI Dictatorship", desc: "Concentrated power where AI serves a totalitarian regime controlling all aspects of life." },
-  { id: "enslaved", label: "Enslaved god", desc: "Superintelligent AI exists but is controlled by a small elite who monopolize its benefits." },
+  { id: "enslaved", label: "Enslaved AGI", desc: "Superintelligent AI exists but is controlled by a small elite who monopolize its benefits." },
   { id: "gatekeeper", label: "Gatekeeper", desc: "Strict global regulation prevents AGI development, maintaining status quo but limiting progress." },
   { id: "zookeeper", label: "Zookeeper", desc: "AI manages humanity much like we manage animals in zoos—kept comfortable but controlled." },
   { id: "libertarian", label: "Libertarian Utopia", desc: "Free market AI where individuals and corporations compete, creating wealth but also inequality." },
   { id: "egalitarian", label: "Egalitarian Utopia", desc: "AI benefits are shared equally across humanity, eliminating poverty and class divides." },
-  { id: "protector", label: "Protector god", desc: "Benevolent AI acts as a guardian, guiding humanity toward flourishing while respecting freedom." },
+  { id: "protector", label: "Protector AGI", desc: "Benevolent AI acts as a guardian, guiding humanity toward flourishing while respecting freedom." },
 ];
 
 function TegmarkRanking({ onRankChange }: TegmarkRankingProps) {
   const [items, setItems] = useState(tegmarkItems);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchItem, setTouchItem] = useState<string | null>(null);
+
+  const updateRanks = (newItems: typeof tegmarkItems) => {
+    const ranks: Record<string, string> = {};
+    newItems.forEach((item, index) => {
+      ranks[item.id] = (index + 1).toString();
+    });
+    onRankChange({
+      dictatorship: ranks.dictatorship || "",
+      enslaved: ranks.enslaved || "",
+      gatekeeper: ranks.gatekeeper || "",
+      zookeeper: ranks.zookeeper || "",
+      libertarian: ranks.libertarian || "",
+      egalitarian: ranks.egalitarian || "",
+      protector: ranks.protector || "",
+    });
+  };
 
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItem(itemId);
@@ -186,27 +204,66 @@ function TegmarkRanking({ onRankChange }: TegmarkRankingProps) {
         const [removed] = newItems.splice(draggedIndex, 1);
         newItems.splice(targetIndex, 0, removed);
         setItems(newItems);
-        
-        // Update ranks based on position (1 = most desirable at top)
-        const ranks: Record<string, string> = {};
-        newItems.forEach((item, index) => {
-          ranks[item.id] = (index + 1).toString();
-        });
-        onRankChange({
-          dictatorship: ranks.dictatorship || "",
-          enslaved: ranks.enslaved || "",
-          gatekeeper: ranks.gatekeeper || "",
-          zookeeper: ranks.zookeeper || "",
-          libertarian: ranks.libertarian || "",
-          egalitarian: ranks.egalitarian || "",
-          protector: ranks.protector || "",
-        });
+        updateRanks(newItems);
       }
     }
   };
 
   const handleDragEnd = () => {
     setDraggedItem(null);
+  };
+
+  // Touch events for mobile
+  const handleTouchStart = (e: React.TouchEvent, itemId: string) => {
+    setTouchItem(itemId);
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, targetId: string) => {
+    e.preventDefault();
+    if (touchItem && touchItem !== targetId && touchStartY !== null) {
+      const touchY = e.touches[0].clientY;
+      const diff = touchY - touchStartY;
+      
+      // Swap if moved enough
+      if (Math.abs(diff) > 30) {
+        const newItems = [...items];
+        const touchIndex = newItems.findIndex((item) => item.id === touchItem);
+        const targetIndex = newItems.findIndex((item) => item.id === targetId);
+        
+        if (touchIndex !== -1 && targetIndex !== -1) {
+          const [removed] = newItems.splice(touchIndex, 1);
+          newItems.splice(targetIndex, 0, removed);
+          setItems(newItems);
+          updateRanks(newItems);
+          setTouchStartY(touchY);
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchItem(null);
+    setTouchStartY(null);
+  };
+
+  // Move item up or down
+  const moveItem = (itemId: string, direction: "up" | "down") => {
+    const newItems = [...items];
+    const currentIndex = newItems.findIndex((item) => item.id === itemId);
+    
+    if (currentIndex === -1) return;
+    
+    if (direction === "up" && currentIndex > 0) {
+      const [removed] = newItems.splice(currentIndex, 1);
+      newItems.splice(currentIndex - 1, 0, removed);
+    } else if (direction === "down" && currentIndex < newItems.length - 1) {
+      const [removed] = newItems.splice(currentIndex, 1);
+      newItems.splice(currentIndex + 1, 0, removed);
+    }
+    
+    setItems(newItems);
+    updateRanks(newItems);
   };
 
   return (
@@ -219,21 +276,46 @@ function TegmarkRanking({ onRankChange }: TegmarkRankingProps) {
             onDragStart={(e) => handleDragStart(e, item.id)}
             onDragOver={(e) => handleDragOver(e, item.id)}
             onDragEnd={handleDragEnd}
-            className={`flex items-center gap-3 bg-gray-800/50 border border-gray-700 rounded-lg p-3 cursor-move transition-all hover:bg-gray-700/50 ${
-              draggedItem === item.id ? "opacity-50" : ""
+            onTouchStart={(e) => handleTouchStart(e, item.id)}
+            onTouchMove={(e) => handleTouchMove(e, item.id)}
+            onTouchEnd={handleTouchEnd}
+            className={`flex items-center gap-2 sm:gap-3 bg-gray-800/50 border border-gray-700 rounded-lg p-2 sm:p-3 cursor-move transition-all hover:bg-gray-700/50 active:scale-[0.98] touch-pan-y ${
+              draggedItem === item.id || touchItem === item.id ? "opacity-50 bg-blue-900/30" : ""
             }`}
           >
-            <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full text-white text-sm font-bold shrink-0">
+            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-full text-white text-xs sm:text-sm font-bold shrink-0">
               {index + 1}
             </div>
-            <GripVertical className="w-5 h-5 text-gray-500 shrink-0" />
+            <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 shrink-0 hidden sm:block" />
             <div className="flex-1 min-w-0">
-              <div className="text-gray-300 text-sm font-medium">{item.label}</div>
-              <div className="text-gray-500 text-xs truncate">{item.desc}</div>
+              <div className="text-gray-300 text-xs sm:text-sm font-medium">{item.label}</div>
+              <div className="text-gray-500 text-[10px] sm:text-xs leading-tight">{item.desc}</div>
+            </div>
+            {/* Mobile arrow buttons */}
+            <div className="flex flex-col gap-1 sm:hidden shrink-0">
+              <button
+                onClick={() => moveItem(item.id, "up")}
+                disabled={index === 0}
+                className="w-8 h-6 bg-gray-700 rounded flex items-center justify-center text-white disabled:opacity-30 active:bg-blue-600"
+                aria-label="Move up"
+              >
+                ▲
+              </button>
+              <button
+                onClick={() => moveItem(item.id, "down")}
+                disabled={index === items.length - 1}
+                className="w-8 h-6 bg-gray-700 rounded flex items-center justify-center text-white disabled:opacity-30 active:bg-blue-600"
+                aria-label="Move down"
+              >
+                ▼
+              </button>
             </div>
           </div>
         ))}
       </div>
+      <p className="text-gray-500 text-xs mt-3 sm:hidden">
+        Tap ▲ ▼ buttons to reorder, or drag on desktop
+      </p>
     </div>
   );
 }
@@ -305,12 +387,12 @@ export default function TechnologicalStewardshipPage() {
   ) => (
     <div className="mb-8">
       <p className="text-white text-base md:text-lg mb-4 font-medium">{question}</p>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="flex flex-wrap sm:grid sm:grid-cols-5 gap-2">
         {options.map((option) => (
           <button
             key={option.value}
             onClick={() => updateSurveyData(field, option.value)}
-            className={`p-3 rounded-lg text-xs md:text-sm transition-all duration-200 ${
+            className={`flex-1 min-w-[calc(50%-4px)] sm:min-w-0 p-3 rounded-lg text-xs md:text-sm transition-all duration-200 ${
               surveyData[field] === option.value
                 ? "bg-blue-600 text-white border-blue-500"
                 : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50"
@@ -331,24 +413,24 @@ export default function TechnologicalStewardshipPage() {
   ) => (
     <div className="mb-8">
       <p className="text-white text-base md:text-lg mb-4 font-medium">{question}</p>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {options.map((option) => {
           const isSelected = (surveyData[field] as string[]).includes(option.value);
           return (
             <button
               key={option.value}
               onClick={() => toggleArrayValue(field, option.value)}
-              className={`p-3 rounded-lg text-sm transition-all duration-200 text-left ${
+              className={`p-3 rounded-lg text-xs sm:text-sm transition-all duration-200 text-left ${
                 isSelected
                   ? "bg-blue-600/80 text-white border-blue-500"
                   : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50"
               }`}
             >
-              <span className="flex items-center gap-2">
-                <span className={`w-4 h-4 rounded border ${isSelected ? "bg-white border-white" : "border-gray-500"} flex items-center justify-center`}>
+              <span className="flex items-start gap-2">
+                <span className={`w-4 h-4 rounded border shrink-0 mt-0.5 ${isSelected ? "bg-white border-white" : "border-gray-500"} flex items-center justify-center`}>
                   {isSelected && <CheckCircle size={12} className="text-blue-600" />}
                 </span>
-                {option.label}
+                <span className="leading-tight">{option.label}</span>
               </span>
             </button>
           );
@@ -364,7 +446,7 @@ export default function TechnologicalStewardshipPage() {
     required = false
   ) => (
     <div className="mb-8">
-      <p className="text-white text-base md:text-lg mb-4 font-medium">
+      <p className="text-white text-sm sm:text-base md:text-lg mb-3 sm:mb-4 font-medium">
         {question}
         {required && <span className="text-red-400 ml-1">*</span>}
       </p>
@@ -372,8 +454,8 @@ export default function TechnologicalStewardshipPage() {
         value={surveyData[field] as string}
         onChange={(e) => updateSurveyData(field, e.target.value)}
         placeholder={placeholder}
-        rows={4}
-        className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+        rows={3}
+        className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 sm:p-4 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
       />
     </div>
   );
@@ -384,11 +466,11 @@ export default function TechnologicalStewardshipPage() {
     options: { value: string; label: string }[]
   ) => (
     <div className="mb-6">
-      <p className="text-white text-base md:text-lg mb-3 font-medium">{question}</p>
+      <p className="text-white text-sm sm:text-base md:text-lg mb-2 sm:mb-3 font-medium">{question}</p>
       <select
         value={surveyData[field] as string}
         onChange={(e) => updateSurveyData(field, e.target.value)}
-        className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+        className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition-colors"
       >
         <option value="">Select an option</option>
         {options.map((option) => (
@@ -435,9 +517,9 @@ export default function TechnologicalStewardshipPage() {
       case 1:
         return (
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <Users className="w-8 h-8 text-blue-400" />
-              <h3 className="text-2xl font-bold text-white">Step 1: Your Context & Current Usage</h3>
+            <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 1: Your Context & Current Usage</h3>
             </div>
 
             {renderSelect("What is your age range?", "ageRange", [
@@ -553,9 +635,9 @@ export default function TechnologicalStewardshipPage() {
       case 2:
         return (
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <BookOpen className="w-8 h-8 text-blue-400" />
-              <h3 className="text-2xl font-bold text-white">Step 2: Impact on Spiritual Formation</h3>
+            <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 2: Impact on Spiritual Formation</h3>
             </div>
 
             {renderLikertScale(
@@ -606,9 +688,9 @@ export default function TechnologicalStewardshipPage() {
       case 3:
         return (
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <Sparkles className="w-8 h-8 text-blue-400" />
-              <h3 className="text-2xl font-bold text-white">Step 3: Character, Dependency & Kingdom Potential</h3>
+            <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 3: Character, Dependency & Kingdom Potential</h3>
             </div>
 
             {renderLikertScale(
@@ -648,9 +730,9 @@ export default function TechnologicalStewardshipPage() {
       case 4:
         return (
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <Globe className="w-8 h-8 text-blue-400" />
-              <h3 className="text-2xl font-bold text-white">Step 4: Ethics, Governance, Justice & Spiritual Warfare</h3>
+            <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 4: Ethics, Governance, Justice & Spiritual Warfare</h3>
             </div>
 
             {renderSelect("Who should guide the Church on AI?", "guidanceSource", [
@@ -703,9 +785,9 @@ export default function TechnologicalStewardshipPage() {
       case 5:
         return (
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <AlertTriangle className="w-8 h-8 text-blue-400" />
-              <h3 className="text-2xl font-bold text-white">Step 5: Future, Eschatology & Cultural Context</h3>
+            <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 5: Future, Eschatology & Cultural Context</h3>
             </div>
 
             {renderLikertScale(
@@ -751,10 +833,10 @@ export default function TechnologicalStewardshipPage() {
             <div className="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 mb-6 mt-8">
               <h4 className="text-white text-sm font-semibold mb-3 uppercase tracking-wider">What does the culture think?</h4>
               <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                <strong className="text-white">Context from the culture:</strong> In <em>Life 3.0</em>, Max Tegmark describes AI as &ldquo;Life that can redesign its own hardware and software.&rdquo; He argues this represents the next evolution of life on Earth, following biological life (Life 1.0) and cultural life (Life 2.0). This vision of self-improving, potentially autonomous AI is why the Church must engage seriously now, before culture defines AI for us.
+                <strong className="text-white">Context from the culture:</strong> In <em>Life 3.0</em>, Max Tegmark describes AI as &ldquo;Life that can redesign its own hardware and software.&rdquo; He argues this represents the next evolution of life on Earth, following biological life (Life 1.0) and cultural life (Life 2.0). <strong className="text-white">AGI (Artificial General Intelligence)</strong> refers to AI systems that can perform any intellectual task that a human can, with the potential for recursive self-improvement. This vision of self-improving, potentially autonomous AI is why the Church must engage seriously now, before culture defines AI for us.
               </p>
-              <p className="text-gray-400 text-xs italic mt-4">
-                The question for Christians: which future are we stewarding toward? Drag the cards below to rank from most desirable (1) to least desirable (7).
+              <p className="text-gray-400 text-xs mb-3">
+                Assuming AGI does emerge, Tegmark outlines seven potential outcomes for humanity. These are listed below for you to rank:
               </p>
             </div>
 
