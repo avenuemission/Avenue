@@ -401,6 +401,22 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "techStewardshipSurvey": {
+        const surveyData = data as Record<string, string | string[]>;
+        
+        // Format survey data for email
+        const formattedData: Record<string, string> = {};
+        Object.entries(surveyData).forEach(([key, value]) => {
+          const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+          formattedData[formattedKey] = Array.isArray(value) ? value.join(", ") : value || "Not answered";
+        });
+        
+        // Send admin notification
+        const adminTemplate = emailTemplates.adminNotification("Technological Stewardship Survey", formattedData);
+        emails.push(sendEmail(ADMIN_EMAIL, adminTemplate.subject, adminTemplate.html));
+        break;
+      }
+
       default:
         return NextResponse.json(
           { error: "Invalid email type" },

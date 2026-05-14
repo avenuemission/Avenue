@@ -9,6 +9,7 @@ import {
   PRAYER_HOTLINE,
 } from "@/lib/data";
 import { Phone, MessageSquare, Mail, X, Calendar, Heart, Clock } from "lucide-react";
+import Link from "next/link";
 
 interface Song {
   title: string;
@@ -593,6 +594,16 @@ export default function StreetlightsPage() {
               <p className="text-gray-300 text-base leading-relaxed mb-6">
                 {selectedMission.fullDescription}
               </p>
+
+              {/* Technological Stewardship Link */}
+              {selectedMission.id === "technological-stewardship" && (
+                <Link
+                  href="/technological-stewardship"
+                  className="inline-flex items-center gap-2 bg-blue-800 hover:bg-blue-700 text-white px-6 py-3 rounded-full text-sm font-medium transition-colors mb-6"
+                >
+                  Take the Survey
+                </Link>
+              )}
 
               {/* Prayer Hotline Contact */}
               {selectedMission.hasContact && (

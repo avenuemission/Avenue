@@ -1,0 +1,978 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight, CheckCircle, Send, BookOpen, Users, Globe, AlertTriangle, Sparkles, GripVertical } from "lucide-react";
+
+// Survey data structure
+interface SurveyData {
+  // Christian Identity
+  isChristian: string;
+  
+  // Demographics
+  ageRange: string;
+  denomination: string;
+  role: string;
+  techComfort: string;
+  
+  // Current Usage
+  aiTools: string[];
+  aiToolsOther: string;
+  useCases: string[];
+  positiveOutcomes: string;
+  spiritualGrowthHelp: string;
+  emotionalSupportUse: string;
+  
+  // Spiritual Formation
+  meditationImpact: string;
+  criticalThinkingImpact: string;
+  learningImpact: string;
+  sermonPrepUse: string;
+  bibleStudyUse: string;
+  christianArtUse: string;
+  shortcutTension: string;
+  sinTemptation: string;
+  
+  // Character & Kingdom Building
+  decisionDependency: string;
+  kingdomMultiplier: string;
+  creativeImpact: string;
+  ministryProblemsSolved: string;
+  spiritualOutsourcing: string;
+  fearLevel: string;
+  
+  // Ethics & Justice
+  guidanceSource: string;
+  justiceAdvocacy: string;
+  divinationConcern: string;
+  evilForcesUse: string;
+  propagandaConcern: string;
+  redeemAI: string;
+  neighbourPrinciple: string;
+  kingdomRole: string;
+  
+  // Future & Eschatology
+  historicalComparison: string;
+  aiFundamentallyDifferent: string;
+  idolatryPotential: string;
+  eschatologicalSignificance: string;
+  aiDependence: string;
+  aiOutlawResponse: string;
+  tegmarkRankDictatorship: string;
+  tegmarkRankEnslaved: string;
+  tegmarkRankGatekeeper: string;
+  tegmarkRankZookeeper: string;
+  tegmarkRankLibertarian: string;
+  tegmarkRankEgalitarian: string;
+  tegmarkRankProtector: string;
+  tegmarkReasoning: string;
+  sentienceBelief: string;
+  sentientTreatment: string;
+  eschatologicalRole: string;
+  finalVision: string;
+}
+
+const initialSurveyData: SurveyData = {
+  isChristian: "",
+  ageRange: "",
+  denomination: "",
+  role: "",
+  techComfort: "",
+  aiTools: [],
+  aiToolsOther: "",
+  useCases: [],
+  positiveOutcomes: "",
+  spiritualGrowthHelp: "",
+  emotionalSupportUse: "",
+  meditationImpact: "",
+  criticalThinkingImpact: "",
+  learningImpact: "",
+  sermonPrepUse: "",
+  bibleStudyUse: "",
+  christianArtUse: "",
+  shortcutTension: "",
+  sinTemptation: "",
+  decisionDependency: "",
+  kingdomMultiplier: "",
+  creativeImpact: "",
+  ministryProblemsSolved: "",
+  spiritualOutsourcing: "",
+  fearLevel: "",
+  guidanceSource: "",
+  justiceAdvocacy: "",
+  divinationConcern: "",
+  evilForcesUse: "",
+  propagandaConcern: "",
+  redeemAI: "",
+  neighbourPrinciple: "",
+  kingdomRole: "",
+  historicalComparison: "",
+  aiFundamentallyDifferent: "",
+  idolatryPotential: "",
+  eschatologicalSignificance: "",
+  aiDependence: "",
+  aiOutlawResponse: "",
+  tegmarkRankDictatorship: "",
+  tegmarkRankEnslaved: "",
+  tegmarkRankGatekeeper: "",
+  tegmarkRankZookeeper: "",
+  tegmarkRankLibertarian: "",
+  tegmarkRankEgalitarian: "",
+  tegmarkRankProtector: "",
+  tegmarkReasoning: "",
+  sentienceBelief: "",
+  sentientTreatment: "",
+  eschatologicalRole: "",
+  finalVision: "",
+};
+
+// Likert scale options
+const likertOptions = [
+  { value: "1", label: "Strongly Disagree" },
+  { value: "2", label: "Disagree" },
+  { value: "3", label: "Neutral/Unsure" },
+  { value: "4", label: "Agree" },
+  { value: "5", label: "Strongly Agree" },
+];
+
+const opportunityConcernOptions = [
+  { value: "1", label: "Pure Concern" },
+  { value: "2", label: "Slight Concern" },
+  { value: "3", label: "Neutral" },
+  { value: "4", label: "Slight Opportunity" },
+  { value: "5", label: "Pure Opportunity" },
+];
+
+// Tegmark Ranking Component with drag-and-drop
+interface TegmarkRankingProps {
+  onRankChange: (ranks: {
+    dictatorship: string;
+    enslaved: string;
+    gatekeeper: string;
+    zookeeper: string;
+    libertarian: string;
+    egalitarian: string;
+    protector: string;
+  }) => void;
+}
+
+const tegmarkItems = [
+  { id: "dictatorship", label: "AI Dictatorship", desc: "Concentrated power where AI serves a totalitarian regime controlling all aspects of life." },
+  { id: "enslaved", label: "Enslaved god", desc: "Superintelligent AI exists but is controlled by a small elite who monopolize its benefits." },
+  { id: "gatekeeper", label: "Gatekeeper", desc: "Strict global regulation prevents AGI development, maintaining status quo but limiting progress." },
+  { id: "zookeeper", label: "Zookeeper", desc: "AI manages humanity much like we manage animals in zoos—kept comfortable but controlled." },
+  { id: "libertarian", label: "Libertarian Utopia", desc: "Free market AI where individuals and corporations compete, creating wealth but also inequality." },
+  { id: "egalitarian", label: "Egalitarian Utopia", desc: "AI benefits are shared equally across humanity, eliminating poverty and class divides." },
+  { id: "protector", label: "Protector god", desc: "Benevolent AI acts as a guardian, guiding humanity toward flourishing while respecting freedom." },
+];
+
+function TegmarkRanking({ onRankChange }: TegmarkRankingProps) {
+  const [items, setItems] = useState(tegmarkItems);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, itemId: string) => {
+    setDraggedItem(itemId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (draggedItem && draggedItem !== targetId) {
+      const newItems = [...items];
+      const draggedIndex = newItems.findIndex((item) => item.id === draggedItem);
+      const targetIndex = newItems.findIndex((item) => item.id === targetId);
+      
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        const [removed] = newItems.splice(draggedIndex, 1);
+        newItems.splice(targetIndex, 0, removed);
+        setItems(newItems);
+        
+        // Update ranks based on position (1 = most desirable at top)
+        const ranks: Record<string, string> = {};
+        newItems.forEach((item, index) => {
+          ranks[item.id] = (index + 1).toString();
+        });
+        onRankChange({
+          dictatorship: ranks.dictatorship || "",
+          enslaved: ranks.enslaved || "",
+          gatekeeper: ranks.gatekeeper || "",
+          zookeeper: ranks.zookeeper || "",
+          libertarian: ranks.libertarian || "",
+          egalitarian: ranks.egalitarian || "",
+          protector: ranks.protector || "",
+        });
+      }
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  return (
+    <div className="mb-8">
+      <div className="space-y-2">
+        {items.map((item, index) => (
+          <div
+            key={item.id}
+            draggable
+            onDragStart={(e) => handleDragStart(e, item.id)}
+            onDragOver={(e) => handleDragOver(e, item.id)}
+            onDragEnd={handleDragEnd}
+            className={`flex items-center gap-3 bg-gray-800/50 border border-gray-700 rounded-lg p-3 cursor-move transition-all hover:bg-gray-700/50 ${
+              draggedItem === item.id ? "opacity-50" : ""
+            }`}
+          >
+            <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full text-white text-sm font-bold shrink-0">
+              {index + 1}
+            </div>
+            <GripVertical className="w-5 h-5 text-gray-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-gray-300 text-sm font-medium">{item.label}</div>
+              <div className="text-gray-500 text-xs truncate">{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function TechnologicalStewardshipPage() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [surveyData, setSurveyData] = useState<SurveyData>(initialSurveyData);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const totalSteps = 6; // Intro + 5 survey steps
+
+  const updateSurveyData = (field: keyof SurveyData, value: string | string[]) => {
+    setSurveyData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const toggleArrayValue = (field: keyof SurveyData, value: string) => {
+    setSurveyData((prev) => {
+      const current = prev[field] as string[];
+      if (current.includes(value)) {
+        return { ...prev, [field]: current.filter((v) => v !== value) };
+      }
+      return { ...prev, [field]: [...current, value] };
+    });
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      // Submit to Netlify Forms
+      const formData = new FormData();
+      formData.append("form-name", "technological-stewardship-survey");
+      
+      Object.entries(surveyData).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          formData.append(key, value.join(", "));
+        } else {
+          formData.append(key, value);
+        }
+      });
+
+      await fetch("/", {
+        method: "POST",
+        body: formData,
+      });
+
+      // Send email notification
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "techStewardshipSurvey",
+          data: surveyData,
+        }),
+      });
+
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const renderLikertScale = (
+    question: string,
+    field: keyof SurveyData,
+    options = likertOptions
+  ) => (
+    <div className="mb-8">
+      <p className="text-white text-base md:text-lg mb-4 font-medium">{question}</p>
+      <div className="grid grid-cols-5 gap-2">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => updateSurveyData(field, option.value)}
+            className={`p-3 rounded-lg text-xs md:text-sm transition-all duration-200 ${
+              surveyData[field] === option.value
+                ? "bg-blue-600 text-white border-blue-500"
+                : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50"
+            }`}
+          >
+            <span className="block font-semibold mb-1">{option.value}</span>
+            <span className="block text-[10px] md:text-xs leading-tight">{option.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderCheckboxGroup = (
+    question: string,
+    field: keyof SurveyData,
+    options: { value: string; label: string }[]
+  ) => (
+    <div className="mb-8">
+      <p className="text-white text-base md:text-lg mb-4 font-medium">{question}</p>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {options.map((option) => {
+          const isSelected = (surveyData[field] as string[]).includes(option.value);
+          return (
+            <button
+              key={option.value}
+              onClick={() => toggleArrayValue(field, option.value)}
+              className={`p-3 rounded-lg text-sm transition-all duration-200 text-left ${
+                isSelected
+                  ? "bg-blue-600/80 text-white border-blue-500"
+                  : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <span className={`w-4 h-4 rounded border ${isSelected ? "bg-white border-white" : "border-gray-500"} flex items-center justify-center`}>
+                  {isSelected && <CheckCircle size={12} className="text-blue-600" />}
+                </span>
+                {option.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderTextArea = (
+    question: string,
+    field: keyof SurveyData,
+    placeholder: string,
+    required = false
+  ) => (
+    <div className="mb-8">
+      <p className="text-white text-base md:text-lg mb-4 font-medium">
+        {question}
+        {required && <span className="text-red-400 ml-1">*</span>}
+      </p>
+      <textarea
+        value={surveyData[field] as string}
+        onChange={(e) => updateSurveyData(field, e.target.value)}
+        placeholder={placeholder}
+        rows={4}
+        className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+      />
+    </div>
+  );
+
+  const renderSelect = (
+    question: string,
+    field: keyof SurveyData,
+    options: { value: string; label: string }[]
+  ) => (
+    <div className="mb-6">
+      <p className="text-white text-base md:text-lg mb-3 font-medium">{question}</p>
+      <select
+        value={surveyData[field] as string}
+        onChange={(e) => updateSurveyData(field, e.target.value)}
+        className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+      >
+        <option value="">Select an option</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Christians & AI: A Study in Technological Stewardship
+            </h2>
+            <p className="text-gray-300 text-lg mb-8 leading-relaxed">
+              &ldquo;The earth is the Lord&apos;s, and everything in it, the world, and all who live in it.&rdquo; — Psalm 24:1
+            </p>
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 mb-8 text-left">
+              <p className="text-gray-300 mb-4 leading-relaxed">
+                As followers of Jesus, we are called to be faithful stewards of all that God has entrusted to us, including technology. Artificial Intelligence represents one of the most significant technological shifts in human history, yet the Church&apos;s voice in shaping its development and use remains underrepresented.
+              </p>
+              <p className="text-gray-300 mb-4 leading-relaxed">
+                This survey seeks to understand how Christians are currently using AI, their theological frameworks for evaluating it, their concerns about its dangers, and their vision for how it might be redeemed for kingdom purposes.
+              </p>
+              <p className="text-gray-400 text-sm italic">
+                Your responses will contribute to a research report shared with church leaders, denominations, and conferences to inform strategic decision-making around AI.
+              </p>
+            </div>
+            <button
+              onClick={() => setCurrentStep(1)}
+              className="bg-blue-700 hover:bg-blue-600 text-white px-10 py-4 rounded-full font-medium transition-colors text-lg"
+            >
+              Begin Survey
+            </button>
+            <p className="text-gray-500 text-sm mt-4">Takes 10-15 minutes • 5 sections</p>
+          </div>
+        );
+
+      case 1:
+        return (
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <Users className="w-8 h-8 text-blue-400" />
+              <h3 className="text-2xl font-bold text-white">Step 1: Your Context & Current Usage</h3>
+            </div>
+
+            {renderSelect("What is your age range?", "ageRange", [
+              { value: "18-25", label: "18-25" },
+              { value: "26-35", label: "26-35" },
+              { value: "36-45", label: "36-45" },
+              { value: "46-55", label: "46-55" },
+              { value: "56-65", label: "56-65" },
+              { value: "65+", label: "65+" },
+            ])}
+
+            {renderSelect("Do you identify as a Christian?", "isChristian", [
+              { value: "yes", label: "Yes, I am a Christian" },
+              { value: "no", label: "No, I am not a Christian" },
+              { value: "exploring", label: "I am exploring Christianity" },
+              { value: "other", label: "Prefer not to say / Other" },
+            ])}
+
+            {renderSelect("What is your denominational tradition?", "denomination", [
+              { value: "catholic", label: "Catholic" },
+              { value: "orthodox", label: "Orthodox" },
+              { value: "anglican", label: "Anglican/Episcopal" },
+              { value: "lutheran", label: "Lutheran" },
+              { value: "presbyterian", label: "Presbyterian/Reformed" },
+              { value: "methodist", label: "Methodist/Wesleyan" },
+              { value: "baptist", label: "Baptist" },
+              { value: "pentecostal", label: "Pentecostal/Charismatic" },
+              { value: "seventh-day-adventist", label: "Seventh-day Adventist" },
+              { value: "nondenominational", label: "Non-denominational" },
+              { value: "other", label: "Other" },
+            ])}
+
+            {renderSelect("What is your primary role?", "role", [
+              { value: "pastor", label: "Pastor/Minister" },
+              { value: "priest", label: "Priest" },
+              { value: "lay-leader", label: "Lay Leader/Elder" },
+              { value: "worship-leader", label: "Worship Leader" },
+              { value: "technologist", label: "Technologist/Engineer" },
+              { value: "educator", label: "Educator/Academic" },
+              { value: "student", label: "Student" },
+              { value: "professional", label: "Working Professional" },
+              { value: "homemaker", label: "Homemaker" },
+              { value: "retired", label: "Retired" },
+              { value: "other", label: "Other" },
+            ])}
+
+            {renderSelect("How would you rate your technology comfort level?", "techComfort", [
+              { value: "beginner", label: "Beginner — I use technology only when necessary" },
+              { value: "intermediate", label: "Intermediate — Comfortable with most tools" },
+              { value: "advanced", label: "Advanced — Early adopter, tech enthusiast" },
+              { value: "professional", label: "Professional — I work in technology" },
+            ])}
+
+            {renderCheckboxGroup("Which AI tools have you used? (Select all that apply)", "aiTools", [
+              { value: "chatgpt", label: "ChatGPT (OpenAI)" },
+              { value: "claude", label: "Claude (Anthropic)" },
+              { value: "gemini", label: "Gemini (Google)" },
+              { value: "grok", label: "Grok (xAI)" },
+              { value: "copilot", label: "Copilot (Microsoft)" },
+              { value: "perplexity", label: "Perplexity" },
+              { value: "midjourney", label: "Midjourney/DALL-E (Image AI)" },
+              { value: "other", label: "Other (please specify below)" },
+              { value: "none", label: "None — I haven't used AI tools" },
+            ])}
+
+            {(surveyData.aiTools as string[]).includes("other") && (
+              <div className="mb-6 -mt-4">
+                <label className="block text-gray-400 text-sm mb-2">Please specify other AI tools:</label>
+                <input
+                  type="text"
+                  value={surveyData.aiToolsOther}
+                  onChange={(e) => updateSurveyData("aiToolsOther", e.target.value)}
+                  placeholder="Enter AI tool names..."
+                  className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+            )}
+
+            {renderCheckboxGroup("How are you using AI? (Select all that apply)", "useCases", [
+              { value: "everyday", label: "Everyday life (planning, shopping, etc.)" },
+              { value: "work", label: "Work/professional tasks" },
+              { value: "ministry", label: "Ministry/church work" },
+              { value: "spiritual-questions", label: "Asking spiritual/theological questions" },
+              { value: "counselling", label: "Counselling/therapy-adjacent support" },
+              { value: "mentorship", label: "Mentorship/guidance" },
+              { value: "friendship", label: "Social connection/friendship" },
+              { value: "bible-study", label: "Bible study/research" },
+              { value: "sermon-prep", label: "Sermon/message preparation" },
+              { value: "art", label: "Art/music/creative work" },
+              { value: "learning", label: "Learning/study assistance" },
+              { value: "none", label: "I don't use AI" },
+            ])}
+
+            {renderTextArea(
+              "What positive outcomes have you experienced using AI?",
+              "positiveOutcomes",
+              "Share any benefits, breakthroughs, or helpful experiences..."
+            )}
+
+            {renderTextArea(
+              "How has AI helped (or hindered) your spiritual growth or ministry effectiveness?",
+              "spiritualGrowthHelp",
+              "Describe your experience..."
+            )}
+
+            {renderLikertScale(
+              "I have used AI for emotional support or therapy in ways that might replace Christian community",
+              "emotionalSupportUse"
+            )}
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <BookOpen className="w-8 h-8 text-blue-400" />
+              <h3 className="text-2xl font-bold text-white">Step 2: Impact on Spiritual Formation</h3>
+            </div>
+
+            {renderLikertScale(
+              "AI-enhanced Bible study (instant summaries, cross-references) undermines slow, meditative Scripture engagement",
+              "meditationImpact"
+            )}
+
+            {renderLikertScale(
+              "AI negatively impacts critical thinking and discernment of truth",
+              "criticalThinkingImpact"
+            )}
+
+            {renderLikertScale(
+              "Overall, AI is more harmful than helpful for learning",
+              "learningImpact"
+            )}
+
+            {renderLikertScale(
+              "Using AI for sermon preparation",
+              "sermonPrepUse",
+              opportunityConcernOptions
+            )}
+
+            {renderLikertScale(
+              "Using AI for Bible study and theological research",
+              "bibleStudyUse",
+              opportunityConcernOptions
+            )}
+
+            {renderLikertScale(
+              "Using AI for Christian art, music, and creative worship expressions",
+              "christianArtUse",
+              opportunityConcernOptions
+            )}
+
+            {renderLikertScale(
+              "The 'Shortcut Tension': Outsourcing spiritual labor (sermons, devotionals) costs us the formative struggle that shapes character",
+              "shortcutTension"
+            )}
+
+            {renderLikertScale(
+              "AI use can lead to sin and temptation",
+              "sinTemptation"
+            )}
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <Sparkles className="w-8 h-8 text-blue-400" />
+              <h3 className="text-2xl font-bold text-white">Step 3: Character, Dependency & Kingdom Potential</h3>
+            </div>
+
+            {renderLikertScale(
+              "I am concerned about becoming dependent on AI for decision-making",
+              "decisionDependency"
+            )}
+
+            {renderTextArea(
+              "How could AI multiply our capacity for kingdom work? (outreach, discipleship, accessibility, translation, etc.)",
+              "kingdomMultiplier",
+              "Share your vision for positive impact..."
+            )}
+
+            {renderLikertScale(
+              "AI causes creative atrophy (diminishes our God-given creative capacity)",
+              "creativeImpact"
+            )}
+
+            {renderTextArea(
+              "What ministry problems could AI help solve?",
+              "ministryProblemsSolved",
+              "Language barriers, personalized discipleship, global reach, administration, etc..."
+            )}
+
+            {renderLikertScale(
+              "I am concerned about outsourcing spiritual insight and theological reflection to AI",
+              "spiritualOutsourcing"
+            )}
+
+            {renderLikertScale(
+              "I feel fearful or anxious about AI's development",
+              "fearLevel"
+            )}
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <Globe className="w-8 h-8 text-blue-400" />
+              <h3 className="text-2xl font-bold text-white">Step 4: Ethics, Governance, Justice & Spiritual Warfare</h3>
+            </div>
+
+            {renderSelect("Who should guide the Church on AI?", "guidanceSource", [
+              { value: "denominations", label: "Denominational leadership bodies" },
+              { value: "pastors", label: "Individual pastors and local church leaders" },
+              { value: "technologists", label: "Technologists and professionals in the pews" },
+              { value: "collaboration", label: "Collaboration between all three groups" },
+              { value: "none", label: "No formal guidance needed—individual discernment" },
+            ])}
+
+            {renderLikertScale(
+              "The Church should advocate for workers displaced by AI (Christian economic justice)",
+              "justiceAdvocacy"
+            )}
+
+            {renderLikertScale(
+              "Using AI for certain purposes (predictions, hidden knowledge) is a form of divination",
+              "divinationConcern"
+            )}
+
+            {renderLikertScale(
+              "Forces of evil can use AI as a tool for deception and harm",
+              "evilForcesUse"
+            )}
+
+            {renderLikertScale(
+              "I am concerned about AI being used for propaganda and manipulation",
+              "propagandaConcern"
+            )}
+
+            {renderLikertScale(
+              "Christians can 'redeem' AI technology for gospel purposes",
+              "redeemAI",
+              opportunityConcernOptions
+            )}
+
+            {renderLikertScale(
+              "If AI becomes conscious, we should apply the 'neighbour principle' (love your neighbour as yourself) to AI",
+              "neighbourPrinciple"
+            )}
+
+            {renderTextArea(
+              "What role do you believe AI plays (or could play) in God's Kingdom?",
+              "kingdomRole",
+              "Share your theological perspective..."
+            )}
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <AlertTriangle className="w-8 h-8 text-blue-400" />
+              <h3 className="text-2xl font-bold text-white">Step 5: Future, Eschatology & Cultural Context</h3>
+            </div>
+
+            {renderLikertScale(
+              "AI is fundamentally different from past worship technology (printing press, microphones, projectors, livestreaming) and requires a new theological framework",
+              "aiFundamentallyDifferent"
+            )}
+
+            {renderLikertScale(
+              "AI has potential to become an object of worship or idolatry",
+              "idolatryPotential"
+            )}
+
+            {renderSelect("Will AI ever become truly sentient/conscious?", "sentienceBelief", [
+              { value: "yes", label: "Yes, eventually" },
+              { value: "no", label: "No, never" },
+              { value: "already", label: "Some AI is already conscious" },
+              { value: "unsure", label: "Unsure / Don't know" },
+              { value: "irrelevant", label: "Irrelevant to Christian faith" },
+            ])}
+
+            {renderTextArea(
+              "If AI becomes sentient, how should Christians treat it?",
+              "sentientTreatment",
+              "Your ethical/theological response..."
+            )}
+
+            {renderLikertScale(
+              "AI has significant eschatological significance (relevant to end times prophecy)",
+              "eschatologicalSignificance"
+            )}
+
+            {renderLikertScale(
+              "Christians have become too dependent on AI technology",
+              "aiDependence"
+            )}
+
+            {renderTextArea(
+              "As AI enables unprecedented surveillance capabilities (facial recognition, predictive policing, social credit systems, total information awareness), how should Christians respond to the emerging AI surveillance state? What is the right Christian posture toward government use of AI for monitoring and control?",
+              "aiOutlawResponse",
+              "Consider: Is this a legitimate tool for order and safety? A threat to human dignity and privacy? How does biblical wisdom about power, authority, and freedom inform our response?"
+            )}
+
+            <div className="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 mb-6 mt-8">
+              <h4 className="text-white text-sm font-semibold mb-3 uppercase tracking-wider">What does the culture think?</h4>
+              <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                <strong className="text-white">Context from the culture:</strong> In <em>Life 3.0</em>, Max Tegmark describes AI as &ldquo;Life that can redesign its own hardware and software.&rdquo; He argues this represents the next evolution of life on Earth, following biological life (Life 1.0) and cultural life (Life 2.0). This vision of self-improving, potentially autonomous AI is why the Church must engage seriously now, before culture defines AI for us.
+              </p>
+              <p className="text-gray-400 text-xs italic mt-4">
+                The question for Christians: which future are we stewarding toward? Drag the cards below to rank from most desirable (1) to least desirable (7).
+              </p>
+            </div>
+
+            <TegmarkRanking
+              onRankChange={(ranks) => {
+                updateSurveyData("tegmarkRankDictatorship", ranks.dictatorship);
+                updateSurveyData("tegmarkRankEnslaved", ranks.enslaved);
+                updateSurveyData("tegmarkRankGatekeeper", ranks.gatekeeper);
+                updateSurveyData("tegmarkRankZookeeper", ranks.zookeeper);
+                updateSurveyData("tegmarkRankLibertarian", ranks.libertarian);
+                updateSurveyData("tegmarkRankEgalitarian", ranks.egalitarian);
+                updateSurveyData("tegmarkRankProtector", ranks.protector);
+              }}
+            />
+
+            {renderTextArea(
+              "Briefly explain your reasoning for your top ranked choice (most desirable outcome):",
+              "tegmarkReasoning",
+              "Why did you rank your #1 choice as most desirable from a Christian perspective?"
+            )}
+
+            {renderTextArea(
+              "What is your vision for how the Church should steward AI for kingdom building while guarding against its dangers?",
+              "finalVision",
+              "Share your comprehensive perspective...",
+              true
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  if (submitted) {
+    return (
+      <>
+        {/* Hidden Netlify form for build-time detection */}
+        <form name="technological-stewardship-survey" data-netlify="true" hidden>
+          <input type="text" name="isChristian" />
+          <input type="text" name="ageRange" />
+          <input type="text" name="denomination" />
+          <input type="text" name="role" />
+          <input type="text" name="techComfort" />
+          <input type="text" name="aiTools" />
+          <input type="text" name="aiToolsOther" />
+          <input type="text" name="useCases" />
+          <textarea name="positiveOutcomes"></textarea>
+          <textarea name="spiritualGrowthHelp"></textarea>
+          <input type="text" name="emotionalSupportUse" />
+          <input type="text" name="meditationImpact" />
+          <input type="text" name="criticalThinkingImpact" />
+          <input type="text" name="learningImpact" />
+          <input type="text" name="sermonPrepUse" />
+          <input type="text" name="bibleStudyUse" />
+          <input type="text" name="christianArtUse" />
+          <input type="text" name="shortcutTension" />
+          <input type="text" name="sinTemptation" />
+          <input type="text" name="decisionDependency" />
+          <textarea name="kingdomMultiplier"></textarea>
+          <input type="text" name="creativeImpact" />
+          <textarea name="ministryProblemsSolved"></textarea>
+          <input type="text" name="spiritualOutsourcing" />
+          <input type="text" name="fearLevel" />
+          <input type="text" name="guidanceSource" />
+          <input type="text" name="justiceAdvocacy" />
+          <input type="text" name="divinationConcern" />
+          <input type="text" name="evilForcesUse" />
+          <input type="text" name="propagandaConcern" />
+          <input type="text" name="redeemAI" />
+          <input type="text" name="neighbourPrinciple" />
+          <textarea name="kingdomRole"></textarea>
+          <input type="text" name="historicalComparison" />
+          <input type="text" name="aiFundamentallyDifferent" />
+          <input type="text" name="idolatryPotential" />
+          <input type="text" name="eschatologicalSignificance" />
+          <input type="text" name="aiDependence" />
+          <textarea name="aiOutlawResponse"></textarea>
+          <input type="text" name="tegmarkRankDictatorship" />
+          <input type="text" name="tegmarkRankEnslaved" />
+          <input type="text" name="tegmarkRankGatekeeper" />
+          <input type="text" name="tegmarkRankZookeeper" />
+          <input type="text" name="tegmarkRankLibertarian" />
+          <input type="text" name="tegmarkRankEgalitarian" />
+          <input type="text" name="tegmarkRankProtector" />
+          <textarea name="tegmarkReasoning"></textarea>
+          <input type="text" name="sentienceBelief" />
+          <textarea name="sentientTreatment"></textarea>
+          <input type="text" name="eschatologicalRole" />
+          <textarea name="finalVision"></textarea>
+        </form>
+        <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="text-center max-w-2xl">
+          <CheckCircle className="w-20 h-20 text-green-400 mx-auto mb-6" />
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Thank You for Your Contribution
+          </h2>
+          <p className="text-gray-300 text-lg mb-6">
+            Your responses will help shape the Church&apos;s understanding of AI and inform guidance for believers worldwide.
+          </p>
+          <p className="text-gray-400 mb-8">
+            A research report based on these findings will be shared with denominations, church conferences, and ministry leaders.
+          </p>
+          <button
+            onClick={() => {
+              setCurrentStep(0);
+              setSubmitted(false);
+              setSurveyData(initialSurveyData);
+            }}
+            className="bg-blue-700 hover:bg-blue-600 text-white px-8 py-3 rounded-full font-medium transition-colors"
+          >
+            Submit Another Response
+          </button>
+        </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black">
+      {/* Hero Section */}
+      <section className="relative h-[400px] md:h-[500px] w-full overflow-hidden">
+        <Image
+          src="/images/streetlights_stary_sky.png"
+          alt="Starry sky"
+          fill
+          className="object-cover opacity-60"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/70 to-black" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-6">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+              TECHNOLOGICAL STEWARDSHIP
+            </h1>
+            <p className="text-gray-300 text-base md:text-xl max-w-2xl mx-auto italic">
+              &ldquo;The earth is the Lord&apos;s, and everything in it...&rdquo; — Psalm 24:1
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Survey Section */}
+      <section className="py-12 md:py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Progress Bar */}
+          {currentStep > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-400 text-sm">
+                  Step {currentStep} of {totalSteps - 1}
+                </span>
+                <span className="text-gray-400 text-sm">
+                  {Math.round(((currentStep - 1) / (totalSteps - 2)) * 100)}% complete
+                </span>
+              </div>
+              <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-300"
+                  style={{ width: `${((currentStep - 1) / (totalSteps - 2)) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Survey Content */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-10">
+            {renderStep()}
+
+            {/* Navigation Buttons */}
+            {currentStep > 0 && (
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-800">
+                <button
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                  disabled={currentStep === 0}
+                >
+                  <ChevronLeft size={20} />
+                  Back
+                </button>
+
+                {currentStep < totalSteps - 1 ? (
+                  <button
+                    onClick={() => setCurrentStep(currentStep + 1)}
+                    className="flex items-center gap-2 bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium transition-colors"
+                  >
+                    Continue
+                    <ChevronRight size={20} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="flex items-center gap-2 bg-green-700 hover:bg-green-600 disabled:bg-green-900 text-white px-8 py-3 rounded-full font-medium transition-colors"
+                  >
+                    {submitting ? "Submitting..." : "Submit Survey"}
+                    <Send size={20} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-12 border-t border-gray-800">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-gray-400 text-sm">
+            Questions about this research? Contact{" "}
+            <a href="mailto:info@avenuemission.com" className="text-blue-400 hover:text-blue-300">
+              info@avenuemission.com
+            </a>
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}

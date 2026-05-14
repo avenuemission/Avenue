@@ -220,6 +220,13 @@ export const PRAYER_HOTLINE = {
 // Mission Initiatives
 export const MISSION_INITIATIVES = [
   {
+    id: "technological-stewardship",
+    title: "Technological Stewardship",
+    shortDescription: "Researching how Christians can steward AI for kingdom building while guarding against its dangers.",
+    fullDescription:
+      "A research initiative exploring how Christians use AI, examining its impact on spiritual formation, ministry effectiveness, ethical frameworks, and eschatological implications. Through surveys, workshops, and theological reflection, we seek to equip the Church to be proactive in shaping technology rather than reactive to cultural definitions. The findings will inform denominational strategies, conference discussions, and practical guidance for believers navigating the AI revolution with wisdom and faithfulness.",
+  },
+  {
     id: "homeless-outreach",
     title: "Melbourne Homeless Outreach",
     shortDescription: "Blessing the homeless in Melbourne every Saturday evening.",
