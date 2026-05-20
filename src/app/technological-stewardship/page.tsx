@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, CheckCircle, Send, BookOpen, Users, Globe, AlertTriangle, Sparkles, GripVertical } from "lucide-react";
 
@@ -32,7 +32,7 @@ interface SurveyData {
   churchHasPosition: string;
 
   // Section 4: How Should We Respond?
-  whoShouldLead: string;
+  whoShouldLead: string[];
   formalPolicy: string;
   unemploymentConcern: string;
   surveillanceResistance: string;
@@ -73,7 +73,7 @@ const initialSurveyData: SurveyData = {
   churchDisclosure: "",
   churchHasPosition: "",
   // Section 4
-  whoShouldLead: "",
+  whoShouldLead: [],
   formalPolicy: "",
   unemploymentConcern: "",
   surveillanceResistance: "",
@@ -287,6 +287,7 @@ function TegmarkRanking({ onRankChange }: TegmarkRankingProps) {
 
 export default function TechnologicalStewardshipPage() {
   const [currentStep, setCurrentStep] = useState(0);
+  const topRef = useRef<HTMLDivElement>(null);
   const [surveyData, setSurveyData] = useState<SurveyData>(initialSurveyData);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -296,6 +297,11 @@ export default function TechnologicalStewardshipPage() {
   const [sessionCodeSuggestion, setSessionCodeSuggestion] = useState("");
   const [sessionCodeValid, setSessionCodeValid] = useState(false);
   const [sessionCodeChecking, setSessionCodeChecking] = useState(false);
+
+  const goToStep = (step: number) => {
+    setCurrentStep(step);
+    setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
 
   const totalSteps = 6; // Intro + 5 survey steps
 
@@ -579,7 +585,7 @@ export default function TechnologicalStewardshipPage() {
 
             <div className="text-center">
               <button
-                onClick={() => setCurrentStep(1)}
+                onClick={() => goToStep(1)}
                 className="bg-blue-700 hover:bg-blue-600 text-white px-10 py-4 rounded-full font-medium transition-colors text-lg"
               >
                 Begin Survey
@@ -791,7 +797,7 @@ export default function TechnologicalStewardshipPage() {
             </div>
             <p className="text-gray-400 text-sm mb-6">Thinking about the Church&apos;s role in society and how Christians should engage with AI at a broader level.</p>
 
-            {renderSelect("Who should lead the Church's response to AI?", "whoShouldLead", [
+            {renderCheckboxGroup("Who should lead the Church's response to AI? (Select all that apply)", "whoShouldLead", [
               { value: "denominations", label: "Denominational leadership bodies" },
               { value: "pastors", label: "Local pastors and church leaders" },
               { value: "technologists", label: "Tech-literate members in the congregation" },
@@ -959,7 +965,7 @@ export default function TechnologicalStewardshipPage() {
       </section>
 
       {/* Survey Section */}
-      <section className="py-12 md:py-20 px-6">
+      <section ref={topRef} className="py-12 md:py-20 px-6">
         <div className="max-w-4xl mx-auto">
           {/* Progress Bar */}
           {currentStep > 0 && (
@@ -989,7 +995,7 @@ export default function TechnologicalStewardshipPage() {
             {currentStep > 0 && (
               <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-800">
                 <button
-                  onClick={() => setCurrentStep(currentStep - 1)}
+                  onClick={() => goToStep(currentStep - 1)}
                   className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                   disabled={currentStep === 0}
                 >
@@ -999,7 +1005,7 @@ export default function TechnologicalStewardshipPage() {
 
                 {currentStep < totalSteps - 1 ? (
                   <button
-                    onClick={() => setCurrentStep(currentStep + 1)}
+                    onClick={() => goToStep(currentStep + 1)}
                     className="flex items-center gap-2 bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium transition-colors"
                   >
                     Continue
