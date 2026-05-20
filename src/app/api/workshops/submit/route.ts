@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     church_operations: surveyData.churchOperations,
     church_disclosure: surveyData.churchDisclosure,
     church_has_position: surveyData.churchHasPosition,
-    who_should_lead: surveyData.whoShouldLead,
+    who_should_lead: Array.isArray(surveyData.whoShouldLead) ? surveyData.whoShouldLead.join(", ") : surveyData.whoShouldLead,
     formal_policy: surveyData.formalPolicy,
     unemployment_concern: surveyData.unemploymentConcern,
     surveillance_resistance: surveyData.surveillanceResistance,
