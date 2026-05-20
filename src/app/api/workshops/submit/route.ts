@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     personal_off_limits: surveyData.personalOffLimits,
     off_limits_uses: Array.isArray(surveyData.offLimitsUses) ? surveyData.offLimitsUses.join(", ") : surveyData.offLimitsUses,
     idolatry_potential: surveyData.idolatryPotential,
+    neighbour_principle: surveyData.neighbourPrinciple,
     church_sermon_prep: surveyData.churchSermonPrep,
     church_social_media: surveyData.churchSocialMedia,
     church_website: surveyData.churchWebsite,

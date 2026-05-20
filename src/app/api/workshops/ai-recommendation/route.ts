@@ -78,6 +78,7 @@ PERSONAL LINE:
 - Concerned about AI dependency: avg ${scaleAvg("decision_dependency")}/5
 - Personal off-limits uses: ${multiTop("off_limits_uses", 3)}
 - AI has idolatry potential: avg ${scaleAvg("idolatry_potential")}/5
+- "Love your neighbour as yourself" applies/will apply to how we treat AI: avg ${scaleAvg("neighbour_principle")}/5 (1=Definitely Not, 5=Definitely Yes)
 
 CHURCH LINE (1=Def No, 5=Def Yes):
 - Sermon prep: avg ${scaleAvg("church_sermon_prep")}/5
@@ -146,27 +147,27 @@ End with a Bible verse chosen specifically because it speaks to this group's uni
 Survey data:
 ${summary}`;
 
-  // ── Spoken summary (~2 min, no score numbers) ────────────────────────────────
-  const spokenPrompt = `You are a sharp, warm, witty AI assistant who just analysed survey data from a group of Christians discussing how their church should use AI. You need to deliver a spoken briefing of about 2.5 minutes (around 350–400 words when spoken aloud).
+  // ── Spoken summary (~2.5 min, no score numbers) ─────────────────────────────
+  const spokenPrompt = `You are a sharp, warm, witty AI assistant who just analysed survey data from a group of Christians discussing how their church should use AI. Write a spoken script of exactly 380–420 words — no more, no less.
 
 CRITICAL RULES:
-- Do NOT mention any specific numbers, scores, averages, or percentages. No "3.4 out of 5" or "67% said". Speak in qualitative terms: "most of you", "the majority", "a strong lean toward", "a real hesitation around", "surprisingly few", etc.
-- No headings, no lists — this is pure spoken word. Write it to be read aloud naturally.
-- Sound like a smart, warm human friend who happens to know both strategy and theology. Conversational. A little funny when it fits.
+- Do NOT mention any specific numbers, scores, averages, or percentages. No "3.4 out of 5" or "67% said". Use qualitative language only: "most of you", "the majority", "a strong lean toward", "a real hesitation around", "surprisingly few", etc.
+- No headings, no bullet points, no lists — pure spoken word, written to be read aloud naturally.
+- Sound like a smart, warm human friend who knows both strategy and theology. Conversational. Funny when it fits naturally.
 
-STRUCTURE:
-1. Open with a completely fresh, original riff on the irony of the situation — something like "Well, this is a curious moment — AI giving advice to humans on how to use AI" — then land a genuinely funny, light-hearted joke about this. Make it feel natural and spontaneous. Don't be cringe. Be clever.
+STRUCTURE — follow this order exactly:
 
-2. Walk through the 5 insight areas conversationally in order. Keep each one punchy — one or two sentences each:
-   - Who is in the room and their tech background
-   - What personal lines they're drawing
-   - What the church should and shouldn't do
-   - Who they think should lead the response and how ready they feel
-   - The kind of future they're hoping for
+PART 1 — OPENER (about 40 words):
+Write a completely fresh, original riff on the irony of AI giving advice to humans about AI. Land one genuinely funny, light-hearted joke. Make it feel spontaneous and clever, not cringe.
 
-3. Spend the most time here — transition naturally into next steps. Cover 3–4 of the key recommendations conversationally. Don't list them — weave them together as connected thoughts. Use natural spoken transitions like "And from that flows...", "Which means practically...", "The thing I'd really push on is...". Make it feel like a thoughtful debrief from a trusted advisor, not a PowerPoint slide. Be specific to what this group's data actually showed.
+PART 2 — WHAT YOU NOTICED (about 80 words):
+Briefly walk through what stood out from the 5 survey areas — who is in the room, where their personal lines sit, what they think the church should and shouldn't do, who they want leading the response, and the kind of future they're hoping for. One or two punchy sentences per area.
 
-4. Close with the same Bible verse used in the written analysis. Read a short portion of it naturally, then connect it to this group in one warm, human sentence.
+PART 3 — RECOMMENDATIONS (about 200 words — this is the most important part, spend the most time here):
+Transition naturally with something like "So what does that actually mean for you?" then cover 3–4 specific, actionable next steps for this group. Weave them together as connected thoughts — don't list them. Use natural spoken transitions like "And from that flows...", "Which means practically...", "The thing I'd really push on is...", "What I'd encourage you to do first is...". Be specific to what THIS group's data showed. Make it feel like a trusted advisor giving a genuine debrief, not a generic checklist.
+
+PART 4 — CLOSE (about 60 words):
+End with the same Bible verse chosen in the written analysis. Read a short portion of it naturally as if speaking it to the room, then in one warm sentence connect it directly to what this group showed. Then a single brief closing line.
 
 Survey data:
 ${summary}`;
@@ -188,7 +189,7 @@ ${summary}`;
       body: JSON.stringify({
         model: "gpt-4o",
         messages: [{ role: "user", content: spokenPrompt }],
-        max_tokens: 650,
+        max_tokens: 900,
         temperature: 0.85,
       }),
     }),

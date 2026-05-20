@@ -21,6 +21,7 @@ interface SurveyData {
   personalOffLimits: string;
   offLimitsUses: string[];
   idolatryPotential: string;
+  neighbourPrinciple: string;
 
   // Section 3: Where Do We As a Church Draw the Line?
   churchSermonPrep: string;
@@ -63,6 +64,7 @@ const initialSurveyData: SurveyData = {
   personalOffLimits: "",
   offLimitsUses: [],
   idolatryPotential: "",
+  neighbourPrinciple: "",
   // Section 3
   churchSermonPrep: "",
   churchSocialMedia: "",
@@ -561,6 +563,20 @@ export default function TechnologicalStewardshipPage() {
               <p className="text-gray-600 text-xs mt-1.5">Leave blank if you&apos;re taking this independently</p>
             </div>
 
+            <div className="max-w-sm mx-auto mb-6 bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+              <p className="text-gray-400 text-xs leading-relaxed">
+                <span className="text-white font-semibold">Privacy notice:</span> All responses are anonymous. No names, emails, or identifying information are collected. Data is used solely within this workshop session for group discussion purposes and is handled in accordance with fair information collection principles. By participating you consent to this use.{" "}
+                <a
+                  href="https://www.oaic.gov.au/privacy/your-privacy-rights/your-personal-information/collection-of-personal-information"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 underline hover:text-blue-300"
+                >
+                  Learn more
+                </a>
+              </p>
+            </div>
+
             <div className="text-center">
               <button
                 onClick={() => setCurrentStep(1)}
@@ -698,6 +714,19 @@ export default function TechnologicalStewardshipPage() {
             {renderLikertScale(
               "AI has the potential to become something people worship or idolise",
               "idolatryPotential"
+            )}
+
+            {renderLikertScale(
+              "Does the principle Jesus taught — to love your neighbour as yourself — currently apply, or will it ever apply, to how we treat AI?",
+              "neighbourPrinciple",
+              [
+                { value: "1", label: "Definitely Not" },
+                { value: "2", label: "Probably Not" },
+                { value: "3", label: "Maybe" },
+                { value: "4", label: "Probably Yes" },
+                { value: "5", label: "Definitely Yes" },
+                { value: "?", label: "Not Sure" },
+              ]
             )}
           </div>
         );

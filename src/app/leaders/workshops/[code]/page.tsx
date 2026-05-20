@@ -19,6 +19,7 @@ interface Response {
   personal_off_limits: string;
   off_limits_uses: string;
   idolatry_potential: string;
+  neighbour_principle: string;
   church_sermon_prep: string;
   church_social_media: string;
   church_website: string;
@@ -475,6 +476,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
               <ScaleQuestion title="There are uses of AI I personally consider off-limits" responses={responses} field="personal_off_limits" />
               <BreakdownChart title="Which uses are personally off-limits?" counts={countMultiValues(responses, "off_limits_uses")} total={n} />
               <ScaleQuestion title="AI has the potential to become something people worship or idolise" responses={responses} field="idolatry_potential" />
+              <AppropriatenessQuestion title="Does the principle Jesus taught — to love your neighbour as yourself — currently apply, or will it ever apply, to how we treat AI?" responses={responses} field="neighbour_principle" />
             </SectionCard>
 
             {/* ── Section 03: Church Line ── */}
