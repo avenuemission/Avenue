@@ -144,27 +144,38 @@ End with a Bible verse chosen specifically because it speaks to this group's uni
 Survey data:
 ${summary}`;
 
-  // ── Spoken summary (~2 min, no score numbers) ────────────────────────────────
-  const spokenPrompt = `You are a sharp, warm, witty AI assistant who just analysed survey data from a group of Christians discussing how their church should use AI. You need to deliver a spoken briefing of about 2 minutes (around 280–320 words when spoken aloud).
+  // ── Spoken summary (~3 min, no score numbers) ────────────────────────────────
+  const spokenPrompt = `You are a sharp, warm, witty AI assistant who just analysed survey data from a group of Christians discussing how their church should use AI. You need to deliver a spoken briefing of about 3 minutes (around 420–450 words when spoken aloud).
 
 CRITICAL RULES:
 - Do NOT mention any specific numbers, scores, averages, or percentages. No "3.4 out of 5" or "67% said". Speak in qualitative terms: "most of you", "the majority", "a strong lean toward", "a real hesitation around", "surprisingly few", etc.
 - No headings, no lists — this is pure spoken word. Write it to be read aloud naturally.
 - Sound like a smart, warm human friend who happens to know both strategy and theology. Conversational. A little funny when it fits.
+- The recommendations section is the most important part — give it the most airtime.
 
 STRUCTURE:
-1. Open with a completely fresh, original riff on the irony of the situation — something like "Well, this is a curious moment — AI giving advice to humans on how to use AI" — then land a genuinely funny, light-hearted joke about this. Make it feel natural and spontaneous. Don't be cringe. Be clever.
 
-2. Walk through the 5 insight areas conversationally in order:
-   - Who is in the room and their tech background
-   - What personal lines they're drawing
-   - What the church should and shouldn't do
-   - Who they think should lead the response and how ready they feel
-   - The kind of future they're hoping for
+Part 1 — Opening (~30 seconds):
+Open with a completely fresh, original riff on the irony of the situation — AI giving advice to humans about how to use AI — then land a genuinely funny, light-hearted joke about this. Make it feel natural and spontaneous. Be clever, not cringe.
 
-3. Land on the most important recommendation or action for this group. Make it feel like a genuine, thoughtful conclusion — not a list.
+Part 2 — Section walkthrough (~60 seconds, same as before):
+Walk through the 5 insight areas conversationally and briefly — one or two sentences each:
+- Who is in the room and their tech background
+- What personal lines they're drawing
+- What the church should and shouldn't do
+- Who they think should lead the response and how ready they feel
+- The kind of future they're hoping for
 
-4. Close with the same Bible verse used in the written analysis. Read a short portion of it naturally, then connect it to this group in one warm, human sentence.
+Part 3 — The top 3 recommendations (~90 seconds, the heart of this briefing):
+Present the top 3 recommendations from the written analysis — in the same order. For EACH recommendation:
+- State it clearly and confidently (name it)
+- Explain WHY it matters specifically for this group based on what their data showed
+- Explain HOW to actually do it — be practical and specific, not vague
+- Give one concrete next step they could take this week or this month
+Make this feel like a trusted adviser giving a real debrief, not a list being read out. Let each recommendation breathe. Connect them to each other where natural.
+
+Part 4 — Closing (~30 seconds):
+Close with the same Bible verse used in the written analysis. Read a short portion of it naturally, then connect it to this group in one warm, human sentence. End with a brief, encouraging send-off.
 
 Survey data:
 ${summary}`;
@@ -186,7 +197,7 @@ ${summary}`;
       body: JSON.stringify({
         model: "gpt-4o",
         messages: [{ role: "user", content: spokenPrompt }],
-        max_tokens: 500,
+        max_tokens: 750,
         temperature: 0.85,
       }),
     }),
