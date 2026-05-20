@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles, Volume2, Square, RotateCcw } from "lucide-react";
 
 interface Response {
   session_code: string;
@@ -321,6 +321,7 @@ const SECTIONS = [
   { id: "s03", num: "03", title: "The Church's Line" },
   { id: "s04", num: "04", title: "How Should We Respond?" },
   { id: "s05", num: "05", title: "What Future?" },
+  { id: "s06", num: "06", title: "AI Recommendation" },
 ];
 
 export default function WorkshopDisplayPage({ params }: { params: Promise<{ code: string }> }) {
@@ -330,8 +331,17 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
   const [loading, setLoading] = useState(true);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    s01: true, s02: false, s03: false, s04: false, s05: false,
+    s01: true, s02: false, s03: false, s04: false, s05: false, s06: false,
   });
+  // AI recommendation state
+  const [aiWritten, setAiWritten] = useState("");
+  const [aiSpoken, setAiSpoken] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [audioUrl, setAudioUrl] = useState("");
+  const [audioPlaying, setAudioPlaying] = useState(false);
+  const [audioFinished, setAudioFinished] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   // Privacy toggles — hidden by default
   const [showAge, setShowAge] = useState(false);
   const [showChristian, setShowChristian] = useState(false);
@@ -497,9 +507,169 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
               <TegmarkResults responses={responses} />
               <OpenTextResponses responses={responses} />
             </SectionCard>
+
+            {/* ── Section 06: AI Recommendation ── */}
+            <SectionCard id="s06" num="06" title="AI Recommendation About AI"
+              open={openSections.s06} onToggle={() => toggleSection("s06")}
+            >
+              <AiRecommendationSection
+                responses={responses}
+                written={aiWritten}
+                spoken={aiSpoken}
+                loading={aiLoading}
+                error={aiError}
+                audioUrl={audioUrl}
+                audioPlaying={audioPlaying}
+                audioFinished={audioFinished}
+                audioRef={audioRef}
+                onGenerate={async () => {
+                  setAiLoading(true);
+                  setAiError("");
+                  setAiWritten("");
+                  setAiSpoken("");
+                  setAudioUrl("");
+                  setAudioPlaying(false);
+                  setAudioFinished(false);
+                  // Stop any existing audio
+                  if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+                  try {
+                    const recRes = await fetch("/api/workshops/ai-recommendation", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ responses }),
+                    });
+                    if (!recRes.ok) throw new Error("Recommendation failed");
+                    const { written, spoken } = await recRes.json();
+                    setAiWritten(written);
+                    setAiSpoken(spoken);
+                    // Generate audio
+                    const ttsRes = await fetch("/api/workshops/ai-speak", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ text: spoken }),
+                    });
+                    if (!ttsRes.ok) throw new Error("TTS failed");
+                    const blob = await ttsRes.blob();
+                    const url = URL.createObjectURL(blob);
+                    setAudioUrl(url);
+                    // Auto-play
+                    const audio = new Audio(url);
+                    audioRef.current = audio;
+                    audio.onplay = () => { setAudioPlaying(true); setAudioFinished(false); };
+                    audio.onended = () => { setAudioPlaying(false); setAudioFinished(true); };
+                    audio.onpause = () => setAudioPlaying(false);
+                    audio.play();
+                  } catch (e) {
+                    setAiError("Something went wrong generating the recommendation. Try again.");
+                    console.error(e);
+                  } finally {
+                    setAiLoading(false);
+                  }
+                }}
+                onStop={() => { if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; } setAudioPlaying(false); }}
+                onReplay={() => { if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.play(); } }}
+              />
+            </SectionCard>
           </>
         )}
       </main>
+    </div>
+  );
+}
+
+// ─── AI Recommendation Section ───────────────────────────────────────────────
+
+function AiRecommendationSection({
+  responses, written, spoken, loading, error, audioUrl, audioPlaying, audioFinished,
+  audioRef, onGenerate, onStop, onReplay,
+}: {
+  responses: Response[];
+  written: string; spoken: string; loading: boolean; error: string;
+  audioUrl: string; audioPlaying: boolean; audioFinished: boolean;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  onGenerate: () => void; onStop: () => void; onReplay: () => void;
+}) {
+  const hasResult = !!written;
+
+  return (
+    <div>
+      {/* Intro */}
+      <p className="text-gray-400 text-sm mb-5 leading-relaxed">
+        Click Generate to have AI analyse your group&apos;s survey results and produce a strategic recommendation —
+        then it will speak a punchy summary to the room.
+      </p>
+
+      {/* Generate button */}
+      <button
+        onClick={onGenerate}
+        disabled={loading || responses.length === 0}
+        className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all mb-6"
+      >
+        <Sparkles className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+        {loading ? "Thinking..." : hasResult ? "Regenerate" : "Generate Recommendation"}
+      </button>
+
+      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+
+      {/* Loading state */}
+      {loading && (
+        <div className="space-y-3 mb-6">
+          <div className="h-3 bg-gray-800 rounded-full animate-pulse w-full" />
+          <div className="h-3 bg-gray-800 rounded-full animate-pulse w-5/6" />
+          <div className="h-3 bg-gray-800 rounded-full animate-pulse w-4/6" />
+          <p className="text-gray-600 text-xs mt-2">Analysing {responses.length} responses across 5 sections...</p>
+        </div>
+      )}
+
+      {/* Written recommendation */}
+      {hasResult && !loading && (
+        <>
+          <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5 mb-5">
+            <p className="text-gray-500 text-xs font-mono uppercase tracking-wider mb-3">Written Analysis</p>
+            <div className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{written}</div>
+          </div>
+
+          {/* Audio controls */}
+          {audioUrl && (
+            <div className={`flex items-center gap-3 p-4 rounded-xl border transition-colors ${
+              audioPlaying
+                ? "bg-purple-900/20 border-purple-700/40"
+                : "bg-gray-900/40 border-gray-800"
+            }`}>
+              {audioPlaying ? (
+                <>
+                  <div className="flex gap-0.5 items-end h-5">
+                    {[1,2,3,4,3,2,1].map((h, i) => (
+                      <div key={i}
+                        className="w-1 bg-purple-400 rounded-full animate-pulse"
+                        style={{ height: `${h * 4}px`, animationDelay: `${i * 80}ms` }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-purple-300 text-xs font-medium flex-1">Speaking...</span>
+                  <button onClick={onStop}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <Square className="w-3 h-3" /> Stop
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-500 text-xs flex-1">
+                    {audioFinished ? "Finished speaking" : "Ready to speak"}
+                  </span>
+                  <button onClick={onReplay}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <RotateCcw className="w-3 h-3" /> Replay
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
