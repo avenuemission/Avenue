@@ -288,6 +288,12 @@ export default function TechnologicalStewardshipPage() {
   const [surveyData, setSurveyData] = useState<SurveyData>(initialSurveyData);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [sessionCode, setSessionCode] = useState("");
+  const [sessionCodeInput, setSessionCodeInput] = useState("");
+  const [sessionCodeError, setSessionCodeError] = useState("");
+  const [sessionCodeSuggestion, setSessionCodeSuggestion] = useState("");
+  const [sessionCodeValid, setSessionCodeValid] = useState(false);
+  const [sessionCodeChecking, setSessionCodeChecking] = useState(false);
 
   const totalSteps = 6; // Intro + 5 survey steps
 
@@ -305,13 +311,36 @@ export default function TechnologicalStewardshipPage() {
     });
   };
 
+  const validateSessionCode = async (code: string) => {
+    setSessionCodeError("");
+    setSessionCodeSuggestion("");
+    if (!code.trim()) return;
+    setSessionCodeChecking(true);
+    const res = await fetch("/api/workshops/validate-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    const data = await res.json();
+    setSessionCodeChecking(false);
+    if (data.valid) {
+      setSessionCode(data.code);
+      setSessionCodeValid(true);
+      setSessionCodeError("");
+    } else {
+      setSessionCodeValid(false);
+      setSessionCode("");
+      setSessionCodeError(data.error || "Invalid code");
+      if (data.suggestion) setSessionCodeSuggestion(data.suggestion);
+    }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
       // Submit to Netlify Forms
       const formData = new FormData();
       formData.append("form-name", "technological-stewardship-survey");
-      
       Object.entries(surveyData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           formData.append(key, value.join(", "));
@@ -319,21 +348,16 @@ export default function TechnologicalStewardshipPage() {
           formData.append(key, value);
         }
       });
+      await fetch("/", { method: "POST", body: formData });
 
-      await fetch("/", {
-        method: "POST",
-        body: formData,
-      });
-
-      // Send email notification
-      await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "techStewardshipSurvey",
-          data: surveyData,
-        }),
-      });
+      // Submit to Supabase via API
+      if (sessionCode) {
+        await fetch("/api/workshops/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionCode, surveyData }),
+        });
+      }
 
       setSubmitted(true);
     } catch (error) {
@@ -480,6 +504,61 @@ export default function TechnologicalStewardshipPage() {
                   <div className="text-gray-400 text-xs leading-relaxed">{section.desc}</div>
                 </div>
               ))}
+            </div>
+
+            <div className="max-w-sm mx-auto mb-6">
+              <label className="block text-white text-sm font-medium mb-2">
+                Workshop Session Code
+                <span className="text-gray-500 font-normal ml-1">(optional)</span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={sessionCodeInput}
+                  onChange={(e) => {
+                    setSessionCodeInput(e.target.value.toUpperCase());
+                    setSessionCodeValid(false);
+                    setSessionCodeError("");
+                    setSessionCodeSuggestion("");
+                  }}
+                  onBlur={() => validateSessionCode(sessionCodeInput)}
+                  placeholder="e.g. GUINEAPIG"
+                  className={`flex-1 bg-gray-800/60 border rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder-gray-600 focus:outline-none transition-colors uppercase ${
+                    sessionCodeValid
+                      ? "border-green-500 focus:border-green-400"
+                      : sessionCodeError
+                        ? "border-red-500 focus:border-red-400"
+                        : "border-gray-700 focus:border-blue-500"
+                  }`}
+                />
+                <button
+                  onClick={() => validateSessionCode(sessionCodeInput)}
+                  disabled={sessionCodeChecking || !sessionCodeInput.trim()}
+                  className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white px-3 py-2 rounded-lg text-xs transition-colors"
+                >
+                  {sessionCodeChecking ? "..." : "Check"}
+                </button>
+              </div>
+              {sessionCodeValid && (
+                <p className="text-green-400 text-xs mt-1.5">&#10003; Session <span className="font-mono font-bold">{sessionCode}</span> confirmed</p>
+              )}
+              {sessionCodeError && (
+                <div className="mt-1.5">
+                  <p className="text-red-400 text-xs">{sessionCodeError}</p>
+                  {sessionCodeSuggestion && (
+                    <button
+                      onClick={() => {
+                        setSessionCodeInput(sessionCodeSuggestion);
+                        validateSessionCode(sessionCodeSuggestion);
+                      }}
+                      className="text-blue-400 text-xs underline mt-0.5"
+                    >
+                      Use &ldquo;{sessionCodeSuggestion}&rdquo; instead
+                    </button>
+                  )}
+                </div>
+              )}
+              <p className="text-gray-600 text-xs mt-1.5">Leave blank if you&apos;re taking this independently</p>
             </div>
 
             <div className="text-center">

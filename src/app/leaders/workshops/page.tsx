@@ -1,0 +1,214 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut } from "lucide-react";
+import { logout } from "@/lib/auth";
+
+interface Session {
+  code: string;
+  created_at: string;
+  status: string;
+  survey_responses: { count: number }[];
+}
+
+export default function WorkshopsPage() {
+  const router = useRouter();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newCode, setNewCode] = useState("");
+  const [error, setError] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) { router.push("/login"); return; }
+    fetchSessions();
+  }, [router]);
+
+  const fetchSessions = async () => {
+    setLoading(true);
+    const res = await fetch("/api/workshops/sessions");
+    const data = await res.json();
+    setSessions(Array.isArray(data) ? data : []);
+    setLoading(false);
+  };
+
+  const handleCreate = async () => {
+    setError("");
+    if (!newCode.trim()) { setError("Enter a session code"); return; }
+    const normalized = newCode.trim().toUpperCase();
+    if (!/^[A-Z0-9]+$/.test(normalized)) {
+      setError("Code must be letters and numbers only");
+      return;
+    }
+    setCreating(true);
+    const res = await fetch("/api/workshops/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: normalized }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Failed to create session");
+    } else {
+      setNewCode("");
+      setShowCreate(false);
+      fetchSessions();
+    }
+    setCreating(false);
+  };
+
+  const suggestedCode = () => {
+    const workshopSessions = sessions.filter(s => s.code.startsWith("WORKSHOP"));
+    if (workshopSessions.length === 0) return "WORKSHOP1";
+    const nums = workshopSessions
+      .map(s => parseInt(s.code.replace("WORKSHOP", ""), 10))
+      .filter(n => !isNaN(n));
+    return `WORKSHOP${nums.length > 0 ? Math.max(...nums) + 1 : 1}`;
+  };
+
+  return (
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => router.push("/leaders")} className="text-gray-400 hover:text-white transition-colors text-sm">
+              ← Leaders Hub
+            </button>
+            <span className="text-gray-700">|</span>
+            <span className="text-white font-semibold">Workshop Sessions</span>
+          </div>
+          <button
+            onClick={() => { logout(); router.push("/"); }}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-10">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Workshop Sessions</h1>
+            <p className="text-gray-400 text-sm">Create a session, share the code with participants, then process results.</p>
+          </div>
+          <button
+            onClick={() => { setShowCreate(true); setNewCode(suggestedCode()); }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Session
+          </button>
+        </div>
+
+        {/* Create session panel */}
+        {showCreate && (
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+            <h2 className="text-white font-semibold mb-4">Create New Session</h2>
+            <div className="flex gap-3 flex-wrap">
+              <div className="flex-1 min-w-[200px]">
+                <input
+                  type="text"
+                  value={newCode}
+                  onChange={e => { setNewCode(e.target.value.toUpperCase()); setError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleCreate()}
+                  placeholder="e.g. GUINEAPIG"
+                  className="w-full bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors uppercase"
+                />
+                {error && <p className="text-red-400 text-xs mt-1.5">{error}</p>}
+              </div>
+              <button
+                onClick={handleCreate}
+                disabled={creating}
+                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+              >
+                {creating ? "Creating..." : "Create"}
+              </button>
+              <button
+                onClick={() => { setShowCreate(false); setError(""); }}
+                className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-5 py-2.5 rounded-lg text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="text-gray-500 text-xs mt-3">
+              Letters and numbers only. Participants will type this code at the start of the survey.
+            </p>
+          </div>
+        )}
+
+        {/* Sessions list */}
+        {loading ? (
+          <div className="text-gray-400 text-sm py-12 text-center">Loading sessions...</div>
+        ) : sessions.length === 0 ? (
+          <div className="text-center py-16 border border-dashed border-gray-800 rounded-2xl">
+            <BarChart2 className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+            <p className="text-gray-400 text-sm">No sessions yet. Create your first one above.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sessions.map(session => {
+              const count = session.survey_responses?.[0]?.count ?? 0;
+              const date = new Date(session.created_at).toLocaleDateString("en-AU", {
+                day: "numeric", month: "short", year: "numeric",
+              });
+              return (
+                <button
+                  key={session.code}
+                  onClick={() => router.push(`/leaders/workshops/${session.code}`)}
+                  className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 rounded-xl px-5 py-4 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-blue-400 font-mono font-bold text-lg">{session.code}</span>
+                    <div className="flex items-center gap-3 text-gray-500 text-sm">
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" />
+                        {count} {count === 1 ? "response" : "responses"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {date}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        session.status === "active"
+                          ? "bg-green-900/40 text-green-400"
+                          : "bg-gray-800 text-gray-500"
+                      }`}>
+                        {session.status}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
+                </button>
+              );
+            })}
+
+            {/* All sessions combined */}
+            <button
+              onClick={() => router.push("/leaders/workshops/ALL")}
+              className="w-full flex items-center justify-between bg-blue-900/10 hover:bg-blue-900/20 border border-blue-800/30 hover:border-blue-500/40 rounded-xl px-5 py-4 transition-all group mt-6"
+            >
+              <div className="flex items-center gap-4">
+                <span className="text-blue-300 font-semibold text-sm">All Sessions Combined</span>
+                <span className="text-gray-500 text-xs">
+                  {sessions.reduce((sum, s) => sum + (s.survey_responses?.[0]?.count ?? 0), 0)} total responses
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
+            </button>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}

@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Calendar,
   Globe,
+  BarChart2,
 } from "lucide-react";
 
 // Calendar URLs
@@ -101,6 +102,15 @@ export default function LeadersPage() {
       color: "from-purple-500/20 to-purple-600/10",
       borderColor: "hover:border-purple-500/30",
       iconColor: "text-purple-400",
+    },
+    {
+      id: "workshops",
+      title: "Workshop Hub",
+      icon: BarChart2,
+      href: "/leaders/workshops",
+      color: "from-cyan-500/20 to-cyan-600/10",
+      borderColor: "hover:border-cyan-500/30",
+      iconColor: "text-cyan-400",
     },
   ];
 
