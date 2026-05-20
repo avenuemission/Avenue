@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut } from "lucide-react";
+import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut, Trash2 } from "lucide-react";
 import { logout } from "@/lib/auth";
 
 interface Session {
@@ -21,6 +21,8 @@ export default function WorkshopsPage() {
   const [newCode, setNewCode] = useState("");
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [confirmClear, setConfirmClear] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -59,6 +61,14 @@ export default function WorkshopsPage() {
       fetchSessions();
     }
     setCreating(false);
+  };
+
+  const handleClear = async (code: string) => {
+    setClearing(true);
+    await fetch(`/api/workshops/clear?code=${code}`, { method: "DELETE" });
+    setConfirmClear(null);
+    setClearing(false);
+    fetchSessions();
   };
 
   const suggestedCode = () => {
@@ -163,33 +173,66 @@ export default function WorkshopsPage() {
                 day: "numeric", month: "short", year: "numeric",
               });
               return (
-                <button
-                  key={session.code}
-                  onClick={() => router.push(`/leaders/workshops/${session.code}`)}
-                  className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 rounded-xl px-5 py-4 transition-all group"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-blue-400 font-mono font-bold text-lg">{session.code}</span>
-                    <div className="flex items-center gap-3 text-gray-500 text-sm">
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5" />
-                        {count} {count === 1 ? "response" : "responses"}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        {date}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        session.status === "active"
-                          ? "bg-green-900/40 text-green-400"
-                          : "bg-gray-800 text-gray-500"
-                      }`}>
-                        {session.status}
-                      </span>
+                <div key={session.code} className="bg-white/5 border border-white/10 hover:border-blue-500/30 rounded-xl transition-all">
+                  {confirmClear === session.code ? (
+                    <div className="flex items-center justify-between px-5 py-4 gap-4">
+                      <p className="text-red-300 text-sm">
+                        Delete all <span className="font-mono font-bold">{count}</span> response{count !== 1 ? "s" : ""} for <span className="font-mono font-bold">{session.code}</span>? This cannot be undone.
+                      </p>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => handleClear(session.code)}
+                          disabled={clearing}
+                          className="bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          {clearing ? "Clearing..." : "Yes, clear"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmClear(null)}
+                          className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
-                </button>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => router.push(`/leaders/workshops/${session.code}`)}
+                        className="flex-1 flex items-center justify-between px-5 py-4 group"
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className="text-blue-400 font-mono font-bold text-lg">{session.code}</span>
+                          <div className="flex items-center gap-3 text-gray-500 text-sm">
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3.5 h-3.5" />
+                              {count} {count === 1 ? "response" : "responses"}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              {date}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              session.status === "active"
+                                ? "bg-green-900/40 text-green-400"
+                                : "bg-gray-800 text-gray-500"
+                            }`}>
+                              {session.status}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmClear(session.code)}
+                        className="px-4 py-4 text-gray-700 hover:text-red-400 transition-colors border-l border-white/10"
+                        title="Clear responses"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })}
 
