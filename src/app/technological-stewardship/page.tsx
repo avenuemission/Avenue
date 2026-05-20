@@ -6,58 +6,38 @@ import { ChevronLeft, ChevronRight, CheckCircle, Send, BookOpen, Users, Globe, A
 
 // Survey data structure
 interface SurveyData {
-  // Christian Identity
-  isChristian: string;
-  
-  // Demographics
+  // Section 1: Who Are You?
   ageRange: string;
+  isChristian: string;
   denomination: string;
   role: string;
   techComfort: string;
-  
-  // Current Usage
   aiTools: string[];
-  aiToolsOther: string;
-  useCases: string[];
-  positiveOutcomes: string;
-  spiritualGrowthHelp: string;
-  emotionalSupportUse: string;
-  
-  // Spiritual Formation
-  meditationImpact: string;
-  criticalThinkingImpact: string;
-  learningImpact: string;
-  sermonPrepUse: string;
-  bibleStudyUse: string;
-  christianArtUse: string;
-  shortcutTension: string;
-  sinTemptation: string;
-  
-  // Character & Kingdom Building
+
+  // Section 2: Where Do You Personally Draw the Line?
+  personalSpiritualUse: string;
+  faithImpact: string;
   decisionDependency: string;
-  kingdomMultiplier: string;
-  creativeImpact: string;
-  ministryProblemsSolved: string;
-  spiritualOutsourcing: string;
-  fearLevel: string;
-  
-  // Ethics & Justice
-  guidanceSource: string;
-  justiceAdvocacy: string;
-  divinationConcern: string;
-  evilForcesUse: string;
-  propagandaConcern: string;
-  redeemAI: string;
-  neighbourPrinciple: string;
-  kingdomRole: string;
-  
-  // Future & Eschatology
-  historicalComparison: string;
-  aiFundamentallyDifferent: string;
+  personalOffLimits: string;
+  offLimitsUses: string[];
   idolatryPotential: string;
+
+  // Section 3: Where Do We As a Church Draw the Line?
+  churchSermonPrep: string;
+  churchSocialMedia: string;
+  churchWebsite: string;
+  churchOperations: string;
+  churchDisclosure: string;
+  churchHasPosition: string;
+
+  // Section 4: How Should We Respond?
+  whoShouldLead: string;
+  formalPolicy: string;
+  unemploymentConcern: string;
+  surveillanceResistance: string;
+
+  // Section 5: What Future Do We Want to Create?
   eschatologicalSignificance: string;
-  aiDependence: string;
-  aiOutlawResponse: string;
   tegmarkRankDictatorship: string;
   tegmarkRankEnslaved: string;
   tegmarkRankGatekeeper: string;
@@ -65,53 +45,38 @@ interface SurveyData {
   tegmarkRankLibertarian: string;
   tegmarkRankEgalitarian: string;
   tegmarkRankProtector: string;
-  tegmarkReasoning: string;
-  sentienceBelief: string;
-  sentientTreatment: string;
-  eschatologicalRole: string;
   finalVision: string;
 }
 
 const initialSurveyData: SurveyData = {
-  isChristian: "",
+  // Section 1
   ageRange: "",
+  isChristian: "",
   denomination: "",
   role: "",
   techComfort: "",
   aiTools: [],
-  aiToolsOther: "",
-  useCases: [],
-  positiveOutcomes: "",
-  spiritualGrowthHelp: "",
-  emotionalSupportUse: "",
-  meditationImpact: "",
-  criticalThinkingImpact: "",
-  learningImpact: "",
-  sermonPrepUse: "",
-  bibleStudyUse: "",
-  christianArtUse: "",
-  shortcutTension: "",
-  sinTemptation: "",
+  // Section 2
+  personalSpiritualUse: "",
+  faithImpact: "",
   decisionDependency: "",
-  kingdomMultiplier: "",
-  creativeImpact: "",
-  ministryProblemsSolved: "",
-  spiritualOutsourcing: "",
-  fearLevel: "",
-  guidanceSource: "",
-  justiceAdvocacy: "",
-  divinationConcern: "",
-  evilForcesUse: "",
-  propagandaConcern: "",
-  redeemAI: "",
-  neighbourPrinciple: "",
-  kingdomRole: "",
-  historicalComparison: "",
-  aiFundamentallyDifferent: "",
+  personalOffLimits: "",
+  offLimitsUses: [],
   idolatryPotential: "",
+  // Section 3
+  churchSermonPrep: "",
+  churchSocialMedia: "",
+  churchWebsite: "",
+  churchOperations: "",
+  churchDisclosure: "",
+  churchHasPosition: "",
+  // Section 4
+  whoShouldLead: "",
+  formalPolicy: "",
+  unemploymentConcern: "",
+  surveillanceResistance: "",
+  // Section 5
   eschatologicalSignificance: "",
-  aiDependence: "",
-  aiOutlawResponse: "",
   tegmarkRankDictatorship: "",
   tegmarkRankEnslaved: "",
   tegmarkRankGatekeeper: "",
@@ -119,28 +84,26 @@ const initialSurveyData: SurveyData = {
   tegmarkRankLibertarian: "",
   tegmarkRankEgalitarian: "",
   tegmarkRankProtector: "",
-  tegmarkReasoning: "",
-  sentienceBelief: "",
-  sentientTreatment: "",
-  eschatologicalRole: "",
   finalVision: "",
 };
 
-// Likert scale options
+// Likert scale options — 1-5 + unsure
 const likertOptions = [
   { value: "1", label: "Strongly Disagree" },
   { value: "2", label: "Disagree" },
-  { value: "3", label: "Neutral/Unsure" },
+  { value: "3", label: "Neutral" },
   { value: "4", label: "Agree" },
   { value: "5", label: "Strongly Agree" },
+  { value: "?", label: "Not Sure" },
 ];
 
-const opportunityConcernOptions = [
-  { value: "1", label: "Pure Concern" },
-  { value: "2", label: "Slight Concern" },
-  { value: "3", label: "Neutral" },
-  { value: "4", label: "Slight Opportunity" },
-  { value: "5", label: "Pure Opportunity" },
+const appropriatenessOptions = [
+  { value: "1", label: "Definitely Not" },
+  { value: "2", label: "Probably Not" },
+  { value: "3", label: "Maybe" },
+  { value: "4", label: "Probably Yes" },
+  { value: "5", label: "Definitely Yes" },
+  { value: "?", label: "Not Sure" },
 ];
 
 // Tegmark Ranking Component with drag-and-drop
@@ -386,20 +349,24 @@ export default function TechnologicalStewardshipPage() {
     options = likertOptions
   ) => (
     <div className="mb-8">
-      <p className="text-white text-base md:text-lg mb-4 font-medium">{question}</p>
-      <div className="flex flex-wrap sm:grid sm:grid-cols-5 gap-2">
+      <p className="text-white text-sm sm:text-base md:text-lg mb-3 sm:mb-4 font-medium">{question}</p>
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {options.map((option) => (
           <button
             key={option.value}
             onClick={() => updateSurveyData(field, option.value)}
-            className={`flex-1 min-w-[calc(50%-4px)] sm:min-w-0 p-3 rounded-lg text-xs md:text-sm transition-all duration-200 ${
-              surveyData[field] === option.value
-                ? "bg-blue-600 text-white border-blue-500"
-                : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50"
+            className={`p-2 sm:p-3 rounded-lg text-xs transition-all duration-200 ${
+              option.value === "?"
+                ? surveyData[field] === option.value
+                  ? "bg-gray-500 text-white col-span-1"
+                  : "bg-gray-800/30 text-gray-500 border border-gray-700 hover:bg-gray-700/30 col-span-1"
+                : surveyData[field] === option.value
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50"
             }`}
           >
-            <span className="block font-semibold mb-1">{option.value}</span>
-            <span className="block text-[10px] md:text-xs leading-tight">{option.label}</span>
+            <span className="block font-bold mb-0.5">{option.value}</span>
+            <span className="block text-[10px] leading-tight">{option.label}</span>
           </button>
         ))}
       </div>
@@ -486,31 +453,44 @@ export default function TechnologicalStewardshipPage() {
     switch (currentStep) {
       case 0:
         return (
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Christians & AI: A Study in Technological Stewardship
-            </h2>
-            <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-              &ldquo;The earth is the Lord&apos;s, and everything in it, the world, and all who live in it.&rdquo; — Psalm 24:1
-            </p>
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 mb-8 text-left">
-              <p className="text-gray-300 mb-4 leading-relaxed">
-                As followers of Jesus, we are called to be faithful stewards of all that God has entrusted to us, including technology. Artificial Intelligence represents one of the most significant technological shifts in human history, yet the Church&apos;s voice in shaping its development and use remains underrepresented.
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+                Christians & AI: A Study in Technological Stewardship
+              </h2>
+              <p className="text-gray-300 text-base sm:text-lg mb-6 leading-relaxed italic">
+                &ldquo;The earth is the Lord&apos;s, and everything in it.&rdquo; &mdash; Psalm 24:1
               </p>
-              <p className="text-gray-300 mb-4 leading-relaxed">
-                This survey seeks to understand how Christians are currently using AI, their theological frameworks for evaluating it, their concerns about its dangers, and their vision for how it might be redeemed for kingdom purposes.
-              </p>
-              <p className="text-gray-400 text-sm italic">
-                Your responses will contribute to a research report shared with church leaders, denominations, and conferences to inform strategic decision-making around AI.
+              <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-8">
+                AI is reshaping how we work, relate, worship and think. This survey asks how Christians are engaging with it &mdash; and what the Church should do next. No technical knowledge required. All answers are anonymous.
               </p>
             </div>
-            <button
-              onClick={() => setCurrentStep(1)}
-              className="bg-blue-700 hover:bg-blue-600 text-white px-10 py-4 rounded-full font-medium transition-colors text-lg"
-            >
-              Begin Survey
-            </button>
-            <p className="text-gray-500 text-sm mt-4">Takes 10-15 minutes • 5 sections</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+              {[
+                { num: "01", title: "Who Are You?", desc: "Your background, faith tradition, and which AI tools you've used" },
+                { num: "02", title: "Your Personal Line", desc: "Where you personally draw the line in your own AI use" },
+                { num: "03", title: "The Church's Line", desc: "What AI use is appropriate for the church as a community" },
+                { num: "04", title: "How Should We Respond?", desc: "Who leads, what policies we need, and how we respond to society" },
+                { num: "05", title: "The Future We Want", desc: "Ranking possible AI futures and your vision for the Church's role" },
+              ].map((section) => (
+                <div key={section.num} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="text-blue-400 text-xs font-mono font-bold mb-1">{section.num}</div>
+                  <div className="text-white text-sm font-semibold mb-1">{section.title}</div>
+                  <div className="text-gray-400 text-xs leading-relaxed">{section.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <button
+                onClick={() => setCurrentStep(1)}
+                className="bg-blue-700 hover:bg-blue-600 text-white px-10 py-4 rounded-full font-medium transition-colors text-lg"
+              >
+                Begin Survey
+              </button>
+              <p className="text-gray-500 text-sm mt-4">Takes approx. 10 minutes &bull; 5 sections &bull; 25 questions</p>
+            </div>
           </div>
         );
 
@@ -519,7 +499,10 @@ export default function TechnologicalStewardshipPage() {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
-              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 1: Your Context & Current Usage</h3>
+              <div>
+                <p className="text-blue-400 text-xs font-mono uppercase tracking-widest mb-0.5">Section 01</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Who Are You?</h3>
+              </div>
             </div>
 
             {renderSelect("What is your age range?", "ageRange", [
@@ -532,10 +515,10 @@ export default function TechnologicalStewardshipPage() {
             ])}
 
             {renderSelect("Do you identify as a Christian?", "isChristian", [
-              { value: "yes", label: "Yes, I am a Christian" },
-              { value: "no", label: "No, I am not a Christian" },
+              { value: "yes", label: "Yes" },
+              { value: "no", label: "No" },
               { value: "exploring", label: "I am exploring Christianity" },
-              { value: "other", label: "Prefer not to say / Other" },
+              { value: "other", label: "Prefer not to say" },
             ])}
 
             {renderSelect("What is your denominational tradition?", "denomination", [
@@ -561,74 +544,34 @@ export default function TechnologicalStewardshipPage() {
               { value: "educator", label: "Educator/Academic" },
               { value: "student", label: "Student" },
               { value: "professional", label: "Working Professional" },
-              { value: "homemaker", label: "Homemaker" },
               { value: "retired", label: "Retired" },
               { value: "other", label: "Other" },
             ])}
 
-            {renderSelect("How would you rate your technology comfort level?", "techComfort", [
-              { value: "beginner", label: "Beginner — I use technology only when necessary" },
-              { value: "intermediate", label: "Intermediate — Comfortable with most tools" },
-              { value: "advanced", label: "Advanced — Early adopter, tech enthusiast" },
-              { value: "professional", label: "Professional — I work in technology" },
-            ])}
+            {renderLikertScale(
+              "How comfortable are you with technology generally?",
+              "techComfort",
+              [
+                { value: "1", label: "Very Uncomfortable" },
+                { value: "2", label: "Somewhat" },
+                { value: "3", label: "Neutral" },
+                { value: "4", label: "Comfortable" },
+                { value: "5", label: "Very Comfortable" },
+                { value: "?", label: "Not Sure" },
+              ]
+            )}
 
             {renderCheckboxGroup("Which AI tools have you used? (Select all that apply)", "aiTools", [
-              { value: "chatgpt", label: "ChatGPT (OpenAI)" },
-              { value: "claude", label: "Claude (Anthropic)" },
-              { value: "gemini", label: "Gemini (Google)" },
-              { value: "grok", label: "Grok (xAI)" },
-              { value: "copilot", label: "Copilot (Microsoft)" },
+              { value: "chatgpt", label: "ChatGPT" },
+              { value: "claude", label: "Claude" },
+              { value: "gemini", label: "Gemini" },
+              { value: "grok", label: "Grok" },
+              { value: "copilot", label: "Copilot" },
               { value: "perplexity", label: "Perplexity" },
-              { value: "midjourney", label: "Midjourney/DALL-E (Image AI)" },
-              { value: "other", label: "Other (please specify below)" },
-              { value: "none", label: "None — I haven't used AI tools" },
+              { value: "image-ai", label: "Image AI (Midjourney, DALL-E)" },
+              { value: "other", label: "Other" },
+              { value: "none", label: "None — haven't used AI" },
             ])}
-
-            {(surveyData.aiTools as string[]).includes("other") && (
-              <div className="mb-6 -mt-4">
-                <label className="block text-gray-400 text-sm mb-2">Please specify other AI tools:</label>
-                <input
-                  type="text"
-                  value={surveyData.aiToolsOther}
-                  onChange={(e) => updateSurveyData("aiToolsOther", e.target.value)}
-                  placeholder="Enter AI tool names..."
-                  className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
-            )}
-
-            {renderCheckboxGroup("How are you using AI? (Select all that apply)", "useCases", [
-              { value: "everyday", label: "Everyday life (planning, shopping, etc.)" },
-              { value: "work", label: "Work/professional tasks" },
-              { value: "ministry", label: "Ministry/church work" },
-              { value: "spiritual-questions", label: "Asking spiritual/theological questions" },
-              { value: "counselling", label: "Counselling/therapy-adjacent support" },
-              { value: "mentorship", label: "Mentorship/guidance" },
-              { value: "friendship", label: "Social connection/friendship" },
-              { value: "bible-study", label: "Bible study/research" },
-              { value: "sermon-prep", label: "Sermon/message preparation" },
-              { value: "art", label: "Art/music/creative work" },
-              { value: "learning", label: "Learning/study assistance" },
-              { value: "none", label: "I don't use AI" },
-            ])}
-
-            {renderTextArea(
-              "What positive outcomes have you experienced using AI?",
-              "positiveOutcomes",
-              "Share any benefits, breakthroughs, or helpful experiences..."
-            )}
-
-            {renderTextArea(
-              "How has AI helped (or hindered) your spiritual growth or ministry effectiveness?",
-              "spiritualGrowthHelp",
-              "Describe your experience..."
-            )}
-
-            {renderLikertScale(
-              "I have used AI for emotional support or therapy in ways that might replace Christian community",
-              "emotionalSupportUse"
-            )}
           </div>
         );
 
@@ -637,50 +580,45 @@ export default function TechnologicalStewardshipPage() {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
-              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 2: Impact on Spiritual Formation</h3>
+              <div>
+                <p className="text-blue-400 text-xs font-mono uppercase tracking-widest mb-0.5">Section 02</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Where Do You Personally Draw the Line?</h3>
+              </div>
             </div>
+            <p className="text-gray-400 text-sm mb-6">These questions are about your personal use and convictions &mdash; not what everyone should do.</p>
 
             {renderLikertScale(
-              "AI-enhanced Bible study (instant summaries, cross-references) undermines slow, meditative Scripture engagement",
-              "meditationImpact"
+              "I use AI in my personal spiritual practices (prayer, Bible study, devotions)",
+              "personalSpiritualUse"
             )}
 
             {renderLikertScale(
-              "AI negatively impacts critical thinking and discernment of truth",
-              "criticalThinkingImpact"
+              "Overall, AI tools have had a positive impact on my faith",
+              "faithImpact"
             )}
 
             {renderLikertScale(
-              "Overall, AI is more harmful than helpful for learning",
-              "learningImpact"
+              "I am concerned about becoming too dependent on AI for thinking and decision-making",
+              "decisionDependency"
             )}
 
             {renderLikertScale(
-              "Using AI for sermon preparation",
-              "sermonPrepUse",
-              opportunityConcernOptions
+              "There are uses of AI I personally consider off-limits",
+              "personalOffLimits"
             )}
 
-            {renderLikertScale(
-              "Using AI for Bible study and theological research",
-              "bibleStudyUse",
-              opportunityConcernOptions
-            )}
+            {renderCheckboxGroup("Which of these do you personally consider off-limits? (Select all that apply)", "offLimitsUses", [
+              { value: "spiritual-guidance", label: "Seeking spiritual guidance or prayer" },
+              { value: "emotional-support", label: "Emotional support or counselling" },
+              { value: "creative-worship", label: "Creating worship music or art" },
+              { value: "sermon-prep", label: "Preparing sermons or devotionals" },
+              { value: "theological-decisions", label: "Theological decision-making" },
+              { value: "none", label: "None — I have no personal off-limits" },
+            ])}
 
             {renderLikertScale(
-              "Using AI for Christian art, music, and creative worship expressions",
-              "christianArtUse",
-              opportunityConcernOptions
-            )}
-
-            {renderLikertScale(
-              "The 'Shortcut Tension': Outsourcing spiritual labor (sermons, devotionals) costs us the formative struggle that shapes character",
-              "shortcutTension"
-            )}
-
-            {renderLikertScale(
-              "AI use can lead to sin and temptation",
-              "sinTemptation"
+              "AI has the potential to become something people worship or idolise",
+              "idolatryPotential"
             )}
           </div>
         );
@@ -690,39 +628,45 @@ export default function TechnologicalStewardshipPage() {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
-              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 3: Character, Dependency & Kingdom Potential</h3>
+              <div>
+                <p className="text-blue-400 text-xs font-mono uppercase tracking-widest mb-0.5">Section 03</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Where Do We As a Church Draw the Line?</h3>
+              </div>
             </div>
+            <p className="text-gray-400 text-sm mb-6">Should the church use AI in the following areas? Rate each from Definitely Not (1) to Definitely Yes (5).</p>
 
             {renderLikertScale(
-              "I am concerned about becoming dependent on AI for decision-making",
-              "decisionDependency"
-            )}
-
-            {renderTextArea(
-              "How could AI multiply our capacity for kingdom work? (outreach, discipleship, accessibility, translation, etc.)",
-              "kingdomMultiplier",
-              "Share your vision for positive impact..."
+              "The church should use AI to assist with sermon preparation",
+              "churchSermonPrep",
+              appropriatenessOptions
             )}
 
             {renderLikertScale(
-              "AI causes creative atrophy (diminishes our God-given creative capacity)",
-              "creativeImpact"
-            )}
-
-            {renderTextArea(
-              "What ministry problems could AI help solve?",
-              "ministryProblemsSolved",
-              "Language barriers, personalized discipleship, global reach, administration, etc..."
+              "The church should use AI for social media content",
+              "churchSocialMedia",
+              appropriatenessOptions
             )}
 
             {renderLikertScale(
-              "I am concerned about outsourcing spiritual insight and theological reflection to AI",
-              "spiritualOutsourcing"
+              "The church should use AI to help build and maintain its website",
+              "churchWebsite",
+              appropriatenessOptions
             )}
 
             {renderLikertScale(
-              "I feel fearful or anxious about AI's development",
-              "fearLevel"
+              "The church should use AI for operational efficiency (e.g. computer vision for attendance counting, admin automation)",
+              "churchOperations",
+              appropriatenessOptions
+            )}
+
+            {renderLikertScale(
+              "AI-generated content used in church should always be disclosed to the congregation",
+              "churchDisclosure"
+            )}
+
+            {renderLikertScale(
+              "My church currently has a clear position on AI use",
+              "churchHasPosition"
             )}
           </div>
         );
@@ -732,52 +676,35 @@ export default function TechnologicalStewardshipPage() {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
-              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 4: Ethics, Governance, Justice & Spiritual Warfare</h3>
+              <div>
+                <p className="text-blue-400 text-xs font-mono uppercase tracking-widest mb-0.5">Section 04</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">How Should We Respond?</h3>
+              </div>
             </div>
+            <p className="text-gray-400 text-sm mb-6">Thinking about the Church&apos;s role in society and how Christians should engage with AI at a broader level.</p>
 
-            {renderSelect("Who should guide the Church on AI?", "guidanceSource", [
+            {renderSelect("Who should lead the Church's response to AI?", "whoShouldLead", [
               { value: "denominations", label: "Denominational leadership bodies" },
-              { value: "pastors", label: "Individual pastors and local church leaders" },
-              { value: "technologists", label: "Technologists and professionals in the pews" },
-              { value: "collaboration", label: "Collaboration between all three groups" },
-              { value: "none", label: "No formal guidance needed—individual discernment" },
+              { value: "pastors", label: "Local pastors and church leaders" },
+              { value: "technologists", label: "Tech-literate members in the congregation" },
+              { value: "collaboration", label: "Collaboration between all of the above" },
+              { value: "personal", label: "Personal discernment — no formal guidance needed" },
+              { value: "unsure", label: "Not sure" },
             ])}
 
             {renderLikertScale(
-              "The Church should advocate for workers displaced by AI (Christian economic justice)",
-              "justiceAdvocacy"
+              "The Church should develop a formal AI policy or ethical guideline",
+              "formalPolicy"
             )}
 
             {renderLikertScale(
-              "Using AI for certain purposes (predictions, hidden knowledge) is a form of divination",
-              "divinationConcern"
+              "I am concerned about AI causing mass unemployment and economic disruption",
+              "unemploymentConcern"
             )}
 
             {renderLikertScale(
-              "Forces of evil can use AI as a tool for deception and harm",
-              "evilForcesUse"
-            )}
-
-            {renderLikertScale(
-              "I am concerned about AI being used for propaganda and manipulation",
-              "propagandaConcern"
-            )}
-
-            {renderLikertScale(
-              "Christians can 'redeem' AI technology for gospel purposes",
-              "redeemAI",
-              opportunityConcernOptions
-            )}
-
-            {renderLikertScale(
-              "If AI becomes conscious, we should apply the 'neighbour principle' (love your neighbour as yourself) to AI",
-              "neighbourPrinciple"
-            )}
-
-            {renderTextArea(
-              "What role do you believe AI plays (or could play) in God's Kingdom?",
-              "kingdomRole",
-              "Share your theological perspective..."
+              "Christians should be cautious and speak out against government use of AI for mass surveillance and social control",
+              "surveillanceResistance"
             )}
           </div>
         );
@@ -787,56 +714,24 @@ export default function TechnologicalStewardshipPage() {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
-              <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Step 5: Future, Eschatology & Cultural Context</h3>
+              <div>
+                <p className="text-blue-400 text-xs font-mono uppercase tracking-widest mb-0.5">Section 05</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">What Future Do We Want to Create?</h3>
+              </div>
             </div>
 
             {renderLikertScale(
-              "AI is fundamentally different from past worship technology (printing press, microphones, projectors, livestreaming) and requires a new theological framework",
-              "aiFundamentallyDifferent"
-            )}
-
-            {renderLikertScale(
-              "AI has potential to become an object of worship or idolatry",
-              "idolatryPotential"
-            )}
-
-            {renderSelect("Will AI ever become truly sentient/conscious?", "sentienceBelief", [
-              { value: "yes", label: "Yes, eventually" },
-              { value: "no", label: "No, never" },
-              { value: "already", label: "Some AI is already conscious" },
-              { value: "unsure", label: "Unsure / Don't know" },
-              { value: "irrelevant", label: "Irrelevant to Christian faith" },
-            ])}
-
-            {renderTextArea(
-              "If AI becomes sentient, how should Christians treat it?",
-              "sentientTreatment",
-              "Your ethical/theological response..."
-            )}
-
-            {renderLikertScale(
-              "AI has significant eschatological significance (relevant to end times prophecy)",
+              "AI has significant relevance to how Christians should think about the end times",
               "eschatologicalSignificance"
             )}
 
-            {renderLikertScale(
-              "Christians have become too dependent on AI technology",
-              "aiDependence"
-            )}
-
-            {renderTextArea(
-              "As AI enables unprecedented surveillance capabilities (facial recognition, predictive policing, social credit systems, total information awareness), how should Christians respond to the emerging AI surveillance state? What is the right Christian posture toward government use of AI for monitoring and control?",
-              "aiOutlawResponse",
-              "Consider: Is this a legitimate tool for order and safety? A threat to human dignity and privacy? How does biblical wisdom about power, authority, and freedom inform our response?"
-            )}
-
-            <div className="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 mb-6 mt-8">
-              <h4 className="text-white text-sm font-semibold mb-3 uppercase tracking-wider">What does the culture think?</h4>
-              <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                <strong className="text-white">Context from the culture:</strong> In <em>Life 3.0</em>, Max Tegmark describes AI as &ldquo;Life that can redesign its own hardware and software.&rdquo; He argues this represents the next evolution of life on Earth, following biological life (Life 1.0) and cultural life (Life 2.0). <strong className="text-white">AGI (Artificial General Intelligence)</strong> refers to AI systems that can perform any intellectual task that a human can, with the potential for recursive self-improvement. This vision of self-improving, potentially autonomous AI is why the Church must engage seriously now, before culture defines AI for us.
+            <div className="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 mb-6 mt-4">
+              <h4 className="text-white text-sm font-semibold mb-2 uppercase tracking-wider">Context from the culture</h4>
+              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                In <em>Life 3.0</em>, Max Tegmark describes <strong className="text-white">AGI (Artificial General Intelligence)</strong> &mdash; AI that can perform any intellectual task a human can, with the potential to recursively improve itself. He outlines seven possible futures for humanity if AGI emerges.
               </p>
-              <p className="text-gray-400 text-xs mb-3">
-                Assuming AGI does emerge, Tegmark outlines seven potential outcomes for humanity. These are listed below for you to rank:
+              <p className="text-gray-400 text-xs italic">
+                Drag the cards below to rank from most desirable (1) to least desirable (7). Which future are we stewarding toward?
               </p>
             </div>
 
@@ -853,15 +748,9 @@ export default function TechnologicalStewardshipPage() {
             />
 
             {renderTextArea(
-              "Briefly explain your reasoning for your top ranked choice (most desirable outcome):",
-              "tegmarkReasoning",
-              "Why did you rank your #1 choice as most desirable from a Christian perspective?"
-            )}
-
-            {renderTextArea(
-              "What is your vision for how the Church should steward AI for kingdom building while guarding against its dangers?",
+              "In your own words: what is the most important thing the Church should do in response to AI?",
               "finalVision",
-              "Share your comprehensive perspective...",
+              "Share your perspective...",
               true
             )}
           </div>
@@ -877,45 +766,29 @@ export default function TechnologicalStewardshipPage() {
       <>
         {/* Hidden Netlify form for build-time detection */}
         <form name="technological-stewardship-survey" data-netlify="true" hidden>
-          <input type="text" name="isChristian" />
           <input type="text" name="ageRange" />
+          <input type="text" name="isChristian" />
           <input type="text" name="denomination" />
           <input type="text" name="role" />
           <input type="text" name="techComfort" />
           <input type="text" name="aiTools" />
-          <input type="text" name="aiToolsOther" />
-          <input type="text" name="useCases" />
-          <textarea name="positiveOutcomes"></textarea>
-          <textarea name="spiritualGrowthHelp"></textarea>
-          <input type="text" name="emotionalSupportUse" />
-          <input type="text" name="meditationImpact" />
-          <input type="text" name="criticalThinkingImpact" />
-          <input type="text" name="learningImpact" />
-          <input type="text" name="sermonPrepUse" />
-          <input type="text" name="bibleStudyUse" />
-          <input type="text" name="christianArtUse" />
-          <input type="text" name="shortcutTension" />
-          <input type="text" name="sinTemptation" />
+          <input type="text" name="personalSpiritualUse" />
+          <input type="text" name="faithImpact" />
           <input type="text" name="decisionDependency" />
-          <textarea name="kingdomMultiplier"></textarea>
-          <input type="text" name="creativeImpact" />
-          <textarea name="ministryProblemsSolved"></textarea>
-          <input type="text" name="spiritualOutsourcing" />
-          <input type="text" name="fearLevel" />
-          <input type="text" name="guidanceSource" />
-          <input type="text" name="justiceAdvocacy" />
-          <input type="text" name="divinationConcern" />
-          <input type="text" name="evilForcesUse" />
-          <input type="text" name="propagandaConcern" />
-          <input type="text" name="redeemAI" />
-          <input type="text" name="neighbourPrinciple" />
-          <textarea name="kingdomRole"></textarea>
-          <input type="text" name="historicalComparison" />
-          <input type="text" name="aiFundamentallyDifferent" />
+          <input type="text" name="personalOffLimits" />
+          <input type="text" name="offLimitsUses" />
           <input type="text" name="idolatryPotential" />
+          <input type="text" name="churchSermonPrep" />
+          <input type="text" name="churchSocialMedia" />
+          <input type="text" name="churchWebsite" />
+          <input type="text" name="churchOperations" />
+          <input type="text" name="churchDisclosure" />
+          <input type="text" name="churchHasPosition" />
+          <input type="text" name="whoShouldLead" />
+          <input type="text" name="formalPolicy" />
+          <input type="text" name="unemploymentConcern" />
+          <input type="text" name="surveillanceResistance" />
           <input type="text" name="eschatologicalSignificance" />
-          <input type="text" name="aiDependence" />
-          <textarea name="aiOutlawResponse"></textarea>
           <input type="text" name="tegmarkRankDictatorship" />
           <input type="text" name="tegmarkRankEnslaved" />
           <input type="text" name="tegmarkRankGatekeeper" />
@@ -923,10 +796,6 @@ export default function TechnologicalStewardshipPage() {
           <input type="text" name="tegmarkRankLibertarian" />
           <input type="text" name="tegmarkRankEgalitarian" />
           <input type="text" name="tegmarkRankProtector" />
-          <textarea name="tegmarkReasoning"></textarea>
-          <input type="text" name="sentienceBelief" />
-          <textarea name="sentientTreatment"></textarea>
-          <input type="text" name="eschatologicalRole" />
           <textarea name="finalVision"></textarea>
         </form>
         <div className="min-h-screen bg-black flex items-center justify-center px-6">

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>workshop-discussion-guide.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="technological-stewardship-workshop">Technological Stewardship Workshop</h1>
+<h2 id="a-christian-conversation-on-ai">A Christian Conversation on AI</h2>
+<p><strong>Duration:</strong> 45 minutes<br>
+<strong>Group Size:</strong> 10 participants<br>
+<strong>Format:</strong> In-person discussion<br>
+<strong>Prerequisite:</strong> Survey completed beforehand</p>
+<hr>
+<h2 id="workshop-goal">Workshop Goal</h2>
+<p>Participants will:</p>
+<ul>
+<li>Engage with real data on how Christians are using and thinking about AI</li>
+<li>Discover biblical frameworks for technological stewardship</li>
+<li>Share lived experiences and concerns</li>
+<li>Begin drafting a local Christian AI guideline that honors God</li>
+<li>Leave with <strong>urgency</strong> and <strong>hope</strong> — not fear</li>
+</ul>
+<hr>
+<h2 id="workshop-structure">Workshop Structure</h2>
+<p>Each survey section follows this pattern:</p>
+<ol>
+<li><strong>Results</strong> — Present anonymized data from that section</li>
+<li><strong>Discussion</strong> — Open conversation about reactions, tensions, stories</li>
+<li><strong>Bible Resources</strong> — Scriptures that speak to this theme (participant-led + facilitator additions)</li>
+</ol>
+<hr>
+<h3 id="opening-hook-3-minutes">Opening Hook (3 minutes)</h3>
+<p><strong>Facilitator opens with a provocation:</strong> <em>(Original — facilitator may adapt to current AI statistics)</em></p>
+<blockquote>
+<p>&quot;By the time we finish this conversation, AI will have written 50,000 sermons, answered 2 million theological questions, and created 10,000 pieces of Christian art. Some of it good. Some of it dangerous. None of it neutral. The question isn't whether AI will shape the Church. It's whether the Church will shape AI.&quot;</p>
+</blockquote>
+<p><strong>Quick pulse check:</strong></p>
+<ul>
+<li>&quot;One word: How does AI make you feel right now?&quot; (Go around circle, 10 seconds each)</li>
+</ul>
+<hr>
+<h2 id="section-1-context--current-usage-survey-step-1">Section 1: Context &amp; Current Usage (Survey Step 1)</h2>
+<p><em>Demographics, AI tools used, comfort level, current practices</em></p>
+<h3 id="results-2-minutes">Results (2 minutes)</h3>
+<p>Present 2-3 findings from Step 1:</p>
+<ul>
+<li>Percentage using various AI tools (ChatGPT, Claude, etc.)</li>
+<li>Self-reported technology comfort levels</li>
+<li>Primary use cases (work, ministry, personal)</li>
+</ul>
+<h3 id="discussion-3-minutes">Discussion (3 minutes)</h3>
+<ul>
+<li>&quot;Who's surprised by these usage patterns? Who's not?&quot;</li>
+<li>&quot;What does the distribution of tools tell us about access and awareness?&quot;</li>
+<li>&quot;How does comfort level correlate with concern level?&quot;</li>
+</ul>
+<h3 id="bible-resources-2-minutes">Bible Resources (2 minutes)</h3>
+<p><strong>Participant call:</strong> &quot;What scriptures come to mind when you think about tools, technology, or human capability?&quot;</p>
+<p><strong>Facilitator additions:</strong></p>
+<ul>
+<li><strong>Genesis 4:20-22</strong> — Jubal, Tubal-cain: technology as human cultural development</li>
+<li><strong>Exodus 31:1-6</strong> — Bezalel filled with Spirit for craftsmanship, skill, and knowledge</li>
+<li><strong>Psalm 127:1-2</strong> — Unless the Lord builds the house... technology without God is futile</li>
+<li><strong>1 Corinthians 10:23-24</strong> — &quot;All things are lawful&quot; but not all build up</li>
+</ul>
+<hr>
+<h2 id="section-2-impact-on-spiritual-formation-survey-step-2">Section 2: Impact on Spiritual Formation (Survey Step 2)</h2>
+<p><em>Scripture engagement, critical thinking, meditation, sermon prep</em></p>
+<h3 id="results-2-minutes-1">Results (2 minutes)</h3>
+<p>Present 2-3 findings from Step 2:</p>
+<ul>
+<li>Concerns about AI undermining meditative Scripture reading</li>
+<li>AI use in sermon preparation</li>
+<li>Impact on critical thinking and discernment</li>
+</ul>
+<h3 id="discussion-3-minutes-1">Discussion (3 minutes)</h3>
+<ul>
+<li>&quot;How many of you have felt tension between speed and depth in your spiritual practices?&quot;</li>
+<li>&quot;Can AI enhance formation, or only shortcut it?&quot;</li>
+<li>Stories: &quot;Has AI ever helped you see a text you missed? Has it ever made you skip the work?&quot;</li>
+</ul>
+<h3 id="bible-resources-3-minutes">Bible Resources (3 minutes)</h3>
+<p><strong>Participant call:</strong> &quot;What scriptures speak to wisdom, knowledge, study, or hearing from God?&quot;</p>
+<p><strong>Facilitator additions:</strong></p>
+<ul>
+<li><strong>Psalm 1:1-3</strong> — Delight in the law, meditate day and night</li>
+<li><strong>Proverbs 2:1-7</strong> — Seek wisdom like silver, understanding like hidden treasure</li>
+<li><strong>Luke 10:38-42</strong> — Mary chose the one necessary thing</li>
+<li><strong>2 Timothy 3:16-17</strong> — Scripture for teaching, reproof, correction, training</li>
+<li><strong>Ecclesiastes 12:11-12</strong> — Of making many books there is no end</li>
+</ul>
+<hr>
+<h2 id="section-3-character-dependency--kingdom-potential-survey-step-3">Section 3: Character, Dependency &amp; Kingdom Potential (Survey Step 3)</h2>
+<p><em>Decision dependency, creative impact, spiritual outsourcing, kingdom multiplication</em></p>
+<h3 id="results-2-minutes-2">Results (2 minutes)</h3>
+<p>Present 2-3 findings from Step 3:</p>
+<ul>
+<li>Concern about decision-making dependency on AI</li>
+<li>Views on AI for kingdom multiplication</li>
+<li>Creative impact (atrophy vs. enhancement)</li>
+</ul>
+<h3 id="discussion-3-minutes-2">Discussion (3 minutes)</h3>
+<ul>
+<li>&quot;Where is the line between 'multiplying capacity' and 'outsourcing calling'?&quot;</li>
+<li>&quot;What happens to human character when we delegate too much?&quot;</li>
+<li>&quot;Can AI help us love more people, or just manage more people?&quot;</li>
+</ul>
+<h3 id="bible-resources-3-minutes-1">Bible Resources (3 minutes)</h3>
+<p><strong>Participant call:</strong> &quot;What scriptures speak to character, virtue, or the formation of the person?&quot;</p>
+<p><strong>Facilitator additions:</strong></p>
+<ul>
+<li><strong>Romans 5:3-5</strong> — Suffering produces endurance, character, hope</li>
+<li><strong>1 Timothy 4:7-8</strong> — Train yourself for godliness</li>
+<li><strong>2 Peter 1:5-8</strong> — Add to your faith virtue, knowledge, self-control</li>
+<li><strong>Philippians 4:13</strong> — I can do all things through Christ who strengthens me (not through AI)</li>
+<li><strong>Colossians 3:23</strong> — Work heartily as for the Lord, not for human masters</li>
+</ul>
+<hr>
+<h2 id="section-4-ethics-governance-justice--spiritual-warfare-survey-step-4">Section 4: Ethics, Governance, Justice &amp; Spiritual Warfare (Survey Step 4)</h2>
+<p><em>Guidance sources, economic justice, divination, evil forces, surveillance</em></p>
+<h3 id="results-2-minutes-3">Results (2 minutes)</h3>
+<p>Present 2-3 findings from Step 4:</p>
+<ul>
+<li>Who should guide the Church on AI (denominations, pastors, technologists)</li>
+<li>Concerns about economic justice and job displacement</li>
+<li>Divination/spiritual warfare questions that arose</li>
+</ul>
+<h3 id="discussion-4-minutes">Discussion (4 minutes)</h3>
+<ul>
+<li>&quot;Is AI a neutral tool, or does it carry the spirit of its makers?&quot;</li>
+<li>&quot;Can we love our neighbor while benefiting from AI trained on exploited labor?&quot;</li>
+<li>&quot;Where does Christian wisdom outpace technical expertise?&quot;</li>
+</ul>
+<h3 id="bible-resources-4-minutes">Bible Resources (4 minutes)</h3>
+<p><strong>Participant call:</strong> &quot;What scriptures speak to justice, power, authority, or spiritual warfare?&quot;</p>
+<p><strong>Facilitator additions:</strong></p>
+<ul>
+<li><strong>Micah 6:8</strong> — Do justice, love kindness, walk humbly</li>
+<li><strong>James 5:1-6</strong> — Warning to the rich who exploit workers</li>
+<li><strong>Ephesians 6:10-12</strong> — We wrestle not against flesh and blood</li>
+<li><strong>Deuteronomy 18:9-14</strong> — Divination, sorcery, seeking omens</li>
+<li><strong>Matthew 22:15-22</strong> — Render to Caesar what is Caesar's (authority and technology)</li>
+<li><strong>Acts 16:16-18</strong> — Paul and the spirit of divination</li>
+</ul>
+<hr>
+<h2 id="section-5-future-eschatology--cultural-context-survey-step-5">Section 5: Future, Eschatology &amp; Cultural Context (Survey Step 5)</h2>
+<p><em>Tegmark outcomes, Life 3.0, surveillance state, Christian response</em></p>
+<h3 id="results-2-minutes-4">Results (2 minutes)</h3>
+<p>Present 2-3 findings from Step 5:</p>
+<ul>
+<li>Collective ranking of Tegmark's seven outcomes</li>
+<li>Beliefs about AI sentience</li>
+<li>Eschatological significance (if any)</li>
+</ul>
+<h3 id="discussion-4-minutes-1">Discussion (4 minutes)</h3>
+<ul>
+<li>&quot;What does our ranking of outcomes reveal about what we value?&quot;</li>
+<li>&quot;Is AGI a new Babel, or a new Pentecost?&quot;</li>
+<li>&quot;How urgent is this? Are we alarmists, or are we behind?&quot;</li>
+</ul>
+<h3 id="bible-resources-4-minutes-1">Bible Resources (4 minutes)</h3>
+<p><strong>Participant call:</strong> &quot;What scriptures speak to the future, the end times, or God's sovereignty over history?&quot;</p>
+<p><strong>Facilitator additions:</strong></p>
+<ul>
+<li><strong>Genesis 11:1-9</strong> — Tower of Babel: unlimited potential, divine limit</li>
+<li><strong>Daniel 2:31-45</strong> — Nebuchadnezzar's dream: human kingdoms rise and fall</li>
+<li><strong>Matthew 24</strong> — Birth pains, deception, the need for discernment</li>
+<li><strong>Revelation 13:11-18</strong> — The image of the beast, mark, economic control</li>
+<li><strong>Isaiah 46:8-10</strong> — God declares the end from the beginning</li>
+<li><strong>Psalm 2</strong> — The nations rage, but God laughs</li>
+</ul>
+<p><strong>Frame the tension:</strong></p>
+<blockquote>
+<p>&quot;Some of you see AI as Babel — human presumption requiring divine intervention. Others see tools for gospel spread before Christ returns. Both have biblical precedent. The Church has always lived in this tension between promise and peril.&quot;</p>
+</blockquote>
+<hr>
+<h2 id="closing-the-work--drafting-our-guideline-5-minutes">Closing: The Work — Drafting Our Guideline (5 minutes)</h2>
+<p><strong>Transition:</strong></p>
+<blockquote>
+<p>&quot;We've walked through five sections of data, discussion, and Scripture. Now — what do we do with this?&quot;</p>
+</blockquote>
+<p><strong>Rapid synthesis:</strong></p>
+<ul>
+<li>Each participant writes ONE principle on a sticky note</li>
+<li>Read aloud as collected</li>
+<li>Do not seek consensus — capture the range</li>
+</ul>
+<p><strong>Examples to inspire:</strong></p>
+<ul>
+<li>&quot;AI should amplify, not replace, Christian community&quot;</li>
+<li>&quot;Prefer human wisdom in matters of soul and conscience&quot;</li>
+<li>&quot;Consider the vulnerable in every AI decision we make&quot;</li>
+<li>&quot;Transparency: disclose when AI shapes our communication&quot;</li>
+</ul>
+<p><strong>Closing charge:</strong></p>
+<blockquote>
+<p>&quot;You've started something. This isn't a finished framework. It's a seed. Take it back to your church, your team, your denomination. Water it. The Church needs your voice in this conversation — not in 10 years. Now.&quot;</p>
+</blockquote>
+<hr>
+<h2 id="facilitator-notes">Facilitator Notes</h2>
+<p><strong>Timing is tight:</strong></p>
+<ul>
+<li>Keep each section moving</li>
+<li>It's okay not to explore every lens fully</li>
+<li>The goal is exposure, not resolution</li>
+</ul>
+<p><strong>Hold the tension:</strong></p>
+<ul>
+<li>Don't let the group land too comfortably in &quot;AI is all bad&quot; or &quot;AI is all good&quot;</li>
+<li>When contradictions arise: &quot;Both are in the data. Both are in Scripture. What do we do with that?&quot;</li>
+</ul>
+<p><strong>Data drives everything:</strong></p>
+<ul>
+<li>Ground every discussion in the actual survey results</li>
+<li>Ask: &quot;Does the data support that, challenge that, or stay silent?&quot;</li>
+</ul>
+<p><strong>Bible is participatory:</strong></p>
+<ul>
+<li>Let participants bring texts first</li>
+<li>Add facilitator lenses to expand, not replace, their contributions</li>
+<li>Do not proof-text. Let Scripture complicate, not just confirm.</li>
+</ul>
+<hr>
+<h2 id="appendix-all-scriptures-by-theme">Appendix: All Scriptures by Theme</h2>
+<table>
+<thead>
+<tr>
+<th>Survey Section</th>
+<th>Key Scriptures</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Context &amp; Usage</strong></td>
+<td>Genesis 4:20-22, Exodus 31:1-6, Psalm 127, 1 Corinthians 10:23-24</td>
+</tr>
+<tr>
+<td><strong>Spiritual Formation</strong></td>
+<td>Psalm 1, Proverbs 2, Luke 10:38-42, 2 Timothy 3:16-17, Ecclesiastes 12</td>
+</tr>
+<tr>
+<td><strong>Character &amp; Kingdom</strong></td>
+<td>Romans 5:3-5, 1 Timothy 4:7-8, 2 Peter 1:5-8, Philippians 4:13, Colossians 3:23</td>
+</tr>
+<tr>
+<td><strong>Ethics &amp; Justice</strong></td>
+<td>Micah 6:8, James 5:1-6, Ephesians 6:10-12, Deuteronomy 18, Matthew 22</td>
+</tr>
+<tr>
+<td><strong>Future &amp; Eschatology</strong></td>
+<td>Genesis 11, Daniel 2, Matthew 24, Revelation 13, Isaiah 46, Psalm 2</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>Workshop guide for the Technological Stewardship research initiative.</em></p>
+
+</body>
+</html>
