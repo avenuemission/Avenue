@@ -11,220 +11,230 @@
 ## Workshop Goal
 
 Participants will:
-- Engage with real data on how Christians are using and thinking about AI
-- Discover biblical frameworks for technological stewardship
-- Share lived experiences and concerns
-- Begin drafting a local Christian AI guideline that honors God
-- Leave with **urgency** and **hope** — not fear
+- Engage with real, anonymized data from the group's own survey responses
+- Discover biblical frameworks for thinking about AI — personally and as a church
+- Share lived experiences, concerns, and convictions
+- Begin forming a shared posture on AI for their church community
+- Leave with **urgency** and **hope** — not fear or paralysis
 
 ---
 
 ## Workshop Structure
 
-Each survey section follows this pattern:
-1. **Results** — Present anonymized data from that section
-2. **Discussion** — Open conversation about reactions, tensions, stories
-3. **Bible Resources** — Scriptures that speak to this theme (participant-led + facilitator additions)
+Each of the five survey sections follows this pattern:
+1. **Results** — Display anonymized data from that section on screen
+2. **Discussion** — Open conversation reacting to the data
+3. **Bible Resources** — Scriptures that speak to this theme (participant-led first, then facilitator additions)
+
+> **Timing is tight.** The goal is exposure and conversation, not resolution. It's okay to leave tensions unresolved.
 
 ---
 
 ### Opening Hook (3 minutes)
 
-**Facilitator opens with a provocation:** *(Original — facilitator may adapt to current AI statistics)*
+**Facilitator opens with a provocation:**
 
 > "By the time we finish this conversation, AI will have written 50,000 sermons, answered 2 million theological questions, and created 10,000 pieces of Christian art. Some of it good. Some of it dangerous. None of it neutral. The question isn't whether AI will shape the Church. It's whether the Church will shape AI."
 
-**Quick pulse check:**
-- "One word: How does AI make you feel right now?" (Go around circle, 10 seconds each)
+**Quick pulse check** — go around the circle, 10 seconds each:
+> "One word: how does AI make you feel right now?"
 
 ---
 
-## Section 1: Context & Current Usage (Survey Step 1)
-*Demographics, AI tools used, comfort level, current practices*
+## Section 01: Who Are You? (5 minutes)
+*Survey questions: age, faith, denomination, role, tech comfort, AI tools used*
 
-### Results (2 minutes)
-Present 2-3 findings from Step 1:
-- Percentage using various AI tools (ChatGPT, Claude, etc.)
-- Self-reported technology comfort levels
-- Primary use cases (work, ministry, personal)
+### Results (1 minute)
+Show 2–3 data points:
+- Which AI tools people in the room have used
+- Distribution of tech comfort levels
+- Range of roles represented (pastors, lay leaders, professionals, etc.)
 
-### Discussion (3 minutes)
-- "Who's surprised by these usage patterns? Who's not?"
-- "What does the distribution of tools tell us about access and awareness?"
-- "How does comfort level correlate with concern level?"
+### Discussion (2 minutes)
+- "Who's surprised by what people are using?"
+- "How many of you use AI tools regularly — and had no idea others in this room did too?"
+- "Does comfort with technology predict how you feel about AI in the church?"
 
 ### Bible Resources (2 minutes)
-**Participant call:** "What scriptures come to mind when you think about tools, technology, or human capability?"
+**Participant call:** "What scriptures come to mind when you think about tools, craft, or human creativity?"
 
 **Facilitator additions:**
-- **Genesis 4:20-22** — Jubal, Tubal-cain: technology as human cultural development
-- **Exodus 31:1-6** — Bezalel filled with Spirit for craftsmanship, skill, and knowledge
-- **Psalm 127:1-2** — Unless the Lord builds the house... technology without God is futile
-- **1 Corinthians 10:23-24** — "All things are lawful" but not all build up
+- **Genesis 4:20-22** — Jubal and Tubal-cain: tool-making as part of human cultural development
+- **Exodus 31:1-6** — Bezalel filled with the Spirit for craftsmanship, skill, and knowledge
+- **1 Corinthians 10:23** — "All things are lawful, but not all things build up"
 
 ---
 
-## Section 2: Impact on Spiritual Formation (Survey Step 2)
-*Scripture engagement, critical thinking, meditation, sermon prep*
+## Section 02: Where Do You Personally Draw the Line? (8 minutes)
+*Survey questions: personal spiritual use of AI, faith impact, dependency concern, personal off-limits uses, idolatry potential*
 
 ### Results (2 minutes)
-Present 2-3 findings from Step 2:
-- Concerns about AI undermining meditative Scripture reading
-- AI use in sermon preparation
-- Impact on critical thinking and discernment
+Show 2–3 data points:
+- How many use AI in personal spiritual practices (prayer, Bible study, devotions)
+- Whether people feel AI has positively or negatively impacted their faith
+- What uses people personally consider off-limits (spiritual guidance, emotional support, creative worship, sermon prep)
+- Whether people see AI as something with idolatry potential
 
 ### Discussion (3 minutes)
-- "How many of you have felt tension between speed and depth in your spiritual practices?"
-- "Can AI enhance formation, or only shortcut it?"
-- Stories: "Has AI ever helped you see a text you missed? Has it ever made you skip the work?"
+- "How many of you have felt torn — this is helpful, but something feels off?"
+- "Is using AI for prayer or devotions a shortcut, or just a tool? Where is the line?"
+- "What would it look like to become spiritually dependent on AI in a way that harms your faith?"
+- "If AI has idolatry potential — what does that actually look like in practice?"
 
 ### Bible Resources (3 minutes)
-**Participant call:** "What scriptures speak to wisdom, knowledge, study, or hearing from God?"
+**Participant call:** "What scriptures speak to wisdom, personal discipline, or the formation of the inner life?"
 
 **Facilitator additions:**
-- **Psalm 1:1-3** — Delight in the law, meditate day and night
-- **Proverbs 2:1-7** — Seek wisdom like silver, understanding like hidden treasure
-- **Luke 10:38-42** — Mary chose the one necessary thing
-- **2 Timothy 3:16-17** — Scripture for teaching, reproof, correction, training
-- **Ecclesiastes 12:11-12** — Of making many books there is no end
+- **Psalm 1:1-3** — Meditate on the law day and night; the image of slow, rooted growth
+- **Luke 10:38-42** — Mary chose the one necessary thing; the tension of activity vs. presence
+- **Proverbs 4:23** — Guard your heart, for everything flows from it
+- **Isaiah 44:9-20** — The danger of making something with your hands and then bowing to it
+- **Romans 1:25** — Worshipping the created thing rather than the Creator
 
 ---
 
-## Section 3: Character, Dependency & Kingdom Potential (Survey Step 3)
-*Decision dependency, creative impact, spiritual outsourcing, kingdom multiplication*
+## Section 03: Where Do We As a Church Draw the Line? (8 minutes)
+*Survey questions: church use of AI for sermon prep, social media, website, operations/efficiency, disclosure, whether the church has a clear position*
 
 ### Results (2 minutes)
-Present 2-3 findings from Step 3:
-- Concern about decision-making dependency on AI
-- Views on AI for kingdom multiplication
-- Creative impact (atrophy vs. enhancement)
+Show the spread of responses on each use case:
+- Sermon preparation (Definitely Not → Definitely Yes)
+- Social media content
+- Website building and maintenance
+- Operational efficiency (e.g. attendance counting, admin automation)
+- Whether AI use in church should always be disclosed
+- Whether this church currently has a clear position on AI
 
 ### Discussion (3 minutes)
-- "Where is the line between 'multiplying capacity' and 'outsourcing calling'?"
-- "What happens to human character when we delegate too much?"
-- "Can AI help us love more people, or just manage more people?"
+- "Which of these felt obviously fine? Which ones felt obviously wrong? Which ones are you genuinely unsure about?"
+- "Is there a difference between AI writing the pastor's sermon and AI counting how many people showed up?"
+- "If someone in the congregation doesn't know a post was AI-generated — does that matter? Why?"
+- "We asked whether this church has a clear position on AI. What do you think the answer should be?"
 
 ### Bible Resources (3 minutes)
-**Participant call:** "What scriptures speak to character, virtue, or the formation of the person?"
+**Participant call:** "What scriptures speak to the community of faith, shared discernment, or how we use resources together?"
 
 **Facilitator additions:**
-- **Romans 5:3-5** — Suffering produces endurance, character, hope
-- **1 Timothy 4:7-8** — Train yourself for godliness
-- **2 Peter 1:5-8** — Add to your faith virtue, knowledge, self-control
-- **Philippians 4:13** — I can do all things through Christ who strengthens me (not through AI)
-- **Colossians 3:23** — Work heartily as for the Lord, not for human masters
+- **Acts 2:42-47** — The early church: shared life, common purpose, radical transparency
+- **1 Corinthians 12:12-26** — The body of Christ: different gifts, shared judgment
+- **Nehemiah 4** — Using every available means to rebuild, while remaining vigilant
+- **Psalm 127:1** — Unless the Lord builds the house, the builders labour in vain
 
 ---
 
-## Section 4: Ethics, Governance, Justice & Spiritual Warfare (Survey Step 4)
-*Guidance sources, economic justice, divination, evil forces, surveillance*
+## Section 04: How Should We Respond? (8 minutes)
+*Survey questions: who should lead the church's response, formal policy, mass unemployment concern, surveillance resistance*
 
 ### Results (2 minutes)
-Present 2-3 findings from Step 4:
-- Who should guide the Church on AI (denominations, pastors, technologists)
-- Concerns about economic justice and job displacement
-- Divination/spiritual warfare questions that arose
+Show responses on:
+- Who people think should lead the church's response (denominations, pastors, tech-literate members, collaboration, personal discernment)
+- Whether a formal AI policy or guideline is needed
+- Level of concern about AI and mass unemployment
+- Whether Christians should speak out against government AI surveillance and social control
 
 ### Discussion (4 minutes)
-- "Is AI a neutral tool, or does it carry the spirit of its makers?"
-- "Can we love our neighbor while benefiting from AI trained on exploited labor?"
-- "Where does Christian wisdom outpace technical expertise?"
+- "The data shows [X] think it should be personal discernment, and [X] think we need formal guidance. Can both be right?"
+- "Who actually has the credibility to lead this? The most tech-savvy? The most spiritually mature? Both?"
+- "AI is already beginning to displace jobs. How does 'love your neighbour' apply when automation puts people out of work?"
+- "On surveillance: is a government using AI to monitor citizens a legitimate safety tool, a threat to human dignity, or both? What's the Christian posture?"
 
 ### Bible Resources (4 minutes)
-**Participant call:** "What scriptures speak to justice, power, authority, or spiritual warfare?"
+**Participant call:** "What scriptures speak to leadership, authority, justice, or how we engage the powers of the world?"
 
 **Facilitator additions:**
+- **Romans 13:1-7** — Governing authorities are established by God; but with limits
+- **Acts 5:29** — "We must obey God rather than human beings" — the limits of compliance
 - **Micah 6:8** — Do justice, love kindness, walk humbly
-- **James 5:1-6** — Warning to the rich who exploit workers
-- **Ephesians 6:10-12** — We wrestle not against flesh and blood
-- **Deuteronomy 18:9-14** — Divination, sorcery, seeking omens
-- **Matthew 22:15-22** — Render to Caesar what is Caesar's (authority and technology)
-- **Acts 16:16-18** — Paul and the spirit of divination
+- **James 5:1-6** — Warning to the wealthy who exploit workers; God hears the cries of the displaced
+- **Jeremiah 29:4-7** — Seek the welfare of the city you are in; engage, don't withdraw
+- **Revelation 13:16-17** — The mark of the beast and economic control; surveillance and coercion are not new fears
 
 ---
 
-## Section 5: Future, Eschatology & Cultural Context (Survey Step 5)
-*Tegmark outcomes, Life 3.0, surveillance state, Christian response*
+## Section 05: What Future Do We Want to Create? (8 minutes)
+*Survey questions: eschatological significance of AI, Tegmark outcome ranking, final open response*
 
 ### Results (2 minutes)
-Present 2-3 findings from Step 5:
-- Collective ranking of Tegmark's seven outcomes
-- Beliefs about AI sentience
-- Eschatological significance (if any)
+Show:
+- How the group answered whether AI has end-times relevance
+- The collective ranking of Tegmark's seven possible AI futures (most to least desirable)
+- Selected quotes from the open-text responses (anonymized)
 
-### Discussion (4 minutes)
-- "What does our ranking of outcomes reveal about what we value?"
-- "Is AGI a new Babel, or a new Pentecost?"
-- "How urgent is this? Are we alarmists, or are we behind?"
+**Brief context for the room:**
+> "In *Life 3.0*, Max Tegmark maps seven futures if AGI — AI that can do anything a human intellect can do — ever emerges. Your group ranked which futures they most want. This is what you chose."
 
-### Bible Resources (4 minutes)
-**Participant call:** "What scriptures speak to the future, the end times, or God's sovereignty over history?"
+### Discussion (3 minutes)
+- "What does your top-ranked future reveal about what you actually value?"
+- "Is AGI a new Tower of Babel — human presumption that will require divine intervention? Or a tool the Church should be ready to steward?"
+- "You voted on eschatological relevance. If AI *is* significant for end times — what does that mean for what we do now, this week?"
+- "What did the open-text responses say that surprised you?"
+
+### Bible Resources (3 minutes)
+**Participant call:** "What scriptures speak to the future, God's sovereignty over history, or how we live in uncertain times?"
 
 **Facilitator additions:**
-- **Genesis 11:1-9** — Tower of Babel: unlimited potential, divine limit
-- **Daniel 2:31-45** — Nebuchadnezzar's dream: human kingdoms rise and fall
-- **Matthew 24** — Birth pains, deception, the need for discernment
-- **Revelation 13:11-18** — The image of the beast, mark, economic control
-- **Isaiah 46:8-10** — God declares the end from the beginning
-- **Psalm 2** — The nations rage, but God laughs
+- **Genesis 11:1-9** — Babel: humanity unified in purpose, building toward the sky — and God intervened
+- **Daniel 2:31-45** — Human kingdoms rise and fall; only one kingdom is eternal
+- **Matthew 24:4-8** — Birth pains, deception, the call for discernment
+- **Revelation 13:11-18** — The image of the beast; worship coerced through economic and technological power
+- **Isaiah 46:9-10** — "I declare the end from the beginning" — God is not surprised by AGI
+- **Psalm 2** — The nations rage and plot; God is not threatened
 
-**Frame the tension:**
-> "Some of you see AI as Babel — human presumption requiring divine intervention. Others see tools for gospel spread before Christ returns. Both have biblical precedent. The Church has always lived in this tension between promise and peril."
+**Frame the tension before closing:**
+> "Some of you see AI as Babel — human overreach that will require divine correction. Others see it as a Pentecost-like tool for gospel spread before Christ returns. Both are in Scripture. The Church has always lived in this tension. You don't have to resolve it tonight."
 
 ---
 
-## Closing: The Work — Drafting Our Guideline (5 minutes)
+## Closing: What Do We Do With This? (5 minutes)
 
 **Transition:**
-> "We've walked through five sections of data, discussion, and Scripture. Now — what do we do with this?"
+> "We've walked through five sections of data, discussion, and Scripture. Now — what do we actually do?"
 
 **Rapid synthesis:**
-- Each participant writes ONE principle on a sticky note
+- Each participant writes **one principle** on a card or sticky note
 - Read aloud as collected
-- Do not seek consensus — capture the range
+- **Do not seek consensus** — capture the full range
 
-**Examples to inspire:**
-- "AI should amplify, not replace, Christian community"
-- "Prefer human wisdom in matters of soul and conscience"
-- "Consider the vulnerable in every AI decision we make"
-- "Transparency: disclose when AI shapes our communication"
+**Examples to spark thinking:**
+- "AI should amplify, not replace, human relationship in the church"
+- "We disclose when AI shapes our communication to the congregation"
+- "We consider the economically vulnerable in every AI decision we make"
+- "Personal use is personal — corporate use requires shared discernment"
 
 **Closing charge:**
-> "You've started something. This isn't a finished framework. It's a seed. Take it back to your church, your team, your denomination. Water it. The Church needs your voice in this conversation — not in 10 years. Now."
+> "This isn't a finished framework. It's a seed. Take it back to your community. Water it. The Church's voice in this conversation matters — not in ten years. Now."
 
 ---
 
 ## Facilitator Notes
 
-**Timing is tight:**
-- Keep each section moving
-- It's okay not to explore every lens fully
-- The goal is exposure, not resolution
-
 **Hold the tension:**
-- Don't let the group land too comfortably in "AI is all bad" or "AI is all good"
-- When contradictions arise: "Both are in the data. Both are in Scripture. What do we do with that?"
+- Do not let the group settle too comfortably in "AI is all bad" or "AI is neutral, just a tool"
+- When contradictions arise, name them: *"Both are in the data. Both are in Scripture. What do we do with that?"*
 
-**Data drives everything:**
-- Ground every discussion in the actual survey results
-- Ask: "Does the data support that, challenge that, or stay silent?"
+**Ground everything in the actual data:**
+- When someone shares a personal view, redirect: *"Does the data from your group support that? Challenge it?"*
+- The survey results are the conversation partner, not just background
 
-**Bible is participatory:**
-- Let participants bring texts first
-- Add facilitator lenses to expand, not replace, their contributions
-- Do not proof-text. Let Scripture complicate, not just confirm.
+**Bible is participatory first:**
+- Always ask participants for scriptures before offering your own
+- Add facilitator additions to expand, not to correct or redirect
+- Don't proof-text — let Scripture complicate, not just confirm
+
+**On questions you can't resolve:**
+- It is okay to say: *"We're not going to agree on this tonight, and that's okay. Naming the question is the first act of stewardship."*
 
 ---
 
 ## Appendix: All Scriptures by Theme
 
-| Survey Section | Key Scriptures |
-|----------------|----------------|
-| **Context & Usage** | Genesis 4:20-22, Exodus 31:1-6, Psalm 127, 1 Corinthians 10:23-24 |
-| **Spiritual Formation** | Psalm 1, Proverbs 2, Luke 10:38-42, 2 Timothy 3:16-17, Ecclesiastes 12 |
-| **Character & Kingdom** | Romans 5:3-5, 1 Timothy 4:7-8, 2 Peter 1:5-8, Philippians 4:13, Colossians 3:23 |
-| **Ethics & Justice** | Micah 6:8, James 5:1-6, Ephesians 6:10-12, Deuteronomy 18, Matthew 22 |
-| **Future & Eschatology** | Genesis 11, Daniel 2, Matthew 24, Revelation 13, Isaiah 46, Psalm 2 |
+| Section | Key Scriptures |
+|---------|----------------|
+| **01 — Who Are You?** | Genesis 4:20-22, Exodus 31:1-6, 1 Corinthians 10:23 |
+| **02 — Your Personal Line** | Psalm 1:1-3, Luke 10:38-42, Proverbs 4:23, Isaiah 44:9-20, Romans 1:25 |
+| **03 — The Church's Line** | Acts 2:42-47, 1 Corinthians 12, Nehemiah 4, Psalm 127:1 |
+| **04 — How Should We Respond?** | Romans 13:1-7, Acts 5:29, Micah 6:8, James 5:1-6, Jeremiah 29:4-7, Revelation 13:16-17 |
+| **05 — What Future Do We Want?** | Genesis 11:1-9, Daniel 2, Matthew 24, Revelation 13:11-18, Isaiah 46:9-10, Psalm 2 |
 
 ---
 
