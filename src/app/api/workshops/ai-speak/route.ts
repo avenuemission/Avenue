@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -31,13 +33,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "TTS generation failed" }, { status: 500 });
   }
 
-  const audioBuffer = await response.arrayBuffer();
-
-  return new NextResponse(audioBuffer, {
+  // Stream the body directly back — avoids buffering the full audio in memory
+  // and prevents serverless timeout on long TTS responses
+  return new NextResponse(response.body, {
     status: 200,
     headers: {
       "Content-Type": "audio/mpeg",
-      "Content-Length": audioBuffer.byteLength.toString(),
+      "Transfer-Encoding": "chunked",
     },
   });
 }

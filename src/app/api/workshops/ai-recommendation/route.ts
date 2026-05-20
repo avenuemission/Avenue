@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 function summariseResponses(responses: Record<string, string>[]): string {
   if (responses.length === 0) return "No responses available.";
 
