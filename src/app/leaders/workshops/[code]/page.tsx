@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { RefreshCw, Users, ArrowLeft, Download } from "lucide-react";
+import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 
 interface Response {
   session_code: string;
@@ -268,21 +268,60 @@ function OpenTextResponses({ responses }: { responses: Response[] }) {
   );
 }
 
-// ─── Section card wrapper ─────────────────────────────────────────────────────
+// ─── Collapsible section card ─────────────────────────────────────────────────
 
-function SectionCard({ num, title, children }: { num: string; title: string; children: React.ReactNode }) {
+function SectionCard({
+  id, num, title, children, open, onToggle,
+}: {
+  id: string; num: string; title: string; children: React.ReactNode;
+  open: boolean; onToggle: () => void;
+}) {
   return (
-    <div className="mb-10">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-blue-400 font-mono text-xs font-bold">{num}</span>
-        <h2 className="text-white text-lg font-bold">{title}</h2>
-      </div>
-      {children}
+    <div id={id} className="mb-4 border border-gray-800 rounded-2xl overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-5 py-4 bg-gray-900/60 hover:bg-gray-900/80 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-blue-400 font-mono text-xs font-bold">{num}</span>
+          <h2 className="text-white text-base font-bold">{title}</h2>
+        </div>
+        {open
+          ? <ChevronUp className="w-4 h-4 text-gray-500" />
+          : <ChevronDown className="w-4 h-4 text-gray-500" />}
+      </button>
+      {open && <div className="px-5 py-5">{children}</div>}
     </div>
   );
 }
 
+// ─── Privacy toggle ───────────────────────────────────────────────────────────
+
+function PrivacyToggle({ label, visible, onToggle }: { label: string; visible: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+        visible
+          ? "border-yellow-700/50 bg-yellow-900/20 text-yellow-400 hover:bg-yellow-900/30"
+          : "border-gray-700 bg-gray-800/40 text-gray-500 hover:bg-gray-800/60"
+      }`}
+    >
+      {visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+      {label}
+    </button>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
+
+const SECTIONS = [
+  { id: "s01", num: "01", title: "Who Are You?" },
+  { id: "s02", num: "02", title: "Your Personal Line" },
+  { id: "s03", num: "03", title: "The Church's Line" },
+  { id: "s04", num: "04", title: "How Should We Respond?" },
+  { id: "s05", num: "05", title: "What Future?" },
+];
 
 export default function WorkshopDisplayPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
@@ -290,6 +329,13 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
   const [responses, setResponses] = useState<Response[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    s01: true, s02: false, s03: false, s04: false, s05: false,
+  });
+  // Privacy toggles — hidden by default
+  const [showAge, setShowAge] = useState(false);
+  const [showChristian, setShowChristian] = useState(false);
+  const [showDenomination, setShowDenomination] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -306,6 +352,14 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
     setLoading(false);
   };
 
+  const toggleSection = (id: string) =>
+    setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const scrollTo = (id: string) => {
+    setOpenSections(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+
   const n = responses.length;
 
   return (
@@ -315,7 +369,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
       </div>
 
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm sticky top-0">
+      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm sticky top-0 bg-black/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => router.push("/leaders/workshops")} className="text-gray-400 hover:text-white transition-colors">
@@ -343,9 +397,31 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
             </button>
           </div>
         </div>
+
+        {/* Section nav */}
+        {n > 0 && (
+          <div className="border-t border-gray-800/50 overflow-x-auto">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 flex gap-1 py-2">
+              {SECTIONS.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => scrollTo(s.id)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    openSections[s.id]
+                      ? "bg-blue-600/20 text-blue-300 border border-blue-700/40"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/40"
+                  }`}
+                >
+                  <span className="font-mono text-[10px]">{s.num}</span>
+                  <span className="hidden sm:inline">{s.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </header>
 
-      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {n === 0 && !loading ? (
           <div className="text-center py-20">
             <Users className="w-12 h-12 text-gray-700 mx-auto mb-4" />
@@ -355,23 +431,34 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
         ) : (
           <>
             {/* ── Section 01: Who Are You? ── */}
-            <SectionCard num="01" title="Who Are You?">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <BreakdownChart title="Age Range" counts={countValues(responses, "age_range")} total={n} />
-                <BreakdownChart title="Do you identify as a Christian?" counts={countValues(responses, "is_christian")} total={n} />
-                <BreakdownChart title="Denominational Tradition" counts={countValues(responses, "denomination")} total={n} />
-                <BreakdownChart title="Role" counts={countValues(responses, "role")} total={n} />
+            <SectionCard id="s01" num="01" title="Who Are You?"
+              open={openSections.s01} onToggle={() => toggleSection("s01")}
+            >
+              {/* Privacy controls */}
+              <div className="flex flex-wrap gap-2 mb-5 pb-4 border-b border-gray-800">
+                <span className="text-gray-500 text-xs self-center mr-1">Private fields:</span>
+                <PrivacyToggle label="Age Range" visible={showAge} onToggle={() => setShowAge(v => !v)} />
+                <PrivacyToggle label="Christian?" visible={showChristian} onToggle={() => setShowChristian(v => !v)} />
+                <PrivacyToggle label="Denomination" visible={showDenomination} onToggle={() => setShowDenomination(v => !v)} />
               </div>
-              <ScaleQuestion
-                title="How comfortable are you with technology generally?"
-                responses={responses}
-                field="tech_comfort"
-              />
+
+              {showAge && <BreakdownChart title="Age Range" counts={countValues(responses, "age_range")} total={n} />}
+              {showChristian && <BreakdownChart title="Do you identify as a Christian?" counts={countValues(responses, "is_christian")} total={n} />}
+              {showDenomination && <BreakdownChart title="Denominational Tradition" counts={countValues(responses, "denomination")} total={n} />}
+
+              {!showAge && !showChristian && !showDenomination && (
+                <p className="text-gray-600 text-xs italic mb-4">Age, faith, and denomination data is hidden. Toggle above to reveal.</p>
+              )}
+
+              <BreakdownChart title="Role" counts={countValues(responses, "role")} total={n} />
+              <ScaleQuestion title="How comfortable are you with technology generally?" responses={responses} field="tech_comfort" />
               <BreakdownChart title="AI Tools Used" counts={countMultiValues(responses, "ai_tools")} total={n} />
             </SectionCard>
 
             {/* ── Section 02: Personal Line ── */}
-            <SectionCard num="02" title="Where Do You Personally Draw the Line?">
+            <SectionCard id="s02" num="02" title="Where Do You Personally Draw the Line?"
+              open={openSections.s02} onToggle={() => toggleSection("s02")}
+            >
               <ScaleQuestion title="I use AI in my personal spiritual practices (prayer, Bible study, devotions)" responses={responses} field="personal_spiritual_use" />
               <ScaleQuestion title="Overall, AI tools have had a positive impact on my faith" responses={responses} field="faith_impact" />
               <ScaleQuestion title="I am concerned about becoming too dependent on AI for thinking and decision-making" responses={responses} field="decision_dependency" />
@@ -381,7 +468,9 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
             </SectionCard>
 
             {/* ── Section 03: Church Line ── */}
-            <SectionCard num="03" title="Where Do We As a Church Draw the Line?">
+            <SectionCard id="s03" num="03" title="Where Do We As a Church Draw the Line?"
+              open={openSections.s03} onToggle={() => toggleSection("s03")}
+            >
               <AppropriatenessQuestion title="The church should use AI to assist with sermon preparation" responses={responses} field="church_sermon_prep" />
               <AppropriatenessQuestion title="The church should use AI for social media content" responses={responses} field="church_social_media" />
               <AppropriatenessQuestion title="The church should use AI to help build and maintain its website" responses={responses} field="church_website" />
@@ -391,7 +480,9 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
             </SectionCard>
 
             {/* ── Section 04: How Should We Respond? ── */}
-            <SectionCard num="04" title="How Should We Respond?">
+            <SectionCard id="s04" num="04" title="How Should We Respond?"
+              open={openSections.s04} onToggle={() => toggleSection("s04")}
+            >
               <BreakdownChart title="Who should lead the Church's response to AI?" counts={countValues(responses, "who_should_lead")} total={n} />
               <ScaleQuestion title="The Church should develop a formal AI policy or ethical guideline" responses={responses} field="formal_policy" />
               <ScaleQuestion title="I am concerned about AI causing mass unemployment and economic disruption" responses={responses} field="unemployment_concern" />
@@ -399,7 +490,9 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
             </SectionCard>
 
             {/* ── Section 05: Future ── */}
-            <SectionCard num="05" title="What Future Do We Want to Create?">
+            <SectionCard id="s05" num="05" title="What Future Do We Want to Create?"
+              open={openSections.s05} onToggle={() => toggleSection("s05")}
+            >
               <ScaleQuestion title="AI has significant relevance to how Christians should think about the end times" responses={responses} field="eschatological_significance" />
               <TegmarkResults responses={responses} />
               <OpenTextResponses responses={responses} />
