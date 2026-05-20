@@ -577,6 +577,78 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
   );
 }
 
+// ─── Markdown renderer for AI written analysis ───────────────────────────────
+
+function MarkdownAnalysis({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+
+  const renderInline = (str: string, key: number): React.ReactNode => {
+    const parts = str.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <span key={key}>
+        {parts.map((p, i) =>
+          p.startsWith("**") && p.endsWith("**")
+            ? <strong key={i} className="text-white font-semibold">{p.slice(2, -2)}</strong>
+            : p
+        )}
+      </span>
+    );
+  };
+
+  let bulletBuffer: string[] = [];
+
+  const flushBullets = () => {
+    if (bulletBuffer.length > 0) {
+      elements.push(
+        <ul key={`ul-${elements.length}`} className="space-y-1.5 mb-4 pl-1">
+          {bulletBuffer.map((b, i) => (
+            <li key={i} className="flex gap-2 text-gray-300 text-sm leading-relaxed">
+              <span className="text-blue-400 mt-1 shrink-0">•</span>
+              <span>{renderInline(b, i)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      bulletBuffer = [];
+    }
+  };
+
+  lines.forEach((line, i) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushBullets();
+      return;
+    }
+    if (trimmed.startsWith("## ")) {
+      flushBullets();
+      const heading = trimmed.slice(3);
+      const isRec = heading.toLowerCase().includes("recommendation");
+      elements.push(
+        <h3 key={`h-${i}`} className={`font-bold text-sm mt-5 mb-2 pb-1 border-b ${
+          isRec
+            ? "text-blue-300 border-blue-800"
+            : "text-white border-gray-800"
+        }`}>
+          {heading}
+        </h3>
+      );
+    } else if (trimmed.startsWith("- ")) {
+      bulletBuffer.push(trimmed.slice(2));
+    } else {
+      flushBullets();
+      elements.push(
+        <p key={`p-${i}`} className="text-gray-300 text-sm leading-relaxed mb-3">
+          {renderInline(trimmed, i)}
+        </p>
+      );
+    }
+  });
+  flushBullets();
+
+  return <div>{elements}</div>;
+}
+
 // ─── AI Recommendation Section ───────────────────────────────────────────────
 
 function AiRecommendationSection({
@@ -625,8 +697,8 @@ function AiRecommendationSection({
       {hasResult && !loading && (
         <>
           <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-5 mb-5">
-            <p className="text-gray-500 text-xs font-mono uppercase tracking-wider mb-3">Written Analysis</p>
-            <div className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{written}</div>
+            <p className="text-gray-500 text-xs font-mono uppercase tracking-wider mb-4">Written Analysis</p>
+            <MarkdownAnalysis text={written} />
           </div>
 
           {/* Audio controls */}

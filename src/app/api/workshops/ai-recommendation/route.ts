@@ -113,28 +113,58 @@ export async function POST(request: NextRequest) {
   const summary = summariseResponses(responses);
 
   // ── Written recommendation ──────────────────────────────────────────────────
-  const writtenPrompt = `You are a sharp strategic consultant who also has deep pastoral instincts. You've just received survey data from a group of Christians discussing AI. Analyse this data and give a clear, practical recommendation.
+  const writtenPrompt = `You are a sharp strategic consultant with deep pastoral instincts. You have just analysed survey results from a group of Christians discussing AI. Produce a structured written analysis.
 
-Be direct and human. Use plain English. Avoid jargon. Occasional dry humour is welcome — but don't force it. No bullet points. Write in flowing paragraphs. Do NOT use markdown formatting.
+Use plain English. Be specific — reference actual scores and patterns from the data. Dry humour welcome but don't force it.
 
-Structure your response as:
-1. What the data actually says (2–3 key observations about this specific group — be specific, reference actual numbers)
-2. What they should do (3 concrete, actionable recommendations for their church — specific and realistic)
-3. A closing Bible verse chosen specifically because it speaks to this group's unique results — quote a short portion of it, then in one sentence connect it directly to what this group's data showed.
+Format your response EXACTLY as follows using these section headings and bullet points. Use markdown: ## for headings, - for bullet points, **bold** for numbered recommendation headlines.
 
-Keep it under 350 words total.
+## Your Group's Tech Profile
+- 3–4 dot points covering who is in the room, their tech comfort, and what AI tools they already use
+
+## Where Personal Lines Are Drawn
+- 3–4 dot points on how they personally use AI (including spiritual practices), what they consider off-limits, dependency concerns, and idolatry risk
+
+## What the Church Should (and Shouldn't) Do
+- 3–4 dot points covering the church appropriateness scores — which uses got high support, which got hesitation, and whether they think disclosure is important
+
+## Who Should Lead the Response
+- 2–3 dot points on who they think should lead, whether they want a formal policy, and how ready their church currently feels
+
+## The Future They're Stewarding Toward
+- 2–3 dot points on eschatological significance, the Tegmark outcome ranking (describe which futures they found most/least desirable), and any notable quotes from open text
+
+## Our Recommendations
+This is the most important section. Write 4–5 numbered recommendations. Each one has:
+**1. Short punchy headline**
+One to two sentences explaining what to do and why, directly tied to what this group's data revealed. Be specific and actionable. Don't be generic.
+
+End with a Bible verse chosen specifically because it speaks to this group's unique combination of results. Quote a short portion, then one sentence connecting it directly to what this group showed.
 
 Survey data:
 ${summary}`;
 
-  // ── Spoken summary ──────────────────────────────────────────────────────────
-  const spokenPrompt = `You are a sharp, warm AI assistant who just analysed survey data from a group of Christians discussing AI. You need to give a 45-second spoken summary.
+  // ── Spoken summary (~2 min, no score numbers) ────────────────────────────────
+  const spokenPrompt = `You are a sharp, warm, witty AI assistant who just analysed survey data from a group of Christians discussing how their church should use AI. You need to deliver a spoken briefing of about 2 minutes (around 280–320 words when spoken aloud).
 
-Start with something like: "I'll save you the trouble of reading through all of that — here's what I'm actually thinking."
+CRITICAL RULES:
+- Do NOT mention any specific numbers, scores, averages, or percentages. No "3.4 out of 5" or "67% said". Speak in qualitative terms: "most of you", "the majority", "a strong lean toward", "a real hesitation around", "surprisingly few", etc.
+- No headings, no lists — this is pure spoken word. Write it to be read aloud naturally.
+- Sound like a smart, warm human friend who happens to know both strategy and theology. Conversational. A little funny when it fits.
 
-Then give the 2 most interesting or surprising things you noticed about this specific group's data (be specific — reference actual numbers or patterns). Then give your single most important recommendation. End with the same Bible verse from the written analysis and one natural sentence connecting it to them.
+STRUCTURE:
+1. Open with a completely fresh, original riff on the irony of the situation — something like "Well, this is a curious moment — AI giving advice to humans on how to use AI" — then land a genuinely funny, light-hearted joke about this. Make it feel natural and spontaneous. Don't be cringe. Be clever.
 
-Sound like a smart human friend who happens to know strategy and theology. A little bit funny is good. Conversational, not formal. No lists, no headings — just talk. Under 120 words.
+2. Walk through the 5 insight areas conversationally in order:
+   - Who is in the room and their tech background
+   - What personal lines they're drawing
+   - What the church should and shouldn't do
+   - Who they think should lead the response and how ready they feel
+   - The kind of future they're hoping for
+
+3. Land on the most important recommendation or action for this group. Make it feel like a genuine, thoughtful conclusion — not a list.
+
+4. Close with the same Bible verse used in the written analysis. Read a short portion of it naturally, then connect it to this group in one warm, human sentence.
 
 Survey data:
 ${summary}`;
@@ -146,7 +176,7 @@ ${summary}`;
       body: JSON.stringify({
         model: "gpt-4o",
         messages: [{ role: "user", content: writtenPrompt }],
-        max_tokens: 600,
+        max_tokens: 1200,
         temperature: 0.75,
       }),
     }),
@@ -156,7 +186,7 @@ ${summary}`;
       body: JSON.stringify({
         model: "gpt-4o",
         messages: [{ role: "user", content: spokenPrompt }],
-        max_tokens: 250,
+        max_tokens: 500,
         temperature: 0.85,
       }),
     }),
