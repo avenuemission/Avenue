@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles, Volume2, Square, RotateCcw } from "lucide-react";
+import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles, Volume2, Square, RotateCcw, Download, FileText } from "lucide-react";
 
 interface Response {
   session_code: string;
@@ -524,6 +524,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
                 audioPlaying={audioPlaying}
                 audioFinished={audioFinished}
                 audioRef={audioRef}
+                sessionCode={code}
                 onGenerate={async () => {
                   setAiLoading(true);
                   setAiError("");
@@ -655,14 +656,58 @@ function MarkdownAnalysis({ text }: { text: string }) {
 
 function AiRecommendationSection({
   responses, written, spoken, loading, error, audioUrl, audioPlaying, audioFinished,
-  audioRef, onGenerate, onStop, onReplay,
+  audioRef, onGenerate, onStop, onReplay, sessionCode,
 }: {
   responses: Response[];
   written: string; spoken: string; loading: boolean; error: string;
   audioUrl: string; audioPlaying: boolean; audioFinished: boolean;
   audioRef: React.RefObject<HTMLAudioElement | null>;
   onGenerate: () => void; onStop: () => void; onReplay: () => void;
+  sessionCode: string;
 }) {
+  const handleDownloadPDF = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Recommendation - ${sessionCode}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #333; }
+    h1 { color: #1a1a1a; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+    h2 { color: #2563eb; margin-top: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+    h3 { color: #374151; margin-top: 20px; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 8px; }
+    strong { color: #1f2937; }
+    .meta { color: #6b7280; font-size: 14px; margin-bottom: 30px; }
+    @media print { body { margin: 0; padding: 20px; } }
+  </style>
+</head>
+<body>
+  <h1>AI Recommendation Report</h1>
+  <div class="meta">Session: ${sessionCode} | Generated: ${new Date().toLocaleString()}</div>
+  ${written.replace(/## /g, "<h2>").replace(/\n- /g, "\n<li>").replace(/\n\n/g, "</p><p>").replace(/^/, "<p>").replace(/$/, "</p>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}
+</body>
+</html>`;
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 100);
+  };
+
+  const handleDownloadMP3 = () => {
+    if (!audioUrl) return;
+    const link = document.createElement("a");
+    link.href = audioUrl;
+    link.download = `${sessionCode}-ai-recommendation.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   const hasResult = !!written;
 
   return (
@@ -739,6 +784,28 @@ function AiRecommendationSection({
                     <RotateCcw className="w-3 h-3" /> Replay
                   </button>
                 </>
+              )}
+            </div>
+          )}
+
+          {/* Download buttons */}
+          {hasResult && !loading && (
+            <div className="flex flex-wrap gap-3 mt-5 pt-5 border-t border-gray-800">
+              <button
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-2 text-xs text-gray-300 hover:text-white bg-gray-800/60 hover:bg-gray-700/60 border border-gray-700 px-4 py-2.5 rounded-lg transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                Download PDF Report
+              </button>
+              {audioUrl && (
+                <button
+                  onClick={handleDownloadMP3}
+                  className="flex items-center gap-2 text-xs text-gray-300 hover:text-white bg-gray-800/60 hover:bg-gray-700/60 border border-gray-700 px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Audio ({sessionCode}-ai-recommendation.mp3)
+                </button>
               )}
             </div>
           )}
