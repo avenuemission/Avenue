@@ -347,6 +347,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
   const [showAge, setShowAge] = useState(false);
   const [showChristian, setShowChristian] = useState(false);
   const [showDenomination, setShowDenomination] = useState(false);
+  const [includeLife3, setIncludeLife3] = useState(true);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -356,9 +357,16 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
 
   const loadData = async () => {
     setLoading(true);
-    const res = await fetch(`/api/workshops/results?code=${code}`);
-    const data = await res.json();
-    setResponses(Array.isArray(data) ? data : []);
+    const [resultsRes, sessionRes] = await Promise.all([
+      fetch(`/api/workshops/results?code=${code}`),
+      fetch(`/api/workshops/sessions`),
+    ]);
+    const resultsData = await resultsRes.json();
+    const sessionsData = await sessionRes.json();
+    setResponses(Array.isArray(resultsData) ? resultsData : []);
+    // Find current session settings
+    const session = Array.isArray(sessionsData) ? sessionsData.find((s: any) => s.code === code) : null;
+    setIncludeLife3(session?.include_life_3 !== false);
     setLastFetched(new Date());
     setLoading(false);
   };
@@ -506,7 +514,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
               open={openSections.s05} onToggle={() => toggleSection("s05")}
             >
               <ScaleQuestion title="AI has significant relevance to how Christians should think about the end times" responses={responses} field="eschatological_significance" />
-              <TegmarkResults responses={responses} />
+              {includeLife3 && <TegmarkResults responses={responses} />}
               <OpenTextResponses responses={responses} />
             </SectionCard>
 

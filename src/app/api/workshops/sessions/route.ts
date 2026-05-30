@@ -16,7 +16,7 @@ export async function GET() {
 
 // POST create a new session
 export async function POST(request: NextRequest) {
-  const { code } = await request.json();
+  const { code, include_life_3 } = await request.json();
 
   if (!code) {
     return NextResponse.json({ error: "Session code required" }, { status: 400 });
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("workshop_sessions")
-    .insert({ code: normalized })
+    .insert({ code: normalized, include_life_3: include_life_3 !== false })
     .select()
     .single();
 

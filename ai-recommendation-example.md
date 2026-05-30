@@ -56,6 +56,3 @@ Maintain AI boundaries in personal spiritual practices, given the 3.0/5 comfort 
 
 Promote a collaborative response to AI challenges and opportunities. The group prefers a united front, ensuring all voices contribute to shaping the future.
 
----
-
-> "Love your neighbour as yourself" (Mark 12:31) needs to be reflected in AI use and treatment—remember, AI might not be your neighbor, but it's certainly sitting next to you in the pew.

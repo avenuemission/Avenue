@@ -297,6 +297,7 @@ export default function TechnologicalStewardshipPage() {
   const [sessionCodeSuggestion, setSessionCodeSuggestion] = useState("");
   const [sessionCodeValid, setSessionCodeValid] = useState(false);
   const [sessionCodeChecking, setSessionCodeChecking] = useState(false);
+  const [includeLife3, setIncludeLife3] = useState(true);
 
   const goToStep = (step: number) => {
     setCurrentStep(step);
@@ -335,6 +336,7 @@ export default function TechnologicalStewardshipPage() {
       setSessionCode(data.code);
       setSessionCodeValid(true);
       setSessionCodeError("");
+      setIncludeLife3(data.include_life_3 !== false);
     } else {
       setSessionCodeValid(false);
       setSessionCode("");
@@ -839,27 +841,31 @@ export default function TechnologicalStewardshipPage() {
               "eschatologicalSignificance"
             )}
 
-            <div className="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 mb-6 mt-4">
-              <h4 className="text-white text-sm font-semibold mb-2 uppercase tracking-wider">Context from the culture</h4>
-              <p className="text-gray-300 text-sm leading-relaxed mb-3">
-                In <em>Life 3.0</em>, Max Tegmark describes <strong className="text-white">AGI (Artificial General Intelligence)</strong> &mdash; AI that can perform any intellectual task a human can, with the potential to recursively improve itself. He outlines seven possible futures for humanity if AGI emerges.
-              </p>
-              <p className="text-gray-400 text-xs italic">
-                Drag the cards below to rank from most desirable (1) to least desirable (7). Which future are we stewarding toward?
-              </p>
-            </div>
+            {includeLife3 && (
+              <>
+                <div className="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 mb-6 mt-4">
+                  <h4 className="text-white text-sm font-semibold mb-2 uppercase tracking-wider">Context from the culture</h4>
+                  <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                    In <em>Life 3.0</em>, Max Tegmark describes <strong className="text-white">AGI (Artificial General Intelligence)</strong> &mdash; AI that can perform any intellectual task a human can, with the potential to recursively improve itself. He outlines seven possible futures for humanity if AGI emerges.
+                  </p>
+                  <p className="text-gray-400 text-xs italic">
+                    Drag the cards below to rank from most desirable (1) to least desirable (7). Which future are we stewarding toward?
+                  </p>
+                </div>
 
-            <TegmarkRanking
-              onRankChange={(ranks) => {
-                updateSurveyData("tegmarkRankDictatorship", ranks.dictatorship);
-                updateSurveyData("tegmarkRankEnslaved", ranks.enslaved);
-                updateSurveyData("tegmarkRankGatekeeper", ranks.gatekeeper);
-                updateSurveyData("tegmarkRankZookeeper", ranks.zookeeper);
-                updateSurveyData("tegmarkRankLibertarian", ranks.libertarian);
-                updateSurveyData("tegmarkRankEgalitarian", ranks.egalitarian);
-                updateSurveyData("tegmarkRankProtector", ranks.protector);
-              }}
-            />
+                <TegmarkRanking
+                  onRankChange={(ranks) => {
+                    updateSurveyData("tegmarkRankDictatorship", ranks.dictatorship);
+                    updateSurveyData("tegmarkRankEnslaved", ranks.enslaved);
+                    updateSurveyData("tegmarkRankGatekeeper", ranks.gatekeeper);
+                    updateSurveyData("tegmarkRankZookeeper", ranks.zookeeper);
+                    updateSurveyData("tegmarkRankLibertarian", ranks.libertarian);
+                    updateSurveyData("tegmarkRankEgalitarian", ranks.egalitarian);
+                    updateSurveyData("tegmarkRankProtector", ranks.protector);
+                  }}
+                />
+              </>
+            )}
 
             {renderTextArea(
               "In your own words: what is the most important thing the Church should do in response to AI?",

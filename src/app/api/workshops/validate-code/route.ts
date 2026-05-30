@@ -28,12 +28,12 @@ export async function POST(request: NextRequest) {
   // Exact match first
   const { data: exact } = await supabase
     .from("workshop_sessions")
-    .select("code, status")
+    .select("code, status, include_life_3")
     .eq("code", normalized)
     .single();
 
   if (exact) {
-    return NextResponse.json({ valid: true, code: exact.code });
+    return NextResponse.json({ valid: true, code: exact.code, include_life_3: exact.include_life_3 });
   }
 
   // Fuzzy match — find closest active session code

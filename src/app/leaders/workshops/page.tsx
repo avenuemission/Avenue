@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut, Trash2 } from "lucide-react";
+import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut, Trash2, Monitor } from "lucide-react";
 import { logout } from "@/lib/auth";
 
 interface Session {
@@ -23,6 +23,7 @@ export default function WorkshopsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [includeLife3, setIncludeLife3] = useState(true);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -50,7 +51,7 @@ export default function WorkshopsPage() {
     const res = await fetch("/api/workshops/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: normalized }),
+      body: JSON.stringify({ code: normalized, include_life_3: includeLife3 }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -112,13 +113,22 @@ export default function WorkshopsPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Workshop Sessions</h1>
             <p className="text-gray-400 text-sm">Create a session, share the code with participants, then process results.</p>
           </div>
-          <button
-            onClick={() => { setShowCreate(true); setNewCode(suggestedCode()); }}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New Session
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/leaders/workshops/display")}
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Monitor className="w-4 h-4" />
+              Display
+            </button>
+            <button
+              onClick={() => { setShowCreate(true); setNewCode(suggestedCode()); }}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Session
+            </button>
+          </div>
         </div>
 
         {/* Create session panel */}
@@ -150,6 +160,20 @@ export default function WorkshopsPage() {
               >
                 Cancel
               </button>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-800">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={includeLife3}
+                  onChange={(e) => setIncludeLife3(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                />
+                <div>
+                  <span className="text-gray-300 text-sm group-hover:text-white transition-colors">Include Life 3.0 question</span>
+                  <p className="text-gray-500 text-xs">Show the Tegmark AGI futures ranking question in Section 5. Disable for groups where this topic may be too complex.</p>
+                </div>
+              </label>
             </div>
             <p className="text-gray-500 text-xs mt-3">
               Letters and numbers only. Participants will type this code at the start of the survey.
