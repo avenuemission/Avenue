@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from("pathway_groups")
     .update(fields)
-    .eq("id", id)
+    .eq("id", Number(id))
     .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -59,7 +59,7 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const { error } = await getSupabaseAdmin().from("pathway_groups").delete().eq("id", id);
+  const { error } = await getSupabaseAdmin().from("pathway_groups").delete().eq("id", Number(id));
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

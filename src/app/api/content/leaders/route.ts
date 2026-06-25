@@ -1,19 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getStore } from "@netlify/blobs";
 
-// GET: admin — list all leaders
+interface LeaderRecord {
+  id: string;
+  email: string;
+  name: string;
+  full_access: boolean;
+  created_at: string;
+}
+
+const isLocal = !process.env.NETLIFY;
+
+// GET: admin — list all leaders (Supabase + Netlify Blobs fallback)
 export async function GET(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error } = await getSupabaseAdmin()
-    .from("leaders")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const leaders: LeaderRecord[] = [];
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ leaders: data ?? [] });
+  // Read from Supabase
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from("leaders")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      leaders.push(...data as LeaderRecord[]);
+    }
+  } catch (error) {
+    console.error("Supabase leaders read error:", error);
+  }
+
+  // Read from Netlify Blobs fallback (merge without duplicates)
+  if (!isLocal) {
+    try {
+      const store = getStore({ name: "leaders", consistency: "strong" });
+      const { blobs } = await store.list();
+      for (const blob of blobs) {
+        const leader = await store.get(blob.key, { type: "json" });
+        if (leader && !leaders.some((l) => l.email === leader.email)) {
+          leaders.push(leader as LeaderRecord);
+        }
+      }
+    } catch (error) {
+      console.error("Netlify Blobs leaders read error:", error);
+    }
+  }
+
+  return NextResponse.json({ leaders });
 }
 
 // PUT: admin — update a leader's access
