@@ -68,20 +68,32 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
     const saved = sessionStorage.getItem("avenue_admin_key");
     if (saved) {
       setAdminKey(saved);
-      setAuthenticated(true);
+      fetch("/api/leader-access/admin", {
+        headers: { authorization: `Bearer ${saved}` },
+      }).then((res) => {
+        if (res.ok) {
+          setAuthenticated(true);
+        } else {
+          sessionStorage.removeItem("avenue_admin_key");
+        }
+      });
     }
-    const user = getCurrentUser();
-    if (!user) router.push("/login");
   }, [router]);
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminKey.trim()) return;
-    // Test the key against a lightweight endpoint
-    fetch("/api/content/site-stats", {
+    // Test the key against the admin auth endpoint
+    fetch("/api/leader-access/admin", {
       headers: { authorization: `Bearer ${adminKey.trim()}` },
     })
       .then((res) => {
