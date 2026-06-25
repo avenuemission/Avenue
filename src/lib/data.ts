@@ -3,32 +3,44 @@
 // Edit these values to update the website
 // ============================================
 
-// Helper to get next Wednesday at 7PM AEDT
+// Returns Melbourne UTC offset in hours, accounting for DST.
+// AEDT = UTC+11 (DST: first Sun Oct – first Sun Apr)
+// AEST = UTC+10 (standard: first Sun Apr – first Sun Oct)
+const getMelbourneOffsetHours = (date: Date): number => {
+  const year = date.getUTCFullYear();
+  const dstStart = new Date(Date.UTC(year, 9, 1)); // Oct 1 UTC
+  dstStart.setUTCDate(1 + (7 - dstStart.getUTCDay()) % 7); // first Sunday of Oct
+  const dstEnd = new Date(Date.UTC(year, 3, 1)); // Apr 1 UTC
+  dstEnd.setUTCDate(1 + (7 - dstEnd.getUTCDay()) % 7); // first Sunday of Apr
+  const inDST = date >= dstStart || date < dstEnd;
+  return inDST ? 11 : 10;
+};
+
+// Helper to get next Wednesday at 7PM Melbourne time (DST-aware)
 const getNextWednesday7PM = (): Date => {
   const now = new Date();
-  // Create date in AEDT (UTC+11)
-  const aedtOffset = 11 * 60; // minutes
+  const melbOffset = getMelbourneOffsetHours(now);
   const localOffset = now.getTimezoneOffset();
-  const aedtNow = new Date(now.getTime() + (aedtOffset + localOffset) * 60 * 1000);
-  
-  const dayOfWeek = aedtNow.getDay();
+  const melbNow = new Date(now.getTime() + (melbOffset * 60 + localOffset) * 60 * 1000);
+
+  const dayOfWeek = melbNow.getDay();
   const daysUntilWednesday = (3 - dayOfWeek + 7) % 7;
-  
-  // If it's Wednesday, check if 7PM has passed
-  const target = new Date(aedtNow);
+
+  const target = new Date(melbNow);
   if (daysUntilWednesday === 0) {
     target.setHours(19, 0, 0, 0);
-    if (aedtNow >= target) {
-      // Wednesday 7PM has passed, go to next Wednesday
+    if (melbNow >= target) {
       target.setDate(target.getDate() + 7);
     }
   } else {
     target.setDate(target.getDate() + daysUntilWednesday);
     target.setHours(19, 0, 0, 0);
   }
-  
-  // Convert back to local time for the Date object
-  const targetUTC = new Date(target.getTime() - (aedtOffset + localOffset) * 60 * 1000);
+
+  // Recalculate offset for the target date (it may cross a DST boundary)
+  const targetApproxUTC = new Date(target.getTime() - (melbOffset * 60 + localOffset) * 60 * 1000);
+  const targetOffset = getMelbourneOffsetHours(targetApproxUTC);
+  const targetUTC = new Date(target.getTime() - (targetOffset * 60 + localOffset) * 60 * 1000);
   return targetUTC;
 };
 

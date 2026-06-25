@@ -15,9 +15,18 @@ import {
   MessageSquare,
   BookOpen,
   Lightbulb,
+  X,
+  ChevronRight,
 } from "lucide-react";
 
 // Phase Types
+interface Episode {
+  id: string;
+  title: string;
+  youtubeId: string;
+  watched: boolean;
+}
+
 interface Module {
   id: string;
   title: string;
@@ -25,6 +34,8 @@ interface Module {
   description: string;
   duration?: string;
   completed: boolean;
+  sectionHeader?: string;
+  episodes?: Episode[];
 }
 
 interface Phase {
@@ -46,108 +57,151 @@ const INITIAL_PHASES: Phase[] = [
   {
     id: "phase1",
     number: 1,
-    title: "Called & Qualified",
-    subtitle: "Discernment of Calling",
-    scripture: "1 Timothy 3",
-    description: "Examine the foundational requirements for leadership through scripture and self-reflection.",
+    title: "Early Church Model",
+    subtitle: "Acts 2:42-47",
+    scripture: "Acts 2:42-47",
+    description: "In the early church, the framework laid out for what the church is was simple. After Pentecost, people journeyed as disciples of Jesus from household to household. They read the word together, prayed, fellowshipped, and ate together (Acts 2:42). Together, the church praised God, enjoyed each other's company as the Lord added people who were being saved (Acts 2:47). At the heart of what makes up the DNA of a church is 3 things: worship, community and mission. These 3 expressions are what we define as a minimum ecclesiology. Whenever Jesus is Lord, people feel a part of a family and have a mission for their world; church exists. We have set up our church around these 3 essential aspects of church.",
     debriefRequired: true,
     debriefScheduled: false,
     debriefCompleted: false,
     locked: false,
     modules: [
-      { id: "p1m1", title: "Discernment of Calling", type: "video", description: "Understanding internal and external calling", duration: "18 min", completed: false },
-      { id: "p1m2", title: "APEST Quiz", type: "quiz", description: "Identify your leadership function", completed: false },
-      { id: "p1m3", title: "Spiritual Gifts Assessment", type: "quiz", description: "Discover your spiritual gifts", completed: false },
-      { id: "p1m4", title: "Strengths & Growth Areas", type: "document", description: "Personal leadership traits analysis", completed: false },
-      { id: "p1m5", title: "Avenue DNA", type: "video", description: "Understanding the mission, vision, and strategy", duration: "22 min", completed: false },
-      { id: "p1m6", title: "Theology & Character Conversations", type: "action", description: "Meet with board/pastors about core theology and character", completed: false },
+      {
+        id: "p1m0",
+        title: "Avenue DNA",
+        type: "video",
+        description: "Understanding the mission, vision, and strategy of Avenue",
+        duration: "5 episodes",
+        completed: false,
+        episodes: [
+          { id: "p1m0e1", title: "Avenue DNA Episode 1", youtubeId: "-yjMDB8OXsg", watched: false },
+          { id: "p1m0e2", title: "Avenue DNA Episode 2", youtubeId: "etpNJoyRNZ0", watched: false },
+          { id: "p1m0e3", title: "Avenue DNA Episode 3", youtubeId: "Lkx09wZpFmw", watched: false },
+          { id: "p1m0e4", title: "Avenue DNA Episode 4", youtubeId: "0EE9n_LEMtw", watched: false },
+          { id: "p1m0e5", title: "Avenue DNA Episode 5", youtubeId: "uod2tVf0M6E", watched: false },
+        ],
+      },
+      {
+        id: "p1m1",
+        title: "Pathways",
+        type: "video",
+        description: "Core training module: leading and facilitating pathway groups",
+        duration: "3 parts",
+        completed: false,
+        episodes: [
+          { id: "p1m1e1", title: "Pathways Part 1", youtubeId: "CDyxXOcMIJw", watched: false },
+          { id: "p1m1e2", title: "Pathways Part 2", youtubeId: "rYxLb_jBdiU", watched: false },
+          { id: "p1m1e3", title: "Pathways Part 3", youtubeId: "dQTBIhpfpq4", watched: false },
+        ],
+      },
+      {
+        id: "p1m2",
+        title: "Intersection",
+        type: "video",
+        description: "Core training module: running intersection events and gatherings",
+        duration: "1 video",
+        completed: false,
+        episodes: [
+          { id: "p1m2e1", title: "Intersection", youtubeId: "-TEHae7KRx4", watched: false },
+        ],
+      },
+      {
+        id: "p1m3",
+        title: "Streetlights",
+        type: "video",
+        description: "Core training module: creative and mission initiatives",
+        duration: "5 parts",
+        completed: false,
+        episodes: [
+          { id: "p1m3e1", title: "Streetlights Part 1", youtubeId: "-Aj49FeIiT8", watched: false },
+          { id: "p1m3e2", title: "Streetlights Part 2", youtubeId: "LDbaw6ipOmM", watched: false },
+          { id: "p1m3e3", title: "Streetlights Part 3", youtubeId: "rJjcWIlndb4", watched: false },
+          { id: "p1m3e4", title: "Streetlights Part 4", youtubeId: "qJ6PAfMmACY", watched: false },
+          { id: "p1m3e5", title: "Streetlights Part 5", youtubeId: "Va4WjPK1U8M", watched: false },
+        ],
+      },
     ],
   },
   {
     id: "phase2",
     number: 2,
-    title: "Devoted Life",
-    subtitle: "Early Church Blueprint",
-    scripture: "Acts 2:42-47",
-    description: "Establishing the core rhythms of leadership through the blueprint of the early church.",
+    title: "Calling",
+    subtitle: "Ephesians 4",
+    scripture: "Ephesians 4",
+    description: "We are all one body with many parts (Ephesians 4). Each person is uniquely gifted and called by God to serve in a specific way. Just as Pentecost unleashed a diverse community of Spirit-filled people, this phase helps you discern your calling, understand your gifts, and align your leadership with Avenue's mission and theology.",
     debriefRequired: true,
     debriefScheduled: false,
     debriefCompleted: false,
     locked: false,
     modules: [
-      { id: "p2m1", title: "The Four Pillars", type: "video", description: "Teaching, fellowship, breaking of bread, and prayer", duration: "25 min", completed: false },
-      { id: "p2m2", title: "Pathways Training", type: "video", description: "How to lead and facilitate pathway groups", duration: "30 min", completed: false },
-      { id: "p2m3", title: "Intersection Training", type: "video", description: "Running intersection events and gatherings", duration: "28 min", completed: false },
-      { id: "p2m4", title: "Streetlights Training", type: "video", description: "Creative and mission initiatives", duration: "24 min", completed: false },
+      { id: "p2m1", title: "Discernment of Calling", type: "video", description: "Understanding internal and external calling", duration: "18 min", completed: false },
+      { id: "p2m2", title: "APEST Quiz", type: "quiz", description: "Identify your leadership function", completed: false },
+      { id: "p2m3", title: "Spiritual Gifts Assessment", type: "quiz", description: "Discover your spiritual gifts", completed: false },
+      { id: "p2m4", title: "Strengths & Growth Areas", type: "document", description: "Personal leadership traits analysis", completed: false },
+      { id: "p2m6", title: "Theology & Character Conversations", type: "action", description: "Conversations with board or pastors about core theology and character", completed: false },
     ],
   },
   {
     id: "phase3",
     number: 3,
-    title: "Build & Launch",
+    title: "Launch",
     subtitle: "Nehemiah Approach",
-    scripture: "Nehemiah",
-    description: "Planning meets execution. From prayer to practical steps toward launch.",
+    scripture: "Nehemiah 1–2",
+    description: "Nehemiah had the responsibility of rebuilding the walls of Jerusalem, when embarking on a new ministry endeavour, here are some leadership principles we see. When Nehemiah heard the state of his city and the walls fallen down, he starts by brings his sorrow to prayer and fasting (Neh. 1). When he arrives in Jerusalem, he creates a core team, taking a few men with him and doesn't tell anyone what God had laid on his heart (Neh. 2:11-15). He then establishes a strong 'why' and emphasises the importance of his project and from there they get to work (Neh. 2:17-18). Even with opposition, Nehemiah is reminded of the calling God had placed on his life and does the work faithfully (2:19-20).",
     debriefRequired: true,
     debriefScheduled: false,
     debriefCompleted: false,
     locked: false,
     modules: [
-      { id: "p3m1", title: "Planning Pathways", type: "document", description: "Fill out planning document (Nehemiah approach)", completed: false },
-      { id: "p3m2", title: "Prayer & Fasting", type: "action", description: "Pray and fast about your launch team", completed: false },
-      { id: "p3m3", title: "Recruiting 2-4 Launch Team Members", type: "action", description: "Identify and invite your core team", completed: false },
-      { id: "p3m4", title: "Regular Launch Team Meetings", type: "video", description: "Meeting for prayer and fasting with team", duration: "15 min", completed: false },
-      { id: "p3m5", title: "Identifying Your Mission Group", type: "action", description: "Who are you on mission for?", completed: false },
-      { id: "p3m6", title: "Third Space Connection", type: "video", description: "Finding and connecting in neutral grounds", duration: "20 min", completed: false },
-      { id: "p3m7", title: "Living Intentionally", type: "video", description: "Putting yourself in position of need-to", duration: "18 min", completed: false },
-      { id: "p3m8", title: "Planning Launch Date", type: "action", description: "Set official date to invite friends and family", completed: false },
-      { id: "p3m9", title: "Defining Ecclesial Minimums", type: "document", description: "What defines your microchurch?", completed: false },
-      { id: "p3m10", title: "Luke 10 Sending", type: "video", description: "Executing plans with boldness", duration: "22 min", completed: false },
-      { id: "p3m11", title: "Weekly MicroChurch Practice", type: "action", description: "Practice being a microchurch with launch team", completed: false },
-      { id: "p3m12", title: "Inviting Others", type: "video", description: "Meet up and group chat theory", duration: "16 min", completed: false },
-      { id: "p3m13", title: "Logistics & Important Dates", type: "document", description: "Track birthdays and key dates", completed: false },
-      { id: "p3m14", title: "Shepherding Others", type: "video", description: "Looking out for people when sick or in need", duration: "19 min", completed: false },
+      { id: "p3m1", title: "Planning Pathways", type: "document", description: "Fill out a planning document (Nehemiah approach)", completed: false },
+      { id: "p3m2", title: "Praying & Fasting About the Launch Team", type: "action", description: "Bring your launch vision to God in prayer and fasting", completed: false },
+      { id: "p3m3", title: "Recruiting 2–4 Launch Team Members", type: "action", description: "Identify and invite your core team", completed: false },
+      { id: "p3m4", title: "Regular Launch Team Meetings", type: "action", description: "Meeting regularly with the launch team for prayer and fasting", completed: false },
+      { id: "p3m5", title: "Identifying a Mission Group", type: "action", description: "Identifying a group to be 'on mission for'", completed: false },
+      { id: "p3m6", title: "Finding a Third Space", type: "action", description: "Identifying a third space to connect with your mission group", completed: false },
+      { id: "p3m7", title: "Living Intentionally", type: "action", description: "Living intentionally with those you're on mission for", completed: false },
+      { id: "p3m8", title: "Putting Yourself in a Position of Need", type: "action", description: "Putting yourself in a position of 'need to'", completed: false },
+      { id: "p3m9", title: "Planning an Official Launch Date", type: "action", description: "Planning an official launch date to be invitational to friends and family", completed: false },
+      { id: "p3m12", title: "Weekly MicroChurch Practice", type: "action", description: "Meeting weekly with the launch team to practice being a MicroChurch together", sectionHeader: "Executing Plans (Sending out Luke 10, boldness 2 Corinthians 2)", completed: false },
+      { id: "p3m13", title: "Inviting Others", type: "action", description: "Meet up and group chat theory", completed: false },
+      { id: "p3m14", title: "Logistics", type: "document", description: "Track important dates (birthdays) and logistics", completed: false },
+      { id: "p3m15", title: "Shepherding", type: "action", description: "Looking out for people when they are sick, in need, etc.", completed: false },
     ],
   },
   {
     id: "phase4",
     number: 4,
-    title: "Coached & Commissioned",
+    title: "Growth",
     subtitle: "Jethro & Moses Model",
-    scripture: "Jethro to Moses",
-    description: "Ongoing coaching and strategic expansion. Entering the parallel stage.",
+    scripture: "Exodus 18",
+    description: "Ongoing coaching is essential to the longevity and success of a leader. When Jethro visits Moses, he praises God for the mighty things he's done through Moses (Ex. 18:8) and spends time eating with Moses and the leaders (Ex. 18:12). Then he offers Moses some gentle but crucial advice saying that his current system of managing the people is inefficient, advising Moses to delegate responsibility to other leaders. (Ex. 18:13-23) Moses listens to the wisdom of a counsellor he trusts and is better off for it in the long run (Ex. 18:25-26).",
     debriefRequired: false,
     debriefScheduled: false,
     debriefCompleted: false,
     locked: false,
     modules: [
-      { id: "p4m1", title: "RPMS Weekly Check-in", type: "action", description: "Relational touch point using RPMs (Reminders enabled)", completed: false },
-      { id: "p4m2", title: "Monthly Pathways Huddles", type: "video", description: "Leader content released at huddles", duration: "35 min", completed: false },
-      { id: "p4m3", title: "Exponential Training Access", type: "document", description: "External training resources", completed: false },
-      { id: "p4m4", title: "Internal Sermons & Podcasts", type: "video", description: "Fresh leadership content", duration: "varies", completed: false },
-      { id: "p4m5", title: "Leaders Retreat", type: "action", description: "Annual gathering for replenishment and alignment", completed: false },
+      { id: "p4m1", title: "Weekly Check-in / Touch Point (RPMS)", type: "action", description: "Relational weekly touch point using RPMS", completed: false },
+      { id: "p4m2", title: "Monthly Pathways Huddles", type: "video", description: "Leader content freshly released at the start of each huddle", duration: "35 min", completed: false },
+      { id: "p4m3", title: "Trainings", type: "document", description: "Exponential, internal sermons and podcasts", completed: false },
+      { id: "p4m4", title: "Leaders Retreat", type: "action", description: "Annual gathering for replenishment and alignment", completed: false },
     ],
   },
   {
     id: "phase5",
     number: 5,
-    title: "Multiply & Send",
+    title: "Multiply",
     subtitle: "Paul & Timothy Legacy",
     scripture: "2 Timothy 2:2",
-    description: "Transition from leading movements to overseeing a multiplying ecosystem.",
+    description: "The gospel multiplied through intentional apprenticeship in the New Testament. Barnabus saw something in Saul who became Paul, even when everyone else was afraid of him (Acts 9:26-27). Paul then released many other leaders such as a younger Timothy who he encouraged that things that he had heard from Paul would be passed on to others, who would be able to teach others also (2 Tim. 2:2). Great leaders intentionally reproduce who they are in others, with the fruit of their ministry growing on other people's trees.",
     debriefRequired: false,
     debriefScheduled: false,
     debriefCompleted: false,
     locked: false,
     modules: [
       { id: "p5m1", title: "Identify an Apprentice", type: "action", description: "Spot potential in future leaders", completed: false },
-      { id: "p5m2", title: "ICNU Conversation", type: "video", description: "I See Network Utility conversation guide", duration: "Coming soon", completed: false },
-      { id: "p5m3", title: "Apprenticeship Model", type: "video", description: "Running the apprenticeship model", duration: "Coming soon", completed: false },
-      { id: "p5m4", title: "Five Phases Plan", type: "document", description: "Begin the plan with your apprentice", completed: false },
-      { id: "p5m5", title: "Creating Networks", type: "video", description: "Connecting with other pathway groups for intersection", duration: "Coming soon", completed: false },
-      { id: "p5m6", title: "Streetlights Expansion", type: "video", description: "Mission initiatives scaling", duration: "Coming soon", completed: false },
-      { id: "p5m7", title: "Discipleship Quiz & Guides", type: "quiz", description: "Personalized apologetics and discipleship guides", completed: false },
-      { id: "p5m8", title: "Up/In/Out Assessment", type: "quiz", description: "Quiz with treatment plan output", completed: false },
+      { id: "p5m2", title: "ICNU Conversation", type: "video", description: "Have an ICNU conversation with your apprentice", duration: "Coming soon", completed: false },
+      { id: "p5m3", title: "Run the Apprenticeship Model", type: "video", description: "Running the apprenticeship model with your apprentice", duration: "Coming soon", completed: false },
+      { id: "p5m4", title: "Begin the Five Phases Plan", type: "document", description: "Begin the Five Phases Plan with your apprentice", completed: false },
     ],
   },
 ];
@@ -177,6 +231,8 @@ export default function TrainingPage() {
   const [phases, setPhases] = useState<Phase[]>(INITIAL_PHASES);
   const [expandedPhase, setExpandedPhase] = useState<string | null>("phase1");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedEpisodeModules, setExpandedEpisodeModules] = useState<Set<string>>(new Set());
+  const [videoModal, setVideoModal] = useState<{ youtubeId: string; title: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -226,6 +282,35 @@ export default function TrainingPage() {
     );
   };
 
+  const toggleEpisodeWatched = (phaseId: string, moduleId: string, episodeId: string) => {
+    setPhases((prev) =>
+      prev.map((phase) => {
+        if (phase.id !== phaseId) return phase;
+        const updatedModules = phase.modules.map((m) => {
+          if (m.id !== moduleId || !m.episodes) return m;
+          const updatedEpisodes = m.episodes.map((e) =>
+            e.id === episodeId ? { ...e, watched: !e.watched } : e
+          );
+          const allWatched = updatedEpisodes.every((e) => e.watched);
+          return { ...m, episodes: updatedEpisodes, completed: allWatched };
+        });
+        return { ...phase, modules: updatedModules };
+      })
+    );
+  };
+
+  const toggleEpisodeList = (moduleId: string) => {
+    setExpandedEpisodeModules((prev) => {
+      const next = new Set(prev);
+      if (next.has(moduleId)) {
+        next.delete(moduleId);
+      } else {
+        next.add(moduleId);
+      }
+      return next;
+    });
+  };
+
   const scheduleDebrief = (phaseId: string) => {
     setPhases((prev) =>
       prev.map((phase) =>
@@ -259,6 +344,14 @@ export default function TrainingPage() {
     return Math.round((completed / allModules.length) * 100);
   };
 
+  const openVideo = (youtubeId: string, title: string) => {
+    setVideoModal({ youtubeId, title });
+  };
+
+  const closeVideo = () => {
+    setVideoModal(null);
+  };
+
   if (!mounted || !user || !accessChecked || !hasAccess) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -269,6 +362,28 @@ export default function TrainingPage() {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
+      {/* Video Modal */}
+      {videoModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeVideo}>
+          <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-semibold text-lg">{videoModal.title}</h3>
+              <button onClick={closeVideo} className="text-gray-400 hover:text-white transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                className="absolute inset-0 w-full h-full rounded-xl"
+                src={`https://www.youtube.com/embed/${videoModal.youtubeId}?autoplay=1`}
+                title={videoModal.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
       {/* Animated Gradient Background */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black animate-gradient-shift" />
@@ -345,83 +460,80 @@ export default function TrainingPage() {
 
           {sidebarOpen && (
             <div className="w-full">
-              {/* Horizontal stepper: 1─2─3─4 with fork from 3 down to 5 */}
-              <div className="relative">
-                {/* Main row: Phases 1-4 with line through center of circles */}
-                <div className="relative">
-                  {/* Horizontal line - centered on circles */}
-                  <div className="absolute top-[24px] left-[12.5%] right-[12.5%] h-[3px] bg-blue-500/40 z-0" />
-                  
-                  <div className="flex items-start relative">
-                    {phases.slice(0, 4).map((phase) => {
-                      const progress = getPhaseProgress(phase);
-                      const isActive = expandedPhase === phase.id;
-                      
-                      return (
-                        <button
-                          key={phase.id}
-                          onClick={() => togglePhase(phase.id)}
-                          className="relative z-10 flex flex-col items-center gap-3 group flex-1"
-                        >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                            isActive 
-                              ? "bg-blue-600 text-white ring-4 ring-blue-500/30 scale-110" 
-                              : progress.percent === 100
-                                ? "bg-green-600 text-white"
-                                : "bg-gray-800 text-gray-300 border-2 border-gray-600 group-hover:border-gray-300"
-                          }`}>
-                            {phase.number}
-                          </div>
-                          <span className={`text-xs text-center max-w-[90px] leading-tight transition-colors ${
-                            isActive ? "text-white font-semibold" : "text-gray-500 group-hover:text-gray-300"
-                          }`}>
-                            {phase.title}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+              {/* Circular orbital layout */}
+              <div className="relative flex items-center justify-center" style={{ height: "340px" }}>
+                {/* Orbit ring */}
+                <div className="absolute w-[280px] h-[280px] rounded-full border-2 border-blue-400/50" />
+
+                {/* Centre label */}
+                <div className="absolute flex flex-col items-center justify-center w-20 h-20 rounded-full bg-blue-900/40 border border-blue-500/30 text-center z-10">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 leading-tight">Leadership<br/>Journey</span>
                 </div>
 
-                {/* Phase 5 row with L-shape connector */}
-                <div className="relative flex items-start" style={{ height: "120px" }}>
-                  {/* L-shaped line: vertical from phase 3, then horizontal to phase 5 */}
-                  {/* Vertical segment */}
-                  <div className="absolute left-[62.5%] top-0 w-[3px] h-[72px] bg-purple-500/50 -translate-x-1/2" />
-                  {/* Horizontal segment */}
-                  <div className="absolute left-[62.5%] top-[72px] h-[3px] bg-purple-500/50" style={{ width: "calc(87.5% - 62.5%)" }} />
-                  
-                  {/* Phase 5 circle positioned at 87.5% (same x as phase 4) */}
-                  <div className="absolute left-[87.5%] top-[48px] -translate-x-1/2">
-                    {(() => {
-                      const phase = phases[4];
-                      const progress = getPhaseProgress(phase);
-                      const isActive = expandedPhase === phase.id;
-                      
-                      return (
-                        <button
-                          onClick={() => togglePhase(phase.id)}
-                          className="relative z-10 flex flex-col items-center gap-3 group"
-                        >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                            isActive 
-                              ? "bg-purple-600 text-white ring-4 ring-purple-500/30 scale-110" 
-                              : progress.percent === 100
-                                ? "bg-green-600 text-white"
-                                : "bg-gray-800 text-gray-300 border-2 border-gray-600 group-hover:border-gray-300"
-                          }`}>
-                            {phase.number}
-                          </div>
-                          <span className={`text-xs text-center max-w-[100px] leading-tight transition-colors ${
-                            isActive ? "text-white font-semibold" : "text-gray-500 group-hover:text-gray-300"
-                          }`}>
-                            {phase.title}
-                          </span>
-                        </button>
-                      );
-                    })()}
-                  </div>
-                </div>
+                {/* Phase nodes arranged in a circle (top, top-right, bottom-right, bottom, top-left) */}
+                {phases.map((phase, i) => {
+                  const progress = getPhaseProgress(phase);
+                  const isActive = expandedPhase === phase.id;
+                  // Distribute 5 phases evenly: start from top (-90°)
+                  const angleDeg = -90 + (360 / phases.length) * i;
+                  const angleRad = (angleDeg * Math.PI) / 180;
+                  const radius = 140;
+                  const x = Math.cos(angleRad) * radius;
+                  const y = Math.sin(angleRad) * radius;
+
+                  const r = 28;
+                  const circumference = 2 * Math.PI * r;
+                  const strokeDashoffset = circumference * (1 - progress.percent / 100);
+                  const trackColor = "rgba(255,255,255,0.08)";
+                  const progressColor = progress.percent === 100
+                    ? "#22c55e"
+                    : isActive
+                      ? "#60a5fa"
+                      : "#3b82f6";
+
+                  return (
+                    <button
+                      key={phase.id}
+                      onClick={() => togglePhase(phase.id)}
+                      className="absolute flex flex-col items-center gap-2 group z-10"
+                      style={{ transform: `translate(${x}px, ${y}px)` }}
+                    >
+                      {/* Circle with SVG progress ring */}
+                      <div className={`relative w-14 h-14 transition-all ${isActive ? "scale-110" : ""}`}>
+                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 64 64">
+                          {/* Track */}
+                          <circle cx="32" cy="32" r={r} fill="none" stroke={trackColor} strokeWidth="3.5" />
+                          {/* Progress arc */}
+                          <circle
+                            cx="32" cy="32" r={r}
+                            fill="none"
+                            stroke={progressColor}
+                            strokeWidth="3.5"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                            style={{ transition: "stroke-dashoffset 0.5s ease" }}
+                          />
+                        </svg>
+                        {/* Inner circle */}
+                        <div className={`absolute inset-[5px] rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
+                          isActive
+                            ? "bg-blue-600 text-white"
+                            : progress.percent === 100
+                              ? "bg-green-600 text-white"
+                              : "bg-gray-800 text-gray-300 group-hover:bg-gray-700 group-hover:text-white"
+                        }`}>
+                          {phase.number}
+                        </div>
+                      </div>
+                      <span className={`text-[11px] text-center max-w-[80px] leading-tight font-medium transition-colors whitespace-nowrap ${
+                        isActive ? "text-white font-semibold" : "text-gray-500 group-hover:text-gray-200"
+                      }`}>
+                        {phase.title}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Expanded phase detail below */}
@@ -540,8 +652,17 @@ export default function TrainingPage() {
                         Training Modules
                       </h3>
                       {phase.modules.map((module) => (
+                        <div key={module.id}>
+                          {module.sectionHeader && (
+                            <div className="flex items-center gap-3 mt-4 mb-2">
+                              <div className="h-px flex-1 bg-white/10" />
+                              <span className="text-xs font-semibold uppercase tracking-wider text-blue-400 whitespace-nowrap">
+                                {module.sectionHeader}
+                              </span>
+                              <div className="h-px flex-1 bg-white/10" />
+                            </div>
+                          )}
                         <div
-                          key={module.id}
                           className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
                             module.completed
                               ? "bg-white/5 border-green-500/30"
@@ -572,11 +693,57 @@ export default function TrainingPage() {
                               <span className="text-xs text-gray-500 mt-1 inline-block">{module.duration}</span>
                             )}
                           </div>
-                          {module.type === "video" && (
+                          {module.type === "video" && !module.episodes && (
                             <button className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center hover:bg-blue-600/30 transition-colors">
                               <Play className="w-4 h-4 text-blue-400" />
                             </button>
                           )}
+                          {module.episodes && (
+                            <button
+                              onClick={() => toggleEpisodeList(module.id)}
+                              className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center hover:bg-blue-600/30 transition-colors"
+                            >
+                              <ChevronRight className={`w-4 h-4 text-blue-400 transition-transform ${expandedEpisodeModules.has(module.id) ? "rotate-90" : ""}`} />
+                            </button>
+                          )}
+                        </div>
+                        {/* Episode list */}
+                        {module.episodes && expandedEpisodeModules.has(module.id) && (
+                          <div className="mt-2 ml-10 space-y-2">
+                            {module.episodes.map((episode) => (
+                              <div
+                                key={episode.id}
+                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                                  episode.watched
+                                    ? "bg-green-500/5 border-green-500/20"
+                                    : "bg-white/5 border-white/10 hover:border-white/20"
+                                }`}
+                              >
+                                <button
+                                  onClick={() => toggleEpisodeWatched(phase.id, module.id, episode.id)}
+                                  className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    episode.watched
+                                      ? "bg-green-500 border-green-500"
+                                      : "border-gray-500 hover:border-blue-400"
+                                  }`}
+                                >
+                                  {episode.watched && <CheckCircle2 className="w-3 h-3 text-black" />}
+                                </button>
+                                <span className={`flex-1 text-sm ${
+                                  episode.watched ? "text-green-400 line-through" : "text-gray-300"
+                                }`}>
+                                  {episode.title}
+                                </span>
+                                <button
+                                  onClick={() => openVideo(episode.youtubeId, episode.title)}
+                                  className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center hover:bg-blue-600/40 transition-colors"
+                                >
+                                  <Play className="w-3 h-3 text-blue-400" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         </div>
                       ))}
                     </div>

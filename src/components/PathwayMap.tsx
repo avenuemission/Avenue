@@ -208,6 +208,18 @@ export default function PathwayMap() {
             data: { ...formData },
           }),
         });
+
+        // Save to Supabase (admin dashboard)
+        await fetch("/api/submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            form_type: "join-pathway",
+            name: formData.name,
+            email: formData.email,
+            data: { phone: formData.phone, group: formData.group },
+          }),
+        });
         setFormSubmitted(true);
         setFormData({ name: "", email: "", phone: "", group: "", website: "" });
         setTimeout(() => setFormSubmitted(false), 3000);

@@ -96,6 +96,18 @@ export default function StreetlightsPage() {
             data: { ...supportForm },
           }),
         });
+
+        // Save to Supabase (admin dashboard)
+        await fetch("/api/submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            form_type: "mission-support",
+            name: supportForm.name,
+            email: supportForm.email,
+            data: { supportType: supportForm.supportType, message: supportForm.message },
+          }),
+        });
         setSupportSubmitted(true);
         setSupportForm({ name: "", email: "", supportType: "", message: "", website: "" });
         setTimeout(() => setSupportSubmitted(false), 3000);
@@ -127,6 +139,18 @@ export default function StreetlightsPage() {
           body: JSON.stringify({
             type: "ideaSubmission",
             data: { ...formData },
+          }),
+        });
+
+        // Save to Supabase (admin dashboard)
+        await fetch("/api/submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            form_type: "idea-submission",
+            name: formData.name,
+            email: formData.email,
+            data: { idea: formData.idea },
           }),
         });
         setSubmitted(true);

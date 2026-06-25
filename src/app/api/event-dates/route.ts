@@ -36,6 +36,26 @@ function parseDate(dateStr: string): { day: number; month: number; year: number 
   return null;
 }
 
+// Returns the UTC offset in hours for Melbourne (Australia/Melbourne) on a given date.
+// AEDT = UTC+11 (DST, first Sun Oct – first Sun Apr)
+// AEST = UTC+10 (standard, first Sun Apr – first Sun Oct)
+function getMelbourneOffsetHours(year: number, month: number, day: number): number {
+  // DST starts: first Sunday of October
+  const dstStart = new Date(year, 9, 1); // Oct 1
+  dstStart.setDate(1 + (7 - dstStart.getDay()) % 7); // first Sunday
+
+  // DST ends: first Sunday of April
+  const dstEnd = new Date(year, 3, 1); // Apr 1
+  dstEnd.setDate(1 + (7 - dstEnd.getDay()) % 7); // first Sunday
+
+  const date = new Date(year, month - 1, day);
+
+  // DST is active from first Sun Oct through first Sun Apr of the following year
+  // i.e. date >= dstStart OR date < dstEnd (of same year)
+  const inDST = date >= dstStart || date < dstEnd;
+  return inDST ? 11 : 10;
+}
+
 function getNextEventDate(dates: EventDate[]): Date | null {
   const now = new Date();
   
@@ -46,8 +66,9 @@ function getNextEventDate(dates: EventDate[]): Date | null {
     const { day, month, year } = parsed;
     const [hours, minutes] = eventDate.time.split(":").map(Number);
     
-    // Create date in AEDT (UTC+11)
-    const eventDateTime = new Date(Date.UTC(year, month - 1, day, hours - 11, minutes));
+    // Create date using DST-aware Melbourne offset
+    const offset = getMelbourneOffsetHours(year, month, day);
+    const eventDateTime = new Date(Date.UTC(year, month - 1, day, hours - offset, minutes));
     
     if (eventDateTime > now) {
       return eventDateTime;

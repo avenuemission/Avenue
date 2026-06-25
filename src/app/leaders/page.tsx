@@ -69,7 +69,7 @@ export default function LeadersPage() {
   const dashboardCards = [
     {
       id: "training",
-      title: "Training Videos",
+      title: "Leader Training",
       icon: Video,
       href: "/leaders/training",
       color: "from-red-500/20 to-red-600/10",
@@ -78,7 +78,7 @@ export default function LeadersPage() {
     },
     {
       id: "study",
-      title: "Weekly Study Guides",
+      title: "Weekly Pathways Topics",
       icon: BookOpen,
       href: "/leaders/study-guides",
       color: "from-green-500/20 to-green-600/10",

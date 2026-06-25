@@ -138,7 +138,7 @@ export default function CountdownTimer({
           Next Intersection
         </span>
         <span className="text-sm font-mono text-white">
-          T-{formatNumber(timeLeft.days)}:{formatNumber(timeLeft.hours)}:{formatNumber(timeLeft.minutes)}:
+          {formatNumber(timeLeft.days)}:{formatNumber(timeLeft.hours)}:{formatNumber(timeLeft.minutes)}:
           {formatNumber(timeLeft.seconds)}
         </span>
       </div>

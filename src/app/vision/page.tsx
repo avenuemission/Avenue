@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 const valuesData = [
   {
@@ -61,67 +61,6 @@ const beliefsData = [
   },
 ];
 
-interface GlassBubbleProps {
-  title: string;
-  content: string;
-  isExpanded: boolean;
-  onClick: () => void;
-}
-
-function GlassBubble({ title, content, isExpanded, onClick }: GlassBubbleProps) {
-  return (
-    <>
-      {/* Collapsed bubble */}
-      <button
-        onClick={onClick}
-        className={`
-          relative px-8 py-6 rounded-3xl cursor-pointer
-          transition-all duration-500 ease-out
-          backdrop-blur-xl bg-white/10 border border-white/20
-          hover:bg-white/15 hover:border-white/30 hover:scale-105
-          shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]
-          ${isExpanded ? "opacity-0 scale-95 pointer-events-none" : "opacity-100"}
-        `}
-      >
-        <h3 className="text-white text-xl md:text-2xl font-semibold tracking-wide">
-          {title}
-        </h3>
-      </button>
-
-      {/* Expanded modal overlay */}
-      {isExpanded && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
-          onClick={onClick}
-        >
-          <div
-            className="
-              relative max-w-2xl w-full p-8 md:p-12 rounded-3xl
-              backdrop-blur-2xl bg-white/15 border border-white/25
-              shadow-[0_25px_80px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.3)]
-              animate-scaleIn
-            "
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={onClick}
-              className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
-            >
-              <X size={24} />
-            </button>
-            <h3 className="text-white text-2xl md:text-3xl font-bold mb-6">
-              {title}
-            </h3>
-            <p className="text-gray-200 text-lg md:text-xl leading-relaxed">
-              {content}
-            </p>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
 interface BeliefCardProps {
   question: string;
   answer: string;
@@ -167,7 +106,7 @@ function BeliefCard({ question, answer, isExpanded, onClick }: BeliefCardProps) 
 }
 
 export default function VisionPage() {
-  const [expandedBubble, setExpandedBubble] = useState<string | null>(null);
+  const [expandedMVV, setExpandedMVV] = useState<string | null>(null);
   const [expandedBelief, setExpandedBelief] = useState<string | null>(null);
 
   return (
@@ -318,89 +257,77 @@ export default function VisionPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center py-24 md:py-32 px-6">
-          {/* Three Bubbles */}
-          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
-            {/* Mission Bubble */}
-            <GlassBubble
-              title="MISSION"
-              content="To unleash God-given potential"
-              isExpanded={expandedBubble === "mission"}
-              onClick={() =>
-                setExpandedBubble(expandedBubble === "mission" ? null : "mission")
-              }
-            />
+        <div className="relative z-10 py-20 px-6">
+          <div className="max-w-4xl mx-auto">
 
-            {/* Vision Bubble */}
-            <GlassBubble
-              title="VISION"
-              content="To be an expanding network of missional microchurches"
-              isExpanded={expandedBubble === "vision"}
-              onClick={() =>
-                setExpandedBubble(expandedBubble === "vision" ? null : "vision")
-              }
-            />
+            <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-4">
+              OUR VISION
+            </h2>
+            <p className="text-gray-300 text-center text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+              Where we are headed and what drives us
+            </p>
 
-            {/* Values Bubble */}
-            <div className="relative">
-              <button
-                onClick={() =>
-                  setExpandedBubble(expandedBubble === "values" ? null : "values")
-                }
-                className={`
-                  relative px-8 py-6 rounded-3xl cursor-pointer
-                  transition-all duration-500 ease-out
-                  backdrop-blur-xl bg-white/10 border border-white/20
-                  hover:bg-white/15 hover:border-white/30 hover:scale-105
-                  shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]
-                  ${expandedBubble === "values" ? "opacity-0 scale-95 pointer-events-none" : "opacity-100"}
-                `}
+            {/* Accordion: Mission, Vision, Values */}
+            <div className="space-y-4 mb-12">
+              <BeliefCard
+                question="MISSION"
+                answer="To unleash God-given potential"
+                isExpanded={expandedMVV === "mission"}
+                onClick={() => setExpandedMVV(expandedMVV === "mission" ? null : "mission")}
+              />
+              <BeliefCard
+                question="VISION"
+                answer="To be an expanding network of missional microchurches"
+                isExpanded={expandedMVV === "vision"}
+                onClick={() => setExpandedMVV(expandedMVV === "vision" ? null : "vision")}
+              />
+              {/* Values — custom accordion row with list */}
+              <div
+                className="relative rounded-2xl cursor-pointer overflow-hidden transition-all duration-500 ease-out backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]"
+                onClick={() => setExpandedMVV(expandedMVV === "values" ? null : "values")}
               >
-                <h3 className="text-white text-xl md:text-2xl font-semibold tracking-wide">
-                  VALUES
-                </h3>
-              </button>
-
-              {/* Values Expanded Modal */}
-              {expandedBubble === "values" && (
+                <div className="flex items-center justify-between p-6">
+                  <h3 className="text-white text-lg md:text-xl font-semibold pr-4">VALUES</h3>
+                  <ChevronDown
+                    className={`text-white/70 flex-shrink-0 transition-transform duration-300 ${
+                      expandedMVV === "values" ? "rotate-180" : ""
+                    }`}
+                    size={24}
+                  />
+                </div>
                 <div
-                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                  onClick={() => setExpandedBubble(null)}
+                  className={`overflow-hidden transition-all duration-500 ease-out ${
+                    expandedMVV === "values" ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+                  }`}
                 >
-                  <div
-                    className="
-                      relative max-w-3xl w-full p-8 md:p-12 rounded-3xl
-                      backdrop-blur-2xl bg-white/15 border border-white/25
-                      shadow-[0_25px_80px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.3)]
-                      max-h-[80vh] overflow-y-auto
-                    "
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => setExpandedBubble(null)}
-                      className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
-                    >
-                      <X size={24} />
-                    </button>
-                    <h3 className="text-white text-2xl md:text-3xl font-bold mb-8">
-                      VALUES
-                    </h3>
-                    <div className="space-y-6">
-                      {valuesData.map((value, index) => (
-                        <div key={index} className="border-l-2 border-white/30 pl-4">
-                          <h4 className="text-white text-lg md:text-xl font-semibold mb-2">
-                            {value.title}
-                          </h4>
-                          <p className="text-gray-200 text-base md:text-lg leading-relaxed">
-                            {value.content}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="px-6 pb-6 space-y-4">
+                    {valuesData.map((value, index) => (
+                      <div key={index} className="border-l-2 border-white/30 pl-4">
+                        <h4 className="text-white text-base md:text-lg font-semibold mb-1">{value.title}</h4>
+                        <p className="text-gray-200 text-sm md:text-base leading-relaxed">{value.content}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
+
+            {/* 2026 Goal Callout */}
+            <div className="relative rounded-2xl p-8 md:p-10 text-center overflow-hidden
+              bg-blue-950/60 border border-blue-500/40 backdrop-blur-xl
+              shadow-[0_0_40px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]"
+            >
+              {/* Subtle glow ring */}
+              <div className="absolute inset-0 rounded-2xl bg-blue-500/5 pointer-events-none" />
+              <p className="text-blue-400 text-xs md:text-sm font-semibold uppercase tracking-widest mb-3">
+                Vision for End of 2027
+              </p>
+              <p className="text-white text-2xl md:text-4xl font-bold leading-snug">
+                10 Pathway Groups<br className="hidden md:block" />{" "}
+                with 20 Healthy Leaders
+              </p>
+            </div>
+
           </div>
         </div>
       </section>
@@ -427,7 +354,7 @@ export default function VisionPage() {
               BELIEFS
             </h2>
             <p className="text-gray-200 text-center text-lg md:text-xl mb-12 max-w-2xl mx-auto">
-              Here is a snapshot of what we believe:
+              We are a church supported by the Seventh-Day Adventist Church. Here is a snapshot of what we believe:
             </p>
 
             {/* Belief Cards */}

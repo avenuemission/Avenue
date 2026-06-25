@@ -68,6 +68,18 @@ export default function PathwaysPage() {
             data: { ...formData },
           }),
         });
+
+        // Save to Supabase (admin dashboard)
+        await fetch("/api/submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            form_type: "start-pathway",
+            name: formData.name,
+            email: formData.email,
+            data: { phone: formData.phone, suburb: formData.suburb },
+          }),
+        });
         setSubmitted(true);
         setFormData({ name: "", email: "", phone: "", suburb: "", website: "" });
         setTimeout(() => setSubmitted(false), 3000);

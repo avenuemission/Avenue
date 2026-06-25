@@ -24,11 +24,23 @@ export async function POST(request: NextRequest) {
 
   const normalized = code.trim().toUpperCase();
 
-  const { data, error } = await supabase
+  // Try with include_life_3 column first
+  let { data, error } = await supabase
     .from("workshop_sessions")
     .insert({ code: normalized, include_life_3: include_life_3 !== false })
     .select()
     .single();
+
+  // Fallback: if column doesn't exist, insert without it
+  if (error && error.message?.includes("include_life_3")) {
+    const result = await supabase
+      .from("workshop_sessions")
+      .insert({ code: normalized })
+      .select()
+      .single();
+    data = result.data;
+    error = result.error;
+  }
 
   if (error) {
     if (error.code === "23505") {

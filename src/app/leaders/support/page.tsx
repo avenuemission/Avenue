@@ -128,6 +128,18 @@ export default function LeaderSupportPage() {
           },
         }),
       });
+
+      // Save to Supabase (admin dashboard)
+      await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          form_type: "leader-support",
+          name: user?.name,
+          email: user?.email,
+          data: { selectedDate: date.toISOString(), formattedDate: `${formatDate(date)} at ${formatTime(date)}` },
+        }),
+      });
       setSubmitted(true);
     } catch (error) {
       console.error("Error submitting:", error);
@@ -167,6 +179,18 @@ export default function LeaderSupportPage() {
             requestedTime: customTime.time,
             website: customTime.website,
           },
+        }),
+      });
+
+      // Save to Supabase (admin dashboard)
+      await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          form_type: "leader-support",
+          name: user?.name,
+          email: user?.email,
+          data: { requestedDate: customTime.date, requestedTime: customTime.time, custom: true },
         }),
       });
       setSubmitted(true);
