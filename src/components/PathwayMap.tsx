@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { PATHWAY_GROUPS } from "@/lib/data";
-import { loadPathwayGroups, PathwayGroup } from "@/lib/loadPathwayGroups";
+import { getPathwayGroups, PathwayGroup } from "@/lib/content";
 
 type SelectedGroup = PathwayGroup;
 
@@ -58,11 +57,11 @@ export default function PathwayMap() {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", group: "", website: "" });
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [pathwayGroups, setPathwayGroups] = useState<PathwayGroup[]>(PATHWAY_GROUPS);
+  const [pathwayGroups, setPathwayGroups] = useState<PathwayGroup[]>([]);
 
-  // Load pathway groups from CSV on mount
+  // Load pathway groups from Supabase on mount
   useEffect(() => {
-    loadPathwayGroups().then((groups) => {
+    getPathwayGroups().then((groups: PathwayGroup[]) => {
       if (groups.length > 0) {
         setPathwayGroups(groups);
       }

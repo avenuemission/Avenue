@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
 
 const VALID_TYPES = [
   "start-pathway",
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid form_type" }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin.from("form_submissions").insert({
+    const { error } = await getSupabaseAdmin().from("form_submissions").insert({
       form_type,
       name: name ?? null,
       email: email ?? null,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
 
-  let query = supabaseAdmin
+  let query = getSupabaseAdmin()
     .from("form_submissions")
     .select("*")
     .order("created_at", { ascending: false });
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest) {
   const { id, archived } = await request.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from("form_submissions")
     .update({ archived: !!archived })
     .eq("id", id);
@@ -90,7 +90,7 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const { error } = await supabaseAdmin.from("form_submissions").delete().eq("id", id);
+  const { error } = await getSupabaseAdmin().from("form_submissions").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

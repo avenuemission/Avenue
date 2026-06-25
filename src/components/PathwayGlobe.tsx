@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { PATHWAY_GROUPS } from "@/lib/data";
+import { getPathwayGroups } from "@/lib/content";
 
 // Dynamically import react-globe.gl to avoid SSR issues
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -29,10 +29,18 @@ export default function PathwayGlobe() {
   const [selectedGroup, setSelectedGroup] = useState<SelectedGroup | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [dimensions, setDimensions] = useState({ width: 600, height: 600 });
+  const [pathwayGroups, setPathwayGroups] = useState<PathwayGroup[]>([]);
+
+  // Load groups from Supabase on mount
+  useEffect(() => {
+    getPathwayGroups().then((groups: PathwayGroup[]) => {
+      if (groups.length > 0) setPathwayGroups(groups);
+    });
+  }, []);
 
   // Filter groups based on search
-  const filteredGroups = PATHWAY_GROUPS.filter(
-    (group) =>
+  const filteredGroups = pathwayGroups.filter(
+    (group: PathwayGroup) =>
       group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       group.coordinator.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -96,7 +104,7 @@ export default function PathwayGlobe() {
   };
 
   // Prepare points data for the globe
-  const pointsData = PATHWAY_GROUPS.map((group) => ({
+  const pointsData = pathwayGroups.map((group: PathwayGroup) => ({
     ...group,
     lat: group.coordinates[0],
     lng: group.coordinates[1],

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import PathwayMap from "@/components/PathwayMap";
 import ImageCarousel from "@/components/PathwaysCarousel";
-import { PATHWAY_STATS } from "@/lib/data";
+import { getPathwayStats } from "@/lib/content";
 
 
 // Counter animation hook
@@ -18,7 +18,7 @@ function useCountUp(end: number, duration: number = 2000) {
     const animate = (currentTime: number) => {
       if (!startTime) startTime = currentTime;
       const progress = Math.min((currentTime - startTime) / duration, 1);
-      
+
       setCount(Math.floor(progress * end));
 
       if (progress < 1) {
@@ -36,12 +36,24 @@ function useCountUp(end: number, duration: number = 2000) {
 export default function PathwaysPage() {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", suburb: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [stats, setStats] = useState({ communities: 6, countries: 1, languages: 5, newGroupsStartingSoon: 3 });
+
+  useEffect(() => {
+    getPathwayStats().then((loaded) => {
+      setStats({
+        communities: loaded.communities ?? 6,
+        countries: loaded.countries ?? 1,
+        languages: loaded.languages ?? 5,
+        newGroupsStartingSoon: loaded.new_groups ?? 3,
+      });
+    });
+  }, []);
 
   // Animated counters
-  const communitiesCount = useCountUp(PATHWAY_STATS.communities);
-  const countriesCount = useCountUp(PATHWAY_STATS.countries);
-  const languagesCount = useCountUp(PATHWAY_STATS.languages);
-  const newGroupsCount = useCountUp(PATHWAY_STATS.newGroupsStartingSoon);
+  const communitiesCount = useCountUp(stats.communities);
+  const countriesCount = useCountUp(stats.countries);
+  const languagesCount = useCountUp(stats.languages);
+  const newGroupsCount = useCountUp(stats.newGroupsStartingSoon);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

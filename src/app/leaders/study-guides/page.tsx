@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
+import { getStudyGuides } from "@/lib/content";
 import {
   LogOut,
   ArrowLeft,
@@ -60,28 +61,18 @@ export default function StudyGuidesPage() {
         router.push("/leaders");
       });
 
-    // Load study guides from CSV
-    fetch("/data/study_guides.csv")
-      .then((res) => res.text())
-      .then((csvText) => {
-        const lines = csvText.trim().split("\n");
-        const guides: StudyGuide[] = [];
-
-        for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(",");
-          if (values.length >= 7 && values[3].trim()) {
-            guides.push({
-              date: values[0],
-              series: values[1],
-              topic: values[2],
-              text: values[3],
-              spotifyUrl: values[4] || "",
-              pdfUrl: values[5] || "",
-              color: values[6] || "#3b82f6",
-            });
-          }
-        }
-
+    // Load study guides from Supabase
+    getStudyGuides()
+      .then((loaded) => {
+        const guides: StudyGuide[] = loaded.map((g) => ({
+          date: g.guide_date,
+          series: g.series,
+          topic: g.topic,
+          text: g.scripture,
+          spotifyUrl: g.spotify_url || "",
+          pdfUrl: g.pdf_url || "",
+          color: g.color || "#3b82f6",
+        }));
         setStudyGuides(guides);
         setLoading(false);
       })

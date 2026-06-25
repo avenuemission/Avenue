@@ -15,6 +15,7 @@ import {
   Calendar,
   Globe,
   BarChart2,
+  Lock,
 } from "lucide-react";
 
 // Calendar URLs
@@ -111,6 +112,15 @@ export default function LeadersPage() {
       color: "from-cyan-500/20 to-cyan-600/10",
       borderColor: "hover:border-cyan-500/30",
       iconColor: "text-cyan-400",
+    },
+    {
+      id: "admin",
+      title: "Admin",
+      icon: Lock,
+      href: "/leaders/admin",
+      color: "from-red-500/20 to-red-600/10",
+      borderColor: "hover:border-red-500/30",
+      iconColor: "text-red-400",
     },
   ];
 

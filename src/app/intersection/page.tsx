@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import CountdownTimer from "@/components/CountdownTimer";
 import ImageCarousel from "@/components/PathwaysCarousel";
 import CalendarPopup from "@/components/CalendarPopup";
-import { INTERSECTION_EVENTS, SOCIAL_LINKS } from "@/lib/data";
+import { getIntersectionEvents, IntersectionEvent, IntersectionEventDate } from "@/lib/content";
+import { SOCIAL_LINKS } from "@/lib/data";
 import {
   Instagram,
   Facebook,
@@ -23,6 +24,8 @@ interface EventDates {
 export default function IntersectionPage() {
   const [formData, setFormData] = useState({ name: "", email: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [events, setEvents] = useState<IntersectionEvent[]>([]);
+  const [dates, setDates] = useState<IntersectionEventDate[]>([]);
   const [eventDates, setEventDates] = useState<EventDates>({
     prayerAndPraise: null,
     quarterlySermon: null,
@@ -31,35 +34,49 @@ export default function IntersectionPage() {
   const [loading, setLoading] = useState(true);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
+  const getNextDate = useCallback(
+    (key: string) => {
+      const now = new Date();
+      const eventDates = dates.filter((d) => d.event_key === key);
+      for (const d of eventDates) {
+        const [hours, minutes] = (d.event_time || "19:00").split(":").map(Number);
+        const dt = new Date(d.event_date);
+        dt.setHours(hours, minutes, 0, 0);
+        if (dt > now) return dt;
+      }
+      return null;
+    },
+    [dates]
+  );
+
+  const getEventInfo = useCallback(
+    (key: string) => events.find((e) => e.key === key),
+    [events]
+  );
+
   useEffect(() => {
-    const fetchEventDates = async () => {
+    const load = async () => {
       try {
-        const [prayerRes, quarterlyRes, weekOfWorshipRes] = await Promise.all([
-          fetch("/api/event-dates?event=prayer_and_praise"),
-          fetch("/api/event-dates?event=quarterly_sermon"),
-          fetch("/api/event-dates?event=week_of_worship"),
-        ]);
-
-        const [prayerData, quarterlyData, weekOfWorshipData] = await Promise.all([
-          prayerRes.json(),
-          quarterlyRes.json(),
-          weekOfWorshipRes.json(),
-        ]);
-
-        setEventDates({
-          prayerAndPraise: prayerData.nextDate ? new Date(prayerData.nextDate) : null,
-          quarterlySermon: quarterlyData.nextDate ? new Date(quarterlyData.nextDate) : null,
-          weekOfWorship: weekOfWorshipData.nextDate ? new Date(weekOfWorshipData.nextDate) : null,
-        });
+        const { events, dates } = await getIntersectionEvents();
+        setEvents(events);
+        setDates(dates);
       } catch (error) {
-        console.error("Failed to fetch event dates:", error);
+        console.error("Failed to fetch events:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEventDates();
+    load();
   }, []);
+
+  useEffect(() => {
+    setEventDates({
+      prayerAndPraise: getNextDate("prayerAndPraise"),
+      quarterlySermon: getNextDate("quarterlySermon"),
+      weekOfWorship: getNextDate("weekOfWorship"),
+    });
+  }, [dates, getNextDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +99,18 @@ export default function IntersectionPage() {
           body: JSON.stringify({
             type: "eventUpdates",
             data: { email: formData.email, website: formData.website },
+          }),
+        });
+
+        // Save to Supabase (admin dashboard)
+        await fetch("/api/submissions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            form_type: "event-updates",
+            name: formData.name,
+            email: formData.email,
+            data: { website: formData.website },
           }),
         });
         setSubmitted(true);
@@ -228,19 +257,19 @@ export default function IntersectionPage() {
             {/* Prayer & Praise */}
             <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
               <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                {INTERSECTION_EVENTS.prayerAndPraise.title}
+                {getEventInfo("prayerAndPraise")?.title ?? "Prayer & Praise"}
               </h3>
               <p className="text-gray-300 text-sm md:text-base">
-                {INTERSECTION_EVENTS.prayerAndPraise.description}
+                {getEventInfo("prayerAndPraise")?.description ?? ""}
               </p>
               <div className="space-y-1 text-sm">
                 <p className="text-gray-400">
                   <span className="text-gray-500 uppercase">Location:</span>{" "}
-                  {INTERSECTION_EVENTS.prayerAndPraise.location}
+                  {getEventInfo("prayerAndPraise")?.location ?? ""}
                 </p>
                 <p className="text-gray-400">
                   <span className="text-gray-500 uppercase">Time:</span>{" "}
-                  {INTERSECTION_EVENTS.prayerAndPraise.time}
+                  {getEventInfo("prayerAndPraise")?.time ?? ""}
                 </p>
               </div>
               <div className="pt-4">
@@ -261,19 +290,19 @@ export default function IntersectionPage() {
             {/* Quarterly Sermon */}
             <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
               <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                {INTERSECTION_EVENTS.quarterlySermon.title}
+                {getEventInfo("quarterlySermon")?.title ?? "Quarterly Sermon"}
               </h3>
               <p className="text-gray-300 text-sm md:text-base">
-                {INTERSECTION_EVENTS.quarterlySermon.description}
+                {getEventInfo("quarterlySermon")?.description ?? ""}
               </p>
               <div className="space-y-1 text-sm">
                 <p className="text-gray-400">
                   <span className="text-gray-500 uppercase">Location:</span>{" "}
-                  {INTERSECTION_EVENTS.quarterlySermon.location}
+                  {getEventInfo("quarterlySermon")?.location ?? ""}
                 </p>
                 <p className="text-gray-400">
                   <span className="text-gray-500 uppercase">Time:</span>{" "}
-                  {INTERSECTION_EVENTS.quarterlySermon.time}
+                  {getEventInfo("quarterlySermon")?.time ?? ""}
                 </p>
               </div>
               <div className="pt-4">
@@ -294,19 +323,19 @@ export default function IntersectionPage() {
             {/* Week of Worship */}
             <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
               <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                {INTERSECTION_EVENTS.weekOfWorship.title}
+                {getEventInfo("weekOfWorship")?.title ?? "Week of Worship"}
               </h3>
               <p className="text-gray-300 text-sm md:text-base">
-                {INTERSECTION_EVENTS.weekOfWorship.description}
+                {getEventInfo("weekOfWorship")?.description ?? ""}
               </p>
               <div className="space-y-1 text-sm">
                 <p className="text-gray-400">
                   <span className="text-gray-500 uppercase">Location:</span>{" "}
-                  {INTERSECTION_EVENTS.weekOfWorship.location}
+                  {getEventInfo("weekOfWorship")?.location ?? ""}
                 </p>
                 <p className="text-gray-400">
                   <span className="text-gray-500 uppercase">Time:</span>{" "}
-                  {INTERSECTION_EVENTS.weekOfWorship.time}
+                  {getEventInfo("weekOfWorship")?.time ?? ""}
                 </p>
               </div>
               <div className="pt-4">

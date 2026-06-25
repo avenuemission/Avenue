@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 
 // ============================================================
@@ -6,12 +6,25 @@ import { NextRequest } from "next/server";
 // This bypasses Row Level Security and must NEVER be imported
 // into client components. Only use inside API routes.
 // ============================================================
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+let _supabaseAdmin: SupabaseClient | null = null;
 
-export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+export function getSupabaseAdmin(): SupabaseClient {
+  if (!_supabaseAdmin) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Supabase admin credentials not configured");
+    }
+    _supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+  }
+  return _supabaseAdmin;
+}
+
+export function hasSupabaseAdminConfig(): boolean {
+  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+}
 
 // Verify the request carries the admin Bearer token.
 // Set ADMIN_API_KEY in your Netlify environment variables.

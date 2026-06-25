@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
 
 // GET: public — list pathway groups
 export async function GET() {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { name, latitude, longitude, time, coordinator, phone, running, description, sort_order } = body;
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("pathway_groups")
     .insert({ name, latitude, longitude, time, coordinator, phone, running: !!running, description, sort_order: sort_order ?? 0 })
     .select()
@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest) {
   const { id, ...fields } = body;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("pathway_groups")
     .update(fields)
     .eq("id", id)
@@ -60,7 +60,7 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const { error } = await supabaseAdmin.from("pathway_groups").delete().eq("id", id);
+  const { error } = await getSupabaseAdmin().from("pathway_groups").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

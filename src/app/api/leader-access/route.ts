@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { getStore } from "@netlify/blobs";
 import { sendLeaderSignupNotification } from "@/lib/email";
+import { supabase } from "@/lib/supabase";
 
 interface LeaderRecord {
   id: string;
@@ -30,8 +31,28 @@ function getLeadersStore() {
   return getStore({ name: "leaders", consistency: "strong" });
 }
 
-// Read a leader by email (normalized to lowercase)
+// Read a leader by email — Supabase first, then Netlify Blobs fallback
 async function getLeader(email: string): Promise<LeaderRecord | null> {
+  try {
+    const { data: sb } = await supabase
+      .from("leaders")
+      .select("id, email, name, full_access, created_at")
+      .eq("email", email.toLowerCase())
+      .single();
+
+    if (sb) {
+      return {
+        id: sb.id,
+        email: sb.email,
+        name: sb.name,
+        full_access: sb.full_access,
+        created_at: sb.created_at,
+      };
+    }
+  } catch (error) {
+    console.error("Supabase leader lookup error:", error);
+  }
+
   const key = email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
   
   if (isLocal) {
@@ -43,36 +64,61 @@ async function getLeader(email: string): Promise<LeaderRecord | null> {
   return leader as LeaderRecord | null;
 }
 
-// Save a leader record
+// Save a leader record — Supabase first, then Netlify Blobs fallback
 async function saveLeader(leader: LeaderRecord): Promise<void> {
+  try {
+    await supabase
+      .from("leaders")
+      .upsert({
+        id: leader.id,
+        email: leader.email.toLowerCase(),
+        name: leader.name,
+        full_access: leader.full_access,
+        created_at: leader.created_at,
+      }, { onConflict: "email" });
+  } catch (error) {
+    console.error("Supabase save leader failed:", error);
+  }
+
   const key = leader.email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
-  
   if (isLocal) {
     localLeaders.set(leader.email.toLowerCase(), leader);
     return;
   }
-  
+
   const store = getLeadersStore();
   await store.setJSON(key, leader);
 }
 
-// List all leaders
+// List all leaders — Supabase first, then Netlify Blobs fallback
 async function listLeaders(): Promise<LeaderRecord[]> {
   if (isLocal) {
     return Array.from(localLeaders.values());
   }
-  
+
+  try {
+    const { data, error } = await supabase
+      .from("leaders")
+      .select("id, email, name, full_access, created_at")
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      return data as LeaderRecord[];
+    }
+  } catch (error) {
+    console.error("Supabase listLeaders failed:", error);
+  }
+
   const store = getLeadersStore();
   const { blobs } = await store.list();
   const leaders: LeaderRecord[] = [];
-  
+
   for (const blob of blobs) {
     const leader = await store.get(blob.key, { type: "json" });
     if (leader) {
       leaders.push(leader as LeaderRecord);
     }
   }
-  
+
   return leaders;
 }
 
