@@ -42,6 +42,7 @@ export interface StudyGuide {
   spotify_url: string;
   pdf_url: string;
   color: string;
+  sort_order: number;
 }
 
 // Load pathway groups from Supabase, falling back to hardcoded constants
@@ -167,6 +168,7 @@ export async function getStudyGuides(): Promise<StudyGuide[]> {
         spotify_url: values[4]?.trim() || "",
         pdf_url: values[5]?.trim() || "",
         color: values[6]?.trim() || "",
+        sort_order: i,
       });
     }
     return guides;

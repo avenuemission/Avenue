@@ -66,6 +66,11 @@ create table if not exists public.intersection_event_dates (
 );
 create index if not exists event_dates_key_idx on public.intersection_event_dates (event_key, event_date);
 
+-- Prevent duplicate event dates when re-running the schema
+alter table public.intersection_event_dates
+  drop constraint if exists unique_event_date,
+  add constraint unique_event_date unique (event_key, event_date);
+
 -- ------------------------------------------------------------
 -- 5. STUDY GUIDES (Weekly Pathways Topics)
 -- ------------------------------------------------------------
@@ -173,12 +178,71 @@ insert into public.site_stats (key, value, label) values
 ('new_groups',  3, 'New Groups Starting Soon')
 on conflict (key) do update set value = excluded.value, label = excluded.label;
 
+-- Study guides (from public/data/study_guides.csv)
+insert into public.study_guides (guide_date, series, topic, scripture, spotify_url, pdf_url, color, sort_order) values
+('27/12/2025', 'James: Practical Faith for the New Year', 'Trials & Wisdom', 'James 1', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#4ade80', 1),
+('3/1/2026', 'James: Practical Faith for the New Year', 'Faith and Deeds', 'James 2', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#4ade80', 2),
+('10/1/2026', 'James: Practical Faith for the New Year', 'Taming the Tongue', 'James 3', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#4ade80', 3),
+('17/1/2026', 'James: Practical Faith for the New Year', 'Submit to God', 'James 4', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#4ade80', 4),
+('24/1/2026', 'James: Practical Faith for the New Year', 'Patience Prayer and Community', 'James 5', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#4ade80', 5),
+('7/2/2026', 'Cosmic Conversations', 'Gethsemane', 'Mark 14:32-38', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#60a5fa', 6),
+('14/2/2026', 'Cosmic Conversations', 'Job and the Heavenly Council', 'Job 1:6-12', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#60a5fa', 7),
+('21/2/2026', 'Cosmic Conversations', 'The Lord Stood Before Abraham', 'Genesis 18:16-33', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#60a5fa', 8),
+('28/2/2026', 'Cosmic Conversations', 'Moses Intercession', 'Exodus 32:7-14', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#60a5fa', 9),
+('7/3/2026', 'Cosmic Conversations', 'Hannah''s Unanswered Prayer', '1 Samuel 1:9-20', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#60a5fa', 10),
+('14/3/2026', 'Cosmic Conversations', 'Walking with God Like Enoch', 'Genesis 5:21-24', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#60a5fa', 11),
+('21/3/2026', 'Cosmic Conversations', 'Why is it so hard to pray? (Gethsemane)', 'Matthew 26:36-46', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#60a5fa', 12),
+('18/4/2026', 'Endgame - A Revelation Series', 'The Revelation of Jesus Christ', 'Revelation 1', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f97316', 13),
+('25/4/2026', 'Endgame - A Revelation Series', 'The Dragon and The Woman', 'Revelation 12:1-17', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f97316', 14),
+('2/5/2026', 'Endgame - A Revelation Series', 'The Beast', 'Revelation 13:1-10', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f97316', 15),
+('9/5/2026', 'Endgame - A Revelation Series', 'The Remaining Who Worship', 'Revelation 14:6-12', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f97316', 16),
+('16/5/2026', 'Endgame - A Revelation Series', 'The Fire and 1000 Years', 'Revelation 20:1-15', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f97316', 17),
+('23/5/2026', 'Endgame - A Revelation Series', 'The Garden City', 'Revelation 21:1-5; 22:1-5', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f97316', 18),
+('20/6/2026', 'Rest Rhythms', 'Sabbath made for man', 'Mark 2:23-28', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#ef4444', 19),
+('27/6/2026', 'Rest Rhythms', 'Healings on the Sabbath', 'Luke 13:10-17', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#ef4444', 20),
+('4/7/2026', 'Rest Rhythms', 'Sitting at Jesus'' Feet', 'Luke 10:38-42', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#ef4444', 21),
+('11/7/2026', 'Rest Rhythms', 'It is Finished (The Cross and Sabbath)', 'John 19:28-30', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#ef4444', 22),
+('18/7/2026', 'Rest Rhythms', 'Resting in Community', 'Hebrews 10:24-25', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#ef4444', 23),
+('25/7/2026', 'Samson Unfiltered', 'Identity Before Intimacy', 'Judges 13', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#a78bfa', 24),
+('1/8/2026', 'Samson Unfiltered', 'Red Flags and Rationalisations', 'Judges 14', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#a78bfa', 25),
+('8/8/2026', 'Samson Unfiltered', 'Strong in Public but Weak in Private', 'Judges 16:1-3', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#a78bfa', 26),
+('15/8/2026', 'Samson Unfiltered', 'Leveraging Love', 'Judges 16:4-21', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#a78bfa', 27),
+('22/8/2026', 'Samson Unfiltered', 'A Grace That''s Greater', 'Judges 16:22-31', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#a78bfa', 28),
+('5/9/2026', 'A Faith that Makes Sense (Apologetics)', 'One Body', '1 Corinthians 12:12-27', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#fbbf24', 29),
+('12/9/2026', 'A Faith that Makes Sense (Apologetics)', 'One Hope', 'Ephesians 4:4-6', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#fbbf24', 30),
+('19/9/2026', 'A Faith that Makes Sense (Apologetics)', 'One Father Lord and Spirit', 'Ephesians 4:4-6', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#fbbf24', 31),
+('26/9/2026', 'A Faith that Makes Sense (Apologetics)', 'One Faith', 'Jude 1:3', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#fbbf24', 32),
+('3/10/2026', 'A Faith that Makes Sense (Apologetics)', 'One Baptism', 'Romans 6:3-4', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#fbbf24', 33),
+('17/10/2026', 'APEST in Action (ACTS)', 'Intro to APEST', 'Ephesians 4:11-13', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#22d3ee', 34),
+('24/10/2026', 'APEST in Action (ACTS)', 'Apostle', 'Acts 1:8', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#22d3ee', 35),
+('31/10/2026', 'APEST in Action (ACTS)', 'Prophet', 'Acts 2:17-18', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#22d3ee', 36),
+('7/11/2026', 'APEST in Action (ACTS)', 'Evangelist', 'Acts 8:26-40', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#22d3ee', 37),
+('14/11/2026', 'APEST in Action (ACTS)', 'Shepherd', 'Acts 20:28-31', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#22d3ee', 38),
+('21/11/2026', 'APEST in Action (ACTS)', 'Teacher', 'Acts 18:24-28', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#22d3ee', 39),
+('12/12/2026', 'Christmas', 'Christmas Week 1', 'Luke 2:1-20', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f472b6', 40),
+('19/12/2026', 'Christmas', 'Christmas Week 2', 'Matthew 2:1-12', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f472b6', 41),
+('26/12/2026', 'Christmas', 'Christmas Week 3', 'John 1:1-14', 'https://open.spotify.com/show/127V2svOSv6x4Xh6Uu6ZaH?si=PHHs0GzwRLqIkqkPqI8M4Q&nd=1&dlsi=21621dab8d0f4790', '', '#f472b6', 42);
+
+-- Intersection event dates (upcoming countdown dates)
+-- Replace these with real dates via the Admin page.
+insert into public.intersection_event_dates (event_key, event_date, event_time) values
+('prayerAndPraise', '2026-07-02', '19:00'),
+('prayerAndPraise', '2026-07-09', '19:00'),
+('prayerAndPraise', '2026-07-16', '19:00'),
+('weekOfWorship', '2026-07-13', '19:00'),
+('weekOfWorship', '2026-07-14', '19:00'),
+('weekOfWorship', '2026-07-15', '19:00'),
+('weekOfWorship', '2026-07-16', '19:00'),
+('weekOfWorship', '2026-07-17', '19:00'),
+('quarterlySermon', '2026-09-06', '15:00')
+on conflict do nothing;
+
 -- Admin leader (matches default auth admin)
 insert into public.leaders (id, email, name, full_access) values
 ('1', 'info@avenuemission.com', 'Avenue Admin', true)
 on conflict (email) do update set full_access = true;
 
 -- ============================================================
--- DONE. Next: import study guides and intersection event dates
--- via the Admin page (or add INSERTs here if you prefer).
+-- DONE. Re-run this schema in Supabase to seed study guides and
+-- placeholder intersection event dates. Edit dates in the Admin page.
 -- ============================================================

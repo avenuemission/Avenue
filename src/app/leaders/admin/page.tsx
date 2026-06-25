@@ -44,6 +44,21 @@ const FORM_TYPES = [
   { value: "event-updates", label: "Event Updates" },
 ];
 
+async function apiCall(url: string, options: RequestInit, onSuccess: () => void) {
+  try {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      const message = json.error || `${res.status} ${res.statusText}`;
+      alert(`Save failed: ${message}`);
+      return;
+    }
+    onSuccess();
+  } catch (err) {
+    alert(`Save failed: ${err instanceof Error ? err.message : "Network error"}`);
+  }
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [adminKey, setAdminKey] = useState("");
@@ -195,19 +210,19 @@ function SubmissionsTab({ adminKey }: { adminKey: string }) {
   }, [fetchSubmissions]);
 
   const toggleArchive = (id: string, archived: boolean) => {
-    fetch("/api/submissions", {
+    apiCall("/api/submissions", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify({ id, archived }),
-    }).then(() => fetchSubmissions());
+    }, fetchSubmissions);
   };
 
   const deleteSubmission = (id: string) => {
     if (!confirm("Delete this submission permanently?")) return;
-    fetch(`/api/submissions?id=${id}`, {
+    apiCall(`/api/submissions?id=${id}`, {
       method: "DELETE",
       headers: { authorization: `Bearer ${adminKey}` },
-    }).then(() => fetchSubmissions());
+    }, fetchSubmissions);
   };
 
   const filtered = submissions.filter((s) => {
@@ -323,28 +338,28 @@ function LeadersTab({ adminKey }: { adminKey: string }) {
   }, [fetchLeaders]);
 
   const toggleAccess = (email: string, full_access: boolean) => {
-    fetch("/api/content/leaders", {
+    apiCall("/api/content/leaders", {
       method: "PUT",
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify({ email, full_access }),
-    }).then(() => fetchLeaders());
+    }, fetchLeaders);
   };
 
   const removeLeader = (email: string) => {
     if (!confirm(`Remove leader ${email}?`)) return;
-    fetch(`/api/content/leaders?email=${encodeURIComponent(email)}`, {
+    apiCall(`/api/content/leaders?email=${encodeURIComponent(email)}`, {
       method: "DELETE",
       headers: { authorization: `Bearer ${adminKey}` },
-    }).then(() => fetchLeaders());
+    }, fetchLeaders);
   };
 
   const addLeader = () => {
     if (!newEmail || !newName) return;
-    fetch("/api/content/leaders", {
+    apiCall("/api/content/leaders", {
       method: "POST",
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify({ email: newEmail, name: newName }),
-    }).then(() => {
+    }, () => {
       setNewEmail("");
       setNewName("");
       fetchLeaders();
@@ -445,11 +460,11 @@ function PathwaysTab({ adminKey }: { adminKey: string }) {
   const save = () => {
     if (!editing) return;
     const method = editing.id ? "PUT" : "POST";
-    fetch("/api/content/pathway-groups", {
+    apiCall("/api/content/pathway-groups", {
       method,
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify(editing),
-    }).then(() => {
+    }, () => {
       setEditing(null);
       fetchGroups();
     });
@@ -457,10 +472,10 @@ function PathwaysTab({ adminKey }: { adminKey: string }) {
 
   const deleteGroup = (id: string) => {
     if (!confirm("Delete this group?")) return;
-    fetch(`/api/content/pathway-groups?id=${id}`, {
+    apiCall(`/api/content/pathway-groups?id=${id}`, {
       method: "DELETE",
       headers: { authorization: `Bearer ${adminKey}` },
-    }).then(() => fetchGroups());
+    }, fetchGroups);
   };
 
   const blankGroup = {
@@ -581,11 +596,11 @@ function EventsTab({ adminKey }: { adminKey: string }) {
 
   const saveEvent = () => {
     if (!editingEvent) return;
-    fetch("/api/content/intersection-events", {
+    apiCall("/api/content/intersection-events", {
       method: "PUT",
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify(editingEvent),
-    }).then(() => {
+    }, () => {
       setEditingEvent(null);
       fetchEvents();
     });
@@ -593,11 +608,11 @@ function EventsTab({ adminKey }: { adminKey: string }) {
 
   const addDate = () => {
     if (!newDate.event_key || !newDate.event_date) return;
-    fetch("/api/content/intersection-events", {
+    apiCall("/api/content/intersection-events", {
       method: "POST",
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify(newDate),
-    }).then(() => {
+    }, () => {
       setNewDate({ event_key: "", event_date: "", event_time: "19:00" });
       fetchEvents();
     });
@@ -605,10 +620,10 @@ function EventsTab({ adminKey }: { adminKey: string }) {
 
   const deleteDate = (id: string) => {
     if (!confirm("Delete this date?")) return;
-    fetch(`/api/content/intersection-events?id=${id}`, {
+    apiCall(`/api/content/intersection-events?id=${id}`, {
       method: "DELETE",
       headers: { authorization: `Bearer ${adminKey}` },
-    }).then(() => fetchEvents());
+    }, fetchEvents);
   };
 
   return (
@@ -733,11 +748,11 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
   const save = () => {
     if (!editing) return;
     const method = editing.id ? "PUT" : "POST";
-    fetch("/api/content/study-guides", {
+    apiCall("/api/content/study-guides", {
       method,
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify(editing),
-    }).then(() => {
+    }, () => {
       setEditing(null);
       fetchGuides();
     });
@@ -745,10 +760,10 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
 
   const deleteGuide = (id: string) => {
     if (!confirm("Delete this guide?")) return;
-    fetch(`/api/content/study-guides?id=${id}`, {
+    apiCall(`/api/content/study-guides?id=${id}`, {
       method: "DELETE",
       headers: { authorization: `Bearer ${adminKey}` },
-    }).then(() => fetchGuides());
+    }, fetchGuides);
   };
 
   const blankGuide = {
@@ -854,11 +869,11 @@ function StatsTab({ adminKey }: { adminKey: string }) {
   }, [fetchStats]);
 
   const updateStat = (key: string, value: number, label: string) => {
-    fetch("/api/content/site-stats", {
+    apiCall("/api/content/site-stats", {
       method: "PUT",
       headers: { "Content-Type": "application/json", authorization: `Bearer ${adminKey}` },
       body: JSON.stringify({ key, value, label }),
-    }).then(() => fetchStats());
+    }, fetchStats);
   };
 
   return (

@@ -25,7 +25,7 @@
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Public (used by browser) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon public key | Public (used by browser) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service_role key | **Secret** — never expose to browser |
-| `ADMIN_API_KEY` | Any long random string you choose | **Secret** — used to unlock the admin page |
+| `ADMIN_API_KEY` | Any long random string you choose | **Secret** — used to unlock the admin page. Avoid simple words; use a strong token. |
 
 > **Important:** `ADMIN_API_KEY` is what you will type on the `/leaders/admin` page to unlock it. Pick something strong and save it somewhere secure.
 
@@ -38,33 +38,22 @@
 
 This creates all the tables, indexes, RLS policies, and seed data.
 
-## 5. Import study guides (optional, recommended)
+## 5. Study guides and event dates are already seeded
 
-The schema seeds pathway groups, site stats, intersection events, and the admin leader. Study guides are not seeded because there are many rows. You can import them via the admin page once it is live:
+The schema now includes seed data for:
 
-1. Log in to the leaders hub as `info@avenuemission.com`.
-2. Click **Admin**.
-3. Go to the **Study Guides** tab.
-4. Add each guide from `public/data/study_guides.csv`.
+- All 42 study guides from `public/data/study_guides.csv`
+- Placeholder upcoming dates for Prayer & Praise, Week of Worship, and Quarterly Sermon
 
-Or, if you prefer, add the `INSERT` statements directly to `supabase/schema.sql` before running it.
+You can edit these in the admin page after deploying. The placeholder dates are just examples — replace them with real dates via the **Intersection Events** tab.
 
-## 6. Import intersection event dates
-
-1. Open the **Admin** page.
-2. Go to the **Intersection Events** tab.
-3. For each event, add upcoming dates from the CSV files in `public/data/`:
-   - `prayer_and_praise.csv`
-   - `week_of_worship.csv`
-   - `quarterly_sermon.csv`
-
-## 7. Deploy
+## 6. Deploy
 
 1. Push the code to your Git repository (or trigger a deploy in Netlify).
 2. Netlify will use the new environment variables.
 3. After deploy, verify the admin page works by visiting `/leaders/admin` and entering your `ADMIN_API_KEY`.
 
-## 8. Leader approval workflow
+## 7. Leader approval workflow
 
 When someone signs up on the site:
 
@@ -72,7 +61,7 @@ When someone signs up on the site:
 2. You receive an email notification.
 3. Go to **Admin > Leaders & Access**, find their email, and click **Full Access** to approve them.
 
-## 9. What is editable in the admin page
+## 8. What is editable in the admin page
 
 - **Form Submissions**: view, archive, and delete all website form submissions.
 - **Leaders & Access**: approve/revoke leader access, add or remove leaders.
@@ -81,6 +70,6 @@ When someone signs up on the site:
 - **Study Guides**: add, edit, and delete weekly pathways topics.
 - **Site Stats**: update the numbers shown on the Pathways page.
 
-## 10. Fallback behavior
+## 9. Fallback behavior
 
 If Supabase is unavailable, the site still works using the existing hardcoded constants and CSV files. Once Supabase is populated, the site will prefer the live database data.
