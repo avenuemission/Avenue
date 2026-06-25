@@ -22,9 +22,8 @@ export async function PUT(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from("site_stats")
     .upsert({ key, value, label }, { onConflict: "key" })
-    .select()
-    .single();
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ stat: data });
+  return NextResponse.json({ stat: data?.[0] ?? null });
 }

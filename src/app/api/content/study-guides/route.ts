@@ -24,11 +24,10 @@ export async function POST(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from("study_guides")
     .insert({ guide_date, series, topic, scripture, spotify_url, pdf_url, color, sort_order: sort_order ?? 0 })
-    .select()
-    .single();
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ guide: data });
+  return NextResponse.json({ guide: data?.[0] ?? null });
 }
 
 // PUT: admin — update a study guide
@@ -44,11 +43,11 @@ export async function PUT(request: NextRequest) {
     .from("study_guides")
     .update(fields)
     .eq("id", id)
-    .select()
-    .single();
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ guide: data });
+  if (!data || data.length === 0) return NextResponse.json({ error: "No matching row found" }, { status: 404 });
+  return NextResponse.json({ guide: data[0] });
 }
 
 // DELETE: admin — remove a study guide

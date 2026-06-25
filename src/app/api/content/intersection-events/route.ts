@@ -32,11 +32,11 @@ export async function PUT(request: NextRequest) {
     .from("intersection_events")
     .update(fields)
     .eq("key", key)
-    .select()
-    .single();
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ event: data });
+  if (!data || data.length === 0) return NextResponse.json({ error: "No matching event found" }, { status: 404 });
+  return NextResponse.json({ event: data[0] });
 }
 
 // POST: admin — add a date to an event
@@ -52,11 +52,10 @@ export async function POST(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from("intersection_event_dates")
     .insert({ event_key, event_date, event_time: event_time ?? "19:00" })
-    .select()
-    .single();
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ date: data });
+  return NextResponse.json({ date: data?.[0] ?? null });
 }
 
 // DELETE: admin — remove a date

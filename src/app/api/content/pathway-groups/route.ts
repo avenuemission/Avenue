@@ -24,11 +24,10 @@ export async function POST(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin()
     .from("pathway_groups")
     .insert({ name, latitude, longitude, time, coordinator, phone, running: !!running, description, sort_order: sort_order ?? 0 })
-    .select()
-    .single();
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ group: data });
+  return NextResponse.json({ group: data?.[0] ?? null });
 }
 
 // PUT: admin — update a pathway group
@@ -44,11 +43,11 @@ export async function PUT(request: NextRequest) {
     .from("pathway_groups")
     .update(fields)
     .eq("id", id)
-    .select()
-    .single();
+    .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ group: data });
+  if (!data || data.length === 0) return NextResponse.json({ error: "No matching row found" }, { status: 404 });
+  return NextResponse.json({ group: data[0] });
 }
 
 // DELETE: admin — remove a pathway group (?id=)

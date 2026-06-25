@@ -1,8 +1,21 @@
 -- ============================================================
 -- Avenue Website — Supabase Schema
 -- Run this in the Supabase SQL Editor (Dashboard > SQL Editor)
--- Safe to re-run: uses CREATE TABLE IF NOT EXISTS / ON CONFLICT
+-- WARNING: This script DROPS existing tables and recreates them
+-- from scratch, so all data is reset. Use only for clean setup.
 -- ============================================================
+
+-- Drop existing tables in reverse dependency order
+-- (disable triggers to avoid foreign-key conflicts during cleanup)
+set session_replication_role = 'replica';
+drop table if exists public.intersection_event_dates cascade;
+drop table if exists public.intersection_events cascade;
+drop table if exists public.form_submissions cascade;
+drop table if exists public.pathway_groups cascade;
+drop table if exists public.study_guides cascade;
+drop table if exists public.site_stats cascade;
+drop table if exists public.leaders cascade;
+set session_replication_role = 'origin';
 
 -- Required for gen_random_uuid()
 create extension if not exists "pgcrypto";

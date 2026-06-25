@@ -31,16 +31,11 @@ export async function PUT(request: NextRequest) {
     .from("leaders")
     .update({ full_access })
     .eq("email", email.toLowerCase())
-    .select()
-    .single();
+    .select();
 
-  if (error) {
-    if (error.code === "PGRST116") {
-      return NextResponse.json({ error: "Leader not found" }, { status: 404 });
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ leader: data });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data || data.length === 0) return NextResponse.json({ error: "Leader not found" }, { status: 404 });
+  return NextResponse.json({ leader: data[0] });
 }
 
 // DELETE: admin — remove a leader
@@ -81,8 +76,7 @@ export async function POST(request: NextRequest) {
       name,
       full_access: full_access ?? false,
     })
-    .select()
-    .single();
+    .select();
 
   if (error) {
     if (error.code === "23505") {
@@ -90,5 +84,5 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ leader: data });
+  return NextResponse.json({ leader: data?.[0] ?? null });
 }
