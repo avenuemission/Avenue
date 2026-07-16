@@ -113,6 +113,9 @@ export default function ImageCarousel({ folder = "pathways_carousel" }: ImageCar
             className="flex gap-4 animate-scroll-infinite"
             style={{
               width: `${mobileImages.length * (240 + 16)}px`,
+              // Duration scales with image count so scroll SPEED (px/s) is
+              // identical on every page, regardless of how many images.
+              animationDuration: `${images.length * 3.5}s`,
             }}
           >
             {mobileImages.map((src, index) => (
