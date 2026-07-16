@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
 
 const VALID_TYPES = [
   "start-pathway",
@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
@@ -67,6 +69,8 @@ export async function PATCH(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const { id, archived } = await request.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
@@ -85,6 +89,8 @@ export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");

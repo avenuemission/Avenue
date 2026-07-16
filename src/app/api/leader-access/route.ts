@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { getStore } from "@netlify/blobs";
 import { sendLeaderSignupNotification } from "@/lib/email";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 interface LeaderRecord {
   id: string;
@@ -34,7 +34,7 @@ function getLeadersStore() {
 // Read a leader by email — Supabase first, then Netlify Blobs fallback
 async function getLeader(email: string): Promise<LeaderRecord | null> {
   try {
-    const { data: sb } = await supabase
+    const { data: sb } = await getSupabaseAdmin()
       .from("leaders")
       .select("id, email, name, full_access, created_at")
       .eq("email", email.toLowerCase())
@@ -67,7 +67,7 @@ async function getLeader(email: string): Promise<LeaderRecord | null> {
 // Save a leader record — Supabase first, then Netlify Blobs fallback
 async function saveLeader(leader: LeaderRecord): Promise<void> {
   try {
-    await supabase
+    await getSupabaseAdmin()
       .from("leaders")
       .upsert({
         id: leader.id,
@@ -97,7 +97,7 @@ async function listLeaders(): Promise<LeaderRecord[]> {
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from("leaders")
       .select("id, email, name, full_access, created_at")
       .order("created_at", { ascending: false });

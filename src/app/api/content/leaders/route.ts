@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
 import { getStore } from "@netlify/blobs";
 
 interface LeaderRecord {
@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const leaders: LeaderRecord[] = [];
 
@@ -57,6 +59,8 @@ export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const { email, full_access } = await request.json();
   if (!email || typeof full_access !== "boolean") {
@@ -79,6 +83,8 @@ export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email");
@@ -98,6 +104,8 @@ export async function POST(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const { id, email, name, full_access } = await request.json();
   if (!email || !name) {

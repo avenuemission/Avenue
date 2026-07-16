@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
 
 // GET: public — list all events with their upcoming dates
 export async function GET() {
@@ -24,6 +24,8 @@ export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
   const body = await request.json();
   const { key, ...fields } = body;
   if (!key) return NextResponse.json({ error: "key required" }, { status: 400 });
@@ -44,6 +46,8 @@ export async function POST(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
   const { event_key, event_date, event_time } = await request.json();
   if (!event_key || !event_date) {
     return NextResponse.json({ error: "event_key and event_date required" }, { status: 400 });
@@ -63,6 +67,8 @@ export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });

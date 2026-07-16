@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
 
 // GET: public — list all study guides
 export async function GET() {
@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
   const body = await request.json();
   const { guide_date, series, topic, scripture, spotify_url, pdf_url, color, sort_order } = body;
 
@@ -35,6 +37,8 @@ export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
   const body = await request.json();
   const { id, ...fields } = body;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
@@ -55,6 +59,8 @@ export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });

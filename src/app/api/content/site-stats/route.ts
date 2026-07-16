@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
 
 // GET: public — all site stats
 export async function GET() {
@@ -14,6 +14,8 @@ export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
   const { key, value, label } = await request.json();
   if (!key || typeof value !== "number") {
     return NextResponse.json({ error: "key and value required" }, { status: 400 });
