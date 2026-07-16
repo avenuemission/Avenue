@@ -5,6 +5,8 @@ import Image from "next/image";
 import CountdownTimer from "@/components/CountdownTimer";
 import ImageCarousel from "@/components/PathwaysCarousel";
 import CalendarPopup from "@/components/CalendarPopup";
+import PageTitle from "@/components/ui/PageTitle";
+import Reveal from "@/components/ui/Reveal";
 import { getIntersectionEvents, IntersectionEvent, IntersectionEventDate } from "@/lib/content";
 import { SOCIAL_LINKS } from "@/lib/data";
 import {
@@ -157,34 +159,18 @@ export default function IntersectionPage() {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
-      {/* Hero Section with Saturn Rings */}
-      <section className="relative w-full">
-        {/* Saturn Rings Background */}
-        <div className="relative h-[500px] md:h-[800px] w-full overflow-hidden">
-          <Image
-            src="/images/saturn_rings.jpg"
-            alt="Saturn rings"
-            fill
-            className="object-cover opacity-40"
-            priority
-          />
+      <PageTitle title="Intersection">
+        &ldquo;May the God of endurance and encouragement grant you to live in
+        such harmony with one another, in accord with Christ Jesus, that
+        together you may with one voice glorify the God and Father of our Lord
+        Jesus Christ.&rdquo; – Apostle Paul
+      </PageTitle>
 
-
-
-          {/* Quote overlay on top */}
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl z-10">
-            <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
-              &ldquo;May the God of endurance and encouragement grant you to
-              live in such harmony with one another, in accord with Christ
-              Jesus, that together you may with one voice glorify the God and
-              Father of our Lord Jesus Christ.&rdquo; – Apostle Paul
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* Image Carousel - Scroll-linked */}
+      <ImageCarousel folder="intersection_carousel" />
 
       {/* Intersection Diagram and Description Section */}
-      <section className="bg-black pt-16 pb-12"> 
+      <section className="bg-black pt-16 pb-12">
         <div className="max-w-7xl mx-auto px-6 sm:px-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
@@ -212,14 +198,11 @@ export default function IntersectionPage() {
 
 
             {/* Right - Content */}
-            <div className="space-y-6 lg:pl-8">
-              <h1 className="text-4xl md:text-6xl font-bold text-white">
-                INTERSECTION EVENTS
-              </h1>
-
-              <p className="text-gray-300 md:text-lg leading-relaxed max-w-md">
-                As pathway groups orbit Jesus, they occasionally come into
-                contact, and during these intersections, we come together to
+            <Reveal delay={100} className="space-y-6 lg:pl-8">
+              <span className="eyebrow">Where roads meet</span>
+              <p className="text-[var(--muted)] md:text-lg leading-relaxed max-w-md">
+                As pathway groups gather around Jesus, they occasionally come
+                into contact, and during these intersections, we come together to
                 worship God in one spirit. We express our worship through
                 community, music, prayer, and leisure, creating moments that
                 draw us closer to God and to one another. These gatherings take
@@ -227,13 +210,10 @@ export default function IntersectionPage() {
                 combined pathway events, quarterly sermons, Avenue camps, and a
                 variety of other meaningful and fun social activities.
               </p>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
-
-      {/* Image Carousel - Scroll-linked */}
-      <ImageCarousel folder="intersection_carousel" />
 
       {/* Event Countdown Section */}
       <section className="relative py-16">
@@ -245,17 +225,21 @@ export default function IntersectionPage() {
             fill
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-black/60" />
+          <div className="absolute inset-0 bg-black/75" />
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center mb-12">
-            EVENT COUNTDOWN
-          </h2>
+          <Reveal className="text-center mb-12">
+            <span className="eyebrow mb-4">What&apos;s on</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white">
+              Event Countdown
+            </h2>
+          </Reveal>
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* Prayer & Praise */}
-            <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
+            <Reveal delay={0}>
+              <div className="panel p-6 space-y-4 h-full">
               <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
                 {getEventInfo("prayerAndPraise")?.title ?? "Prayer & Praise"}
               </h3>
@@ -285,10 +269,12 @@ export default function IntersectionPage() {
                   <p className="text-gray-400 text-sm">No upcoming date</p>
                 )}
               </div>
-            </div>
+              </div>
+            </Reveal>
 
             {/* Quarterly Sermon */}
-            <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
+            <Reveal delay={80}>
+              <div className="panel p-6 space-y-4 h-full">
               <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
                 {getEventInfo("quarterlySermon")?.title ?? "Quarterly Sermon"}
               </h3>
@@ -318,10 +304,12 @@ export default function IntersectionPage() {
                   <p className="text-gray-400 text-sm">No upcoming date</p>
                 )}
               </div>
-            </div>
+              </div>
+            </Reveal>
 
             {/* Week of Worship */}
-            <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-6 space-y-4 hover:bg-gray-900/60 transition-colors">
+            <Reveal delay={160}>
+              <div className="panel p-6 space-y-4 h-full">
               <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
                 {getEventInfo("weekOfWorship")?.title ?? "Week of Worship"}
               </h3>
@@ -351,7 +339,8 @@ export default function IntersectionPage() {
                   <p className="text-gray-400 text-sm">No upcoming date</p>
                 )}
               </div>
-            </div>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -366,13 +355,16 @@ export default function IntersectionPage() {
             fill
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-black/60" />
+          <div className="absolute inset-0 bg-black/75" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 text-center">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-12">
-            STAY IN THE LOOP
-          </h2>
+          <Reveal className="mb-12">
+            <span className="eyebrow mb-4">Stay connected</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white">
+              Stay in the Loop
+            </h2>
+          </Reveal>
 
           {/* Social Media Buttons */}
           <div className="flex flex-wrap justify-center gap-6 mb-16">
@@ -381,7 +373,7 @@ export default function IntersectionPage() {
                 <button
                   key={social.name}
                   onClick={() => setCalendarOpen(true)}
-                  className={`flex items-center justify-center gap-3 bg-blue-800 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:bg-blue-700 min-w-[180px]`}
+                  className={`flex items-center justify-center gap-3 bg-[var(--accent)] text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:brightness-110 min-w-[180px]`}
                 >
                   <social.icon size={24} />
                   <span className="text-base uppercase tracking-wider">
@@ -394,7 +386,7 @@ export default function IntersectionPage() {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center justify-center gap-3 bg-blue-800 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:bg-blue-700 min-w-[180px]`}
+                  className={`flex items-center justify-center gap-3 bg-[var(--accent)] text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:brightness-110 min-w-[180px]`}
                 >
                   <social.icon size={24} />
                   <span className="text-base uppercase tracking-wider">
@@ -438,7 +430,7 @@ export default function IntersectionPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                   required
                 />
               </div>
@@ -452,13 +444,13 @@ export default function IntersectionPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="bg-blue-700 text-white px-12 py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm"
+                className="bg-[var(--accent)] text-white px-12 py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
               >
                 Submit
               </button>

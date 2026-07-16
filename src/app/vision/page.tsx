@@ -3,7 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import ImageCarousel from "@/components/PathwaysCarousel";
+import PageTitle from "@/components/ui/PageTitle";
+import Section from "@/components/ui/Section";
+import Disclosure from "@/components/ui/Disclosure";
+import Reveal from "@/components/ui/Reveal";
 
 const valuesData = [
   {
@@ -61,322 +65,177 @@ const beliefsData = [
   },
 ];
 
-interface BeliefCardProps {
-  question: string;
-  answer: string;
-  isExpanded: boolean;
-  onClick: () => void;
-}
-
-function BeliefCard({ question, answer, isExpanded, onClick }: BeliefCardProps) {
-  return (
-    <div
-      className={`
-        relative rounded-2xl cursor-pointer overflow-hidden
-        transition-all duration-500 ease-out
-        backdrop-blur-xl bg-white/10 border border-white/20
-        hover:bg-white/15 hover:border-white/30
-        shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]
-      `}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between p-6">
-        <h3 className="text-white text-lg md:text-xl font-semibold pr-4">
-          {question}
-        </h3>
-        <ChevronDown
-          className={`text-white/70 flex-shrink-0 transition-transform duration-300 ${
-            isExpanded ? "rotate-180" : ""
-          }`}
-          size={24}
-        />
-      </div>
-      <div
-        className={`
-          overflow-hidden transition-all duration-500 ease-out
-          ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}
-        `}
-      >
-        <p className="px-6 pb-6 text-gray-200 text-base md:text-lg leading-relaxed">
-          {answer}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function VisionPage() {
   const [expandedMVV, setExpandedMVV] = useState<string | null>(null);
   const [expandedBelief, setExpandedBelief] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
+      <PageTitle title="Vision">
+        &ldquo;Therefore go and make disciples of all nations, baptizing them in
+        the name of the Father and of the Son and of the Holy Spirit, and
+        teaching them to obey everything I have commanded you. And surely I am
+        with you always, to the very end of the age.&rdquo; – Jesus
+      </PageTitle>
+
+      {/* Pooled carousel from all three areas, shuffled */}
+      <ImageCarousel folder="pathways_carousel,intersection_carousel,streetlights_carousel" />
 
       {/* ===================== */}
-      {/* HERO SECTION */}
+      {/* THE MODEL */}
       {/* ===================== */}
-      <section className="relative w-full">
-
-        {/* Earth Horizon Image */}
-        <div className="relative h-[500px] md:h-[800px] w-full overflow-hidden">
-          <Image
-            src="/images/vision_page_earth_horizon_day.png"
-            alt="Earth horizon from space"
-            fill
-            className="object-bottom object-cover"
-            priority
-          />
-
-          {/* TOP-ALIGNED QUOTE */}
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl">
-            <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
-              &ldquo;Therefore go and make disciples of all nations, baptizing
-              them in the name of the Father and of the Son and of the Holy
-              Spirit, and teaching them to obey everything I have commanded you.
-              And surely I am with you always, to the very end of the age.&rdquo;
-              – Jesus
-            </p>
-          </div>
-        </div>
-
-      </section>
-
-
-
-      {/* ===================== */}
-      {/* AVENUE ORBIT SECTION */}
-      {/* ===================== */}
-      <section className="bg-black py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10">
-
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-
-          {/* Orbit Diagram */}
-          <div className="relative flex justify-center lg:justify-start overflow-visible">
-            <div
-              className="
-                relative
-                h-[450px] md:h-[500px] lg:h-[550px] xl:h-[600px]
-                w-full
-                overflow-visible
-              "
-            >
-            <Image
-              src="/images/vision_avenue_orbit.png"
-              alt="Avenue Orbit Diagram"
-              fill
-              className="
-                object-left object-contain
-
-                /* ===== MOBILE ===== */
-                scale-[0.85]           /* bigger than 0.6 */
-                translate-x-0          /* center, not right */
-                translate-y-4          /* slight down shift */
-
-                /* ===== TABLET ===== */
-                md:scale-[1.1]         /* medium sized */
-                md:translate-x-4       /* slight push right */
-                md:translate-y-10      /* moderate down shift */
-
-                /* ===== LAPTOP ===== */
-                lg:scale-[1.5]         /* keep your good laptop scale */
-                lg:-translate-x-40     /* your preferred left shift */
-                lg:translate-y-20      /* your preferred downward shift */
-              "
-
-            />
-
+      <Section eyebrow="The Model" width="wide">
+        <div className="grid lg:grid-cols-2 gap-10 items-center">
+          <Reveal className="relative flex justify-center lg:justify-start overflow-visible">
+            <div className="relative h-[420px] md:h-[500px] lg:h-[560px] w-full overflow-visible">
+              <Image
+                src="/images/vision_avenue_orbit.png"
+                alt="Avenue Decentralised Structure Diagram"
+                fill
+                className="object-left object-contain scale-[0.85] translate-y-4 md:scale-[1.1] md:translate-x-4 md:translate-y-10 lg:scale-[1.5] lg:-translate-x-40 lg:translate-y-20"
+              />
             </div>
-          </div>
+          </Reveal>
 
-
-
-
-            {/* Text Section */}
-            <div className="text-white space-y-6 lg:pl-8">
-              <h2 className="text-4xl md:text-6xl font-bold">
-                AVENUE ORBIT
-              </h2>
-
-              <div className="space-y-4 text-gray-300 md:text-lg leading-relaxed max-w-md">
-                <p>
-                  Everything is centred around Jesus. Pathway groups are house
-                  church communities growing together, empowered by the Spirit
-                  of God.
-                </p>
-                <p>
-                  Surrounding these church communities, an orbit is created
-                  called streetlights, a space for serving those in need and
-                  divine-inspired initiatives.
-                </p>
-                <p>
-                  Each pathway group is connected through one intersection orbit, a place for worshipping God in one spirit.
-                </p>
-              </div>
-
-              {/* Explore More Buttons */}
-              <div className="flex flex-wrap gap-3 pt-4">
-                <Link
-                  href="/pathways"
-                  className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
-                >
-                  Pathways
-                </Link>
-                <Link
-                  href="/intersection"
-                  className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
-                >
-                  Intersection
-                </Link>
-                <Link
-                  href="/streetlights"
-                  className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold uppercase tracking-wider hover:bg-white/20 hover:border-white/40 transition-all duration-300"
-                >
-                  Streetlights
-                </Link>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ===================== */}
-      {/* MISSION / VISION / VALUES SECTION */}
-      {/* ===================== */}
-      <section className="relative w-full">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <Image
-            src="/images/ocean_grove.png"
-            alt="Ocean Grove"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 py-20 px-6">
-          <div className="max-w-4xl mx-auto">
-
-            <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-4">
-              OUR VISION
+          <Reveal delay={100} className="lg:pl-8">
+            <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-tight text-white">
+              Avenue Decentralised Structure
             </h2>
-            <p className="text-gray-300 text-center text-lg md:text-xl mb-12 max-w-2xl mx-auto">
-              Where we are headed and what drives us
-            </p>
+            <div className="mt-6 space-y-4 text-[var(--muted)] md:text-lg leading-relaxed max-w-md">
+              <p>
+                Everything is centred around Jesus. Pathway groups are house
+                church communities growing together, empowered by the Spirit of
+                God.
+              </p>
+              <p>
+                Surrounding these church communities, a decentralised structure
+                is created called streetlights, a space for serving those in
+                need and divine-inspired initiatives.
+              </p>
+              <p>
+                Each pathway group is connected through one intersection, a
+                place for worshipping God in one spirit.
+              </p>
+            </div>
 
-            {/* Accordion: Mission, Vision, Values */}
-            <div className="space-y-4 mb-12">
-              <BeliefCard
-                question="MISSION"
-                answer="To unleash God-given potential"
-                isExpanded={expandedMVV === "mission"}
-                onClick={() => setExpandedMVV(expandedMVV === "mission" ? null : "mission")}
-              />
-              <BeliefCard
-                question="VISION"
-                answer="To be an expanding network of missional microchurches"
-                isExpanded={expandedMVV === "vision"}
-                onClick={() => setExpandedMVV(expandedMVV === "vision" ? null : "vision")}
-              />
-              {/* Values — custom accordion row with list */}
-              <div
-                className="relative rounded-2xl cursor-pointer overflow-hidden transition-all duration-500 ease-out backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]"
-                onClick={() => setExpandedMVV(expandedMVV === "values" ? null : "values")}
-              >
-                <div className="flex items-center justify-between p-6">
-                  <h3 className="text-white text-lg md:text-xl font-semibold pr-4">VALUES</h3>
-                  <ChevronDown
-                    className={`text-white/70 flex-shrink-0 transition-transform duration-300 ${
-                      expandedMVV === "values" ? "rotate-180" : ""
-                    }`}
-                    size={24}
-                  />
-                </div>
-                <div
-                  className={`overflow-hidden transition-all duration-500 ease-out ${
-                    expandedMVV === "values" ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
-                  }`}
+            <div className="mt-8 flex flex-wrap gap-3">
+              {[
+                { href: "/pathways", label: "Pathways" },
+                { href: "/intersection", label: "Intersection" },
+                { href: "/streetlights", label: "Streetlights" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 text-sm font-semibold uppercase tracking-wider text-white transition-all duration-300 hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)]"
                 >
-                  <div className="px-6 pb-6 space-y-4">
-                    {valuesData.map((value, index) => (
-                      <div key={index} className="border-l-2 border-white/30 pl-4">
-                        <h4 className="text-white text-base md:text-lg font-semibold mb-1">{value.title}</h4>
-                        <p className="text-gray-200 text-sm md:text-base leading-relaxed">{value.content}</p>
-                      </div>
-                    ))}
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </Section>
+
+      {/* ===================== */}
+      {/* OUR VISION */}
+      {/* ===================== */}
+      <Section eyebrow="Direction" title="Our Vision" lead="Where we are headed and what drives us." centered>
+        <div className="space-y-4 mb-10">
+          <Reveal>
+            <Disclosure
+              question="MISSION"
+              isExpanded={expandedMVV === "mission"}
+              onToggle={() => setExpandedMVV(expandedMVV === "mission" ? null : "mission")}
+            >
+              To unleash God-given potential.
+            </Disclosure>
+          </Reveal>
+          <Reveal delay={60}>
+            <Disclosure
+              question="VISION"
+              isExpanded={expandedMVV === "vision"}
+              onToggle={() => setExpandedMVV(expandedMVV === "vision" ? null : "vision")}
+            >
+              To be an expanding network of missional microchurches.
+            </Disclosure>
+          </Reveal>
+          <Reveal delay={120}>
+            <Disclosure
+              question="VALUES"
+              isExpanded={expandedMVV === "values"}
+              onToggle={() => setExpandedMVV(expandedMVV === "values" ? null : "values")}
+            >
+              <div className="space-y-4">
+                {valuesData.map((value) => (
+                  <div key={value.title} className="border-l-2 border-[var(--accent)]/50 pl-4">
+                    <h4 className="text-white text-base md:text-lg font-semibold mb-1">
+                      {value.title}
+                    </h4>
+                    <p className="text-[var(--muted)] text-sm md:text-base leading-relaxed">
+                      {value.content}
+                    </p>
                   </div>
-                </div>
+                ))}
               </div>
-            </div>
-
-            {/* 2026 Goal Callout */}
-            <div className="relative rounded-2xl p-8 md:p-10 text-center overflow-hidden
-              bg-blue-950/60 border border-blue-500/40 backdrop-blur-xl
-              shadow-[0_0_40px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]"
-            >
-              {/* Subtle glow ring */}
-              <div className="absolute inset-0 rounded-2xl bg-blue-500/5 pointer-events-none" />
-              <p className="text-blue-400 text-xs md:text-sm font-semibold uppercase tracking-widest mb-3">
-                Vision for End of 2027
-              </p>
-              <p className="text-white text-2xl md:text-4xl font-bold leading-snug">
-                10 Pathway Groups<br className="hidden md:block" />{" "}
-                with 20 Healthy Leaders
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ===================== */}
-      {/* BELIEFS SECTION */}
-      {/* ===================== */}
-      <section className="relative min-h-screen w-full">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <Image
-            src="/images/alan_baptism.png"
-            alt="Baptism"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-black/50" />
+            </Disclosure>
+          </Reveal>
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 py-20 px-6">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-6">
-              BELIEFS
-            </h2>
-            <p className="text-gray-200 text-center text-lg md:text-xl mb-12 max-w-2xl mx-auto">
-              We are a church supported by the Seventh-Day Adventist Church. Here is a snapshot of what we believe:
+        {/* 2027 Goal — bordered panel, accent eyebrow (replaces blue-glow) */}
+        <Reveal>
+          <div className="panel p-8 md:p-10 text-center">
+            <span className="eyebrow mb-3">Vision for End of 2027</span>
+            <p className="text-white text-2xl md:text-4xl font-bold leading-snug">
+              10 Pathway Groups
+              <br className="hidden md:block" /> with 20 Healthy Leaders
             </p>
+          </div>
+        </Reveal>
+      </Section>
 
-            {/* Belief Cards */}
+      {/* ===================== */}
+      {/* BELIEFS — the one photo moment */}
+      {/* ===================== */}
+      <section className="relative w-full">
+        <div className="absolute inset-0">
+          <Image src="/images/alan_baptism.png" alt="Baptism" fill className="object-cover" />
+          <div className="absolute inset-0 bg-black/70" />
+        </div>
+
+        <div className="relative z-10 py-20 md:py-28 px-6">
+          <div className="max-w-4xl mx-auto">
+            <Reveal className="text-center mb-12">
+              <span className="eyebrow mb-5">What we hold</span>
+              <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-tight text-white">
+                Beliefs
+              </h2>
+              <p className="mt-4 mx-auto max-w-2xl text-lg text-gray-300 leading-relaxed">
+                We are a church supported by the Seventh-Day Adventist Church.
+                Here is a snapshot of what we believe:
+              </p>
+            </Reveal>
+
             <div className="space-y-4">
               {beliefsData.map((belief, index) => (
-                <BeliefCard
-                  key={index}
-                  question={belief.question}
-                  answer={belief.answer}
-                  isExpanded={expandedBelief === belief.question}
-                  onClick={() =>
-                    setExpandedBelief(
-                      expandedBelief === belief.question ? null : belief.question
-                    )
-                  }
-                />
+                <Reveal key={belief.question} delay={index * 50}>
+                  <Disclosure
+                    question={belief.question}
+                    isExpanded={expandedBelief === belief.question}
+                    onToggle={() =>
+                      setExpandedBelief(
+                        expandedBelief === belief.question ? null : belief.question
+                      )
+                    }
+                  >
+                    {belief.answer}
+                  </Disclosure>
+                </Reveal>
               ))}
             </div>
           </div>
         </div>
       </section>
-
     </div>
   );
 }

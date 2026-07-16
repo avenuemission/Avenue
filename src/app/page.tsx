@@ -25,12 +25,12 @@ export default function Home() {
             
             {/* Text Content - Below Earth */}
             <div className="max-w-xs pb-20">
-              <h1 className="text-3xl font-bold text-white leading-tight mb-3">
+              <h1 className="hero-in text-3xl font-bold uppercase tracking-tight text-white leading-tight mb-3">
                 ON EARTH
                 <br />
                 AS IN HEAVEN
               </h1>
-              <p className="text-gray-300 text-xs mb-4 px-2 leading-relaxed">
+              <p className="hero-in text-gray-300 text-xs mb-4 px-2 leading-relaxed" style={{ animationDelay: "120ms" }}>
                 Avenue is a decentralised movement of people following Jesus,
                 convinced that disciple-making doesn&apos;t require more church
                 buildings, just the willingness to open the spaces we already
@@ -38,7 +38,8 @@ export default function Home() {
               </p>
               <Link
                 href="/vision"
-                className="inline-block bg-blue-800 text-white px-8 py-3 rounded-full font-medium tracking-wider hover:bg-blue-700 transition-colors"
+                className="hero-in inline-block bg-[var(--accent)] text-white px-8 py-3 rounded-full font-medium tracking-wider hover:brightness-110 transition-all"
+                style={{ animationDelay: "240ms" }}
               >
                 EXPLORE
               </Link>
@@ -49,12 +50,12 @@ export default function Home() {
           <div className="hidden md:flex items-center w-full h-full">
             {/* Left Content - Positioned closer to earth */}
             <div className="absolute left-[15%] md:left-[20%] lg:left-[25%] z-20 max-w-xl">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              <h1 className="hero-in text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white leading-tight mb-6">
                 ON EARTH
                 <br />
                 AS IN HEAVEN
               </h1>
-              <p className="text-gray-400 text-sm md:text-base max-w-md mb-8">
+              <p className="hero-in text-gray-400 text-sm md:text-base max-w-md mb-8" style={{ animationDelay: "120ms" }}>
                 Avenue is a decentralised movement of people following Jesus,
                 convinced that disciple-making doesn&apos;t require more church
                 buildings, just the willingness to open the spaces we already
@@ -62,7 +63,8 @@ export default function Home() {
               </p>
               <Link
                 href="/vision"
-                className="inline-block bg-blue-800 text-white px-8 py-3 rounded-full font-medium tracking-wider hover:bg-blue-700 transition-colors"
+                className="hero-in inline-block bg-[var(--accent)] text-white px-8 py-3 rounded-full font-medium tracking-wider hover:brightness-110 transition-all"
+                style={{ animationDelay: "240ms" }}
               >
                 EXPLORE
               </Link>

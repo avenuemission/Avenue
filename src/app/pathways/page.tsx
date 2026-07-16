@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import PathwayMap from "@/components/PathwayMap";
 import ImageCarousel from "@/components/PathwaysCarousel";
+import PageTitle from "@/components/ui/PageTitle";
+import Reveal from "@/components/ui/Reveal";
 import { getPathwayStats } from "@/lib/content";
 
 
@@ -103,39 +105,24 @@ export default function PathwaysPage() {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
-      {/* Hero Section with Earth Horizon */}
-      <section className="relative w-full">
-        {/* Earth Horizon Night Image */}
-        <div className="relative h-[500px] md:h-[800px] w-full overflow-hidden">
-          <Image
-            src="/images/pathways_earth_horizon_nights.png"
-            alt="Earth at night from space"
-            fill
-            className="object-cover object-[center_30%]"
-            priority
-          />
+      <PageTitle title="Pathways">
+        &ldquo;Every day they continued to meet together in the temple courts.
+        They broke bread in their homes and ate together with glad and sincere
+        hearts.&rdquo; – Doctor Luke
+      </PageTitle>
 
+      {/* Image Carousel - Scroll-linked */}
+      <ImageCarousel folder="pathways_carousel" />
 
-          {/* Quote overlay on top */}
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 px-4 w-full max-w-5xl z-10">
-            <p className="text-white italic text-center text-sm md:text-lg drop-shadow-lg">
-              &ldquo;Every day they continued to meet together in the temple
-              courts. They broke bread in their homes and ate together with glad
-              and sincere hearts.&rdquo; – Doctor Luke
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Statistics Section - Overlapping earth image */}
-      <section className="bg-black py-12">
+      {/* Statistics Section */}
+      <section className="bg-black py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-3 gap-8 md:gap-16 text-center">
+          <Reveal className="grid grid-cols-3 gap-8 md:gap-16 text-center">
             <div>
               <div className="text-5xl md:text-8xl font-bold text-white">
                 {communitiesCount}
               </div>
-              <div className="text-xs md:text-sm text-gray-400 uppercase tracking-wider mt-2">
+              <div className="text-xs md:text-sm text-[var(--muted)] uppercase tracking-wider mt-2">
                 Pathway Communities
               </div>
             </div>
@@ -143,7 +130,7 @@ export default function PathwaysPage() {
               <div className="text-5xl md:text-8xl font-bold text-white">
                 {countriesCount}
               </div>
-              <div className="text-xs md:text-sm text-gray-400 uppercase tracking-wider mt-2">
+              <div className="text-xs md:text-sm text-[var(--muted)] uppercase tracking-wider mt-2">
                 Countries
               </div>
             </div>
@@ -151,39 +138,37 @@ export default function PathwaysPage() {
               <div className="text-5xl md:text-8xl font-bold text-white">
                 {languagesCount}
               </div>
-              <div className="text-xs md:text-sm text-gray-400 uppercase tracking-wider mt-2">
+              <div className="text-xs md:text-sm text-[var(--muted)] uppercase tracking-wider mt-2">
                 Languages
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Image Carousel - Scroll-linked */}
-      <ImageCarousel folder="pathways_carousel" />
-
       {/* Find a Pathway Section */}
-      <section className="bg-gradient-to-b from-blue-950/40 via-blue-900/30 to-blue-950/50 py-16 overflow-hidden">
+      <section className="bg-black py-16 md:py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             {/* Left Content */}
-            <div className="space-y-6 px-2">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                FIND A PATHWAY COMMUNITY NEAR YOU
+            <Reveal className="space-y-6 px-2">
+              <span className="eyebrow">Join a group</span>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white leading-tight">
+                Find a Pathway Community Near You
               </h2>
-              <p className="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-lg">
+              <p className="text-[var(--muted)] text-sm sm:text-base md:text-lg leading-relaxed max-w-lg">
                 Pathway groups are house church communities growing together,
                 empowered by the Spirit of God. We meet in homes, libraries,
                 schools, wherever the LORD has sent us. We eat together, read
                 the bible together, discuss and encourage others through
                 friendship and prayer.
               </p>
-            </div>
+            </Reveal>
 
             {/* Right Content - Map and Form */}
-            <div className="relative w-full">
+            <Reveal delay={100} className="relative w-full">
               <PathwayMap />
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -198,16 +183,17 @@ export default function PathwaysPage() {
             fill
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-black/60" />
+          <div className="absolute inset-0 bg-black/75" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-start">
 
             {/* Left - Form */}
-            <div className="space-y-6 px-2">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white">
-                START YOUR OWN PATHWAY
+            <Reveal className="space-y-6 px-2">
+              <span className="eyebrow">Lead</span>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white">
+                Start Your Own Pathway
               </h2>
 
               <p className="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed">
@@ -218,7 +204,7 @@ export default function PathwaysPage() {
               </p>
 
               <div className="space-y-6 pt-4">
-                <p className="text-blue-400 text-sm md:text-base uppercase tracking-wider font-medium">
+                <p className="text-[var(--accent)] text-sm md:text-base uppercase tracking-wider font-medium">
                   Please fill out the expression of interest below and we can
                   set up a time to call and support your pathway mission.
                 </p>
@@ -250,7 +236,7 @@ export default function PathwaysPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                       required
                     />
                   </div>
@@ -265,7 +251,7 @@ export default function PathwaysPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                       required
                     />
                   </div>
@@ -280,7 +266,7 @@ export default function PathwaysPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
                       }
-                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                     />
                   </div>
 
@@ -294,14 +280,14 @@ export default function PathwaysPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, suburb: e.target.value })
                       }
-                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                       placeholder="Where would you like to start a group?"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="bg-blue-700 text-white px-12 py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm"
+                    className="bg-[var(--accent)] text-white px-12 py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
                   >
                     Submit
                   </button>
@@ -317,7 +303,7 @@ export default function PathwaysPage() {
               <p className="text-white italic text-sm md:text-base pt-6">
                 &ldquo;The harvest is plentiful but the workers are few.&rdquo; – Jesus
               </p>
-            </div>
+            </Reveal>
 
             {/* Right - Stats */}
             <div className="relative w-full overflow-hidden">
