@@ -7,6 +7,7 @@ const VALID_TYPES = [
   "mission-support",
   "idea-submission",
   "leader-support",
+  "event-updates",
 ];
 
 // POST: public — record a new form submission
