@@ -223,12 +223,6 @@ export const CREATIVE_INITIATIVES = {
   },
 };
 
-// Prayer Hotline Contact
-export const PRAYER_HOTLINE = {
-  phone: "+61 477110098",
-  email: "info@avenuemission.com",
-};
-
 // Mission Initiatives
 export const MISSION_INITIATIVES = [
   {
@@ -244,14 +238,6 @@ export const MISSION_INITIATIVES = [
     shortDescription: "Blessing the homeless in Melbourne every Saturday evening.",
     fullDescription:
       "A pathway group that was meeting at Monash University has been blessing the homeless in Melbourne Australia. On Saturday evenings, they go into the city, with the intention of being the hands and feet of Jesus. They provide food, warm clothing, and most importantly, genuine connection and prayer for those experiencing homelessness.",
-  },
-  {
-    id: "prayer-hotline",
-    title: "Prayer Hotline",
-    shortDescription: "24/7 prayer support for anyone in need.",
-    fullDescription:
-      "Avenue provides a 24/7 prayer hotline to anyone in need of divine support. Whether you're going through a difficult season, need encouragement, or simply want someone to pray with you, our team is here to listen and lift you up in prayer.",
-    hasContact: true,
   },
   {
     id: "philippines-mission",

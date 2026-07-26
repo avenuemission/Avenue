@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
+import { getStudyGuides } from "@/lib/content";
 import Reveal from "@/components/ui/Reveal";
 import {
   Video,
@@ -19,6 +20,30 @@ import {
   Lock,
 } from "lucide-react";
 
+// Study guide dates are stored as "DD/MM/YYYY".
+function parseGuideDate(d: string): Date | null {
+  const parts = (d || "").split("/");
+  if (parts.length !== 3) return null;
+  const [day, month, year] = parts.map((p) => parseInt(p, 10));
+  if (!day || !month || !year) return null;
+  return new Date(year, month - 1, day);
+}
+
+// Pick "this week's" topic: the most recent guide dated on/before today.
+// If every guide is in the future, fall back to the earliest upcoming one.
+function pickCurrentGuide(guides: Array<Record<string, unknown>>): Record<string, unknown> | null {
+  const dated = guides
+    .map((g) => ({ g, d: parseGuideDate(String(g.guide_date ?? "")) }))
+    .filter((x): x is { g: Record<string, unknown>; d: Date } => x.d !== null);
+  if (dated.length === 0) return guides[0] ?? null;
+  const now = new Date();
+  const past = dated.filter((x) => x.d.getTime() <= now.getTime());
+  if (past.length > 0) {
+    return past.reduce((a, b) => (b.d.getTime() > a.d.getTime() ? b : a)).g;
+  }
+  return dated.reduce((a, b) => (b.d.getTime() < a.d.getTime() ? b : a)).g;
+}
+
 // Calendar URLs
 const AVENUE_CALENDAR_URL =
   "https://calendar.google.com/calendar/embed?src=c_f77b62d0efa5c8f706f97ed58b880dc6bdbd9ca0a67d4b413748de6f0b2f612e%40group.calendar.google.com&ctz=Australia%2FSydney";
@@ -31,6 +56,13 @@ export default function LeadersPage() {
   const [mounted, setMounted] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
+  const [weekly, setWeekly] = useState<Record<string, unknown> | null>(null);
+
+  useEffect(() => {
+    getStudyGuides()
+      .then((guides) => setWeekly(pickCurrentGuide(guides as unknown as Array<Record<string, unknown>>)))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -123,6 +155,41 @@ export default function LeadersPage() {
             Access resources, training, and tools for Avenue leaders
           </p>
         </Reveal>
+
+        {/* This Week's Topic — featured for all leaders */}
+        {weekly && (() => {
+          const inner = (
+            <>
+              <span className="eyebrow mb-2">This Week&apos;s Topic</span>
+              <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                {String(weekly.topic ?? "")}
+              </h2>
+              {(weekly.series || weekly.scripture) && (
+                <p className="mt-2 text-[var(--muted)]">
+                  {String(weekly.series ?? "")}
+                  {weekly.series && weekly.scripture ? " · " : ""}
+                  {String(weekly.scripture ?? "")}
+                </p>
+              )}
+              {hasFullAccess && (
+                <span className="mt-4 inline-block text-sm font-semibold text-[var(--accent)] group-hover:brightness-110 transition-all">
+                  Open the study guide →
+                </span>
+              )}
+            </>
+          );
+          return (
+            <Reveal className="max-w-4xl mx-auto mb-8">
+              {hasFullAccess ? (
+                <Link href="/leaders/study-guides" className="panel panel-interactive group block p-6 md:p-8">
+                  {inner}
+                </Link>
+              ) : (
+                <div className="panel p-6 md:p-8">{inner}</div>
+              )}
+            </Reveal>
+          );
+        })()}
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">

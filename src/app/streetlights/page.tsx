@@ -9,9 +9,8 @@ import Reveal from "@/components/ui/Reveal";
 import {
   CREATIVE_INITIATIVES,
   MISSION_INITIATIVES,
-  PRAYER_HOTLINE,
 } from "@/lib/data";
-import { Phone, MessageSquare, Mail, X, Calendar, Heart, Clock } from "lucide-react";
+import { X, Calendar, Heart, Clock } from "lucide-react";
 import Link from "next/link";
 
 interface Song {
@@ -614,32 +613,6 @@ export default function StreetlightsPage() {
                 </Link>
               )}
 
-              {/* Prayer Hotline Contact */}
-              {selectedMission.hasContact && (
-                <div className="flex flex-wrap gap-4 mb-6">
-                  <a
-                    href={`tel:${PRAYER_HOTLINE.phone}`}
-                    className="flex items-center gap-2 bg-[var(--accent)] hover:brightness-110 text-white px-4 py-2 rounded-full text-sm transition-all"
-                  >
-                    <Phone size={16} />
-                    CALL
-                  </a>
-                  <a
-                    href={`sms:${PRAYER_HOTLINE.phone}`}
-                    className="flex items-center gap-2 bg-[var(--accent)] hover:brightness-110 text-white px-4 py-2 rounded-full text-sm transition-all"
-                  >
-                    <MessageSquare size={16} />
-                    TEXT
-                  </a>
-                  <a
-                    href={`mailto:${PRAYER_HOTLINE.email}`}
-                    className="flex items-center gap-2 bg-[var(--accent)] hover:brightness-110 text-white px-4 py-2 rounded-full text-sm transition-all"
-                  >
-                    <Mail size={16} />
-                    EMAIL
-                  </a>
-                </div>
-              )}
 
               {/* Support Form for Philippines Mission */}
               {selectedMission.isFeatured && (

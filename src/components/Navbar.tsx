@@ -11,7 +11,6 @@ const streetlightsDropdown = [
   { href: "/streetlights", label: "Overview" },
   { href: "/streetlights#mission-initiatives", label: "Mission Initiatives" },
   { href: "/streetlights#creative-initiatives", label: "Creative Initiatives" },
-  { href: "/streetlights#mission-initiatives", label: "Prayer Hotline" },
   { href: "/apest-quiz", label: "APEST Quiz" },
   { href: "/streetlights#giving", label: "Giving" },
 ];
