@@ -385,15 +385,9 @@ export default function TrainingPage() {
         </div>
       )}
       {/* Animated Gradient Background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black animate-gradient-shift" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-purple-900/20 via-transparent to-blue-950/30 animate-gradient-shift-reverse" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl animate-pulse-slower" />
-      </div>
 
       {/* Header */}
-      <header className="sticky top-4 z-50 flex justify-between items-center px-6 py-3 bg-black/40 backdrop-blur-xl rounded-full mt-4 mx-4 max-w-7xl border border-white/20 shadow-[0_0_20px_rgba(182,196,255,0.2)] lg:mx-auto">
+      <header className="sticky top-4 z-50 flex justify-between items-center px-6 py-3 bg-[var(--surface)] rounded-full mt-4 mx-4 max-w-7xl border border-[var(--border)] lg:mx-auto">
         <div className="flex items-center gap-4">
           <span className="text-lg font-bold text-white uppercase tracking-wider">Leadership Journey</span>
         </div>
@@ -430,7 +424,7 @@ export default function TrainingPage() {
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Link href="/leaders" className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm uppercase tracking-wider mb-8">
+        <Link href="/leaders" className="inline-flex items-center gap-2 text-[var(--accent)] hover:text-[var(--accent)] text-sm uppercase tracking-wider mb-8">
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </Link>
@@ -466,8 +460,8 @@ export default function TrainingPage() {
                 <div className="absolute w-[280px] h-[280px] rounded-full border-2 border-blue-400/50" />
 
                 {/* Centre label */}
-                <div className="absolute flex flex-col items-center justify-center w-20 h-20 rounded-full bg-blue-900/40 border border-blue-500/30 text-center z-10">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 leading-tight">Leadership<br/>Journey</span>
+                <div className="absolute flex flex-col items-center justify-center w-20 h-20 rounded-full bg-[var(--accent)]/20 border border-[var(--border-strong)] text-center z-10">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] leading-tight">Leadership<br/>Journey</span>
                 </div>
 
                 {/* Phase nodes arranged in a circle (top, top-right, bottom-right, bottom, top-left) */}
@@ -518,7 +512,7 @@ export default function TrainingPage() {
                         {/* Inner circle */}
                         <div className={`absolute inset-[5px] rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
                           isActive
-                            ? "bg-blue-600 text-white"
+                            ? "bg-[var(--accent)] text-white"
                             : progress.percent === 100
                               ? "bg-green-600 text-white"
                               : "bg-gray-800 text-gray-300 group-hover:bg-gray-700 group-hover:text-white"
@@ -546,14 +540,14 @@ export default function TrainingPage() {
                 return (
                   <div className={`mt-6 p-5 rounded-xl border ${
                     color === "blue" 
-                      ? "bg-blue-600/10 border-blue-500/30" 
+                      ? "bg-[var(--accent)]/10 border-[var(--border)]" 
                       : "bg-purple-600/10 border-purple-500/30"
                   }`}>
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-3 mb-1">
                           <span className={`text-xs font-bold uppercase tracking-wider ${
-                            color === "blue" ? "text-blue-400" : "text-purple-400"
+                            color === "blue" ? "text-[var(--accent)]" : "text-purple-400"
                           }`}>
                             Phase {phase.number}
                           </span>
@@ -599,13 +593,13 @@ export default function TrainingPage() {
             if (!isExpanded) return null;
 
             return (
-              <div key={phase.id} className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+              <div key={phase.id} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
                 {/* Phase Header */}
-                <div className="p-6 md:p-8 border-b border-white/10">
+                <div className="p-6 md:p-8 border-b border-[var(--border)]">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-1 rounded-full">
                           {phase.scripture}
                         </span>
                         <span className="text-xs text-gray-500 uppercase tracking-wider">
@@ -655,18 +649,18 @@ export default function TrainingPage() {
                         <div key={module.id}>
                           {module.sectionHeader && (
                             <div className="flex items-center gap-3 mt-4 mb-2">
-                              <div className="h-px flex-1 bg-white/10" />
-                              <span className="text-xs font-semibold uppercase tracking-wider text-blue-400 whitespace-nowrap">
+                              <div className="h-px flex-1 bg-[var(--surface-hover)]" />
+                              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] whitespace-nowrap">
                                 {module.sectionHeader}
                               </span>
-                              <div className="h-px flex-1 bg-white/10" />
+                              <div className="h-px flex-1 bg-[var(--surface-hover)]" />
                             </div>
                           )}
                         <div
                           className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
                             module.completed
-                              ? "bg-white/5 border-green-500/30"
-                              : "bg-white/5 border-white/10 hover:border-white/20"
+                              ? "bg-[var(--surface)] border-green-500/30"
+                              : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
                           }`}
                         >
                           <button
@@ -694,16 +688,16 @@ export default function TrainingPage() {
                             )}
                           </div>
                           {module.type === "video" && !module.episodes && (
-                            <button className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center hover:bg-blue-600/30 transition-colors">
-                              <Play className="w-4 h-4 text-blue-400" />
+                            <button className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center hover:brightness-110/30 transition-colors">
+                              <Play className="w-4 h-4 text-[var(--accent)]" />
                             </button>
                           )}
                           {module.episodes && (
                             <button
                               onClick={() => toggleEpisodeList(module.id)}
-                              className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center hover:bg-blue-600/30 transition-colors"
+                              className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center hover:brightness-110/30 transition-colors"
                             >
-                              <ChevronRight className={`w-4 h-4 text-blue-400 transition-transform ${expandedEpisodeModules.has(module.id) ? "rotate-90" : ""}`} />
+                              <ChevronRight className={`w-4 h-4 text-[var(--accent)] transition-transform ${expandedEpisodeModules.has(module.id) ? "rotate-90" : ""}`} />
                             </button>
                           )}
                         </div>
@@ -716,7 +710,7 @@ export default function TrainingPage() {
                                 className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                                   episode.watched
                                     ? "bg-green-500/5 border-green-500/20"
-                                    : "bg-white/5 border-white/10 hover:border-white/20"
+                                    : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
                                 }`}
                               >
                                 <button
@@ -736,9 +730,9 @@ export default function TrainingPage() {
                                 </span>
                                 <button
                                   onClick={() => openVideo(episode.youtubeId, episode.title)}
-                                  className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center hover:bg-blue-600/40 transition-colors"
+                                  className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--accent)]/20 flex items-center justify-center hover:brightness-110/40 transition-colors"
                                 >
-                                  <Play className="w-3 h-3 text-blue-400" />
+                                  <Play className="w-3 h-3 text-[var(--accent)]" />
                                 </button>
                               </div>
                             ))}
@@ -751,9 +745,9 @@ export default function TrainingPage() {
                     {/* Right: Debrief & Status */}
                     <div className="space-y-6">
                       {phase.debriefRequired && (
-                        <div className="p-6 rounded-xl border border-dashed border-white/20 bg-white/5">
+                        <div className="p-6 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center">
                               <MessageSquare className="w-5 h-5 text-white" />
                             </div>
                             <div>
@@ -765,7 +759,7 @@ export default function TrainingPage() {
                           {!phase.debriefScheduled && !phase.debriefCompleted && (
                             <button
                               onClick={() => scheduleDebrief(phase.id)}
-                              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold uppercase text-sm tracking-wider transition-colors"
+                              className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-full font-semibold uppercase text-sm tracking-wider transition-colors"
                             >
                               Schedule Zoom Call
                             </button>
@@ -773,8 +767,8 @@ export default function TrainingPage() {
 
                           {phase.debriefScheduled && !phase.debriefCompleted && (
                             <div className="space-y-3">
-                              <div className="p-3 bg-blue-600/10 rounded-lg border border-blue-500/30">
-                                <p className="text-sm text-blue-400 text-center">Zoom call scheduled</p>
+                              <div className="p-3 bg-[var(--accent)]/10 rounded-lg border border-[var(--border)]">
+                                <p className="text-sm text-[var(--accent)] text-center">Zoom call scheduled</p>
                               </div>
                               <button
                                 onClick={() => completeDebrief(phase.id)}
@@ -795,16 +789,16 @@ export default function TrainingPage() {
                       )}
 
                       {/* Phase Status */}
-                      <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                      <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
                         <h4 className="font-semibold text-white mb-4">Phase Status</h4>
                         <div className="space-y-3">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Modules Complete</span>
                             <span className="text-white">{progress.completed}/{progress.total}</span>
                           </div>
-                          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-2 bg-[var(--surface-hover)] rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                              className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
                               style={{ width: `${progress.percent}%` }}
                             />
                           </div>
@@ -842,9 +836,9 @@ export default function TrainingPage() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 p-6 rounded-xl bg-white/5 border border-white/10">
+        <div className="mt-12 p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
           <div className="flex items-start gap-4">
-            <BookOpen className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
+            <BookOpen className="w-6 h-6 text-[var(--accent)] flex-shrink-0 mt-1" />
             <div>
               <h4 className="font-semibold text-white mb-2">About This Journey</h4>
               <p className="text-gray-400 text-sm leading-relaxed">

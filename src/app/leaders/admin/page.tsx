@@ -111,14 +111,13 @@ export default function AdminPage() {
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center px-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/40 to-black" />
         <form
           onSubmit={handleAuth}
-          className="relative z-10 w-full max-w-md p-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl"
+          className="relative z-10 w-full max-w-md p-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)]"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center">
+              <Lock className="w-5 h-5 text-[var(--accent)]" />
             </div>
             <h1 className="text-xl font-bold text-white uppercase tracking-wider">Avenue Admin</h1>
           </div>
@@ -129,13 +128,13 @@ export default function AdminPage() {
               value={adminKey}
               onChange={(e) => setAdminKey(e.target.value)}
               placeholder="Admin key"
-              className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-black/30 border border-[var(--border)] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
           {authError && <p className="text-red-400 text-sm mt-3">{authError}</p>}
           <button
             type="submit"
-            className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-lg transition-colors"
+            className="w-full mt-4 bg-[var(--accent)] hover:bg-[var(--accent)] text-white font-semibold py-3 rounded-lg transition-colors"
           >
             Unlock
           </button>
@@ -146,7 +145,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/30 to-black" />
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
@@ -176,8 +174,8 @@ export default function AdminPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                    ? "bg-[var(--accent)] text-white"
+                    : "bg-[var(--surface)] text-gray-400 hover:bg-[var(--surface-hover)] hover:text-white"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -256,13 +254,13 @@ function SubmissionsTab({ adminKey }: { adminKey: string }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search submissions..."
-            className="w-full bg-black/30 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500"
+            className="w-full bg-black/30 border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500"
           />
         </div>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-sm text-white"
+          className="bg-black/30 border border-[var(--border)] rounded-lg px-4 py-2 text-sm text-white"
         >
           {FORM_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
@@ -279,12 +277,12 @@ function SubmissionsTab({ adminKey }: { adminKey: string }) {
           {filtered.map((s) => (
             <div
               key={s.id}
-              className={`p-4 rounded-xl border ${s.archived ? "border-white/5 bg-white/5 opacity-60" : "border-white/10 bg-white/5"}`}
+              className={`p-4 rounded-xl border ${s.archived ? "border-[var(--border)] bg-[var(--surface)] opacity-60" : "border-[var(--border)] bg-[var(--surface)]"}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
                       {FORM_TYPES.find((t) => t.value === s.form_type)?.label || s.form_type}
                     </span>
                     <span className="text-xs text-gray-500">{new Date(s.created_at).toLocaleString()}</span>
@@ -303,7 +301,7 @@ function SubmissionsTab({ adminKey }: { adminKey: string }) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleArchive(s.id, !s.archived)}
-                    className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white"
+                    className="p-2 rounded-lg hover:bg-[var(--surface-hover)] text-gray-400 hover:text-white"
                     title={s.archived ? "Unarchive" : "Archive"}
                   >
                     {s.archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
@@ -386,18 +384,18 @@ function LeadersTab({ adminKey }: { adminKey: string }) {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="New leader name"
-          className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-sm text-white"
+          className="bg-black/30 border border-[var(--border)] rounded-lg px-4 py-2 text-sm text-white"
         />
         <input
           type="email"
           value={newEmail}
           onChange={(e) => setNewEmail(e.target.value)}
           placeholder="New leader email"
-          className="bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-sm text-white"
+          className="bg-black/30 border border-[var(--border)] rounded-lg px-4 py-2 text-sm text-white"
         />
         <button
           onClick={addLeader}
-          className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-medium"
+          className="flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-lg px-4 py-2 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> Add Leader
         </button>
@@ -408,7 +406,7 @@ function LeadersTab({ adminKey }: { adminKey: string }) {
       ) : (
         <div className="space-y-3">
           {leaders.map((l) => (
-            <div key={l.email} className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5">
+            <div key={l.email} className="flex items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
               <div>
                 <p className="font-medium text-white">{l.name}</p>
                 <p className="text-sm text-gray-400">{l.email}</p>
@@ -508,7 +506,7 @@ function PathwaysTab({ adminKey }: { adminKey: string }) {
         <h2 className="text-lg font-semibold">Pathway Groups</h2>
         <button
           onClick={() => setEditing(blankGroup)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-medium"
+          className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-lg px-4 py-2 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> Add Group
         </button>
@@ -519,7 +517,7 @@ function PathwaysTab({ adminKey }: { adminKey: string }) {
       ) : (
         <div className="space-y-3">
           {groups.map((g) => (
-            <div key={g.id} className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5">
+            <div key={g.id} className="flex items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
               <div>
                 <p className="font-medium text-white">{g.name}</p>
                 <p className="text-sm text-gray-400">
@@ -527,7 +525,7 @@ function PathwaysTab({ adminKey }: { adminKey: string }) {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setEditing(g)} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
+                <button onClick={() => setEditing(g)} className="p-2 rounded-lg hover:bg-[var(--surface-hover)] text-gray-400 hover:text-white">
                   <Save className="w-4 h-4" />
                 </button>
                 <button onClick={() => deleteGroup(g.id)} className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400">
@@ -554,7 +552,7 @@ function PathwaysTab({ adminKey }: { adminKey: string }) {
                       [field]: field === "latitude" || field === "longitude" ? parseFloat(e.target.value) || 0 : e.target.value,
                     })
                   }
-                  className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                  className="w-full bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white"
                 />
               </div>
             ))}
@@ -567,7 +565,7 @@ function PathwaysTab({ adminKey }: { adminKey: string }) {
               />
               Running
             </label>
-            <button onClick={save} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-medium">
+            <button onClick={save} className="bg-[var(--accent)] hover:bg-[var(--accent)] text-white py-2 rounded-lg font-medium">
               Save Group
             </button>
           </div>
@@ -642,7 +640,7 @@ function EventsTab({ adminKey }: { adminKey: string }) {
     <div>
       <div className="grid gap-4 mb-6">
         {events.map((e) => (
-          <div key={e.key} className="p-4 rounded-xl border border-white/10 bg-white/5">
+          <div key={e.key} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-medium text-white">{e.title}</h3>
@@ -651,7 +649,7 @@ function EventsTab({ adminKey }: { adminKey: string }) {
                   {e.location} · {e.time}
                 </p>
               </div>
-              <button onClick={() => setEditingEvent(e)} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
+              <button onClick={() => setEditingEvent(e)} className="p-2 rounded-lg hover:bg-[var(--surface-hover)] text-gray-400 hover:text-white">
                 <Save className="w-4 h-4" />
               </button>
             </div>
@@ -663,7 +661,7 @@ function EventsTab({ adminKey }: { adminKey: string }) {
                   .map((d) => (
                     <span
                       key={d.id}
-                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs"
+                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface)] border border-[var(--border)] text-xs"
                     >
                       {d.event_date} @ {d.event_time}
                       <button onClick={() => deleteDate(d.id)} className="text-gray-500 hover:text-red-400">
@@ -677,13 +675,13 @@ function EventsTab({ adminKey }: { adminKey: string }) {
         ))}
       </div>
 
-      <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+      <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
         <h3 className="text-sm font-semibold mb-3">Add Event Date</h3>
         <div className="grid sm:grid-cols-3 gap-3">
           <select
             value={newDate.event_key}
             onChange={(e) => setNewDate({ ...newDate, event_key: e.target.value })}
-            className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+            className="bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white"
           >
             <option value="">Select event</option>
             {events.map((e) => (
@@ -696,18 +694,18 @@ function EventsTab({ adminKey }: { adminKey: string }) {
             type="date"
             value={newDate.event_date}
             onChange={(e) => setNewDate({ ...newDate, event_date: e.target.value })}
-            className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+            className="bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white"
           />
           <input
             type="time"
             value={newDate.event_time}
             onChange={(e) => setNewDate({ ...newDate, event_time: e.target.value })}
-            className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+            className="bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white"
           />
         </div>
         <button
           onClick={addDate}
-          className="mt-3 flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-medium"
+          className="mt-3 flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-lg px-4 py-2 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> Add Date
         </button>
@@ -723,11 +721,11 @@ function EventsTab({ adminKey }: { adminKey: string }) {
                   type="text"
                   value={(editingEvent as any)[field] ?? ""}
                   onChange={(e) => setEditingEvent({ ...editingEvent, [field]: e.target.value })}
-                  className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                  className="w-full bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white"
                 />
               </div>
             ))}
-            <button onClick={saveEvent} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-medium">
+            <button onClick={saveEvent} className="bg-[var(--accent)] hover:bg-[var(--accent)] text-white py-2 rounded-lg font-medium">
               Save Event
             </button>
           </div>
@@ -795,7 +793,7 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
         <h2 className="text-lg font-semibold">Study Guides</h2>
         <button
           onClick={() => setEditing(blankGuide)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-medium"
+          className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-lg px-4 py-2 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> Add Guide
         </button>
@@ -806,7 +804,7 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
       ) : (
         <div className="space-y-3">
           {guides.map((g) => (
-            <div key={g.id} className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5">
+            <div key={g.id} className="flex items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: g.color || "#3b82f6" }} />
                 <div>
@@ -817,7 +815,7 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setEditing(g)} className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
+                <button onClick={() => setEditing(g)} className="p-2 rounded-lg hover:bg-[var(--surface-hover)] text-gray-400 hover:text-white">
                   <Save className="w-4 h-4" />
                 </button>
                 <button onClick={() => deleteGuide(g.id)} className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400">
@@ -847,11 +845,11 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
                   type="text"
                   value={(editing as any)[key] ?? ""}
                   onChange={(e) => setEditing({ ...editing, [key]: e.target.value })}
-                  className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                  className="w-full bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white"
                 />
               </div>
             ))}
-            <button onClick={save} className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-medium">
+            <button onClick={save} className="bg-[var(--accent)] hover:bg-[var(--accent)] text-white py-2 rounded-lg font-medium">
               Save Guide
             </button>
           </div>
@@ -895,7 +893,7 @@ function StatsTab({ adminKey }: { adminKey: string }) {
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {stats.map((s) => (
-            <div key={s.key} className="p-4 rounded-xl border border-white/10 bg-white/5">
+            <div key={s.key} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
               <label className="text-xs text-gray-400 uppercase">{s.label || s.key}</label>
               <div className="flex items-center gap-3 mt-2">
                 <input
@@ -905,11 +903,11 @@ function StatsTab({ adminKey }: { adminKey: string }) {
                     const value = parseInt(e.target.value) || 0;
                     setStats(stats.map((st) => (st.key === s.key ? { ...st, value } : st)));
                   }}
-                  className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white"
+                  className="flex-1 bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-white"
                 />
                 <button
                   onClick={() => updateStat(s.key, s.value, s.label)}
-                  className="p-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white"
+                  className="p-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent)] text-white"
                 >
                   <Save className="w-4 h-4" />
                 </button>
@@ -928,10 +926,10 @@ function StatsTab({ adminKey }: { adminKey: string }) {
 function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 rounded-2xl border border-white/10 bg-gray-900" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 rounded-2xl border border-[var(--border)] bg-gray-900" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[var(--surface-hover)] text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>

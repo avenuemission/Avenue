@@ -83,12 +83,8 @@ export default function WorkshopsPage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      </div>
 
-      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm">
+      <header className="relative z-10 border-b border-[var(--border)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => router.push("/leaders")} className="text-gray-400 hover:text-white transition-colors text-sm">
@@ -123,7 +119,7 @@ export default function WorkshopsPage() {
             </button>
             <button
               onClick={() => { setShowCreate(true); setNewCode(suggestedCode()); }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent)] text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
             >
               <Plus className="w-4 h-4" />
               New Session
@@ -133,7 +129,7 @@ export default function WorkshopsPage() {
 
         {/* Create session panel */}
         {showCreate && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 mb-6">
             <h2 className="text-white font-semibold mb-4">Create New Session</h2>
             <div className="flex gap-3 flex-wrap">
               <div className="flex-1 min-w-[200px]">
@@ -143,14 +139,14 @@ export default function WorkshopsPage() {
                   onChange={e => { setNewCode(e.target.value.toUpperCase()); setError(""); }}
                   onKeyDown={e => e.key === "Enter" && handleCreate()}
                   placeholder="e.g. GUINEAPIG"
-                  className="w-full bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors uppercase"
+                  className="w-full bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2.5 text-white font-mono placeholder-gray-500 focus:outline-none focus:border-[var(--accent)] transition-colors uppercase"
                 />
                 {error && <p className="text-red-400 text-xs mt-1.5">{error}</p>}
               </div>
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                className="bg-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
               >
                 {creating ? "Creating..." : "Create"}
               </button>
@@ -197,7 +193,7 @@ export default function WorkshopsPage() {
                 day: "numeric", month: "short", year: "numeric",
               });
               return (
-                <div key={session.code} className="bg-white/5 border border-white/10 hover:border-blue-500/30 rounded-xl transition-all">
+                <div key={session.code} className="bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl transition-all">
                   {confirmClear === session.code ? (
                     <div className="flex items-center justify-between px-5 py-4 gap-4">
                       <p className="text-red-300 text-sm">
@@ -226,7 +222,7 @@ export default function WorkshopsPage() {
                         className="flex-1 flex items-center justify-between px-5 py-4 group"
                       >
                         <div className="flex items-center gap-4">
-                          <span className="text-blue-400 font-mono font-bold text-lg">{session.code}</span>
+                          <span className="text-[var(--accent)] font-mono font-bold text-lg">{session.code}</span>
                           <div className="flex items-center gap-3 text-gray-500 text-sm">
                             <span className="flex items-center gap-1">
                               <Users className="w-3.5 h-3.5" />
@@ -245,11 +241,11 @@ export default function WorkshopsPage() {
                             </span>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
+                        <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-[var(--accent)] transition-colors" />
                       </button>
                       <button
                         onClick={() => setConfirmClear(session.code)}
-                        className="px-4 py-4 text-gray-700 hover:text-red-400 transition-colors border-l border-white/10"
+                        className="px-4 py-4 text-gray-700 hover:text-red-400 transition-colors border-l border-[var(--border)]"
                         title="Clear responses"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -263,15 +259,15 @@ export default function WorkshopsPage() {
             {/* All sessions combined */}
             <button
               onClick={() => router.push("/leaders/workshops/ALL")}
-              className="w-full flex items-center justify-between bg-blue-900/10 hover:bg-blue-900/20 border border-blue-800/30 hover:border-blue-500/40 rounded-xl px-5 py-4 transition-all group mt-6"
+              className="w-full flex items-center justify-between bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl px-5 py-4 transition-all group mt-6"
             >
               <div className="flex items-center gap-4">
-                <span className="text-blue-300 font-semibold text-sm">All Sessions Combined</span>
+                <span className="text-[var(--accent)] font-semibold text-sm">All Sessions Combined</span>
                 <span className="text-gray-500 text-xs">
                   {sessions.reduce((sum, s) => sum + (s.survey_responses?.[0]?.count ?? 0), 0)} total responses
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-[var(--accent)] transition-colors" />
             </button>
           </div>
         )}

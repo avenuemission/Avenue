@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { login, signup } from "@/lib/auth";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import Reveal from "@/components/ui/Reveal";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,11 +52,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-950/30 via-black to-black" />
-
-      <div className="relative z-10 w-full max-w-md">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 py-16">
+      <Reveal className="w-full max-w-md">
+        <div className="panel p-8">
         {/* Logo */}
         <div className="text-center mb-8">
           <Image
@@ -90,7 +89,7 @@ export default function LoginPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full bg-gray-900/50 border border-gray-700 rounded-lg py-3 pl-11 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg py-3 pl-11 pr-4 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                   placeholder="Your name"
                 />
               </div>
@@ -109,7 +108,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full bg-gray-900/50 border border-gray-700 rounded-lg py-3 pl-11 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg py-3 pl-11 pr-4 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                 placeholder="your@email.com"
                 required
               />
@@ -128,7 +127,7 @@ export default function LoginPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="w-full bg-gray-900/50 border border-gray-700 rounded-lg py-3 pl-11 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg py-3 pl-11 pr-4 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
                 placeholder="••••••••"
                 required
               />
@@ -142,7 +141,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-700 text-white py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+            className="w-full bg-[var(--accent)] text-white py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
           >
             <span>{loading ? "Please wait..." : isSignup ? "Sign Up" : "Login"}</span>
             {!loading && <ArrowRight className="w-4 h-4" />}
@@ -159,10 +158,11 @@ export default function LoginPage() {
               setIsSignup(!isSignup);
               setError("");
             }}
-            className="text-blue-400 hover:text-blue-300 text-sm font-medium mt-1 transition-colors"
+            className="text-[var(--accent)] hover:brightness-110 text-sm font-medium mt-1 transition-all"
           >
             {isSignup ? "Login instead" : "Create an account"}
           </button>
+        </div>
         </div>
 
         {/* Back to home */}
@@ -174,7 +174,7 @@ export default function LoginPage() {
             ← Back to Home
           </a>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

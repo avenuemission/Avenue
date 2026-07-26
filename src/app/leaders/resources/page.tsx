@@ -160,15 +160,9 @@ export default function ResourcesPage() {
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
       {/* Animated Gradient Background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black animate-gradient-shift" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-purple-900/20 via-transparent to-blue-950/30 animate-gradient-shift-reverse" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl animate-pulse-slower" />
-      </div>
 
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm">
+      <header className="relative z-10 border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -196,7 +190,7 @@ export default function ResourcesPage() {
       <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
           href="/leaders"
-          className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm uppercase tracking-wider mb-8"
+          className="inline-flex items-center gap-2 text-[var(--accent)] hover:text-[var(--accent)] text-sm uppercase tracking-wider mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
@@ -213,7 +207,7 @@ export default function ResourcesPage() {
 
         <div className="space-y-8">
           {/* Music Section */}
-          <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
             <div className="flex items-center gap-3 mb-6">
               <Music className="w-6 h-6 text-pink-400" />
               <h2 className="text-xl font-semibold text-white">Music</h2>
@@ -227,7 +221,7 @@ export default function ResourcesPage() {
                     href={resource.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-pink-500/30 rounded-xl transition-all group"
+                    className="flex items-center justify-between p-4 bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl transition-all group"
                   >
                     <div>
                       <p className="text-white font-medium">{resource.title}</p>
@@ -242,7 +236,7 @@ export default function ResourcesPage() {
                 <button
                   key={`download-${index}`}
                   onClick={() => handleDownload(file.name)}
-                  className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-pink-500/30 rounded-xl transition-all group text-left w-full"
+                  className="flex items-center justify-between p-4 bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl transition-all group text-left w-full"
                 >
                   <div>
                     <p className="text-white font-medium">{file.name.split("/").pop()}</p>
@@ -255,9 +249,9 @@ export default function ResourcesPage() {
           </div>
 
           {/* Courses Section */}
-          <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
             <div className="flex items-center gap-3 mb-6">
-              <GraduationCap className="w-6 h-6 text-blue-400" />
+              <GraduationCap className="w-6 h-6 text-[var(--accent)]" />
               <h2 className="text-xl font-semibold text-white">Courses</h2>
             </div>
             <div className="grid gap-3">
@@ -268,18 +262,18 @@ export default function ResourcesPage() {
                     href={resource.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 rounded-xl transition-all group"
+                    className="flex items-center justify-between p-4 bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl transition-all group"
                   >
                     <div>
                       <p className="text-white font-medium">{resource.title}</p>
                       <p className="text-gray-500 text-sm">{resource.description}</p>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                    <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-[var(--accent)] transition-colors" />
                   </a>
                 ) : (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
+                    className="flex items-center justify-between p-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl"
                   >
                     <div>
                       <p className="text-white font-medium">{resource.title}</p>
@@ -293,7 +287,7 @@ export default function ResourcesPage() {
           </div>
 
           {/* Books Section */}
-          <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
             <div className="flex items-center gap-3 mb-6">
               <BookOpen className="w-6 h-6 text-green-400" />
               <h2 className="text-xl font-semibold text-white">Recommended Books</h2>
@@ -306,7 +300,7 @@ export default function ResourcesPage() {
                     href={book.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-green-500/30 rounded-xl transition-all group"
+                    className="flex items-center justify-between p-4 bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-green-500/30 rounded-xl transition-all group"
                   >
                     <div>
                       <p className="text-white font-medium">{book.title}</p>
@@ -318,7 +312,7 @@ export default function ResourcesPage() {
                 ) : (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
+                    className="flex items-center justify-between p-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl"
                   >
                     <div>
                       <p className="text-white font-medium">{book.title}</p>
@@ -333,7 +327,7 @@ export default function ResourcesPage() {
           </div>
 
           {/* Downloads Section */}
-          <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
             <div className="flex items-center gap-3 mb-6">
               <FileDown className="w-6 h-6 text-purple-400" />
               <h2 className="text-xl font-semibold text-white">Downloads</h2>
@@ -348,7 +342,7 @@ export default function ResourcesPage() {
                   <button
                     key={index}
                     onClick={() => handleDownload(file.name)}
-                    className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-xl transition-all group text-left w-full"
+                    className="flex items-center justify-between p-4 bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-purple-500/30 rounded-xl transition-all group text-left w-full"
                   >
                     <div>
                       <p className="text-white font-medium">{file.name}</p>

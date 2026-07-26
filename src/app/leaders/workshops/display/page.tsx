@@ -52,12 +52,8 @@ export default function WorkshopDisplayPage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      </div>
 
-      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm">
+      <header className="relative z-10 border-b border-[var(--border)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -78,7 +74,7 @@ export default function WorkshopDisplayPage() {
         </div>
 
         {/* Session code input */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 max-w-md">
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 mb-8 max-w-md">
           <label className="block text-gray-300 text-sm font-medium mb-2">
             Session Code
           </label>
@@ -87,7 +83,7 @@ export default function WorkshopDisplayPage() {
             value={sessionCode}
             onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
             placeholder="e.g. WORKSHOP1"
-            className="w-full bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-3 text-white font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors uppercase text-lg"
+            className="w-full bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-3 text-white font-mono placeholder-gray-500 focus:outline-none focus:border-[var(--accent)] transition-colors uppercase text-lg"
           />
           <p className="text-gray-500 text-xs mt-2">
             Type the workshop code participants will use to join.

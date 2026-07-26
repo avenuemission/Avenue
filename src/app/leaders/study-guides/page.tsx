@@ -111,15 +111,9 @@ export default function StudyGuidesPage() {
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
       {/* Animated Gradient Background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black animate-gradient-shift" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-purple-900/20 via-transparent to-blue-950/30 animate-gradient-shift-reverse" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl animate-pulse-slower" />
-      </div>
 
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm">
+      <header className="relative z-10 border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -147,7 +141,7 @@ export default function StudyGuidesPage() {
       <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
           href="/leaders"
-          className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm uppercase tracking-wider mb-8"
+          className="inline-flex items-center gap-2 text-[var(--accent)] hover:text-[var(--accent)] text-sm uppercase tracking-wider mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
@@ -181,12 +175,12 @@ export default function StudyGuidesPage() {
                 {guides.map((guide) => (
                   <div
                     key={guide.originalIndex}
-                    className="backdrop-blur-xl bg-white/5 rounded-xl border overflow-hidden transition-all"
+                    className="bg-[var(--surface)] rounded-xl border overflow-hidden transition-all"
                     style={{ borderColor: `${color}40` }}
                   >
                     <button
                       onClick={() => toggleGuide(guide.originalIndex)}
-                      className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+                      className="w-full p-4 flex items-center justify-between text-left hover:bg-[var(--surface-hover)] transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div
@@ -207,9 +201,9 @@ export default function StudyGuidesPage() {
                     </button>
 
                     {expandedGuide === guide.originalIndex && (
-                      <div className="px-4 pb-4 border-t border-white/10">
+                      <div className="px-4 pb-4 border-t border-[var(--border)]">
                         <div className="mt-4 space-y-3">
-                          <div className="p-3 bg-white/5 rounded-lg">
+                          <div className="p-3 bg-[var(--surface)] rounded-lg">
                             <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">
                               Bible Text
                             </p>
@@ -240,7 +234,7 @@ export default function StudyGuidesPage() {
                                 href={guide.pdfUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-600/30 rounded-full text-sm text-blue-400 transition-all"
+                                className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)]/20 hover:brightness-110/30 border border-blue-600/30 rounded-full text-sm text-[var(--accent)] transition-all"
                               >
                                 <FileText className="w-4 h-4" />
                                 Summary PDF

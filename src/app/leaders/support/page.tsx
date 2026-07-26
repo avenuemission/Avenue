@@ -212,15 +212,9 @@ export default function LeaderSupportPage() {
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
       {/* Animated Gradient Background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/50 to-black animate-gradient-shift" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-purple-900/20 via-transparent to-blue-950/30 animate-gradient-shift-reverse" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl animate-pulse-slower" />
-      </div>
 
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-800/50 backdrop-blur-sm">
+      <header className="relative z-10 border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -248,7 +242,7 @@ export default function LeaderSupportPage() {
       <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
           href="/leaders"
-          className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm uppercase tracking-wider mb-8"
+          className="inline-flex items-center gap-2 text-[var(--accent)] hover:text-[var(--accent)] text-sm uppercase tracking-wider mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
@@ -264,19 +258,19 @@ export default function LeaderSupportPage() {
         </div>
 
         {submitted ? (
-          <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-green-500/30 p-8 text-center">
+          <div className="bg-[var(--surface)] rounded-2xl border border-green-500/30 p-8 text-center">
             <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-white mb-2">Booking Confirmed!</h2>
             <p className="text-gray-400 mb-6">
               You&apos;ll receive a confirmation email with the Zoom details.
             </p>
             
-            <div className="bg-white/5 rounded-xl p-6 text-left max-w-md mx-auto">
+            <div className="bg-[var(--surface)] rounded-xl p-6 text-left max-w-md mx-auto">
               <h3 className="text-white font-medium mb-4">Zoom Meeting Details</h3>
               <div className="space-y-2 text-sm">
                 <p className="text-gray-400">
                   <span className="text-gray-500">Link:</span>{" "}
-                  <a href={ZOOM_INFO.link} className="text-blue-400 hover:underline break-all">
+                  <a href={ZOOM_INFO.link} className="text-[var(--accent)] hover:underline break-all">
                     Join Meeting
                   </a>
                 </p>
@@ -295,7 +289,7 @@ export default function LeaderSupportPage() {
                 setSelectedDate(null);
                 setShowCustomForm(false);
               }}
-              className="mt-6 text-blue-400 hover:text-blue-300 text-sm"
+              className="mt-6 text-[var(--accent)] hover:text-[var(--accent)] text-sm"
             >
               Book another call
             </button>
@@ -303,9 +297,9 @@ export default function LeaderSupportPage() {
         ) : (
           <div className="space-y-8">
             {/* Regular Call Times */}
-            <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
               <div className="flex items-center gap-3 mb-6">
-                <Video className="w-6 h-6 text-blue-400" />
+                <Video className="w-6 h-6 text-[var(--accent)]" />
                 <h2 className="text-xl font-semibold text-white">Weekly Support Calls</h2>
               </div>
 
@@ -322,7 +316,7 @@ export default function LeaderSupportPage() {
                         key={index}
                         onClick={() => handleSelectDate(date)}
                         disabled={submitting}
-                        className="w-full p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 rounded-xl text-left transition-all disabled:opacity-50"
+                        className="w-full p-4 bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl text-left transition-all disabled:opacity-50"
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -348,7 +342,7 @@ export default function LeaderSupportPage() {
                         key={index}
                         onClick={() => handleSelectDate(date)}
                         disabled={submitting}
-                        className="w-full p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 rounded-xl text-left transition-all disabled:opacity-50"
+                        className="w-full p-4 bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl text-left transition-all disabled:opacity-50"
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -365,7 +359,7 @@ export default function LeaderSupportPage() {
             </div>
 
             {/* Custom Time Request */}
-            <div className="backdrop-blur-xl bg-white/5 rounded-2xl border border-white/10 p-6">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
               <button
                 onClick={() => setShowCustomForm(!showCustomForm)}
                 className="w-full flex items-center justify-between text-left"
@@ -407,7 +401,7 @@ export default function LeaderSupportPage() {
                       type="date"
                       value={customTime.date}
                       onChange={(e) => setCustomTime({ ...customTime, date: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                      className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--accent)]"
                       required
                     />
                   </div>
@@ -419,14 +413,14 @@ export default function LeaderSupportPage() {
                       type="time"
                       value={customTime.time}
                       onChange={(e) => setCustomTime({ ...customTime, time: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                      className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--accent)]"
                       required
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+                    className="w-full bg-[var(--accent)] hover:bg-[var(--accent)] text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                   >
                     {submitting ? "Submitting..." : "Request This Time"}
                   </button>
