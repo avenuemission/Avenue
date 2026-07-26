@@ -19,8 +19,19 @@ import {
 
 interface EventDates {
   prayerAndPraise: Date | null;
-  quarterlySermon: Date | null;
-  weekOfWorship: Date | null;
+}
+
+// Prayer & Praise is a weekly Wednesday 7pm gathering. Compute the next
+// occurrence client-side so it always shows a live countdown even when there's
+// no explicit date in the database.
+function getNextWednesday7pm(): Date {
+  const now = new Date();
+  const d = new Date(now);
+  const daysUntilWed = (3 - d.getDay() + 7) % 7; // 3 = Wednesday
+  d.setDate(d.getDate() + daysUntilWed);
+  d.setHours(19, 0, 0, 0);
+  if (d.getTime() <= now.getTime()) d.setDate(d.getDate() + 7);
+  return d;
 }
 
 export default function IntersectionPage() {
@@ -30,8 +41,6 @@ export default function IntersectionPage() {
   const [dates, setDates] = useState<IntersectionEventDate[]>([]);
   const [eventDates, setEventDates] = useState<EventDates>({
     prayerAndPraise: null,
-    quarterlySermon: null,
-    weekOfWorship: null,
   });
   const [loading, setLoading] = useState(true);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -74,9 +83,7 @@ export default function IntersectionPage() {
 
   useEffect(() => {
     setEventDates({
-      prayerAndPraise: getNextDate("prayerAndPraise"),
-      quarterlySermon: getNextDate("quarterlySermon"),
-      weekOfWorship: getNextDate("weekOfWorship"),
+      prayerAndPraise: getNextDate("prayerAndPraise") ?? getNextWednesday7pm(),
     });
   }, [dates, getNextDate]);
 
@@ -236,109 +243,37 @@ export default function IntersectionPage() {
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="max-w-md mx-auto">
             {/* Prayer & Praise */}
-            <Reveal delay={0}>
-              <div className="panel p-6 space-y-4 h-full">
-              <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                {getEventInfo("prayerAndPraise")?.title ?? "Prayer & Praise"}
-              </h3>
-              <p className="text-gray-300 text-sm md:text-base">
-                {getEventInfo("prayerAndPraise")?.description ?? ""}
-              </p>
-              <div className="space-y-1 text-sm">
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Location:</span>{" "}
-                  {getEventInfo("prayerAndPraise")?.location ?? ""}
+            <Reveal>
+              <div className="panel p-6 space-y-4">
+                <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
+                  {getEventInfo("prayerAndPraise")?.title ?? "Prayer & Praise"}
+                </h3>
+                <p className="text-gray-300 text-sm md:text-base">
+                  {getEventInfo("prayerAndPraise")?.description ?? ""}
                 </p>
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Time:</span>{" "}
-                  {getEventInfo("prayerAndPraise")?.time ?? ""}
-                </p>
-              </div>
-              <div className="pt-4">
-                {loading ? (
-                  <p className="text-gray-400 text-sm">Loading...</p>
-                ) : eventDates.prayerAndPraise ? (
-                  <CountdownTimer
-                    variant="event"
-                    targetDate={eventDates.prayerAndPraise}
-                    eventType="weekly"
-                  />
-                ) : (
-                  <p className="text-gray-400 text-sm">No upcoming date</p>
-                )}
-              </div>
-              </div>
-            </Reveal>
-
-            {/* Quarterly Sermon */}
-            <Reveal delay={80}>
-              <div className="panel p-6 space-y-4 h-full">
-              <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                {getEventInfo("quarterlySermon")?.title ?? "Quarterly Sermon"}
-              </h3>
-              <p className="text-gray-300 text-sm md:text-base">
-                {getEventInfo("quarterlySermon")?.description ?? ""}
-              </p>
-              <div className="space-y-1 text-sm">
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Location:</span>{" "}
-                  {getEventInfo("quarterlySermon")?.location ?? ""}
-                </p>
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Time:</span>{" "}
-                  {getEventInfo("quarterlySermon")?.time ?? ""}
-                </p>
-              </div>
-              <div className="pt-4">
-                {loading ? (
-                  <p className="text-gray-400 text-sm">Loading...</p>
-                ) : eventDates.quarterlySermon ? (
-                  <CountdownTimer
-                    variant="event"
-                    targetDate={eventDates.quarterlySermon}
-                    eventType="quarterly"
-                  />
-                ) : (
-                  <p className="text-gray-400 text-sm">No upcoming date</p>
-                )}
-              </div>
-              </div>
-            </Reveal>
-
-            {/* Week of Worship */}
-            <Reveal delay={160}>
-              <div className="panel p-6 space-y-4 h-full">
-              <h3 className="text-base md:text-lg font-semibold text-white uppercase tracking-wider">
-                {getEventInfo("weekOfWorship")?.title ?? "Week of Worship"}
-              </h3>
-              <p className="text-gray-300 text-sm md:text-base">
-                {getEventInfo("weekOfWorship")?.description ?? ""}
-              </p>
-              <div className="space-y-1 text-sm">
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Location:</span>{" "}
-                  {getEventInfo("weekOfWorship")?.location ?? ""}
-                </p>
-                <p className="text-gray-400">
-                  <span className="text-gray-500 uppercase">Time:</span>{" "}
-                  {getEventInfo("weekOfWorship")?.time ?? ""}
-                </p>
-              </div>
-              <div className="pt-4">
-                {loading ? (
-                  <p className="text-gray-400 text-sm">Loading...</p>
-                ) : eventDates.weekOfWorship ? (
-                  <CountdownTimer
-                    variant="event"
-                    targetDate={eventDates.weekOfWorship}
-                    eventType="quarterly"
-                  />
-                ) : (
-                  <p className="text-gray-400 text-sm">No upcoming date</p>
-                )}
-              </div>
+                <div className="space-y-1 text-sm">
+                  <p className="text-gray-400">
+                    <span className="text-gray-500 uppercase">Location:</span>{" "}
+                    {getEventInfo("prayerAndPraise")?.location ?? ""}
+                  </p>
+                  <p className="text-gray-400">
+                    <span className="text-gray-500 uppercase">Time:</span>{" "}
+                    {getEventInfo("prayerAndPraise")?.time ?? ""}
+                  </p>
+                </div>
+                <div className="pt-4">
+                  {loading || !eventDates.prayerAndPraise ? (
+                    <p className="text-gray-400 text-sm">Loading...</p>
+                  ) : (
+                    <CountdownTimer
+                      variant="event"
+                      targetDate={eventDates.prayerAndPraise}
+                      eventType="weekly"
+                    />
+                  )}
+                </div>
               </div>
             </Reveal>
           </div>
