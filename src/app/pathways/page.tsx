@@ -147,9 +147,6 @@ export default function PathwaysPage() {
         </div>
       </section>
 
-      {/* This Week's Topic + Pathways Podcast */}
-      <WeeklyTopic />
-
       {/* Find a Pathway Section */}
       <section className="bg-black py-16 md:py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
@@ -176,7 +173,10 @@ export default function PathwaysPage() {
           </div>
         </div>
       </section>
-      
+
+      {/* This Week's Topic + Pathways Podcast */}
+      <WeeklyTopic />
+
       {/* Start Your Own Pathway Section */}
       <section className="relative py-20 overflow-hidden">
         {/* Background Image */}
