@@ -20,6 +20,7 @@
 - **Chart nodes show photo and first name only.** No pathway group, role or birthday on the chart.
 - **Emails are trimmed and lowercased** on every read and write.
 - Commits are authored as `Henry <henry.jamcmahon@gmail.com>` (already the git default here). Netlify's free plan allows one Git contributor. End every commit message with `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`, matching existing history.
+- **Lint baseline: 57 problems (36 errors, 21 warnings)** as of commit `64b8e93`, spread across files this plan never touches (admin, workshops, Navbar, CountdownTimer, login, layout). `npm run lint` is therefore **not** expected to come back clean. The gate is: no new problem in a file you touched, and the total does not rise. Do not "fix" unrelated lint noise, it is not this plan's job.
 - Dev server: `npm run dev` on port 3000. One is likely already running. Check with `netstat -ano | grep :3000` before starting another.
 - The in-app Browser pane freezes scrolling and CSS animation and sometimes reports viewport width 0. Always `resize_window` before measuring, and verify structure and geometry rather than motion.
 
@@ -2271,7 +2272,7 @@ npm run lint
 npm run build
 ```
 
-Expected: tests pass, lint clean, build succeeds. A failing build means a broken deploy, and deploys are scarce here.
+Expected: tests pass, lint no worse than the 57-problem baseline, build succeeds. A failing build means a broken deploy, and deploys are scarce here.
 
 - [ ] **Step 6: Commit**
 
@@ -2294,7 +2295,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 | Check | How |
 |---|---|
 | Tests pass | `npm test` |
-| Lint clean | `npm run lint` |
+| Lint no worse than baseline | `npm run lint`, still 57 problems or fewer, none in a file this plan touched |
 | Build succeeds | `npm run build` |
 | Table verified | `node --env-file=.env.local scripts/check-network-table.mjs` |
 | API verified | `node --env-file=.env.local scripts/check-network-api.mjs` |
