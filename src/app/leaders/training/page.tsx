@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
+import EpisodeCarousel from "@/components/ui/EpisodeCarousel";
 import {
   LogOut,
   ArrowLeft,
@@ -16,7 +17,6 @@ import {
   BookOpen,
   Lightbulb,
   X,
-  ChevronRight,
 } from "lucide-react";
 
 // Phase Types
@@ -231,7 +231,6 @@ export default function TrainingPage() {
   const [phases, setPhases] = useState<Phase[]>(INITIAL_PHASES);
   const [expandedPhase, setExpandedPhase] = useState<string | null>("phase1");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expandedEpisodeModules, setExpandedEpisodeModules] = useState<Set<string>>(new Set());
   const [videoModal, setVideoModal] = useState<{ youtubeId: string; title: string } | null>(null);
 
   useEffect(() => {
@@ -297,18 +296,6 @@ export default function TrainingPage() {
         return { ...phase, modules: updatedModules };
       })
     );
-  };
-
-  const toggleEpisodeList = (moduleId: string) => {
-    setExpandedEpisodeModules((prev) => {
-      const next = new Set(prev);
-      if (next.has(moduleId)) {
-        next.delete(moduleId);
-      } else {
-        next.add(moduleId);
-      }
-      return next;
-    });
   };
 
   const scheduleDebrief = (phaseId: string) => {
@@ -692,51 +679,16 @@ export default function TrainingPage() {
                               <Play className="w-4 h-4 text-[var(--accent)]" />
                             </button>
                           )}
-                          {module.episodes && (
-                            <button
-                              onClick={() => toggleEpisodeList(module.id)}
-                              className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center hover:brightness-110/30 transition-colors"
-                            >
-                              <ChevronRight className={`w-4 h-4 text-[var(--accent)] transition-transform ${expandedEpisodeModules.has(module.id) ? "rotate-90" : ""}`} />
-                            </button>
-                          )}
                         </div>
-                        {/* Episode list */}
-                        {module.episodes && expandedEpisodeModules.has(module.id) && (
-                          <div className="mt-2 ml-10 space-y-2">
-                            {module.episodes.map((episode) => (
-                              <div
-                                key={episode.id}
-                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                                  episode.watched
-                                    ? "bg-green-500/5 border-green-500/20"
-                                    : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
-                                }`}
-                              >
-                                <button
-                                  onClick={() => toggleEpisodeWatched(phase.id, module.id, episode.id)}
-                                  className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                    episode.watched
-                                      ? "bg-green-500 border-green-500"
-                                      : "border-gray-500 hover:border-blue-400"
-                                  }`}
-                                >
-                                  {episode.watched && <CheckCircle2 className="w-3 h-3 text-black" />}
-                                </button>
-                                <span className={`flex-1 text-sm ${
-                                  episode.watched ? "text-green-400 line-through" : "text-gray-300"
-                                }`}>
-                                  {episode.title}
-                                </span>
-                                <button
-                                  onClick={() => openVideo(episode.youtubeId, episode.title)}
-                                  className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--accent)]/20 flex items-center justify-center hover:brightness-110/40 transition-colors"
-                                >
-                                  <Play className="w-3 h-3 text-[var(--accent)]" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                        {/* Episode carousel — thumbnails with watched progress */}
+                        {module.episodes && (
+                          <EpisodeCarousel
+                            episodes={module.episodes}
+                            onPlay={openVideo}
+                            onToggleWatched={(episodeId) =>
+                              toggleEpisodeWatched(phase.id, module.id, episodeId)
+                            }
+                          />
                         )}
                         </div>
                       ))}

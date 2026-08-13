@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
 import Reveal from "@/components/ui/Reveal";
+import ProfileCard from "@/components/ui/ProfileCard";
 import {
   Video,
   BookOpen,
@@ -119,6 +120,11 @@ export default function LeadersPage() {
           <p className="text-[var(--muted)]">
             Access resources, training, and tools for Avenue leaders
           </p>
+        </Reveal>
+
+        {/* My Profile */}
+        <Reveal className="max-w-4xl mx-auto mb-5">
+          <ProfileCard email={user.email} fallbackName={user.name} />
         </Reveal>
 
         {/* Featured */}
