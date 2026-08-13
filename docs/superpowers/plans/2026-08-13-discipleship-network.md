@@ -1621,6 +1621,11 @@ export default function NetworkGraph({
   const layout = useMemo(() => layoutNetwork(people), [people]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  // The ref carries the drag maths, which must not cause a re-render on every
+  // pointer move. isDragging exists only to drive the cursor, which must.
+  // Clearing the ref alone would leave the cursor stuck on "grabbing", because
+  // a ref write never re-renders.
+  const [isDragging, setIsDragging] = useState(false);
   const drag = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
 
   const nodeById = useMemo(
@@ -1643,6 +1648,7 @@ export default function NetworkGraph({
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     drag.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    setIsDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -1656,6 +1662,7 @@ export default function NetworkGraph({
 
   const onPointerUp = () => {
     drag.current = null;
+    setIsDragging(false);
   };
 
   const nudgeZoom = (factor: number) =>
@@ -1682,7 +1689,7 @@ export default function NetworkGraph({
         data-testid="network-graph"
         viewBox={viewBox}
         className="h-[70vh] w-full touch-none select-none"
-        style={{ cursor: drag.current ? "grabbing" : "grab" }}
+        style={{ cursor: isDragging ? "grabbing" : "grab" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
