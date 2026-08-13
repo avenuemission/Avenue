@@ -97,7 +97,7 @@ try {
 
   console.log("GET with an unknown email");
   const denied = await fetch(`${BASE}/api/network?email=nobody@example.invalid`);
-  check("is refused with 403", denied.status === 403);
+  check("GET is refused with 403 (viewer not a leader)", denied.status === 403);
 
   console.log("add");
   const added = await post({
@@ -119,23 +119,73 @@ try {
   check("starts pending", row?.link_status === "pending");
   check("marks them as not joined", row?.joined === false);
 
+  console.log("confirm (actor is a real leader)");
+  // link_status = "confirmed" is the write the whole confirm/decline feature
+  // turns on, so it needs real coverage, not just refusal paths. Same
+  // borrow-and-restore shape as the decline test further down: capture
+  // LEADER's row by id with an error check, mutate it to a known pending
+  // state, exercise the route, assert the write it made, then restore by
+  // that same id with an error-checked named check before moving on. This
+  // restore is inline and immediate (not deferred to the outer finally)
+  // so the leader's row is back to its real state well before decline's
+  // own borrow, and well before the temp-person cleanup at the end.
+  const { data: confirmLeaderBefore, error: confirmLeaderReadErr } = await db
+    .from("network_people")
+    .select("sent_out_by, link_status")
+    .eq("id", leaderId)
+    .maybeSingle();
+  if (confirmLeaderReadErr) throw new Error(confirmLeaderReadErr.message);
+
+  const { error: confirmBorrowErr } = await db
+    .from("network_people")
+    .update({ sent_out_by: row.id, link_status: "pending" })
+    .eq("id", leaderId);
+  if (confirmBorrowErr) throw new Error(confirmBorrowErr.message);
+
+  const confirmed = await post({ action: "confirm", actorEmail: LEADER });
+  check("confirm succeeds", confirmed.status === 200, JSON.stringify(confirmed.json));
+  const { data: confirmedRow } = await db
+    .from("network_people")
+    .select("link_status")
+    .eq("id", leaderId)
+    .maybeSingle();
+  check("confirm sets link_status to confirmed", confirmedRow?.link_status === "confirmed");
+
+  const { error: confirmRestoreErr } = await db
+    .from("network_people")
+    .update({
+      sent_out_by: confirmLeaderBefore.sent_out_by,
+      link_status: confirmLeaderBefore.link_status,
+    })
+    .eq("id", leaderId);
+  check(
+    "restores the leader's own record after confirm",
+    !confirmRestoreErr,
+    confirmRestoreErr?.message ?? ""
+  );
+
+  console.log("confirm with nothing pending (expected refusal)");
+  // Run right after the restore above, while the leader's own sent_out_by
+  // is genuinely null again, so this is testing the "Nothing to confirm"
+  // branch rather than fighting leftover state from the previous test.
+  const nothingToConfirm = await post({ action: "confirm", actorEmail: LEADER });
+  check(
+    "confirm is refused with 400 (nothing to confirm)",
+    nothingToConfirm.status === 400,
+    JSON.stringify(nothingToConfirm.json)
+  );
+
   console.log("confirm as a non-leader actor (expected refusal)");
   // ensureNode() checks `leaders` FIRST and unconditionally, before it ever
-  // looks at network_people. TEST_EMAIL has a network_people row (from the
-  // earlier "add"), but it is not a row in `leaders`, so ensureNode() still
-  // returns null for it and the route refuses with 403 before the confirm
-  // logic runs at all. Having a network_people row is not enough to act;
-  // only a real leader account is. This is the gate the design spec
-  // requires ("The viewer email must exist in `leaders`, otherwise 403"),
-  // and it is what the earlier version of this test got backwards before
-  // the route's lookup order was fixed to check leaders first.
-  await db
-    .from("network_people")
-    .update({ sent_out_by: graph.viewerId, link_status: "pending" })
-    .eq("email", TEST_EMAIL);
+  // looks at network_people or at the confirm logic's own sent_out_by
+  // check. TEST_EMAIL has a network_people row (from the earlier "add"),
+  // but it is not a row in `leaders`, so ensureNode() returns null and the
+  // route refuses with 403 before the confirm logic ever runs. No setup on
+  // TEST_EMAIL's own row is needed or relevant here: the request never gets
+  // far enough to read it.
   const confirmAsStranger = await post({ action: "confirm", actorEmail: TEST_EMAIL });
   check(
-    "is refused with 403",
+    "confirm is refused with 403 (actor not a leader)",
     confirmAsStranger.status === 403,
     JSON.stringify(confirmAsStranger.json)
   );
@@ -149,7 +199,11 @@ try {
     action: "confirm",
     actorEmail: "network-check-unknown-actor@example.invalid",
   });
-  check("is refused with 403", unknownActor.status === 403, JSON.stringify(unknownActor.json));
+  check(
+    "confirm is refused with 403 (actor unknown to the system)",
+    unknownActor.status === 403,
+    JSON.stringify(unknownActor.json)
+  );
 
   console.log("add the same person twice");
   const dup = await post({
@@ -196,7 +250,11 @@ try {
     .single();
   if (strangerErr) throw new Error(strangerErr.message);
   const notYours = await post({ action: "remove", actorEmail: LEADER, id: stranger.id });
-  check("is refused with 403", notYours.status === 403, JSON.stringify(notYours.json));
+  check(
+    "remove is refused with 403 (not your link)",
+    notYours.status === 403,
+    JSON.stringify(notYours.json)
+  );
 
   console.log("decline (actor is a real leader)");
   // Borrow LEADER's own row to prove decline works for a genuine leader
