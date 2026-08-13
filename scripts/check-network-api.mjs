@@ -37,7 +37,10 @@ async function cleanup() {
 // The LEADER row is real production data (info@avenuemission.com), not a
 // throwaway. The decline test needs an actor that is genuinely a leader, and
 // only real leader accounts exist, so we borrow this row, capture its exact
-// state first, and put it back in the finally block below.
+// state first, and put it back in the finally block below. leaderId and
+// leaderBefore are captured with the SAME filter (by id) used to restore,
+// so a restore can never target a different row than the one we read.
+let leaderId = null;
 let leaderBefore = null;
 
 await cleanup();
@@ -49,6 +52,7 @@ try {
   check("returns 200", res.status === 200, JSON.stringify(graph).slice(0, 200));
   check("gives the viewer a node", typeof graph.viewerId === "string");
   check("returns a people array", Array.isArray(graph.people));
+  leaderId = graph.viewerId;
 
   const viewerPerson = graph.people?.find((p) => p.id === graph.viewerId);
   check("viewer's own node is present in people", !!viewerPerson);
@@ -103,7 +107,7 @@ try {
     lastName: "Check",
     email: TEST_EMAIL,
   });
-  check("succeeds", added.status === 200, JSON.stringify(added.json));
+  check("add succeeds", added.status === 200, JSON.stringify(added.json));
 
   const { data: row } = await db
     .from("network_people")
@@ -115,29 +119,26 @@ try {
   check("starts pending", row?.link_status === "pending");
   check("marks them as not joined", row?.joined === false);
 
-  console.log("confirm own pending link (actor is not in `leaders`, only in network_people)");
-  // TEST_EMAIL got its network_people row from the earlier "add" action, not
-  // from ensureNode()'s leaders lookup. ensureNode() checks network_people
-  // FIRST and returns any existing row unconditionally, never falling
-  // through to the `leaders` table check once a row exists. That is correct,
-  // load-bearing behaviour: someone who was sent out must be able to confirm
-  // or decline their own link before they are ever a registered leader.
-  // (We initially expected this call to be refused with 403 as if TEST_EMAIL
-  // were a stranger to the whole system, but that was wrong: TEST_EMAIL is
-  // not a stranger, it already has a network_people row. See the next test
-  // for the case that genuinely is a stranger.)
+  console.log("confirm as a non-leader actor (expected refusal)");
+  // ensureNode() checks `leaders` FIRST and unconditionally, before it ever
+  // looks at network_people. TEST_EMAIL has a network_people row (from the
+  // earlier "add"), but it is not a row in `leaders`, so ensureNode() still
+  // returns null for it and the route refuses with 403 before the confirm
+  // logic runs at all. Having a network_people row is not enough to act;
+  // only a real leader account is. This is the gate the design spec
+  // requires ("The viewer email must exist in `leaders`, otherwise 403"),
+  // and it is what the earlier version of this test got backwards before
+  // the route's lookup order was fixed to check leaders first.
   await db
     .from("network_people")
     .update({ sent_out_by: graph.viewerId, link_status: "pending" })
     .eq("email", TEST_EMAIL);
-  const confirmed = await post({ action: "confirm", actorEmail: TEST_EMAIL });
-  check("succeeds", confirmed.status === 200, JSON.stringify(confirmed.json));
-  const { data: confirmedRow } = await db
-    .from("network_people")
-    .select("link_status")
-    .eq("email", TEST_EMAIL)
-    .maybeSingle();
-  check("link_status becomes confirmed", confirmedRow?.link_status === "confirmed");
+  const confirmAsStranger = await post({ action: "confirm", actorEmail: TEST_EMAIL });
+  check(
+    "is refused with 403",
+    confirmAsStranger.status === 403,
+    JSON.stringify(confirmAsStranger.json)
+  );
 
   console.log("act as an actor unknown to the system entirely");
   // This address has never had a network_people row and is not in `leaders`,
@@ -161,7 +162,7 @@ try {
 
   console.log("remove");
   const removed = await post({ action: "remove", actorEmail: LEADER, id: row.id });
-  check("succeeds", removed.status === 200, JSON.stringify(removed.json));
+  check("remove succeeds", removed.status === 200, JSON.stringify(removed.json));
   const { data: after } = await db
     .from("network_people")
     .select("sent_out_by")
@@ -176,7 +177,7 @@ try {
     firstName: "Temp",
     email: TEST_EMAIL,
   });
-  check("succeeds", readded.status === 200, JSON.stringify(readded.json));
+  check("re-add succeeds", readded.status === 200, JSON.stringify(readded.json));
   check("reports adopted:true", readded.json?.adopted === true, JSON.stringify(readded.json));
 
   console.log("remove a person you have no link to");
@@ -200,22 +201,29 @@ try {
   console.log("decline (actor is a real leader)");
   // Borrow LEADER's own row to prove decline works for a genuine leader
   // account, then restore whatever it held before (see leaderBefore/finally).
-  const { data: leaderRow } = await db
+  // Captured by id here; the finally block restores by that same id (see
+  // leaderId above), so restore can never target a different row than the
+  // one we actually read.
+  const { data: leaderRow, error: leaderReadErr } = await db
     .from("network_people")
     .select("sent_out_by, link_status")
-    .eq("id", graph.viewerId)
+    .eq("id", leaderId)
     .maybeSingle();
+  if (leaderReadErr) throw new Error(leaderReadErr.message);
   leaderBefore = leaderRow;
-  await db
+
+  const { error: leaderBorrowErr } = await db
     .from("network_people")
     .update({ sent_out_by: row.id, link_status: "pending" })
-    .eq("id", graph.viewerId);
+    .eq("id", leaderId);
+  if (leaderBorrowErr) throw new Error(leaderBorrowErr.message);
+
   const declined = await post({ action: "decline", actorEmail: LEADER });
-  check("succeeds", declined.status === 200, JSON.stringify(declined.json));
+  check("decline succeeds", declined.status === 200, JSON.stringify(declined.json));
   const { data: leaderAfter } = await db
     .from("network_people")
     .select("sent_out_by")
-    .eq("id", graph.viewerId)
+    .eq("id", leaderId)
     .maybeSingle();
   check("clears the leader's own sender", leaderAfter?.sent_out_by === null);
 
@@ -228,13 +236,14 @@ try {
   check("is refused with 400", bogus.status === 400);
 } finally {
   if (leaderBefore) {
-    await db
+    const { error: restoreErr } = await db
       .from("network_people")
       .update({
         sent_out_by: leaderBefore.sent_out_by,
         link_status: leaderBefore.link_status,
       })
-      .eq("email", LEADER);
+      .eq("id", leaderId);
+    check("restores the leader's own record", !restoreErr, restoreErr?.message ?? "");
     console.log("restored the leader's own record");
   }
   await cleanup();
