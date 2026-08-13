@@ -8,7 +8,7 @@ import { getCurrentUser, logout, User } from "@/lib/auth";
 import Reveal from "@/components/ui/Reveal";
 import ProfileCard from "@/components/ui/ProfileCard";
 import {
-  Video,
+  GraduationCap,
   BookOpen,
   HeadphonesIcon,
   FolderOpen,
@@ -113,7 +113,7 @@ export default function LeadersPage() {
 
   // Featured up top.
   const primaryCards = [
-    { id: "training", title: "Leader Training", icon: Video, href: "/leaders/training" },
+    { id: "training", title: "Leader Training", icon: GraduationCap, href: "/leaders/training" },
     { id: "network", title: "Discipleship Network", icon: Network, href: "/leaders/network" },
     { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
   ];
