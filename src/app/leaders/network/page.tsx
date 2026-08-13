@@ -30,8 +30,10 @@ export default function NetworkPage() {
       if (!res.ok) throw new Error(data.error ?? "Could not load the network.");
       setPeople(data.people ?? []);
       setViewerId(data.viewerId ?? null);
+      return true;
     } catch (e) {
       setError((e as Error).message);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -59,8 +61,7 @@ export default function NetworkPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "That did not work.");
-      await load(user.email);
-      return true;
+      return await load(user.email);
     } catch (e) {
       setError((e as Error).message);
       return false;
