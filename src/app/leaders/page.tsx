@@ -18,6 +18,7 @@ import {
   Globe,
   BarChart2,
   Lock,
+  ChevronDown,
 } from "lucide-react";
 
 // Calendar URLs
@@ -32,6 +33,7 @@ export default function LeadersPage() {
   const [mounted, setMounted] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -69,14 +71,14 @@ export default function LeadersPage() {
   // Cards that require full_access
   const restrictedCards = ["training", "study", "resources"];
 
-  // Featured up top — the dashboard upgrade will land alongside this.
+  // Featured up top. Discipleship Network joins these once its page exists.
   const primaryCards = [
     { id: "training", title: "Leader Training", icon: Video, href: "/leaders/training" },
+    { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
   ];
 
   // Secondary tools, kept in a quieter section below.
   const moreCards = [
-    { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
     { id: "support", title: "Leader Support", icon: HeadphonesIcon, href: "/leaders/support" },
     { id: "resources", title: "Resources", icon: FolderOpen, href: "/leaders/resources" },
     { id: "workshops", title: "Workshop Hub", icon: BarChart2, href: "/leaders/workshops" },
@@ -124,11 +126,11 @@ export default function LeadersPage() {
 
         {/* My Profile */}
         <Reveal className="max-w-4xl mx-auto mb-5">
-          <ProfileCard email={user.email} fallbackName={user.name} />
+          <ProfileCard email={user.email} fallbackName={user.name} collapsible />
         </Reveal>
 
         {/* Featured */}
-        <div className="grid grid-cols-1 gap-5 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
           {primaryCards.map((card, index) => {
             const restricted = isRestricted(card.id);
 
@@ -217,13 +219,23 @@ export default function LeadersPage() {
           </div>
         )}
 
-        {/* Quick Links */}
-        <Reveal className="mt-12 max-w-4xl mx-auto">
-          <div className="panel p-6">
-            <h2 className="text-lg font-semibold text-white uppercase tracking-wider mb-4">
-              Quick Links
-            </h2>
-            <div className="flex flex-wrap gap-3">
+        {/* Quick Links: folded away so the page leads with the tools */}
+        <Reveal className="mt-6 max-w-4xl mx-auto">
+          <button
+            onClick={() => setQuickOpen((v) => !v)}
+            aria-expanded={quickOpen}
+            className="panel panel-interactive flex w-full items-center justify-between p-4"
+          >
+            <span className="text-sm font-medium text-white">Quick Links</span>
+            <ChevronDown
+              className={`w-4 h-4 text-[var(--muted)] transition-transform ${
+                quickOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {quickOpen && (
+            <div className="mt-3 flex flex-wrap gap-3">
               <a href={AVENUE_CALENDAR_URL} target="_blank" rel="noopener noreferrer" className={quickLinkClass}>
                 <Calendar className="w-4 h-4" />
                 Avenue Calendar
@@ -239,7 +251,7 @@ export default function LeadersPage() {
                 Main Website
               </a>
             </div>
-          </div>
+          )}
         </Reveal>
       </main>
     </div>
