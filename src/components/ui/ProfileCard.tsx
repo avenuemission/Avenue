@@ -446,6 +446,7 @@ export default function ProfileCard({ email, fallbackName, collapsible = false }
         {collapsible && (
           <button
             onClick={() => setOpen(false)}
+            aria-expanded
             aria-label="Collapse my profile"
             className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] p-2 text-[var(--muted)] hover:text-white hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)] transition-all"
           >
