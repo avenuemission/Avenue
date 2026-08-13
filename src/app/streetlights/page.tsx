@@ -447,14 +447,24 @@ export default function StreetlightsPage() {
             and share the love of Jesus with those in need.
           </p>
 
-          <a
-            href="https://tithe.ly/give_new/www/#/tithely/give-one-time/1827900"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-[var(--accent)] hover:brightness-110 text-white px-12 py-4 rounded-full font-medium transition-all uppercase tracking-wider text-lg mb-10"
-          >
-            Give Now
-          </a>
+          <div className="flex flex-wrap justify-center gap-4 mb-10">
+            <a
+              href="https://egiving.org.au/Avenue?filter=tithe"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[var(--accent)] hover:brightness-110 text-white px-12 py-4 rounded-full font-medium transition-all uppercase tracking-wider text-lg"
+            >
+              Tithe
+            </a>
+            <a
+              href="https://egiving.org.au/Avenue?filter=local"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] text-white px-12 py-4 rounded-full font-medium transition-all uppercase tracking-wider text-lg"
+            >
+              Local Offering
+            </a>
+          </div>
 
           <p className="text-white italic text-sm md:text-base max-w-xl mx-auto">
             &ldquo;Each of you should give what you have decided in your heart

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
-import { getStudyGuides } from "@/lib/content";
 import Reveal from "@/components/ui/Reveal";
 import {
   Video,
@@ -20,30 +19,6 @@ import {
   Lock,
 } from "lucide-react";
 
-// Study guide dates are stored as "DD/MM/YYYY".
-function parseGuideDate(d: string): Date | null {
-  const parts = (d || "").split("/");
-  if (parts.length !== 3) return null;
-  const [day, month, year] = parts.map((p) => parseInt(p, 10));
-  if (!day || !month || !year) return null;
-  return new Date(year, month - 1, day);
-}
-
-// Pick "this week's" topic: the most recent guide dated on/before today.
-// If every guide is in the future, fall back to the earliest upcoming one.
-function pickCurrentGuide(guides: Array<Record<string, unknown>>): Record<string, unknown> | null {
-  const dated = guides
-    .map((g) => ({ g, d: parseGuideDate(String(g.guide_date ?? "")) }))
-    .filter((x): x is { g: Record<string, unknown>; d: Date } => x.d !== null);
-  if (dated.length === 0) return guides[0] ?? null;
-  const now = new Date();
-  const past = dated.filter((x) => x.d.getTime() <= now.getTime());
-  if (past.length > 0) {
-    return past.reduce((a, b) => (b.d.getTime() > a.d.getTime() ? b : a)).g;
-  }
-  return dated.reduce((a, b) => (b.d.getTime() < a.d.getTime() ? b : a)).g;
-}
-
 // Calendar URLs
 const AVENUE_CALENDAR_URL =
   "https://calendar.google.com/calendar/embed?src=c_f77b62d0efa5c8f706f97ed58b880dc6bdbd9ca0a67d4b413748de6f0b2f612e%40group.calendar.google.com&ctz=Australia%2FSydney";
@@ -56,13 +31,6 @@ export default function LeadersPage() {
   const [mounted, setMounted] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
-  const [weekly, setWeekly] = useState<Record<string, unknown> | null>(null);
-
-  useEffect(() => {
-    getStudyGuides()
-      .then((guides) => setWeekly(pickCurrentGuide(guides as unknown as Array<Record<string, unknown>>)))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -100,8 +68,13 @@ export default function LeadersPage() {
   // Cards that require full_access
   const restrictedCards = ["training", "study", "resources"];
 
-  const dashboardCards = [
+  // Featured up top — the dashboard upgrade will land alongside this.
+  const primaryCards = [
     { id: "training", title: "Leader Training", icon: Video, href: "/leaders/training" },
+  ];
+
+  // Secondary tools, kept in a quieter section below.
+  const moreCards = [
     { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
     { id: "support", title: "Leader Support", icon: HeadphonesIcon, href: "/leaders/support" },
     { id: "resources", title: "Resources", icon: FolderOpen, href: "/leaders/resources" },
@@ -139,14 +112,6 @@ export default function LeadersPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        {/* Isaiah Quote */}
-        <Reveal className="text-center mb-12">
-          <span className="eyebrow mb-3">Isaiah 6:8</span>
-          <blockquote className="text-xl md:text-2xl text-[var(--muted)] italic max-w-3xl mx-auto">
-            &ldquo;Then I heard the voice of the Lord saying, &apos;Whom shall I send?&apos; … And I said, &apos;Here am I. Send me!&apos;&rdquo;
-          </blockquote>
-        </Reveal>
-
         <Reveal className="mb-12 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white uppercase tracking-tight mb-2">
             Leader Dashboard
@@ -156,44 +121,9 @@ export default function LeadersPage() {
           </p>
         </Reveal>
 
-        {/* This Week's Topic — featured for all leaders */}
-        {weekly && (() => {
-          const inner = (
-            <>
-              <span className="eyebrow mb-2">This Week&apos;s Topic</span>
-              <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-                {String(weekly.topic ?? "")}
-              </h2>
-              {(weekly.series || weekly.scripture) && (
-                <p className="mt-2 text-[var(--muted)]">
-                  {String(weekly.series ?? "")}
-                  {weekly.series && weekly.scripture ? " · " : ""}
-                  {String(weekly.scripture ?? "")}
-                </p>
-              )}
-              {hasFullAccess && (
-                <span className="mt-4 inline-block text-sm font-semibold text-[var(--accent)] group-hover:brightness-110 transition-all">
-                  Open the study guide →
-                </span>
-              )}
-            </>
-          );
-          return (
-            <Reveal className="max-w-4xl mx-auto mb-8">
-              {hasFullAccess ? (
-                <Link href="/leaders/study-guides" className="panel panel-interactive group block p-6 md:p-8">
-                  {inner}
-                </Link>
-              ) : (
-                <div className="panel p-6 md:p-8">{inner}</div>
-              )}
-            </Reveal>
-          );
-        })()}
-
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-          {dashboardCards.map((card, index) => {
+        {/* Featured */}
+        <div className="grid grid-cols-1 gap-5 max-w-4xl mx-auto">
+          {primaryCards.map((card, index) => {
             const restricted = isRestricted(card.id);
 
             if (restricted) {
@@ -230,6 +160,46 @@ export default function LeadersPage() {
             );
           })}
         </div>
+
+        {/* More Tools — secondary, compact tiles */}
+        <Reveal className="mt-10 max-w-4xl mx-auto">
+          <div className="border-t border-[var(--border)] pt-8">
+            <h2 className="eyebrow mb-4">More Tools</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {moreCards.map((card) => {
+                const restricted = isRestricted(card.id);
+
+                if (restricted) {
+                  return (
+                    <div
+                      key={card.id}
+                      className="panel flex items-center gap-3 p-4 opacity-50 cursor-not-allowed"
+                      title="Pending authorization"
+                    >
+                      <card.icon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <span className="text-sm font-medium text-gray-400 truncate">
+                        {card.title}
+                      </span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={card.id}
+                    href={card.href}
+                    className="panel panel-interactive group flex items-center gap-3 p-4"
+                  >
+                    <card.icon className="w-5 h-5 text-[var(--accent)] flex-shrink-0 transition-transform group-hover:scale-110" />
+                    <span className="text-sm font-medium text-white truncate">
+                      {card.title}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </Reveal>
 
         {/* Pending Access Message */}
         {accessChecked && !hasFullAccess && (

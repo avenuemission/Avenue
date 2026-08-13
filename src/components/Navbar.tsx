@@ -107,17 +107,15 @@ export default function Navbar() {
           {/* Countdown Timer, Giving and Login */}
           <div className="hidden sm:flex items-center space-x-3">
             <CountdownTimer variant="navbar" />
-            <a
-              href="https://tithe.ly/give_new/www/#/tithely/give-one-time/1827900"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/streetlights#giving"
               className="flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
             >
               <Heart className="w-4 h-4 text-white" />
               <span className="text-xs font-medium text-white uppercase tracking-wider">
                 Giving
               </span>
-            </a>
+            </Link>
             <Link
               href="/login"
               className="flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
@@ -197,10 +195,8 @@ export default function Navbar() {
             {/* Mobile Countdown Timer, Giving and Login */}
             <div className="px-3 py-4 space-y-3">
               <CountdownTimer variant="navbar" />
-              <a
-                href="https://tithe.ly/give_new/www/#/tithely/give-one-time/1827900"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/streetlights#giving"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
               >
@@ -208,7 +204,7 @@ export default function Navbar() {
                 <span className="text-xs font-medium text-white uppercase tracking-wider">
                   Giving
                 </span>
-              </a>
+              </Link>
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}

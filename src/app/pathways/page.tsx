@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import PathwayMap from "@/components/PathwayMap";
 import ImageCarousel from "@/components/PathwaysCarousel";
+import WeeklyTopic from "@/components/WeeklyTopic";
 import PageTitle from "@/components/ui/PageTitle";
 import Reveal from "@/components/ui/Reveal";
 import { getPathwayStats } from "@/lib/content";
@@ -145,6 +146,9 @@ export default function PathwaysPage() {
           </Reveal>
         </div>
       </section>
+
+      {/* This Week's Topic + Pathways Podcast */}
+      <WeeklyTopic />
 
       {/* Find a Pathway Section */}
       <section className="bg-black py-16 md:py-24 overflow-hidden">
