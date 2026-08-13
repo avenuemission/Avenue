@@ -1451,6 +1451,12 @@ In `src/app/api/leader-access/route.ts`, add this near the other Supabase helper
 // This is a convenience, not a guarantee: /api/network creates a node
 // lazily for any leader who does not have one. That is why a failure
 // here is logged and swallowed rather than blocking a signup.
+//
+// Both failure shapes must be logged. supabase-js does not throw on a
+// query-level failure such as an RLS denial or a constraint violation,
+// it returns it in `error`, so the catch below only ever sees thrown
+// JS exceptions. Swallowing is deliberate. Swallowing in silence is the
+// exact bug that once made an RLS-blocked write look like a success.
 async function claimNetworkNode(email: string, name: string): Promise<void> {
   try {
     const db = getSupabaseAdmin();
@@ -1466,22 +1472,28 @@ async function claimNetworkNode(email: string, name: string): Promise<void> {
       .maybeSingle();
 
     if (existing) {
-      await db
+      const { error } = await db
         .from("network_people")
         .update({ joined: true, first_name: existing.first_name || first, updated_at: now })
         .eq("id", existing.id);
+      if (error) {
+        console.error("claimNetworkNode failed:", error.message, "email:", email);
+      }
       return;
     }
 
-    await db.from("network_people").insert({
+    const { error } = await db.from("network_people").insert({
       email,
       first_name: first,
       last_name: last,
       joined: true,
       added_by_email: email,
     });
+    if (error) {
+      console.error("claimNetworkNode failed:", error.message, "email:", email);
+    }
   } catch (e) {
-    console.error("claimNetworkNode failed:", (e as Error).message);
+    console.error("claimNetworkNode failed:", (e as Error).message, "email:", email);
   }
 }
 ```
