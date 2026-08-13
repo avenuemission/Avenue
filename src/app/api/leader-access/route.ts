@@ -90,6 +90,46 @@ async function saveLeader(leader: LeaderRecord): Promise<void> {
   await store.setJSON(key, leader);
 }
 
+// When someone signs up, take over any node their discipler already
+// created for them so they keep their place in the network.
+//
+// This is a convenience, not a guarantee: /api/network creates a node
+// lazily for any leader who does not have one. That is why a failure
+// here is logged and swallowed rather than blocking a signup.
+async function claimNetworkNode(email: string, name: string): Promise<void> {
+  try {
+    const db = getSupabaseAdmin();
+    const parts = String(name ?? "").trim().split(/\s+/).filter(Boolean);
+    const first = parts[0] || email.split("@")[0];
+    const last = parts.slice(1).join(" ") || null;
+    const now = new Date().toISOString();
+
+    const { data: existing } = await db
+      .from("network_people")
+      .select("id, first_name")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      await db
+        .from("network_people")
+        .update({ joined: true, first_name: existing.first_name || first, updated_at: now })
+        .eq("id", existing.id);
+      return;
+    }
+
+    await db.from("network_people").insert({
+      email,
+      first_name: first,
+      last_name: last,
+      joined: true,
+      added_by_email: email,
+    });
+  } catch (e) {
+    console.error("claimNetworkNode failed:", (e as Error).message);
+  }
+}
+
 // List all leaders — Supabase first, then Netlify Blobs fallback
 async function listLeaders(): Promise<LeaderRecord[]> {
   if (isLocal) {
@@ -190,6 +230,9 @@ export async function POST(request: NextRequest) {
     };
 
     await saveLeader(newLeader);
+
+    // Take over any node their discipler already created for them.
+    await claimNetworkNode(String(email).toLowerCase(), name);
 
     // Send email notification to admin about new leader signup
     try {
