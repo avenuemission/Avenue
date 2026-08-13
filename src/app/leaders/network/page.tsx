@@ -36,6 +36,7 @@ export default function NetworkPage() {
     } catch (e) {
       setError((e as Error).message);
       setLoaded(false);
+      setSelected(null);
       return false;
     } finally {
       setLoading(false);
@@ -217,7 +218,7 @@ export default function NetworkPage() {
             </Reveal>
           ))}
 
-        {selected && (
+        {loaded && selected && (
           <div className="mx-auto mt-6 max-w-xl">
             <div className="panel p-6">
               <div className="mb-4 flex items-start justify-between gap-4">
