@@ -168,7 +168,7 @@ export default function PathwaysPage() {
 
               <div className="pt-4">
                 <Link
-                  href="/login#signup"
+                  href="/login"
                   className="inline-block bg-[var(--accent)] text-white px-10 py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
                 >
                   Become a Pathway Leader
