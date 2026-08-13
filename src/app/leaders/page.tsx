@@ -37,6 +37,7 @@ export default function LeadersPage() {
   const [quickOpen, setQuickOpen] = useState(false);
   const [pendingSender, setPendingSender] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [pendingError, setPendingError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -62,7 +63,7 @@ export default function LeadersPage() {
         .then((data) => {
           const me = data.people?.find((p: { id: string }) => p.id === data.viewerId);
           if (!me?.sentOutBy || me.linkStatus === "confirmed") return;
-          const sender = data.people.find((p: { id: string }) => p.id === me.sentOutBy);
+          const sender = data.people?.find((p: { id: string }) => p.id === me.sentOutBy);
           setPendingSender(sender?.firstName ?? "Someone");
         })
         .catch(() => {
@@ -79,13 +80,21 @@ export default function LeadersPage() {
   const answerPending = async (action: "confirm" | "decline") => {
     if (!user) return;
     setConfirming(true);
+    setPendingError(null);
     try {
-      await fetch("/api/network", {
+      const res = await fetch("/api/network", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action, actorEmail: user.email }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setPendingError(data?.error || "We could not save your answer. Please try again.");
+        return;
+      }
       setPendingSender(null);
+    } catch {
+      setPendingError("We could not save your answer. Please try again.");
     } finally {
       setConfirming(false);
     }
@@ -180,6 +189,9 @@ export default function LeadersPage() {
                   Not right
                 </button>
               </div>
+              {pendingError && (
+                <p className="mt-3 text-sm text-[var(--muted)]">{pendingError}</p>
+              )}
             </div>
           </Reveal>
         )}
@@ -229,7 +241,7 @@ export default function LeadersPage() {
           })}
         </div>
 
-        {/* More Tools — secondary, compact tiles */}
+        {/* More Tools: secondary, compact tiles */}
         <Reveal className="mt-10 max-w-4xl mx-auto">
           <div className="border-t border-[var(--border)] pt-8">
             <h2 className="eyebrow mb-4">More Tools</h2>
@@ -274,7 +286,7 @@ export default function LeadersPage() {
           <div className="mt-6 max-w-4xl mx-auto text-center">
             <p className="text-[var(--muted)] text-sm italic">
               Full access to training materials, study guides, and resources will be granted after your first Zoom call with our team.
-              Please use the Leader Support section to schedule a meeting — we look forward to connecting with you!
+              Please use the Leader Support section to schedule a meeting. We look forward to connecting with you!
             </p>
           </div>
         )}
