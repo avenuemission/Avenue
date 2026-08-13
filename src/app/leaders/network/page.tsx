@@ -15,6 +15,7 @@ export default function NetworkPage() {
   const [people, setPeople] = useState<NetworkPerson[]>([]);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<NetworkPerson | null>(null);
 
@@ -30,9 +31,11 @@ export default function NetworkPage() {
       if (!res.ok) throw new Error(data.error ?? "Could not load the network.");
       setPeople(data.people ?? []);
       setViewerId(data.viewerId ?? null);
+      setLoaded(true);
       return true;
     } catch (e) {
       setError((e as Error).message);
+      setLoaded(false);
       return false;
     } finally {
       setLoading(false);
@@ -129,21 +132,23 @@ export default function NetworkPage() {
           </p>
         </Reveal>
 
-        <Reveal className="mb-6 flex flex-wrap items-center justify-center gap-3">
-          <span className="text-sm text-[var(--muted)]">
-            {people.length} {people.length === 1 ? "person" : "people"} · you are sending out{" "}
-            {mine.length}
-          </span>
-          <button
-            onClick={() => setAdding((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-white transition-all hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add someone you sent out
-          </button>
-        </Reveal>
+        {loaded && (
+          <Reveal className="mb-6 flex flex-wrap items-center justify-center gap-3">
+            <span className="text-sm text-[var(--muted)]">
+              {people.length} {people.length === 1 ? "person" : "people"} · you are sending out{" "}
+              {mine.length}
+            </span>
+            <button
+              onClick={() => setAdding((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-white transition-all hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add someone you sent out
+            </button>
+          </Reveal>
+        )}
 
-        {adding && (
+        {adding && loaded && (
           <Reveal className="mx-auto mb-6 max-w-xl">
             <form onSubmit={submitAdd} className="panel space-y-3 p-6">
               <span className="eyebrow">Someone you sent out</span>
@@ -190,26 +195,27 @@ export default function NetworkPage() {
           </div>
         )}
 
-        {people.length === 0 ? (
-          <Reveal className="mx-auto max-w-xl">
-            <div className="panel p-10 text-center">
-              <Users className="mx-auto mb-4 h-10 w-10 text-[var(--accent)]" />
-              <h2 className="mb-2 text-xl font-semibold text-white">Nobody here yet</h2>
-              <p className="text-sm text-[var(--muted)]">
-                Add the first person you sent out and the network starts from there.
-              </p>
-            </div>
-          </Reveal>
-        ) : (
-          <Reveal>
-            <NetworkGraph
-              people={people}
-              viewerId={viewerId}
-              selectedId={selected?.id ?? null}
-              onSelect={setSelected}
-            />
-          </Reveal>
-        )}
+        {loaded &&
+          (people.length === 0 ? (
+            <Reveal className="mx-auto max-w-xl">
+              <div className="panel p-10 text-center">
+                <Users className="mx-auto mb-4 h-10 w-10 text-[var(--accent)]" />
+                <h2 className="mb-2 text-xl font-semibold text-white">Nobody here yet</h2>
+                <p className="text-sm text-[var(--muted)]">
+                  Add the first person you sent out and the network starts from there.
+                </p>
+              </div>
+            </Reveal>
+          ) : (
+            <Reveal>
+              <NetworkGraph
+                people={people}
+                viewerId={viewerId}
+                selectedId={selected?.id ?? null}
+                onSelect={setSelected}
+              />
+            </Reveal>
+          ))}
 
         {selected && (
           <div className="mx-auto mt-6 max-w-xl">
