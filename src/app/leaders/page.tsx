@@ -19,6 +19,7 @@ import {
   BarChart2,
   Lock,
   ChevronDown,
+  Network,
 } from "lucide-react";
 
 // Calendar URLs
@@ -34,6 +35,8 @@ export default function LeadersPage() {
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [pendingSender, setPendingSender] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -52,12 +55,40 @@ export default function LeadersPage() {
         .catch(() => {
           setAccessChecked(true);
         });
+
+      // Has someone claimed to have sent this person out?
+      fetch(`/api/network?email=${encodeURIComponent(currentUser.email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          const me = data.people?.find((p: { id: string }) => p.id === data.viewerId);
+          if (!me?.sentOutBy || me.linkStatus === "confirmed") return;
+          const sender = data.people.find((p: { id: string }) => p.id === me.sentOutBy);
+          setPendingSender(sender?.firstName ?? "Someone");
+        })
+        .catch(() => {
+          // The banner is a nicety. A failure here must not break the dashboard.
+        });
     }
   }, [router]);
 
   const handleLogout = () => {
     logout();
     router.push("/");
+  };
+
+  const answerPending = async (action: "confirm" | "decline") => {
+    if (!user) return;
+    setConfirming(true);
+    try {
+      await fetch("/api/network", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action, actorEmail: user.email }),
+      });
+      setPendingSender(null);
+    } finally {
+      setConfirming(false);
+    }
   };
 
   if (!mounted || !user) {
@@ -71,9 +102,10 @@ export default function LeadersPage() {
   // Cards that require full_access
   const restrictedCards = ["training", "study", "resources"];
 
-  // Featured up top. Discipleship Network joins these once its page exists.
+  // Featured up top.
   const primaryCards = [
     { id: "training", title: "Leader Training", icon: Video, href: "/leaders/training" },
+    { id: "network", title: "Discipleship Network", icon: Network, href: "/leaders/network" },
     { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
   ];
 
@@ -124,13 +156,41 @@ export default function LeadersPage() {
           </p>
         </Reveal>
 
+        {/* Someone says they sent you out */}
+        {pendingSender && (
+          <Reveal className="mx-auto mb-5 max-w-4xl">
+            <div className="panel p-6">
+              <span className="eyebrow">Discipleship Network</span>
+              <p className="mt-2 text-white">
+                {pendingSender} says they sent you out.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  onClick={() => answerPending("confirm")}
+                  disabled={confirming}
+                  className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => answerPending("decline")}
+                  disabled={confirming}
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-white transition-all hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] disabled:opacity-50"
+                >
+                  Not right
+                </button>
+              </div>
+            </div>
+          </Reveal>
+        )}
+
         {/* My Profile */}
         <Reveal className="max-w-4xl mx-auto mb-5">
           <ProfileCard email={user.email} fallbackName={user.name} collapsible />
         </Reveal>
 
         {/* Featured */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
           {primaryCards.map((card, index) => {
             const restricted = isRestricted(card.id);
 
