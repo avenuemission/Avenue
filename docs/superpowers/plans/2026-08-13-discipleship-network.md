@@ -1045,15 +1045,18 @@ function splitName(full: string, email: string) {
 // Every leader gets a node the first time they touch the network, so the
 // accounts that predate this table need no manual backfill. Returns null
 // when the email is not a leader at all.
+//
+// The `leaders` check MUST run first and unconditionally, before any
+// network_people lookup. Every /api/network request is gated by a non-null
+// return from this function, and section 4.1 of the design spec requires that
+// gate to mean "is a leader". Checking network_people first would let a
+// non-null return happen for anyone who merely has a network_people row,
+// including people who were only ever NAMED by someone else's "add" and never
+// signed up or consented to anything. That would let anyone who knows such a
+// person's email read the entire graph: every id, name, email and avatar URL
+// in it, which defeats the whole point of the gate. Do not reorder this.
 async function ensureNode(email: string): Promise<Row | null> {
   const db = getSupabaseAdmin();
-
-  const { data: existing } = await db
-    .from("network_people")
-    .select(COLUMNS)
-    .eq("email", email)
-    .maybeSingle();
-  if (existing) return existing as Row;
 
   const { data: leader } = await db
     .from("leaders")
@@ -1061,6 +1064,13 @@ async function ensureNode(email: string): Promise<Row | null> {
     .eq("email", email)
     .maybeSingle();
   if (!leader) return null;
+
+  const { data: existing } = await db
+    .from("network_people")
+    .select(COLUMNS)
+    .eq("email", email)
+    .maybeSingle();
+  if (existing) return existing as Row;
 
   const { first, last } = splitName(String(leader.name ?? ""), email);
   const { data, error } = await db
