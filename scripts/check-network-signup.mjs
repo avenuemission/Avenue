@@ -47,6 +47,10 @@ try {
   if (!node) { console.log("FAIL no node"); failures++; }
   if (node && node.id !== seed.id) { console.log("FAIL created a duplicate instead of claiming"); failures++; }
   if (node && node.joined !== true) { console.log("FAIL node was not marked joined"); failures++; }
+  if (node && node.first_name !== "Placeholder") {
+    console.log("FAIL discipler-entered first_name was overwritten:", node.first_name);
+    failures++;
+  }
 
   console.log(failures === 0 ? "OK: signup claims the existing node" : `${failures} failure(s)`);
 } finally {

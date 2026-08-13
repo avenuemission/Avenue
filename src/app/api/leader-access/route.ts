@@ -95,7 +95,10 @@ async function saveLeader(leader: LeaderRecord): Promise<void> {
 //
 // This is a convenience, not a guarantee: /api/network creates a node
 // lazily for any leader who does not have one. That is why a failure
-// here is logged and swallowed rather than blocking a signup.
+// here never blocks a signup: it is logged and swallowed instead,
+// whether it is a thrown JS exception or a query-level { error } from
+// supabase-js (RLS denials and constraint violations do not throw,
+// they come back in { error }, so both paths are logged explicitly).
 async function claimNetworkNode(email: string, name: string): Promise<void> {
   try {
     const db = getSupabaseAdmin();
@@ -111,22 +114,28 @@ async function claimNetworkNode(email: string, name: string): Promise<void> {
       .maybeSingle();
 
     if (existing) {
-      await db
+      const { error } = await db
         .from("network_people")
         .update({ joined: true, first_name: existing.first_name || first, updated_at: now })
         .eq("id", existing.id);
+      if (error) {
+        console.error("claimNetworkNode failed:", error.message, "email:", email);
+      }
       return;
     }
 
-    await db.from("network_people").insert({
+    const { error } = await db.from("network_people").insert({
       email,
       first_name: first,
       last_name: last,
       joined: true,
       added_by_email: email,
     });
+    if (error) {
+      console.error("claimNetworkNode failed:", error.message, "email:", email);
+    }
   } catch (e) {
-    console.error("claimNetworkNode failed:", (e as Error).message);
+    console.error("claimNetworkNode failed:", (e as Error).message, "email:", email);
   }
 }
 
