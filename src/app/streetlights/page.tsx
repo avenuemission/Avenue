@@ -31,13 +31,6 @@ interface MissionInitiative {
 }
 
 export default function StreetlightsPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    idea: "",
-    website: "",
-  });
-  const [submitted, setSubmitted] = useState(false);
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [selectedMission, setSelectedMission] = useState<MissionInitiative | null>(null);
@@ -113,51 +106,6 @@ export default function StreetlightsPage() {
         setSupportSubmitted(true);
         setSupportForm({ name: "", email: "", supportType: "", message: "", website: "" });
         setTimeout(() => setSupportSubmitted(false), 3000);
-      } catch (error) {
-        console.error("Form submission error:", error);
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.idea) {
-      try {
-        // Submit to Netlify Forms
-        const netlifyData = new FormData();
-        netlifyData.append("form-name", "idea-submission");
-        netlifyData.append("name", formData.name);
-        netlifyData.append("email", formData.email);
-        netlifyData.append("idea", formData.idea);
-        await fetch("/", {
-          method: "POST",
-          body: netlifyData,
-        });
-
-        // Send email notification
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "ideaSubmission",
-            data: { ...formData },
-          }),
-        });
-
-        // Save to Supabase (admin dashboard)
-        await fetch("/api/submissions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            form_type: "idea-submission",
-            name: formData.name,
-            email: formData.email,
-            data: { idea: formData.idea },
-          }),
-        });
-        setSubmitted(true);
-        setFormData({ name: "", email: "", idea: "", website: "" });
-        setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
       }
@@ -341,91 +289,10 @@ export default function StreetlightsPage() {
           <p className="text-white italic text-sm md:text-base max-w-2xl mx-auto">
             As humanity carries the breath of God, we also carry the breath of
             creativity. We love ideas, both big and small, and are keen to
-            support and facilitate. Please let us know your ideas below:
+            support and facilitate.
           </p>
-        </div>
-      </section>
 
-      {/* Idea Submission Section */}
-      <section className="bg-black py-16 md:py-24">
-        <div className="max-w-lg mx-auto px-6 sm:px-10">
-          <h3 className="text-2xl md:text-3xl font-semibold text-white text-center mb-8 uppercase tracking-wider">
-            Tell Us Your Ideas
-          </h3>
-
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-            data-netlify="true"
-            name="idea-submission"
-          >
-            <input type="hidden" name="form-name" value="idea-submission" />
-            {/* Honeypot field - hidden from humans, bots will fill it */}
-            <input
-              type="text"
-              name="website"
-              value={formData.website}
-              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
-              tabIndex={-1}
-              autoComplete="off"
-            />
-            <div>
-              <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
-                Name (Optional)
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
-                Email (Optional)
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-400 text-xs md:text-sm mb-2 uppercase tracking-wider">
-                Your Ideas
-              </label>
-              <textarea
-                value={formData.idea}
-                onChange={(e) =>
-                  setFormData({ ...formData, idea: e.target.value })
-                }
-                rows={6}
-                className="w-full bg-transparent border-2 border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-[var(--accent)] transition-colors resize-none"
-                required
-              />
-            </div>
-            <div className="text-center">
-              <button
-                type="submit"
-                className="bg-[var(--accent)] text-white px-12 py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
-              >
-                Submit
-              </button>
-            </div>
-            {submitted && (
-              <p className="text-green-400 text-sm text-center">
-                Thank you for sharing your idea!
-              </p>
-            )}
-          </form>
-
-          <p className="text-white italic text-sm md:text-base text-center mt-12">
+          <p className="text-white italic text-sm md:text-base mt-8">
             &ldquo;In the beginning God created the heavens and the earth.&rdquo;
           </p>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { login, signup } from "@/lib/auth";
@@ -17,6 +17,14 @@ export default function LoginPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // /login#signup opens straight into the signup form, so the "Become a
+  // Pathway Leader" call to action does not land people on a login box they
+  // have no account for. A hash rather than a query param keeps this out of
+  // useSearchParams, which would need a Suspense boundary to build.
+  useEffect(() => {
+    if (window.location.hash === "#signup") setIsSignup(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
