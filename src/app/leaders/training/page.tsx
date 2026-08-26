@@ -306,10 +306,16 @@ export default function TrainingPage() {
     };
   }, [accessChecked, hasAccess, user]);
 
-  // Collects the current watched episode ids and completed module ids from
-  // state and PUTs them. Reads from phasesRef rather than closing over
-  // `phases`, since this fires up to 800ms after the tick that scheduled it.
-  const saveProgress = useCallback(async () => {
+  // Whether a PUT is currently in flight, and whether state changed again
+  // while it was. These are refs, not state, because they gate synchronous
+  // decisions inside runSave and must never trigger a render themselves.
+  const inFlightRef = useRef(false);
+  const dirtyRef = useRef(false);
+
+  // A single save attempt. Collects the current watched episode ids and
+  // completed module ids from phasesRef (not `phases`, since this can fire
+  // long after the tick that scheduled it) and PUTs them.
+  const performSave = useCallback(async () => {
     if (!user) return;
     const currentPhases = phasesRef.current;
     const watchedEpisodes = currentPhases.flatMap((phase) =>
@@ -318,8 +324,6 @@ export default function TrainingPage() {
     const completedModules = currentPhases.flatMap((phase) =>
       phase.modules.filter((m) => m.completed).map((m) => m.id)
     );
-    setSaving(true);
-    setSaveError(null);
     try {
       const res = await fetch("/api/leader-training", {
         method: "PUT",
@@ -327,14 +331,38 @@ export default function TrainingPage() {
         body: JSON.stringify({ email: user.email, watchedEpisodes, completedModules }),
       });
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      setSaveError(null);
     } catch {
       // Never revert a leader's tick because the network failed. Local
       // state is left exactly as it is; only the error banner changes.
       setSaveError("Could not save your progress. It is kept on this page, try again shortly.");
-    } finally {
-      setSaving(false);
     }
   }, [user]);
+
+  // Serialises saves so at most one PUT is ever in flight. Two overlapping
+  // full-overwrite PUTs race: whichever response lands last at the server
+  // wins, and that is not necessarily the one holding the latest tick. If a
+  // tick arrives while a save is already running, it is marked dirty rather
+  // than firing a second request; the moment the in-flight save finishes,
+  // one more save goes out carrying whatever is current at that point. That
+  // gives last-write-wins with correct ordering, at the cost of an extra
+  // round trip on a slow connection, never a lost tick.
+  const runSave = useCallback(async () => {
+    if (inFlightRef.current) {
+      dirtyRef.current = true;
+      return;
+    }
+    inFlightRef.current = true;
+    setSaving(true);
+    let more = true;
+    while (more) {
+      dirtyRef.current = false;
+      await performSave();
+      more = dirtyRef.current;
+    }
+    inFlightRef.current = false;
+    setSaving(false);
+  }, [performSave]);
 
   // Every tick clears the pending timeout and schedules a new one 800ms out,
   // so rapid ticking sends one request rather than one per click.
@@ -342,9 +370,9 @@ export default function TrainingPage() {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       saveTimeoutRef.current = null;
-      saveProgress();
+      runSave();
     }, 800);
-  }, [saveProgress]);
+  }, [runSave]);
 
   // Clear the pending timeout on unmount so a save cannot fire after the
   // component is gone.
