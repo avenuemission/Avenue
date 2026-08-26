@@ -7,6 +7,20 @@ const LEADER = "info@avenuemission.com";
 const TEST_EMAIL = "network-check-temp@example.invalid";
 const STRANGER_EMAIL = "network-check-stranger@example.invalid";
 
+// Apprenticeship-step and depth checks need a viewer with a fully isolated,
+// zero-descendant starting point, which neither real leader account can
+// promise (production data already hangs real people off them). Rather than
+// touch a real account, we register a throwaway leader of our own: a row in
+// `leaders` with an @example.invalid email, which is exactly what makes
+// ensureNode() treat it as a real leader for the duration of this run. It
+// gets a network_people node the same way any first-time leader does, and
+// everything about it, including the `leaders` row itself, is deleted by
+// exact email in cleanup().
+const APPRENTICE_LEADER_ID = "network-check-apprentice-leader";
+const APPRENTICE_LEADER_EMAIL = "network-check-apprentice-leader@example.invalid";
+const APPRENTICE_CHILD_EMAIL = "network-check-apprentice-child@example.invalid";
+const APPRENTICE_GRANDCHILD_EMAIL = "network-check-apprentice-grandchild@example.invalid";
+
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -32,6 +46,10 @@ const post = (body, headers = {}) =>
 async function cleanup() {
   await db.from("network_people").delete().eq("email", TEST_EMAIL);
   await db.from("network_people").delete().eq("email", STRANGER_EMAIL);
+  await db.from("network_people").delete().eq("email", APPRENTICE_LEADER_EMAIL);
+  await db.from("network_people").delete().eq("email", APPRENTICE_CHILD_EMAIL);
+  await db.from("network_people").delete().eq("email", APPRENTICE_GRANDCHILD_EMAIL);
+  await db.from("leaders").delete().eq("email", APPRENTICE_LEADER_EMAIL);
 }
 
 // The LEADER row is real production data (info@avenuemission.com), not a
@@ -57,6 +75,7 @@ try {
   const viewerPerson = graph.people?.find((p) => p.id === graph.viewerId);
   check("viewer's own node is present in people", !!viewerPerson);
   const expectedKeys = [
+    "apprenticeStep",
     "avatarUrl",
     "email",
     "firstName",
@@ -94,6 +113,26 @@ try {
     viewerPerson?.linkStatus === "pending" || viewerPerson?.linkStatus === "confirmed"
   );
   check("viewer.joined is a boolean", typeof viewerPerson?.joined === "boolean");
+  check(
+    "viewer.apprenticeStep is an integer",
+    Number.isInteger(viewerPerson?.apprenticeStep),
+    String(viewerPerson?.apprenticeStep)
+  );
+  check(
+    "GET response carries a depth object",
+    typeof graph.depth === "object" && graph.depth !== null,
+    JSON.stringify(graph.depth)
+  );
+  check(
+    "depth.generations is a non-negative integer",
+    Number.isInteger(graph.depth?.generations) && graph.depth.generations >= 0,
+    String(graph.depth?.generations)
+  );
+  check(
+    "depth.people is a non-negative integer",
+    Number.isInteger(graph.depth?.people) && graph.depth.people >= 0,
+    String(graph.depth?.people)
+  );
 
   console.log("GET with an unknown email");
   const denied = await fetch(`${BASE}/api/network?email=nobody@example.invalid`);
@@ -284,6 +323,171 @@ try {
     .eq("id", leaderId)
     .maybeSingle();
   check("clears the leader's own sender", leaderAfter?.sent_out_by === null);
+
+  console.log("apprentice step: set on your own person succeeds and stores it");
+  // `row` (TEST_EMAIL) has sent_out_by === leaderId ever since the re-add
+  // (adopt path) above, and nothing since has changed that, so this is a
+  // genuine "person you sent out" for LEADER.
+  const ownStep = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: 3 });
+  check("own-person step set succeeds", ownStep.status === 200, JSON.stringify(ownStep.json));
+  const { data: ownStepRow } = await db
+    .from("network_people")
+    .select("apprentice_step")
+    .eq("id", row.id)
+    .maybeSingle();
+  check(
+    "own-person step is stored as 3",
+    ownStepRow?.apprentice_step === 3,
+    String(ownStepRow?.apprentice_step)
+  );
+
+  console.log("apprentice step: refused for someone you are not sending out");
+  // `stranger` has sent_out_by === null, so LEADER is not their sender.
+  const notMineStep = await post({
+    action: "set-apprentice-step",
+    actorEmail: LEADER,
+    id: stranger.id,
+    step: 2,
+  });
+  check(
+    "step on someone else's person is refused with 403",
+    notMineStep.status === 403,
+    JSON.stringify(notMineStep.json)
+  );
+
+  console.log("apprentice step: rejects out-of-range and non-integer values");
+  const stepTooHigh = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: 6 });
+  check("step of 6 is refused with 400", stepTooHigh.status === 400, JSON.stringify(stepTooHigh.json));
+
+  const stepNegative = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: -1 });
+  check("step of -1 is refused with 400", stepNegative.status === 400, JSON.stringify(stepNegative.json));
+
+  const stepFractional = await post({
+    action: "set-apprentice-step",
+    actorEmail: LEADER,
+    id: row.id,
+    step: 2.5,
+  });
+  check(
+    "step of 2.5 is refused with 400",
+    stepFractional.status === 400,
+    JSON.stringify(stepFractional.json)
+  );
+
+  const stepString = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: "3" });
+  check(
+    'step of "3" (a string, not a number) is refused with 400',
+    stepString.status === 400,
+    JSON.stringify(stepString.json)
+  );
+
+  console.log("none of the rejected step writes touched the stored value");
+  const { data: unchangedStepRow } = await db
+    .from("network_people")
+    .select("apprentice_step")
+    .eq("id", row.id)
+    .maybeSingle();
+  check(
+    "rejected 400s left apprentice_step at 3",
+    unchangedStepRow?.apprentice_step === 3,
+    String(unchangedStepRow?.apprentice_step)
+  );
+
+  console.log("GET carries apprenticeStep for every person");
+  const stepGraphRes = await fetch(`${BASE}/api/network?email=${encodeURIComponent(LEADER)}`);
+  const stepGraph = await stepGraphRes.json();
+  check(
+    "every person in GET has an integer apprenticeStep",
+    Array.isArray(stepGraph.people) &&
+      stepGraph.people.length > 0 &&
+      stepGraph.people.every(
+        (p) => typeof p.apprenticeStep === "number" && Number.isInteger(p.apprenticeStep)
+      ),
+    JSON.stringify(stepGraph.people?.map((p) => p.apprenticeStep))
+  );
+
+  console.log("depth: register a throwaway leader with zero descendants");
+  const { error: apprenticeLeaderErr } = await db.from("leaders").insert({
+    id: APPRENTICE_LEADER_ID,
+    email: APPRENTICE_LEADER_EMAIL,
+    name: "Apprentice Depth Check",
+  });
+  if (apprenticeLeaderErr) throw new Error(apprenticeLeaderErr.message);
+
+  console.log("depth: zero for a leader sending nobody out");
+  const zeroDepthRes = await fetch(
+    `${BASE}/api/network?email=${encodeURIComponent(APPRENTICE_LEADER_EMAIL)}`
+  );
+  const zeroDepthGraph = await zeroDepthRes.json();
+  check(
+    "fresh leader GET returns 200",
+    zeroDepthRes.status === 200,
+    JSON.stringify(zeroDepthGraph).slice(0, 200)
+  );
+  check(
+    "depth is generations:0, people:0 for a leader sending nobody out",
+    zeroDepthGraph.depth?.generations === 0 && zeroDepthGraph.depth?.people === 0,
+    JSON.stringify(zeroDepthGraph.depth)
+  );
+
+  console.log("depth: counts a two-generation chain correctly");
+  const chainChild = await post({
+    action: "add",
+    actorEmail: APPRENTICE_LEADER_EMAIL,
+    firstName: "Apprentice",
+    lastName: "Child",
+    email: APPRENTICE_CHILD_EMAIL,
+  });
+  check("adds the chain's first generation", chainChild.status === 200, JSON.stringify(chainChild.json));
+
+  const { data: childRow, error: childReadErr } = await db
+    .from("network_people")
+    .select("id")
+    .eq("email", APPRENTICE_CHILD_EMAIL)
+    .maybeSingle();
+  if (childReadErr) throw new Error(childReadErr.message);
+  check("chain's first generation was stored", !!childRow);
+
+  const { data: grandchildRow, error: grandchildErr } = await db
+    .from("network_people")
+    .insert({
+      email: APPRENTICE_GRANDCHILD_EMAIL,
+      first_name: "Apprentice",
+      last_name: "Grandchild",
+      sent_out_by: childRow.id,
+      link_status: "pending",
+      joined: false,
+      added_by_email: APPRENTICE_CHILD_EMAIL,
+    })
+    .select("id")
+    .single();
+  if (grandchildErr) throw new Error(grandchildErr.message);
+
+  const chainRes = await fetch(
+    `${BASE}/api/network?email=${encodeURIComponent(APPRENTICE_LEADER_EMAIL)}`
+  );
+  const chainGraph = await chainRes.json();
+  check(
+    "depth counts the two-generation chain as generations:2, people:2",
+    chainGraph.depth?.generations === 2 && chainGraph.depth?.people === 2,
+    JSON.stringify(chainGraph.depth)
+  );
+
+  console.log("apprentice step: refused when the person is a generation out of reach");
+  // The grandchild's sent_out_by is the CHILD, not the throwaway leader, so
+  // the leader trying to set the grandchild's step must be refused even
+  // though the leader can see the grandchild in their own network graph.
+  const grandchildStepAttempt = await post({
+    action: "set-apprentice-step",
+    actorEmail: APPRENTICE_LEADER_EMAIL,
+    id: grandchildRow.id,
+    step: 1,
+  });
+  check(
+    "skipping a generation to set a step is refused with 403",
+    grandchildStepAttempt.status === 403,
+    JSON.stringify(grandchildStepAttempt.json)
+  );
 
   console.log("reparent without an Authorization header");
   const reparentNoAuth = await post({ action: "reparent", id: row.id, newParentId: null });

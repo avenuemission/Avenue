@@ -10,9 +10,11 @@ interface Row {
   sent_out_by: string | null;
   link_status: "pending" | "confirmed";
   joined: boolean;
+  apprentice_step: number;
 }
 
-const COLUMNS = "id, email, first_name, last_name, sent_out_by, link_status, joined";
+const COLUMNS =
+  "id, email, first_name, last_name, sent_out_by, link_status, joined, apprentice_step";
 
 async function loadRows(): Promise<Row[]> {
   const { data, error } = await getSupabaseAdmin().from("network_people").select(COLUMNS);
@@ -36,6 +38,51 @@ async function loadAvatars(rows: Row[]): Promise<Map<string, string>> {
     if (profile.avatar_url) map.set(profile.email, profile.avatar_url);
   }
   return map;
+}
+
+// Ferguson's Kingdom Building measure: how many generations descend from the
+// viewer, and how many people that is in total. Walked in memory from the
+// rows already loaded, breadth-first, one level at a time.
+//
+// The graph is supposed to be a cycle-free forest (wouldCreateCycle guards
+// every write that could introduce a loop), but this walk does not trust
+// that: it is the second line of defence, same shape as networkLayout.ts's
+// walkRevisits. A node is only ever added to `visited` once, so a corrupted
+// row that points back into an ancestor can make a child get re-offered on
+// a later level, but it can never be re-counted or re-queued once seen, and
+// the loop always terminates because the frontier can only shrink toward
+// nodes not yet visited from a finite set.
+function computeDepth(rows: Row[], viewerId: string): { generations: number; people: number } {
+  const childrenOf = new Map<string, string[]>();
+  for (const r of rows) {
+    if (r.sent_out_by) {
+      const list = childrenOf.get(r.sent_out_by) ?? [];
+      list.push(r.id);
+      childrenOf.set(r.sent_out_by, list);
+    }
+  }
+
+  const visited = new Set<string>([viewerId]);
+  let people = 0;
+  let generations = 0;
+  let frontier = [viewerId];
+
+  while (frontier.length > 0) {
+    const next: string[] = [];
+    for (const id of frontier) {
+      for (const childId of childrenOf.get(id) ?? []) {
+        if (visited.has(childId)) continue;
+        visited.add(childId);
+        next.push(childId);
+        people++;
+      }
+    }
+    if (next.length === 0) break;
+    generations++;
+    frontier = next;
+  }
+
+  return { generations, people };
 }
 
 function splitName(full: string, email: string) {
@@ -111,9 +158,11 @@ export async function GET(request: NextRequest) {
 
     const rows = await loadRows();
     const avatars = await loadAvatars(rows);
+    const depth = computeDepth(rows, viewer.id);
 
     return NextResponse.json({
       viewerId: viewer.id,
+      depth,
       people: rows.map((r) => ({
         id: r.id,
         firstName: r.first_name,
@@ -123,6 +172,7 @@ export async function GET(request: NextRequest) {
         sentOutBy: r.sent_out_by,
         linkStatus: r.link_status,
         joined: r.joined,
+        apprenticeStep: r.apprentice_step,
       })),
     });
   } catch (e) {
@@ -251,6 +301,42 @@ export async function POST(request: NextRequest) {
         .update({ link_status: "confirmed", updated_at: now })
         .eq("id", actor.id);
       if (error) throw new Error(error.message);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "set-apprentice-step") {
+      const id = String(body.id ?? "");
+      if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+      const step = body.step;
+      if (typeof step !== "number" || !Number.isInteger(step) || step < 0 || step > 5) {
+        return NextResponse.json(
+          { error: "step must be an integer from 0 to 5" },
+          { status: 400 }
+        );
+      }
+
+      // Authorisation lives in the filter itself: the row is only touched
+      // when its id AND its sent_out_by match this request in the same
+      // update. There is no separate read to compare against in JavaScript
+      // first, so there is no window where a stale read could approve a
+      // write that the database itself would not. A zero-row result means
+      // either the person does not exist or the actor is not who sent them
+      // out, and both collapse to the same 403: the actor gets no signal
+      // about which.
+      const { data, error } = await db
+        .from("network_people")
+        .update({ apprentice_step: step, updated_at: now })
+        .eq("id", id)
+        .eq("sent_out_by", actor.id)
+        .select("id");
+      if (error) throw new Error(error.message);
+      if (!data || data.length === 0) {
+        return NextResponse.json(
+          { error: "You can only set the step for someone you sent out" },
+          { status: 403 }
+        );
+      }
       return NextResponse.json({ ok: true });
     }
 
