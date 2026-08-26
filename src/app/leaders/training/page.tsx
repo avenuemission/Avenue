@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
@@ -187,6 +187,27 @@ const INITIAL_PHASES: Phase[] = [
   },
 ];
 
+type CheckpointStatus = "none" | "requested" | "complete";
+
+// Reconciles saved progress (id lists from the database) into a fresh copy of
+// INITIAL_PHASES. Ids saved that no longer exist in the content are ignored;
+// content with no matching saved id simply stays false.
+function reconcilePhases(
+  watchedEpisodes: string[],
+  completedModules: string[]
+): Phase[] {
+  const watchedSet = new Set(watchedEpisodes);
+  const completedSet = new Set(completedModules);
+  return INITIAL_PHASES.map((phase) => ({
+    ...phase,
+    modules: phase.modules.map((m) => ({
+      ...m,
+      completed: completedSet.has(m.id),
+      episodes: m.episodes?.map((e) => ({ ...e, watched: watchedSet.has(e.id) })),
+    })),
+  }));
+}
+
 // No separate component needed - inline in the layout below
 
 // Module Type Icons
@@ -214,6 +235,24 @@ export default function TrainingPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [videoModal, setVideoModal] = useState<{ youtubeId: string; title: string } | null>(null);
 
+  // Progress load state. Task 5 consumes checkpointStatus to lock phase 3
+  // and render the Calling checkpoint; this task only fetches it and holds
+  // it, so it is intentionally unread here.
+  const [progressLoaded, setProgressLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- read by Task 5
+  const [checkpointStatus, setCheckpointStatus] = useState<CheckpointStatus | null>(null);
+
+  // Debounced save state.
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const phasesRef = useRef<Phase[]>(phases);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    phasesRef.current = phases;
+  }, [phases]);
+
   useEffect(() => {
     setMounted(true);
     const currentUser = getCurrentUser();
@@ -236,6 +275,84 @@ export default function TrainingPage() {
         });
     }
   }, [router]);
+
+  // Load saved progress once the session and access checks have both passed.
+  // Until this resolves the page keeps showing its loading treatment: a
+  // returning leader must never see an empty journey flash before their
+  // watched episodes and completed modules land.
+  useEffect(() => {
+    if (!accessChecked || !hasAccess || !user) return;
+    let cancelled = false;
+    fetch(`/api/leader-training?email=${encodeURIComponent(user.email)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load progress (${res.status})`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const progress = data.progress ?? {};
+        setPhases(
+          reconcilePhases(progress.watchedEpisodes ?? [], progress.completedModules ?? [])
+        );
+        setCheckpointStatus((progress.checkpointStatus as CheckpointStatus) ?? "none");
+        setProgressLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError("Could not load your training progress. Please refresh the page to try again.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessChecked, hasAccess, user]);
+
+  // Collects the current watched episode ids and completed module ids from
+  // state and PUTs them. Reads from phasesRef rather than closing over
+  // `phases`, since this fires up to 800ms after the tick that scheduled it.
+  const saveProgress = useCallback(async () => {
+    if (!user) return;
+    const currentPhases = phasesRef.current;
+    const watchedEpisodes = currentPhases.flatMap((phase) =>
+      phase.modules.flatMap((m) => (m.episodes ?? []).filter((e) => e.watched).map((e) => e.id))
+    );
+    const completedModules = currentPhases.flatMap((phase) =>
+      phase.modules.filter((m) => m.completed).map((m) => m.id)
+    );
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/leader-training", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, watchedEpisodes, completedModules }),
+      });
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+    } catch {
+      // Never revert a leader's tick because the network failed. Local
+      // state is left exactly as it is; only the error banner changes.
+      setSaveError("Could not save your progress. It is kept on this page, try again shortly.");
+    } finally {
+      setSaving(false);
+    }
+  }, [user]);
+
+  // Every tick clears the pending timeout and schedules a new one 800ms out,
+  // so rapid ticking sends one request rather than one per click.
+  const scheduleSave = useCallback(() => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveTimeoutRef.current = null;
+      saveProgress();
+    }, 800);
+  }, [saveProgress]);
+
+  // Clear the pending timeout on unmount so a save cannot fire after the
+  // component is gone.
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -260,6 +377,7 @@ export default function TrainingPage() {
         return phase;
       })
     );
+    scheduleSave();
   };
 
   const toggleEpisodeWatched = (phaseId: string, moduleId: string, episodeId: string) => {
@@ -277,6 +395,7 @@ export default function TrainingPage() {
         return { ...phase, modules: updatedModules };
       })
     );
+    scheduleSave();
   };
 
   const getPhaseProgress = (phase: Phase) => {
@@ -299,6 +418,27 @@ export default function TrainingPage() {
   };
 
   if (!mounted || !user || !accessChecked || !hasAccess) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  // A load failure is shown plainly rather than silently rendering an empty
+  // journey, which would look identical to having lost every tick.
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="text-white text-center max-w-md">
+          <p className="mb-2">{loadError}</p>
+          <p className="text-gray-400 text-sm">Your saved progress has not been touched.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!progressLoaded) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>
@@ -360,6 +500,12 @@ export default function TrainingPage() {
               </span>
             </div>
           </div>
+          {saving && (
+            <span className="text-gray-500 text-xs hidden sm:inline">Saving...</span>
+          )}
+          {!saving && saveError && (
+            <span className="text-red-400 text-xs hidden sm:inline max-w-[220px]">{saveError}</span>
+          )}
           <span className="text-gray-400 text-sm hidden sm:inline">Welcome, {user.name}</span>
           <button onClick={handleLogout} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
             <LogOut className="w-4 h-4" />
