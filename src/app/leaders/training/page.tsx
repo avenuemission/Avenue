@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
 import EpisodeCarousel from "@/components/ui/EpisodeCarousel";
+import CheckinHistory, { CheckinEntry } from "@/components/ui/CheckinHistory";
+import { mondayOf, recentMondays } from "@/lib/weeks";
 import {
   LogOut,
   ArrowLeft,
@@ -16,6 +18,9 @@ import {
   BookOpen,
   Lightbulb,
   X,
+  Heart,
+  Users,
+  MessageCircle,
 } from "lucide-react";
 
 // Phase Types
@@ -265,6 +270,58 @@ const ModuleTypeIcon = ({ type }: { type: Module["type"] }) => {
   }
 };
 
+// The four RPMS gauges from Ferguson's Multiplier, in the fixed order the
+// weekly check-in and the crash course placeholder both use.
+const RPMS_GAUGES: { key: "relational" | "physical" | "mental" | "spiritual"; label: string }[] = [
+  { key: "relational", label: "Relational" },
+  { key: "physical", label: "Physical" },
+  { key: "mental", label: "Mental" },
+  { key: "spiritual", label: "Spiritual" },
+];
+
+// How many recent weeks the history strip shows.
+const CHECKIN_HISTORY_WEEKS = 12;
+
+// One gauge's 1-to-10 picker: ten small buttons, one tap sets the score.
+// This is the whole "four taps" the check-in is meant to cost, times four
+// gauges. No slider, no text field, nothing that needs explaining.
+function ScoreRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm text-white">{label}</span>
+        <span className="text-sm font-semibold text-[var(--accent)] tabular-nums">{value}/10</span>
+      </div>
+      <div className="flex gap-1">
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChange(n)}
+            aria-label={`${label} ${n} out of 10`}
+            aria-pressed={value === n}
+            className={`flex-1 h-8 rounded-md text-xs font-medium transition-colors ${
+              n <= value
+                ? "bg-[var(--accent)] text-white"
+                : "bg-[var(--surface-hover)] text-[var(--muted)] hover:bg-[var(--border-strong)]"
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function TrainingPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -283,6 +340,25 @@ export default function TrainingPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- read by Task 5
   const [checkpointStatus, setCheckpointStatus] = useState<CheckpointStatus | null>(null);
+
+  // Phase 4's weekly RPMS check-ins. This is a completely separate data
+  // source and save path from the training-progress machinery above: it
+  // talks to /api/leader-checkins, not /api/leader-training, has no revision
+  // guard, and its own PUT is a plain one-shot save rather than a debounced,
+  // merge-on-conflict one. The two must never be routed through each other.
+  const [checkins, setCheckins] = useState<CheckinEntry[]>([]);
+  const [checkinsLoaded, setCheckinsLoaded] = useState(false);
+  const [checkinForm, setCheckinForm] = useState({
+    relational: 5,
+    physical: 5,
+    mental: 5,
+    spiritual: 5,
+    reflection: "",
+  });
+  const [checkinSaving, setCheckinSaving] = useState(false);
+  const [checkinSaveError, setCheckinSaveError] = useState<string | null>(null);
+  const [checkinSaved, setCheckinSaved] = useState(false);
+  const checkinSavedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced save state.
   const [saving, setSaving] = useState(false);
@@ -401,6 +477,50 @@ export default function TrainingPage() {
       .catch(() => {
         if (cancelled) return;
         setLoadError("Could not load your training progress. Please refresh the page to try again.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessChecked, hasAccess, user]);
+
+  // Load this leader's RPMS check-ins, independently of training progress
+  // above. If the current week already has an entry, the form opens
+  // pre-filled with it, so re-opening the week edits it rather than the
+  // leader re-entering scores from scratch and the PUT's upsert creating a
+  // false sense of a second row (it does not; the API upserts on
+  // (email, week_start), but the form must still look pre-filled).
+  useEffect(() => {
+    if (!accessChecked || !hasAccess || !user) return;
+    let cancelled = false;
+    fetch(`/api/leader-checkins?email=${encodeURIComponent(user.email)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load check-ins (${res.status})`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const list: CheckinEntry[] = data.checkins ?? [];
+        setCheckins(list);
+        const currentWeek = mondayOf(new Date());
+        const existing = list.find((c) => c.weekStart === currentWeek);
+        if (existing) {
+          setCheckinForm({
+            relational: existing.relational,
+            physical: existing.physical,
+            mental: existing.mental,
+            spiritual: existing.spiritual,
+            reflection: existing.reflection ?? "",
+          });
+        }
+        setCheckinsLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // The rest of the page (training progress) does not depend on this,
+        // so a failure here is shown locally in the check-in card rather
+        // than blocking the whole page.
+        setCheckinsLoaded(true);
+        setCheckinSaveError("Could not load your check-in history. Refresh to try again.");
       });
     return () => {
       cancelled = true;
@@ -621,6 +741,7 @@ export default function TrainingPage() {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       if (conflictNoticeTimeoutRef.current) clearTimeout(conflictNoticeTimeoutRef.current);
+      if (checkinSavedTimeoutRef.current) clearTimeout(checkinSavedTimeoutRef.current);
     };
   }, []);
 
@@ -666,6 +787,51 @@ export default function TrainingPage() {
       })
     );
     scheduleSave();
+  };
+
+  // Saves the current week's RPMS check-in. Deliberately a plain one-shot
+  // PUT, not routed through scheduleSave/runSave/performSave above: those
+  // exist to serialise and merge training-progress saves against a revision
+  // guard, none of which applies here. The API's upsert on
+  // (email, week_start) is what makes re-saving the same week edit it
+  // rather than create a second row.
+  const saveCheckin = async () => {
+    if (!user) return;
+    setCheckinSaving(true);
+    setCheckinSaveError(null);
+    const weekStart = mondayOf(new Date());
+    try {
+      const res = await fetch("/api/leader-checkins", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          weekStart,
+          relational: checkinForm.relational,
+          physical: checkinForm.physical,
+          mental: checkinForm.mental,
+          spiritual: checkinForm.spiritual,
+          reflection: checkinForm.reflection.trim() === "" ? null : checkinForm.reflection,
+        }),
+      });
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      const body = await res.json();
+      const saved: CheckinEntry = body.checkin;
+      setCheckins((prev) => {
+        const others = prev.filter((c) => c.weekStart !== saved.weekStart);
+        return [saved, ...others].sort((a, b) => (a.weekStart < b.weekStart ? 1 : -1));
+      });
+      if (checkinSavedTimeoutRef.current) clearTimeout(checkinSavedTimeoutRef.current);
+      setCheckinSaved(true);
+      checkinSavedTimeoutRef.current = setTimeout(() => {
+        checkinSavedTimeoutRef.current = null;
+        setCheckinSaved(false);
+      }, 3000);
+    } catch {
+      setCheckinSaveError("Could not save your check-in. It is kept on this page, try again shortly.");
+    } finally {
+      setCheckinSaving(false);
+    }
   };
 
   const getPhaseProgress = (phase: Phase) => {
@@ -840,6 +1006,11 @@ export default function TrainingPage() {
                 {phases.map((phase, i) => {
                   const progress = getPhaseProgress(phase);
                   const isActive = expandedPhase === phase.id;
+                  // Growth is an ongoing rhythm, not a checklist, so its node
+                  // never reads as a percentage: the ring stays full and a
+                  // single steady colour, standing for "always in motion"
+                  // rather than "this much done".
+                  const isOngoing = phase.id === "phase4";
                   // Distribute 5 phases evenly: start from top (-90°)
                   const angleDeg = -90 + (360 / phases.length) * i;
                   const angleRad = (angleDeg * Math.PI) / 180;
@@ -849,13 +1020,15 @@ export default function TrainingPage() {
 
                   const r = 28;
                   const circumference = 2 * Math.PI * r;
-                  const strokeDashoffset = circumference * (1 - progress.percent / 100);
+                  const strokeDashoffset = isOngoing ? 0 : circumference * (1 - progress.percent / 100);
                   const trackColor = "rgba(255,255,255,0.08)";
-                  const progressColor = progress.percent === 100
-                    ? "#22c55e"
-                    : isActive
-                      ? "#60a5fa"
-                      : "#3b82f6";
+                  const progressColor = isOngoing
+                    ? "var(--accent)"
+                    : progress.percent === 100
+                      ? "#22c55e"
+                      : isActive
+                        ? "#60a5fa"
+                        : "#3b82f6";
 
                   return (
                     <button
@@ -869,7 +1042,7 @@ export default function TrainingPage() {
                         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 64 64">
                           {/* Track */}
                           <circle cx="32" cy="32" r={r} fill="none" stroke={trackColor} strokeWidth="3.5" />
-                          {/* Progress arc */}
+                          {/* Progress arc (full and steady for the ongoing phase) */}
                           <circle
                             cx="32" cy="32" r={r}
                             fill="none"
@@ -885,9 +1058,11 @@ export default function TrainingPage() {
                         <div className={`absolute inset-[5px] rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
                           isActive
                             ? "bg-[var(--accent)] text-white"
-                            : progress.percent === 100
-                              ? "bg-green-600 text-white"
-                              : "bg-gray-800 text-gray-300 group-hover:bg-gray-700 group-hover:text-white"
+                            : isOngoing
+                              ? "bg-[var(--accent)]/20 text-[var(--accent)]"
+                              : progress.percent === 100
+                                ? "bg-green-600 text-white"
+                                : "bg-gray-800 text-gray-300 group-hover:bg-gray-700 group-hover:text-white"
                         }`}>
                           {phase.number}
                         </div>
@@ -908,11 +1083,12 @@ export default function TrainingPage() {
                 if (!phase) return null;
                 const progress = getPhaseProgress(phase);
                 const color = phase.number <= 3 ? "blue" : "purple";
-                
+                const isOngoing = phase.id === "phase4";
+
                 return (
                   <div className={`mt-6 p-5 rounded-xl border ${
-                    color === "blue" 
-                      ? "bg-[var(--accent)]/10 border-[var(--border)]" 
+                    color === "blue"
+                      ? "bg-[var(--accent)]/10 border-[var(--border)]"
                       : "bg-purple-600/10 border-purple-500/30"
                   }`}>
                     <div className="flex items-center justify-between">
@@ -928,26 +1104,39 @@ export default function TrainingPage() {
                         <h4 className="text-xl font-semibold text-white">{phase.title}</h4>
                         <p className="text-sm text-gray-400 mt-1">{phase.subtitle}</p>
                       </div>
-                      
-                      {/* Circular progress */}
-                      <div className="relative w-16 h-16 flex-shrink-0">
-                        <svg className="w-full h-full -rotate-90">
-                          <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
-                          <circle 
-                            cx="32" cy="32" r="28" fill="none" 
-                            stroke={progress.percent === 100 ? "#22c55e" : color === "blue" ? "#3b82f6" : "#a855f7"} 
-                            strokeWidth="3" 
-                            strokeDasharray={`${2 * Math.PI * 28}`} 
-                            strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress.percent / 100)}`} 
-                            strokeLinecap="round" 
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">{progress.percent}%</span>
+
+                      {isOngoing ? (
+                        // Growth is a rhythm, not a checklist: no percentage
+                        // ring, no modules-complete count. Just a marker
+                        // that this phase stays open rather than finishing.
+                        <div className="flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border border-[var(--border)] bg-[var(--accent)]/10">
+                          <Heart className="w-6 h-6 text-[var(--accent)]" />
                         </div>
-                      </div>
+                      ) : (
+                        /* Circular progress */
+                        <div className="relative w-16 h-16 flex-shrink-0">
+                          <svg className="w-full h-full -rotate-90">
+                            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
+                            <circle
+                              cx="32" cy="32" r="28" fill="none"
+                              stroke={progress.percent === 100 ? "#22c55e" : color === "blue" ? "#3b82f6" : "#a855f7"}
+                              strokeWidth="3"
+                              strokeDasharray={`${2 * Math.PI * 28}`}
+                              strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress.percent / 100)}`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-sm font-bold text-white">{progress.percent}%</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">{progress.completed} of {progress.total} modules complete</p>
+                    {isOngoing ? (
+                      <p className="text-xs text-gray-500 mt-2">A weekly rhythm, not a checklist to finish.</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-2">{progress.completed} of {progress.total} modules complete</p>
+                    )}
                   </div>
                 );
               })()}
@@ -962,6 +1151,18 @@ export default function TrainingPage() {
             const isExpanded = expandedPhase === phase.id;
 
             if (!isExpanded) return null;
+
+            // Growth is an ongoing rhythm, not a checklist: phase 4 gets its
+            // own content below instead of the modules grid every other
+            // phase uses, and never shows a completion percentage.
+            const isGrowthPhase = phase.id === "phase4";
+            const currentWeekStart = mondayOf(new Date());
+            const currentWeekLabel = new Date(`${currentWeekStart}T00:00:00`).toLocaleDateString("en-AU", {
+              day: "numeric",
+              month: "long",
+            });
+            const historyWeeks = recentMondays(CHECKIN_HISTORY_WEEKS, new Date()).slice().reverse();
+            const hasCheckedInThisWeek = checkins.some((c) => c.weekStart === currentWeekStart);
 
             return (
               <div key={phase.id} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
@@ -982,33 +1183,152 @@ export default function TrainingPage() {
                       </h2>
                       <p className="text-gray-400">{phase.description}</p>
                     </div>
-                    {/* Orbital Progress */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative w-20 h-20">
-                        <svg className="w-full h-full -rotate-90">
-                          <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r="36"
-                            fill="none"
-                            stroke="#b6c4ff"
-                            strokeWidth="4"
-                            strokeDasharray={`${2 * Math.PI * 36}`}
-                            strokeDashoffset={`${2 * Math.PI * 36 * (1 - progress.percent / 100)}`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-xl font-bold text-white">{progress.percent}%</span>
+                    {/* Orbital Progress (Growth shows an ongoing marker instead) */}
+                    {isGrowthPhase ? (
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-20 rounded-full border border-[var(--border)] bg-[var(--accent)]/10 flex items-center justify-center">
+                          <Heart className="w-8 h-8 text-[var(--accent)]" />
                         </div>
+                        <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                          {hasCheckedInThisWeek ? "Checked in this week" : "Not yet this week"}
+                        </span>
                       </div>
-                      <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Complete</span>
-                    </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-20 h-20">
+                          <svg className="w-full h-full -rotate-90">
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="36"
+                              fill="none"
+                              stroke="#b6c4ff"
+                              strokeWidth="4"
+                              strokeDasharray={`${2 * Math.PI * 36}`}
+                              strokeDashoffset={`${2 * Math.PI * 36 * (1 - progress.percent / 100)}`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-xl font-bold text-white">{progress.percent}%</span>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Complete</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Modules List */}
+                {isGrowthPhase ? (
+                  <div className="p-6 md:p-8 space-y-6">
+                    {/* Healthy leader: a recommendation, not a module */}
+                    <div className="panel p-6">
+                      <span className="eyebrow">Healthy leader</span>
+                      <h3 className="text-lg font-semibold text-white mt-1 mb-2">Multiplier, by Dave Ferguson</h3>
+                      <p className="text-sm text-[var(--muted)] leading-relaxed mb-5">
+                        Ferguson&rsquo;s case is that a leader reproduces who they are, not what they teach, so
+                        health comes before technique. He tracks that health across four gauges: Relational,
+                        Physical, Mental and Spiritual, RPMS for short. The weekly check-in below uses the same
+                        four.
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {RPMS_GAUGES.map(({ key, label }) => (
+                          <div key={key} className="rounded-lg border border-dashed border-[var(--border)] p-3 text-center">
+                            <span className="text-xs uppercase tracking-wider text-[var(--muted)]">{label}</span>
+                            <p className="text-[11px] text-[var(--muted)] mt-2 italic">
+                              Crash course notes coming soon
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* The weekly check-in */}
+                    <div className="panel p-6">
+                      <span className="eyebrow">This week&rsquo;s check-in</span>
+                      <h3 className="text-lg font-semibold text-white mt-1 mb-4">Week of {currentWeekLabel}</h3>
+                      {!checkinsLoaded ? (
+                        <p className="text-sm text-[var(--muted)]">Loading your check-in...</p>
+                      ) : (
+                        <>
+                          <div className="space-y-4 mb-5">
+                            {RPMS_GAUGES.map(({ key, label }) => (
+                              <ScoreRow
+                                key={key}
+                                label={label}
+                                value={checkinForm[key]}
+                                onChange={(next) => setCheckinForm((prev) => ({ ...prev, [key]: next }))}
+                              />
+                            ))}
+                          </div>
+                          <div className="mb-4">
+                            <label htmlFor="checkin-reflection" className="text-sm text-white mb-1.5 block">
+                              One sentence
+                            </label>
+                            <textarea
+                              id="checkin-reflection"
+                              value={checkinForm.reflection}
+                              onChange={(e) => setCheckinForm((prev) => ({ ...prev, reflection: e.target.value }))}
+                              maxLength={2000}
+                              rows={2}
+                              placeholder="How this week actually went."
+                              className="w-full rounded-lg bg-[var(--surface-hover)] border border-[var(--border)] p-3 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] resize-none"
+                            />
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={saveCheckin}
+                              disabled={checkinSaving}
+                              className="px-5 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                            >
+                              {checkinSaving ? "Saving..." : "Save check-in"}
+                            </button>
+                            {checkinSaved && !checkinSaving && (
+                              <span className="text-xs text-[var(--accent)]">Saved.</span>
+                            )}
+                            {checkinSaveError && (
+                              <span className="text-xs text-red-400">{checkinSaveError}</span>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* The history */}
+                    <div className="panel p-6">
+                      <span className="eyebrow">History</span>
+                      <h3 className="text-lg font-semibold text-white mt-1 mb-4">Recent weeks</h3>
+                      <CheckinHistory weeks={historyWeeks} checkins={checkins} />
+                    </div>
+
+                    {/* Two coming soon cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="panel p-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="w-4 h-4 text-[var(--accent)]" />
+                          <span className="eyebrow">Coming soon</span>
+                        </div>
+                        <h3 className="text-base font-semibold text-white mb-2">Healthy group</h3>
+                        <p className="text-sm text-[var(--muted)] leading-relaxed">
+                          A monthly check on how your pathway group is going, taken at or before the pathway
+                          huddle. Part of the monthly rhythm, not built yet.
+                        </p>
+                      </div>
+                      <div className="panel p-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageCircle className="w-4 h-4 text-[var(--accent)]" />
+                          <span className="eyebrow">Coming soon</span>
+                        </div>
+                        <h3 className="text-base font-semibold text-white mb-2">Prayer requests</h3>
+                        <p className="text-sm text-[var(--muted)] leading-relaxed">
+                          Raise a prayer request here, and later share it with other leaders. Not stored yet.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <div className="p-6 md:p-8">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left: Modules */}
@@ -1112,6 +1432,7 @@ export default function TrainingPage() {
                     </div>
                   </div>
                 </div>
+                )}
               </div>
             );
           })}
