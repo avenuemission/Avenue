@@ -222,26 +222,28 @@ function extractProgressIds(phases: Phase[]): { watchedEpisodes: string[]; compl
   return { watchedEpisodes, completedModules };
 }
 
-// Merges edits made locally after `sent` was captured on top of the
-// server's own copy, instead of discarding them. `sent` is the payload a
-// conflicted save went out with; `local` is whatever the page holds now,
-// which may have changed while that save was in flight. The difference
-// between them is exactly what changed during the flight:
-//   - an id in `local` but not in `sent` was added during the flight (a
-//     tick) and must survive into the merge
-//   - an id in `sent` but not in `local` was removed during the flight (an
-//     un-tick) and must stay removed, not be resurrected by the server's
-//     copy just because the server doesn't know about it
-// Ids the server already has (from whoever won the conflicting write) are
-// kept unless this page's own in-flight edit explicitly removed them.
-function mergeIdsSinceSend(serverIds: string[], sentIds: string[], localIds: string[]): string[] {
-  const sentSet = new Set(sentIds);
+// Standard three-way merge (base, mine, theirs), used to resolve a 409.
+// `base` is the last server state this page's edits are known to be
+// relative to (see baseRef below), not the payload a conflicted save
+// happened to go out with: comparing against the sent payload instead of
+// base was tried first and was wrong, because a tick that IS the sent
+// payload's own content is then neither an addition nor a removal relative
+// to itself, and survives only by accident if the server happens to already
+// have it independently. It usually doesn't, since that is exactly why the
+// save conflicted, so that tick would silently die.
+//   - localAdds: ids in `local` but not in `base` - added since base, kept
+//   - localRemoves: ids in `base` but not in `local` - removed since base
+//     (an un-tick), stays removed, not resurrected by the server's copy
+//     just because the server doesn't independently know about it
+// merged = (server ids, plus localAdds) minus localRemoves.
+function mergeAgainstBase(serverIds: string[], baseIds: string[], localIds: string[]): string[] {
+  const baseSet = new Set(baseIds);
   const localSet = new Set(localIds);
   const merged = new Set(serverIds);
   for (const id of localSet) {
-    if (!sentSet.has(id)) merged.add(id);
+    if (!baseSet.has(id)) merged.add(id);
   }
-  for (const id of sentSet) {
+  for (const id of baseSet) {
     if (!localSet.has(id)) merged.delete(id);
   }
   return Array.from(merged);
@@ -296,6 +298,25 @@ export default function TrainingPage() {
   // a 409 conflict response both replace it with whatever the server says is
   // now current.
   const revisionRef = useRef<number | null>(null);
+
+  // The last server state this page's local edits are known to be relative
+  // to: watched episode ids and completed module ids as of the last
+  // successful sync, not as of whatever a save most recently sent. This is
+  // the "base" in a three-way merge (base, mine, theirs) used to resolve a
+  // 409 - see mergeAgainstBase above. It is set:
+  //   - on the initial GET, to what the server returned
+  //   - after any save that succeeds outright, to what that save sent
+  //   - after a merge-and-save (the chained save that follows a 409)
+  //     succeeds, to the merged state that save sent - this falls out of
+  //     the previous rule for free, since the merged state becomes that
+  //     save's own "sent" payload
+  // It must NOT move on a save that fails for a reason other than 409 (a
+  // network error, a 500): nothing was applied there, so the state this
+  // page's edits are relative to has not changed.
+  const baseRef = useRef<{ watchedEpisodes: string[]; completedModules: string[] }>({
+    watchedEpisodes: [],
+    completedModules: [],
+  });
 
   // Shown briefly after a 409 conflict overwrites local state with the
   // server's copy, so a leader whose click silently lost is told why,
@@ -364,6 +385,12 @@ export default function TrainingPage() {
         // uniform with the 409 branch of performSave, where this is not
         // optional (see the comment there).
         phasesRef.current = loadedPhases;
+        // base starts as exactly what the server returned, derived the same
+        // way `local` and a save's own payload are (extractProgressIds over
+        // a Phase[] tree), so all three are always compared on like terms -
+        // an id the raw API response carried that no longer exists in
+        // INITIAL_PHASES is excluded from base exactly as it is from local.
+        baseRef.current = extractProgressIds(loadedPhases);
         setCheckpointStatus((progress.checkpointStatus as CheckpointStatus) ?? "none");
         // Assigned directly (not left to a syncing effect) so the very first
         // save this page can send never races ahead of knowing the row's
@@ -421,10 +448,17 @@ export default function TrainingPage() {
 
       if (res.status === 409) {
         // Another tab or device saved a newer revision first. Rather than
-        // discarding whatever happened on this page since sentWatched /
-        // sentCompleted were captured, or blindly retrying and fighting
-        // whatever made the change, the two are merged: the server's copy,
-        // with this page's own since-send edits re-applied on top.
+        // discarding whatever this page's local state holds now, or
+        // blindly retrying and fighting whatever made the change, a
+        // three-way merge (base, mine, theirs) is used: base is baseRef,
+        // the last server state this page's edits are known to be relative
+        // to, NOT the payload that was just sent. Comparing against the
+        // sent payload instead of base was tried first and was wrong: an id
+        // that IS the sent payload's own content is then neither an
+        // addition nor a removal relative to itself, and survives only if
+        // the server happens to already have it independently, which it
+        // usually does not, since that is exactly why the save conflicted.
+        // See mergeAgainstBase above for the full reasoning.
         const body = await res.json().catch(() => null);
         let serverProgress = body?.progress ?? null;
 
@@ -449,29 +483,35 @@ export default function TrainingPage() {
         }
 
         if (!serverProgress) {
+          // Nothing was applied and nothing here is being adopted, so base
+          // must not move either: it still correctly describes the state
+          // this page's (still-unsaved) local edits are relative to.
           setSaveError("Could not save your progress. It is kept on this page, try again shortly.");
           return;
         }
 
-        // Whatever phasesRef holds right now reflects every edit made since
-        // sentWatched / sentCompleted were captured, including one made
-        // while this very request was in flight: the difference between
-        // that snapshot and this one is exactly what changed during the
-        // flight, ticks and un-ticks both. Merging that difference onto the
-        // server's copy, rather than replacing local state with the
-        // server's copy wholesale, is what keeps an in-flight edit from
-        // silently vanishing the moment a conflict resolves.
+        // Whatever phasesRef holds right now reflects every local edit made
+        // since base was last set, including one made while this very
+        // request was in flight: the difference between base and this
+        // snapshot is exactly what this page has changed, ticks and
+        // un-ticks both, regardless of whether any particular id happened
+        // to be part of what this specific request sent. Merging that
+        // difference onto the server's copy, rather than comparing against
+        // the sent payload or replacing local state with the server's copy
+        // wholesale, is what keeps every local edit (the one that triggered
+        // this save included) from silently vanishing when a conflict
+        // resolves.
         const { watchedEpisodes: localWatched, completedModules: localCompleted } = extractProgressIds(
           phasesRef.current
         );
-        const mergedWatched = mergeIdsSinceSend(
+        const mergedWatched = mergeAgainstBase(
           serverProgress.watchedEpisodes ?? [],
-          sentWatched,
+          baseRef.current.watchedEpisodes,
           localWatched
         );
-        const mergedCompleted = mergeIdsSinceSend(
+        const mergedCompleted = mergeAgainstBase(
           serverProgress.completedModules ?? [],
-          sentCompleted,
+          baseRef.current.completedModules,
           localCompleted
         );
 
@@ -490,16 +530,26 @@ export default function TrainingPage() {
           typeof serverProgress.revision === "number" ? serverProgress.revision : revisionRef.current;
         revisionRef.current = serverRevision;
 
-        // dirtyRef is deliberately left untouched here, not cleared. Any
-        // edit that landed during this request's flight already set it, via
-        // the same debounce-then-runSave path every other tick uses; that is
-        // precisely the signal that the merged state above still needs to
-        // be persisted, since only phasesRef and revisionRef were updated
-        // just now, nothing has actually been sent yet. Leaving it as-is
-        // means runSave's loop fires exactly one more save, carrying the
-        // merged state at the newly-adopted revision + 1, only when there
-        // is genuinely something left to save; if nothing changed during
-        // the flight, dirtyRef is still false and the loop ends here.
+        // base is deliberately NOT updated here. It only moves once a save
+        // actually succeeds (see the success branch below), and the merged
+        // state has not been sent anywhere yet, only adopted locally. The
+        // next performSave call, fired immediately below, will capture this
+        // merged state as ITS OWN sent payload, and if that save succeeds,
+        // base becomes the merged state via the ordinary success-path rule,
+        // which is exactly the "after a merge-and-save succeeds" case.
+        //
+        // dirtyRef is explicitly set here, not just left at whatever it
+        // already was. Round 2 only left it as-is, on the assumption that
+        // the merge needed re-saving exactly when a during-flight edit had
+        // set it. That assumption does not hold once the merge compares
+        // against base instead of the sent payload: the merged state can
+        // (and, in the plain "no edit during the flight" case, always does)
+        // differ from what the server has, purely because it restores the
+        // sent payload's own content, with no during-flight edit involved
+        // at all. That difference still needs to reach the server, so
+        // runSave's loop must fire again regardless of dirtyRef's prior
+        // value; setting it unconditionally is what makes that happen.
+        dirtyRef.current = true;
         setSaveError(null);
         setConflictNotice(
           "Your progress was merged with an update from elsewhere."
@@ -513,10 +563,19 @@ export default function TrainingPage() {
       const body = await res.json();
       const savedRevision = typeof body?.progress?.revision === "number" ? body.progress.revision : nextRevision;
       revisionRef.current = savedRevision;
+      // This save's own payload is now confirmed persisted, so it becomes
+      // the new base: the state this page's future edits are relative to,
+      // whether this was an ordinary save or the merged save chained after
+      // a 409 (in which case sentWatched/sentCompleted here ARE the merged
+      // arrays, since they were captured from phasesRef at the top of this
+      // same call, after the merge had already been adopted into it).
+      baseRef.current = { watchedEpisodes: sentWatched, completedModules: sentCompleted };
       setSaveError(null);
     } catch {
-      // Never revert a leader's tick because the network failed. Local
-      // state is left exactly as it is; only the error banner changes.
+      // Never revert a leader's tick because the network failed, and never
+      // move base: nothing was applied, so the state this page's edits are
+      // relative to has not changed. Local state is left exactly as it is;
+      // only the error banner changes.
       setSaveError("Could not save your progress. It is kept on this page, try again shortly.");
     }
   }, [scheduleConflictNoticeClear, user]);
