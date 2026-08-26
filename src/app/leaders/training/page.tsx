@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
@@ -208,6 +208,136 @@ function reconcilePhases(
   }));
 }
 
+// Save coordination state, deliberately living at module scope rather than
+// inside the component. There is one training page and one leader per
+// browser session, and a save that is in flight (or queued behind one) must
+// survive the leader navigating away from the page and straight back: the
+// new component instance has to join that SAME chain, not race a rival one
+// against it. A useRef cannot do this: it dies with its component instance,
+// but the fetch promise it started does not, so a leftover chain and a
+// freshly-mounted one would both be free to PUT independently with no
+// ordering guarantee between them (fix round 2's bug). Do NOT "tidy" this
+// back into a useRef; that reopens exactly that hole.
+//
+// watchedEpisodes/completedModules here are the single source of truth for
+// what gets saved. They are seeded from the server once per email per
+// session (the `loaded` flag) and from then on are only ever updated by
+// local ticks, never overwritten by a later GET. A GET issued right after
+// a remount can easily resolve before an in-flight save (from before the
+// remount) has actually reached the database, and reconciling from it would
+// silently regress a tick that is legitimately still on its way.
+const saveState: {
+  email: string | null;
+  watchedEpisodes: Set<string>;
+  completedModules: Set<string>;
+  loaded: boolean;
+  inFlight: boolean;
+  dirty: boolean;
+  timeoutId: ReturnType<typeof setTimeout> | null;
+  setSaving: ((value: boolean) => void) | null;
+  setSaveError: ((value: string | null) => void) | null;
+} = {
+  email: null,
+  watchedEpisodes: new Set(),
+  completedModules: new Set(),
+  loaded: false,
+  inFlight: false,
+  dirty: false,
+  timeoutId: null,
+  setSaving: null,
+  setSaveError: null,
+};
+
+// Whether saveState currently belongs to whoever is logged in right now.
+// Used at render time (in lazy useState initializers) as well as in
+// effects, so a remount can compute its first-paint state directly from
+// saveState instead of rendering something wrong for one frame and
+// correcting it in an effect afterwards. getCurrentUser() is a synchronous
+// localStorage read, the same source the component's own session-check
+// effect uses, so this is safe to call during render.
+function isCurrentLeaderSession(): boolean {
+  const currentUser = getCurrentUser();
+  return !!currentUser && saveState.email === currentUser.email;
+}
+
+// A different leader logging in within the same page session must not
+// inherit a stale chain, stale ids, or a stale pending timeout from
+// whoever used the page before them.
+function resetSaveStateForEmail(email: string) {
+  saveState.email = email;
+  saveState.watchedEpisodes = new Set();
+  saveState.completedModules = new Set();
+  saveState.loaded = false;
+  saveState.inFlight = false;
+  saveState.dirty = false;
+  if (saveState.timeoutId) {
+    clearTimeout(saveState.timeoutId);
+    saveState.timeoutId = null;
+  }
+}
+
+// A single save attempt. Reads saveState's ids at call time (not a snapshot
+// taken when the save was scheduled), so it always PUTs whatever is
+// currently known, regardless of which component instance produced it.
+async function performSave() {
+  if (!saveState.email) return;
+  const watchedEpisodes = Array.from(saveState.watchedEpisodes);
+  const completedModules = Array.from(saveState.completedModules);
+  try {
+    const res = await fetch("/api/leader-training", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: saveState.email, watchedEpisodes, completedModules }),
+    });
+    if (!res.ok) throw new Error(`Save failed (${res.status})`);
+    saveState.setSaveError?.(null);
+  } catch {
+    // Never revert a leader's tick because the network failed. Local state
+    // is left exactly as it is; only the error banner changes.
+    saveState.setSaveError?.("Could not save your progress. It is kept on this page, try again shortly.");
+  }
+}
+
+// Serialises saves so at most one PUT is ever in flight, across any number
+// of component instances. Two overlapping full-overwrite PUTs race:
+// whichever response lands last at the server wins, and that is not
+// necessarily the one holding the latest tick. If a tick arrives while a
+// save is already running, it is marked dirty rather than firing a second
+// request; the moment the in-flight save finishes, one more save goes out
+// immediately carrying whatever is current at that point. That gives
+// last-write-wins with correct ordering, at the cost of an extra round trip
+// on a slow connection, never a lost tick. Because the flags live on
+// saveState rather than a ref, a remount joins this exact chain instead of
+// starting a new one beside it.
+async function runSave() {
+  if (saveState.inFlight) {
+    saveState.dirty = true;
+    return;
+  }
+  saveState.inFlight = true;
+  saveState.setSaving?.(true);
+  let more = true;
+  while (more) {
+    saveState.dirty = false;
+    await performSave();
+    more = saveState.dirty;
+  }
+  saveState.inFlight = false;
+  saveState.setSaving?.(false);
+}
+
+// Every tick clears the pending timeout and schedules a new one 800ms out,
+// so rapid ticking sends one request rather than one per click. The timeout
+// id lives on saveState, not a component ref, so a remount before it fires
+// does not lose the schedule.
+function scheduleSave() {
+  if (saveState.timeoutId) clearTimeout(saveState.timeoutId);
+  saveState.timeoutId = setTimeout(() => {
+    saveState.timeoutId = null;
+    runSave();
+  }, 800);
+}
+
 // No separate component needed - inline in the layout below
 
 // Module Type Icons
@@ -230,7 +360,15 @@ export default function TrainingPage() {
   const [mounted, setMounted] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
-  const [phases, setPhases] = useState<Phase[]>(INITIAL_PHASES);
+  // Lazily seeded from saveState rather than always starting at
+  // INITIAL_PHASES, so a remount for the same leader paints the correct
+  // progress on its very first render instead of flashing empty and
+  // correcting itself in an effect a moment later.
+  const [phases, setPhases] = useState<Phase[]>(() =>
+    saveState.loaded && isCurrentLeaderSession()
+      ? reconcilePhases(Array.from(saveState.watchedEpisodes), Array.from(saveState.completedModules))
+      : INITIAL_PHASES
+  );
   const [expandedPhase, setExpandedPhase] = useState<string | null>("phase1");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [videoModal, setVideoModal] = useState<{ youtubeId: string; title: string } | null>(null);
@@ -238,20 +376,58 @@ export default function TrainingPage() {
   // Progress load state. Task 5 consumes checkpointStatus to lock phase 3
   // and render the Calling checkpoint; this task only fetches it and holds
   // it, so it is intentionally unread here.
-  const [progressLoaded, setProgressLoaded] = useState(false);
+  const [progressLoaded, setProgressLoaded] = useState(() => saveState.loaded && isCurrentLeaderSession());
   const [loadError, setLoadError] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- read by Task 5
   const [checkpointStatus, setCheckpointStatus] = useState<CheckpointStatus | null>(null);
 
-  // Debounced save state.
-  const [saving, setSaving] = useState(false);
+  // Debounced save state. saving/saveError are still local: they only
+  // describe what THIS instance should currently show, and are kept in sync
+  // with the module-level saveState by the "join" effect below (a remount
+  // while a save from the previous instance is in flight must show that
+  // immediately, not idle until it finishes).
+  const [saving, setSaving] = useState(() => isCurrentLeaderSession() && saveState.inFlight);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const phasesRef = useRef<Phase[]>(phases);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Keeps saveState's ids in sync with this instance's rendered phases,
+  // whenever they change (including the initial reconciliation on load).
+  // This, not `phases` itself, is what performSave actually reads.
   useEffect(() => {
-    phasesRef.current = phases;
-  }, [phases]);
+    if (!user) return;
+    const watchedEpisodes = new Set<string>();
+    const completedModules = new Set<string>();
+    for (const phase of phases) {
+      for (const m of phase.modules) {
+        if (m.completed) completedModules.add(m.id);
+        for (const e of m.episodes ?? []) {
+          if (e.watched) watchedEpisodes.add(e.id);
+        }
+      }
+    }
+    saveState.watchedEpisodes = watchedEpisodes;
+    saveState.completedModules = completedModules;
+  }, [phases, user]);
+
+  // Joins this instance to the module-level save chain. Resets it first if
+  // a different leader's email is on it (a stale chain from someone else's
+  // session must never be inherited), then registers this instance's
+  // setters as the ones a save in progress should update, and immediately
+  // reflects whatever the chain is already doing.
+  useEffect(() => {
+    if (!user) return;
+    if (saveState.email !== user.email) {
+      resetSaveStateForEmail(user.email);
+    }
+    saveState.setSaving = setSaving;
+    saveState.setSaveError = setSaveError;
+    return () => {
+      if (saveState.setSaving === setSaving) saveState.setSaving = null;
+      if (saveState.setSaveError === setSaveError) saveState.setSaveError = null;
+      // Deliberately not clearing saveState.email/ids/inFlight/dirty/
+      // timeoutId here: those belong to the save chain, which must outlive
+      // this unmount if a PUT is still running or queued behind one.
+    };
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
@@ -280,8 +456,35 @@ export default function TrainingPage() {
   // Until this resolves the page keeps showing its loading treatment: a
   // returning leader must never see an empty journey flash before their
   // watched episodes and completed modules land.
+  //
+  // If saveState is already loaded for this email, this is a remount, not a
+  // first visit: phases and progressLoaded were already seeded from it by
+  // the lazy useState initializers above, so there is nothing to render
+  // here. A save from before the remount may still be in flight or queued,
+  // and a GET landing before it reaches the database would show, and could
+  // feed straight back into the next save as, regressed data, so this
+  // branch deliberately never reconciles phases from a fresh GET once
+  // saveState already holds this leader's data. checkpointStatus is still
+  // worth refreshing in the background (an admin may have acted while the
+  // leader was away), but a failure there must not re-block a page that
+  // already has something correct to show.
   useEffect(() => {
     if (!accessChecked || !hasAccess || !user) return;
+
+    if (saveState.loaded && saveState.email === user.email) {
+      fetch(`/api/leader-training?email=${encodeURIComponent(user.email)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.progress) {
+            setCheckpointStatus((data.progress.checkpointStatus as CheckpointStatus) ?? "none");
+          }
+        })
+        .catch(() => {
+          // Background refresh only; the page already has valid data.
+        });
+      return;
+    }
+
     let cancelled = false;
     fetch(`/api/leader-training?email=${encodeURIComponent(user.email)}`)
       .then((res) => {
@@ -291,9 +494,12 @@ export default function TrainingPage() {
       .then((data) => {
         if (cancelled) return;
         const progress = data.progress ?? {};
-        setPhases(
-          reconcilePhases(progress.watchedEpisodes ?? [], progress.completedModules ?? [])
-        );
+        const watchedEpisodes: string[] = progress.watchedEpisodes ?? [];
+        const completedModules: string[] = progress.completedModules ?? [];
+        saveState.watchedEpisodes = new Set(watchedEpisodes);
+        saveState.completedModules = new Set(completedModules);
+        saveState.loaded = true;
+        setPhases(reconcilePhases(watchedEpisodes, completedModules));
         setCheckpointStatus((progress.checkpointStatus as CheckpointStatus) ?? "none");
         setProgressLoaded(true);
       })
@@ -305,82 +511,6 @@ export default function TrainingPage() {
       cancelled = true;
     };
   }, [accessChecked, hasAccess, user]);
-
-  // Whether a PUT is currently in flight, and whether state changed again
-  // while it was. These are refs, not state, because they gate synchronous
-  // decisions inside runSave and must never trigger a render themselves.
-  const inFlightRef = useRef(false);
-  const dirtyRef = useRef(false);
-
-  // A single save attempt. Collects the current watched episode ids and
-  // completed module ids from phasesRef (not `phases`, since this can fire
-  // long after the tick that scheduled it) and PUTs them.
-  const performSave = useCallback(async () => {
-    if (!user) return;
-    const currentPhases = phasesRef.current;
-    const watchedEpisodes = currentPhases.flatMap((phase) =>
-      phase.modules.flatMap((m) => (m.episodes ?? []).filter((e) => e.watched).map((e) => e.id))
-    );
-    const completedModules = currentPhases.flatMap((phase) =>
-      phase.modules.filter((m) => m.completed).map((m) => m.id)
-    );
-    try {
-      const res = await fetch("/api/leader-training", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, watchedEpisodes, completedModules }),
-      });
-      if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      setSaveError(null);
-    } catch {
-      // Never revert a leader's tick because the network failed. Local
-      // state is left exactly as it is; only the error banner changes.
-      setSaveError("Could not save your progress. It is kept on this page, try again shortly.");
-    }
-  }, [user]);
-
-  // Serialises saves so at most one PUT is ever in flight. Two overlapping
-  // full-overwrite PUTs race: whichever response lands last at the server
-  // wins, and that is not necessarily the one holding the latest tick. If a
-  // tick arrives while a save is already running, it is marked dirty rather
-  // than firing a second request; the moment the in-flight save finishes,
-  // one more save goes out carrying whatever is current at that point. That
-  // gives last-write-wins with correct ordering, at the cost of an extra
-  // round trip on a slow connection, never a lost tick.
-  const runSave = useCallback(async () => {
-    if (inFlightRef.current) {
-      dirtyRef.current = true;
-      return;
-    }
-    inFlightRef.current = true;
-    setSaving(true);
-    let more = true;
-    while (more) {
-      dirtyRef.current = false;
-      await performSave();
-      more = dirtyRef.current;
-    }
-    inFlightRef.current = false;
-    setSaving(false);
-  }, [performSave]);
-
-  // Every tick clears the pending timeout and schedules a new one 800ms out,
-  // so rapid ticking sends one request rather than one per click.
-  const scheduleSave = useCallback(() => {
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    saveTimeoutRef.current = setTimeout(() => {
-      saveTimeoutRef.current = null;
-      runSave();
-    }, 800);
-  }, [runSave]);
-
-  // Clear the pending timeout on unmount so a save cannot fire after the
-  // component is gone.
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    };
-  }, []);
 
   const handleLogout = () => {
     logout();
