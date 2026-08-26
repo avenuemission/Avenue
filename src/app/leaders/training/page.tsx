@@ -299,6 +299,22 @@ function apprenticeStepLabel(step: number): string {
   return APPRENTICE_STEPS[step]?.label ?? APPRENTICE_STEPS[0].label;
 }
 
+// Hero Maker's five practices (Dave Ferguson) - a different set from the
+// five apprenticeship steps above. The steps describe how one
+// apprenticeship relationship moves along (APPRENTICE_STEPS); the
+// practices are the five habits of a multiplying leader. The crash-course
+// placeholder below is laid out over the practices, not the steps: the
+// steps are already shown, per person, in "Your people" directly beneath
+// it, so scaffolding the placeholder for steps would just duplicate that
+// list rather than covering new ground.
+const HERO_MAKER_PRACTICES: string[] = [
+  "Multiplication Thinking",
+  "Permission Giving",
+  "Disciple Multiplying",
+  "Gift Activating",
+  "Kingdom Building",
+];
+
 // A person from the discipleship network (/api/network), as seen from phase
 // 5. This is a separate shape from lib/networkLayout's NetworkPerson because
 // it also carries apprenticeStep, which that shared type does not yet.
@@ -385,6 +401,15 @@ export default function TrainingPage() {
   // merge-on-conflict one. The two must never be routed through each other.
   const [checkins, setCheckins] = useState<CheckinEntry[]>([]);
   const [checkinsLoaded, setCheckinsLoaded] = useState(false);
+  // Set when the GET for check-ins fails. Distinct from checkinSaveError
+  // (a PUT failure): while this is set, the form is not rendered at all,
+  // only a retry prompt, because rendering the form's 5/5/5/5 defaults
+  // over a week that might already have real scores, with Save left
+  // enabled, is exactly how one blipped load plus one click permanently
+  // overwrites a leader's real check-in with defaults they never saw.
+  const [checkinLoadError, setCheckinLoadError] = useState<string | null>(null);
+  // Bumped by the retry button to re-run the load effect below.
+  const [checkinLoadAttempt, setCheckinLoadAttempt] = useState(0);
   const [checkinForm, setCheckinForm] = useState({
     relational: 5,
     physical: 5,
@@ -396,6 +421,17 @@ export default function TrainingPage() {
   const [checkinSaveError, setCheckinSaveError] = useState<string | null>(null);
   const [checkinSaved, setCheckinSaved] = useState(false);
   const checkinSavedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The single Monday this render's check-in form is editing: computed
+  // once, not recomputed from `new Date()` separately at render time and
+  // again at save time. Those two computations of "now" can disagree if
+  // the page has been sitting open across the Sunday-to-Monday rollover,
+  // which would show the leader one week's label while quietly saving into
+  // a different week. Reusing this single value for the label, the
+  // pre-fill lookup, and the save payload keeps all three in lockstep for
+  // as long as this page stays open, even if the real calendar week moves
+  // on underneath it.
+  const [editingWeekStart] = useState<string>(() => mondayOf(new Date()));
 
   // Phase 5's discipleship network view. Also a completely separate data
   // source from training progress: it talks to /api/network, which already
@@ -540,9 +576,17 @@ export default function TrainingPage() {
   // leader re-entering scores from scratch and the PUT's upsert creating a
   // false sense of a second row (it does not; the API upserts on
   // (email, week_start), but the form must still look pre-filled).
+  //
+  // If this fails, checkinLoadError is set instead of quietly leaving the
+  // form at its 5/5/5/5 defaults with Save still enabled: this leader's
+  // real scores for the week may already exist on the server and simply
+  // failed to load, and saving the unseen defaults over them would destroy
+  // that data with no way back. The check-in card renders a retry prompt
+  // in that state instead of the form; see checkinLoadError below.
   useEffect(() => {
     if (!accessChecked || !hasAccess || !user) return;
     let cancelled = false;
+    setCheckinLoadError(null);
     fetch(`/api/leader-checkins?email=${encodeURIComponent(user.email)}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load check-ins (${res.status})`);
@@ -552,8 +596,7 @@ export default function TrainingPage() {
         if (cancelled) return;
         const list: CheckinEntry[] = data.checkins ?? [];
         setCheckins(list);
-        const currentWeek = mondayOf(new Date());
-        const existing = list.find((c) => c.weekStart === currentWeek);
+        const existing = list.find((c) => c.weekStart === editingWeekStart);
         if (existing) {
           setCheckinForm({
             relational: existing.relational,
@@ -567,16 +610,15 @@ export default function TrainingPage() {
       })
       .catch(() => {
         if (cancelled) return;
-        // The rest of the page (training progress) does not depend on this,
-        // so a failure here is shown locally in the check-in card rather
-        // than blocking the whole page.
         setCheckinsLoaded(true);
-        setCheckinSaveError("Could not load your check-in history. Refresh to try again.");
+        setCheckinLoadError(
+          "Could not load this week's check-in. Saving is turned off until it loads, so real scores can't be overwritten by defaults you never saw."
+        );
       });
     return () => {
       cancelled = true;
     };
-  }, [accessChecked, hasAccess, user]);
+  }, [accessChecked, hasAccess, user, editingWeekStart, checkinLoadAttempt]);
 
   // Load this leader's discipleship network, independently of training
   // progress and check-ins above. Phase 5 reads apprenticeStep and depth
@@ -880,14 +922,13 @@ export default function TrainingPage() {
     if (!user) return;
     setCheckinSaving(true);
     setCheckinSaveError(null);
-    const weekStart = mondayOf(new Date());
     try {
       const res = await fetch("/api/leader-checkins", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: user.email,
-          weekStart,
+          weekStart: editingWeekStart,
           relational: checkinForm.relational,
           physical: checkinForm.physical,
           mental: checkinForm.mental,
@@ -895,8 +936,14 @@ export default function TrainingPage() {
           reflection: checkinForm.reflection.trim() === "" ? null : checkinForm.reflection,
         }),
       });
-      if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      const body = await res.json();
+      // Read the error out of the response body, same as setApprenticeStep
+      // does below, so a validation 400 (for example a rejected week) shows
+      // its actual reason instead of reading as a generic, transient
+      // network blip every time.
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || `Could not save your check-in (${res.status})`);
+      }
       const saved: CheckinEntry = body.checkin;
       setCheckins((prev) => {
         const others = prev.filter((c) => c.weekStart !== saved.weekStart);
@@ -908,8 +955,12 @@ export default function TrainingPage() {
         checkinSavedTimeoutRef.current = null;
         setCheckinSaved(false);
       }, 3000);
-    } catch {
-      setCheckinSaveError("Could not save your check-in. It is kept on this page, try again shortly.");
+    } catch (e) {
+      setCheckinSaveError(
+        e instanceof Error && e.message
+          ? e.message
+          : "Could not save your check-in. It is kept on this page, try again shortly."
+      );
     } finally {
       setCheckinSaving(false);
     }
@@ -952,7 +1003,18 @@ export default function TrainingPage() {
   };
 
   const getOverallProgress = () => {
-    const allModules = phases.flatMap((p) => p.modules);
+    // The denominator here is deliberately not every module in
+    // INITIAL_PHASES. Phases 4 and 5 (Growth and Multiplication) are
+    // ongoing rhythms, not checklists: their module grids are never
+    // rendered (see isGrowthPhase / isMultiplyPhase below, which replace
+    // the modules grid entirely for those two phases), so the modules
+    // still declared on them in INITIAL_PHASES can never be ticked.
+    // Counting them would cap this headline number below 100% forever with
+    // no way to close the gap, for every leader who finishes everything
+    // reachable. Excluding phases 4 and 5 matches the fact that they
+    // already show no completion percentage anywhere else in the page.
+    const reachablePhases = phases.filter((p) => p.id !== "phase4" && p.id !== "phase5");
+    const allModules = reachablePhases.flatMap((p) => p.modules);
     const completed = allModules.filter((m) => m.completed).length;
     return Math.round((completed / allModules.length) * 100);
   };
@@ -968,7 +1030,7 @@ export default function TrainingPage() {
   // Used by both the orbital summary and phase 5's own content below, so
   // both read the exact same computation rather than two that could drift.
   const sentByViewer = networkPeople.filter((p) => p.sentOutBy === networkViewerId);
-  const checkedInThisWeek = checkins.some((c) => c.weekStart === mondayOf(new Date()));
+  const checkedInThisWeek = checkins.some((c) => c.weekStart === editingWeekStart);
 
   if (!mounted || !user || !accessChecked || !hasAccess) {
     return (
@@ -1260,9 +1322,18 @@ export default function TrainingPage() {
                           ? checkedInThisWeek
                             ? "Checked in this week: a rhythm, not a checklist to finish."
                             : "A weekly rhythm, not a checklist to finish."
-                          : sentByViewer.length === 0
-                            ? "Not sending anyone out yet: a rhythm to begin, not a checklist to finish."
-                            : `Sending ${sentByViewer.length} ${sentByViewer.length === 1 ? "person" : "people"} out: a rhythm, not a checklist to finish.`}
+                          // Gated on networkLoaded/networkError the same way
+                          // "Your people" below gates itself, so this never
+                          // shows the empty-network wording before the
+                          // network has actually loaded, or alongside a
+                          // failed load with no explanation.
+                          : !networkLoaded
+                            ? "Loading your network..."
+                            : networkError
+                              ? "Could not load your network."
+                              : sentByViewer.length === 0
+                                ? "Not sending anyone out yet: a rhythm to begin, not a checklist to finish."
+                                : `Sending ${sentByViewer.length} ${sentByViewer.length === 1 ? "person" : "people"} out: a rhythm, not a checklist to finish.`}
                       </p>
                     ) : (
                       <p className="text-xs text-gray-500 mt-2">{progress.completed} of {progress.total} modules complete</p>
@@ -1288,7 +1359,12 @@ export default function TrainingPage() {
             // neither ever shows a completion percentage.
             const isGrowthPhase = phase.id === "phase4";
             const isMultiplyPhase = phase.id === "phase5";
-            const currentWeekStart = mondayOf(new Date());
+            // editingWeekStart, not a fresh mondayOf(new Date()) here: this
+            // label is shown right next to the form that edits it, and
+            // saveCheckin sends this exact same value, so the two can never
+            // disagree about which week is being edited even if the real
+            // calendar week has moved on since the page loaded.
+            const currentWeekStart = editingWeekStart;
             const currentWeekLabel = new Date(`${currentWeekStart}T00:00:00`).toLocaleDateString("en-AU", {
               day: "numeric",
               month: "long",
@@ -1331,9 +1407,18 @@ export default function TrainingPage() {
                           <Users className="w-8 h-8 text-[var(--accent)]" />
                         </div>
                         <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">
-                          {sentByViewer.length === 0
-                            ? "Sending nobody yet"
-                            : `Sending ${sentByViewer.length} out`}
+                          {/* Gated on networkLoaded/networkError, same as
+                              "Your people" below, so this doesn't flash
+                              "Sending nobody yet" before the network has
+                              loaded, or read confidently next to a load
+                              failure. */}
+                          {!networkLoaded
+                            ? "Loading..."
+                            : networkError
+                              ? "Could not load"
+                              : sentByViewer.length === 0
+                                ? "Sending nobody yet"
+                                : `Sending ${sentByViewer.length} out`}
                         </span>
                       </div>
                     ) : (
@@ -1393,6 +1478,25 @@ export default function TrainingPage() {
                       <h3 className="text-lg font-semibold text-white mt-1 mb-4">Week of {currentWeekLabel}</h3>
                       {!checkinsLoaded ? (
                         <p className="text-sm text-[var(--muted)]">Loading your check-in...</p>
+                      ) : checkinLoadError ? (
+                        // No form is rendered here on purpose. Rendering it
+                        // at its 5/5/5/5 defaults with Save enabled would
+                        // let a leader whose real scores simply failed to
+                        // load overwrite them with defaults they never saw.
+                        <div className="rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
+                          <p className="text-sm text-white mb-1">This week&rsquo;s check-in could not be loaded.</p>
+                          <p className="text-sm text-[var(--muted)] mb-4">{checkinLoadError}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCheckinsLoaded(false);
+                              setCheckinLoadAttempt((n) => n + 1);
+                            }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] text-white text-sm font-semibold transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
+                          >
+                            Try again
+                          </button>
+                        </div>
                       ) : (
                         <>
                           <div className="space-y-4 mb-5">
@@ -1474,22 +1578,23 @@ export default function TrainingPage() {
                 ) : isMultiplyPhase ? (
                   <div className="p-6 md:p-8 space-y-6">
                     {/* Hero Maker crash course: a clearly marked placeholder,
-                        laid out for the five practices as a daily rhythm.
-                        No invented teaching goes here. */}
+                        laid out for the five practices, not the five
+                        apprenticeship steps (those are already shown, per
+                        person, in "Your people" below). No invented
+                        teaching goes here. */}
                     <div className="panel p-6">
                       <span className="eyebrow">Placeholder</span>
                       <h3 className="text-lg font-semibold text-white mt-1 mb-2">Hero Maker, by Dave Ferguson</h3>
                       <p className="text-sm text-[var(--muted)] leading-relaxed mb-5">
-                        Ferguson&rsquo;s case is that multiplication is not a course you finish, it is a
-                        five-step apprenticeship you run with a named person, moved through a step at a
-                        time below. The crash course on each step as a daily rhythm goes here.
+                        Ferguson&rsquo;s case is that multiplication is not a course you finish, it is five
+                        practices you build as habits. The crash course on each practice goes here.
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                        {APPRENTICE_STEPS.slice(1).map(({ value, label }) => (
-                          <div key={value} className="rounded-lg border border-dashed border-[var(--border)] p-3 text-center">
-                            <span className="text-xs uppercase tracking-wider text-[var(--muted)]">{value}. {label}</span>
+                        {HERO_MAKER_PRACTICES.map((practice) => (
+                          <div key={practice} className="rounded-lg border border-dashed border-[var(--border)] p-3 text-center">
+                            <span className="text-xs uppercase tracking-wider text-[var(--muted)]">{practice}</span>
                             <p className="text-[11px] text-[var(--muted)] mt-2 italic">
-                              As a daily rhythm: crash course notes coming soon
+                              Crash course notes coming soon
                             </p>
                           </div>
                         ))}
@@ -1573,7 +1678,18 @@ export default function TrainingPage() {
                         zero reads as a beginning rather than a failure. */}
                     <div className="panel p-6 text-center">
                       <span className="eyebrow">Kingdom advance</span>
-                      {networkDepth.people === 0 ? (
+                      {/* Gated on networkLoaded/networkError, same as "Your
+                          people" above: without this, a leader with a real
+                          network briefly saw "This is the beginning" before
+                          it corrected, and on a failed load saw a red error
+                          right next to a confident "This is the
+                          beginning" with no indication the count was
+                          unknown rather than genuinely zero. */}
+                      {!networkLoaded ? (
+                        <p className="text-sm text-[var(--muted)] mt-2">Loading your network...</p>
+                      ) : networkError ? (
+                        <p className="text-sm text-red-400 mt-2">{networkError}</p>
+                      ) : networkDepth.people === 0 ? (
                         <>
                           <p className="text-3xl font-bold text-white mt-2">This is the beginning</p>
                           <p className="text-sm text-[var(--muted)] mt-2 max-w-md mx-auto">
@@ -1685,7 +1801,7 @@ export default function TrainingPage() {
                             </button>
                           )}
                         </div>
-                        {/* Episode carousel — thumbnails with watched progress */}
+                        {/* Episode carousel: thumbnails with watched progress */}
                         {module.episodes && (
                           <EpisodeCarousel
                             episodes={module.episodes}

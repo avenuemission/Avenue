@@ -31,8 +31,17 @@ export function recentMondays(count: number, from: Date): string[] {
   for (let i = 0; i < count; i++) {
     mondays.push(currentMonday);
 
-    // Go back 7 days to get the previous Monday
-    const currentDate = new Date(currentMonday);
+    // Go back 7 days to get the previous Monday. Parse `currentMonday`
+    // (YYYY-MM-DD) into year/month/day parts and construct the Date with
+    // the local-time constructor, not `new Date(currentMonday)`. A bare
+    // "YYYY-MM-DD" string is parsed as UTC midnight per the Date spec; in
+    // any zone behind UTC, reading it back with local getters (as
+    // formatDate does below) then reads the previous calendar day, so
+    // consecutive Mondays drift by a day at a time instead of staying
+    // exactly seven days apart. Staying in local time throughout, the same
+    // way mondayOf does above, avoids that entirely.
+    const [year, month, day] = currentMonday.split("-").map(Number);
+    const currentDate = new Date(year, month - 1, day);
     currentDate.setDate(currentDate.getDate() - 7);
     currentMonday = formatDate(currentDate);
   }

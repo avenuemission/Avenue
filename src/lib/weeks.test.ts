@@ -103,5 +103,29 @@ describe("weeks", () => {
       const result = recentMondays(0, new Date(2026, 7, 26));
       expect(result).toEqual([]);
     });
+
+    it("stays in local time in a negative UTC offset zone (regression: UTC parsing drifted the sequence off Mondays)", () => {
+      // The existing tests above pass even with the bug, because the test
+      // machine runs at UTC+10, where the bug does not manifest. In a zone
+      // behind UTC (e.g. America/New_York), parsing "YYYY-MM-DD" via
+      // `new Date(currentMonday)` reads it as UTC midnight, which lands on
+      // the previous local calendar day; reading local getters back off
+      // that then produced 2026-08-24, 08-16, 08-08, 07-31, 07-23 instead
+      // of Mondays seven days apart.
+      const originalTZ = process.env.TZ;
+      process.env.TZ = "America/New_York";
+      try {
+        const result = recentMondays(5, new Date(2026, 7, 26));
+        expect(result).toEqual([
+          "2026-08-24",
+          "2026-08-17",
+          "2026-08-10",
+          "2026-08-03",
+          "2026-07-27",
+        ]);
+      } finally {
+        process.env.TZ = originalTZ;
+      }
+    });
   });
 });

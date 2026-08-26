@@ -61,6 +61,31 @@ function melbourneTodayISO(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Melbourne" }).format(new Date());
 }
 
+// How many days ahead of Melbourne's own calendar date a submitted
+// weekStart is still allowed to be. Every leader is assumed to be in
+// Melbourne, but a leader's device is not: someone genuinely in a
+// timezone ahead of Melbourne, for example New Zealand, computes their own
+// current Monday correctly and can be up to about a day ahead of
+// Melbourne's calendar date while doing so (verified: Auckland Monday
+// 00:30 sends 2026-08-31 while Melbourne is still 2026-08-30). Two days of
+// slack comfortably covers that gap for any real timezone ahead of
+// Melbourne, while a week that is genuinely in the future is always at
+// least 7 days out, so it is still refused.
+const FUTURE_SLACK_DAYS = 2;
+
+// melbourneTodayISO() plus FUTURE_SLACK_DAYS, in the same YYYY-MM-DD shape
+// so it can be compared against weekStart as a plain string, the same way
+// melbourneTodayISO() itself is used below.
+function melbourneTodayPlusSlackISO(): string {
+  const [y, m, d] = melbourneTodayISO().split("-").map(Number);
+  const withSlack = new Date(Date.UTC(y, m - 1, d));
+  withSlack.setUTCDate(withSlack.getUTCDate() + FUTURE_SLACK_DAYS);
+  const yy = withSlack.getUTCFullYear();
+  const mm = String(withSlack.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(withSlack.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
 // Validates the `weekStart` body/query field: must be an ISO YYYY-MM-DD
 // string, a real calendar date, a Monday, and not later than today in
 // Melbourne. Returns the clean string, or a readable error to send back as
@@ -87,8 +112,10 @@ function validateWeekStart(value: unknown): { weekStart: string } | { error: str
 
   // Plain string comparison is safe and correct here because both sides are
   // zero-padded YYYY-MM-DD, so lexicographic order matches chronological
-  // order exactly.
-  if (value > melbourneTodayISO()) {
+  // order exactly. Compared against today-plus-slack, not today itself, so
+  // a real timezone ahead of Melbourne can still file its own current
+  // week; see FUTURE_SLACK_DAYS above.
+  if (value > melbourneTodayPlusSlackISO()) {
     return { error: "weekStart must not be in the future" };
   }
 
