@@ -50,7 +50,8 @@ const post = (body, headers = {}) =>
   }).then(async (r) => ({ status: r.status, json: await r.json() }));
 
 async function cleanupStranger() {
-  await db.from("leader_training_progress").delete().eq("email", STRANGER_EMAIL);
+  const { error } = await db.from("leader_training_progress").delete().eq("email", STRANGER_EMAIL);
+  return error;
 }
 
 // The LEADER row (info@avenuemission.com) is real production data, not a
@@ -60,7 +61,10 @@ async function cleanupStranger() {
 // never target a different row than the one we actually read.
 let leaderBefore = null;
 
-await cleanupStranger();
+const preRunCleanupErr = await cleanupStranger();
+if (preRunCleanupErr) {
+  console.error("warning: pre-run cleanup of the stranger row failed:", preRunCleanupErr.message);
+}
 
 try {
   console.log("capture the leader's current progress row");
@@ -142,6 +146,22 @@ try {
   });
   check("returns 400", badEntry.status === 400, JSON.stringify(badEntry.json));
 
+  console.log("PUT with a 501-entry completedModules array");
+  const completedTooLong = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: Array.from({ length: 501 }, (_, i) => `p1m0e${i}`),
+  });
+  check("returns 400", completedTooLong.status === 400, JSON.stringify(completedTooLong.json));
+
+  console.log("PUT with a completedModules entry containing punctuation");
+  const completedBadEntry = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: ["p1m0!"],
+  });
+  check("returns 400", completedBadEntry.status === 400, JSON.stringify(completedBadEntry.json));
+
   console.log("PUT attempting to set checkpointStatus");
   const smuggle = await put({
     email: LEADER,
@@ -218,6 +238,7 @@ try {
   const bogus = await post({ action: "nonsense", email: LEADER });
   check("returns 400", bogus.status === 400, JSON.stringify(bogus.json));
 } finally {
+  let restoreOk;
   if (leaderBefore) {
     const { error: restoreErr } = await db
       .from("leader_training_progress")
@@ -230,7 +251,8 @@ try {
         checkpoint_completed_by: leaderBefore.checkpoint_completed_by,
       })
       .eq("email", LEADER);
-    check("restores the leader's original row", !restoreErr, restoreErr?.message ?? "");
+    restoreOk = !restoreErr;
+    check("restores the leader's original row", restoreOk, restoreErr?.message ?? "");
   } else {
     // The leader had no row before this run: put it back to that state
     // exactly, rather than leaving behind a row this script created.
@@ -238,12 +260,20 @@ try {
       .from("leader_training_progress")
       .delete()
       .eq("email", LEADER);
-    check("removes the row this run created for the leader", !deleteErr, deleteErr?.message ?? "");
+    restoreOk = !deleteErr;
+    check("removes the row this run created for the leader", restoreOk, deleteErr?.message ?? "");
   }
-  console.log("restored the leader's own record");
+  // Report what actually happened, not a fixed message: a failed restore on
+  // real leader data is exactly the kind of thing that must not read as
+  // success in the log.
+  console.log(
+    restoreOk
+      ? "restored the leader's own record"
+      : "FAILED to restore the leader's own record, see the check above"
+  );
 
-  await cleanupStranger();
-  console.log("cleaned up the temporary stranger row");
+  const cleanupErr = await cleanupStranger();
+  check("cleaned up the temporary stranger row", !cleanupErr, cleanupErr?.message ?? "");
 }
 
 if (failures > 0) {

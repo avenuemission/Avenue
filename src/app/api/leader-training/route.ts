@@ -74,22 +74,27 @@ function toProgress(row: ProgressRow) {
 async function ensureProgress(email: string): Promise<ProgressRow | null> {
   const db = getSupabaseAdmin();
 
-  const { data: leader } = await db.from("leaders").select("email").eq("email", email).maybeSingle();
-  if (!leader) return null;
-
-  const { data: existing } = await db
-    .from("leader_training_progress")
-    .select(PROGRESS_COLUMNS)
+  const { data: leader, error: leaderErr } = await db
+    .from("leaders")
+    .select("email")
     .eq("email", email)
     .maybeSingle();
-  if (existing) return existing as ProgressRow;
+  if (leaderErr) throw new Error(leaderErr.message);
+  if (!leader) return null;
 
+  // Upsert rather than read-then-insert. A read-then-insert has a race: two
+  // concurrent first-time requests for the same brand new leader (the
+  // training page's initial GET and its first debounced PUT both landing
+  // around mount) can both find no row and both attempt to insert, and the
+  // loser crashes on a duplicate-key error. The upsert payload only
+  // contains `email`, so on conflict it writes `email = excluded.email`
+  // (a no-op) rather than resetting any progress already saved, and still
+  // returns the row's current values either way.
   const { data, error } = await db
     .from("leader_training_progress")
-    .insert({ email })
+    .upsert({ email }, { onConflict: "email" })
     .select(PROGRESS_COLUMNS)
     .single();
-
   if (error) throw new Error(error.message);
   return data as ProgressRow;
 }
@@ -97,16 +102,20 @@ async function ensureProgress(email: string): Promise<ProgressRow | null> {
 // GET /api/leader-training?email=<leader>
 // GET /api/leader-training?all=1  (admin)
 export async function GET(request: NextRequest) {
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
-
   const url = new URL(request.url);
 
   if (url.searchParams.get("all") === "1") {
-    // Admin listing, authorised by Bearer token. Checked before any read.
+    // Admin listing, authorised by Bearer token. isAdminAuthorized runs
+    // before adminConfigError, not after, so an unauthenticated caller
+    // cannot use this endpoint to elicit the service-role-key diagnostic
+    // (see the "call right after the isAdminAuthorized check" guidance at
+    // src/lib/supabaseAdmin.ts:69).
     if (!isAdminAuthorized(request)) {
       return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
     }
+
+    const cfgErr = adminConfigError();
+    if (cfgErr) return cfgErr;
 
     try {
       const db = getSupabaseAdmin();
@@ -130,6 +139,7 @@ export async function GET(request: NextRequest) {
           checkpointStatus: r.checkpoint_status,
           checkpointRequestedAt: r.checkpoint_requested_at,
           checkpointCompletedAt: r.checkpoint_completed_at,
+          checkpointCompletedBy: r.checkpoint_completed_by,
           updatedAt: r.updated_at,
         })),
       });
@@ -137,6 +147,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: (e as Error).message }, { status: 500 });
     }
   }
+
+  const cfgErr = adminConfigError();
+  if (cfgErr) return cfgErr;
 
   const email = normaliseEmail(url.searchParams.get("email"));
   if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
@@ -245,12 +258,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "complete-checkpoint") {
+      // There is currently a single shared admin Bearer token and no
+      // per-admin identity in the POST contract, so "admin-token" marks the
+      // era (releases made under the shared-token scheme) rather than the
+      // person. Once individual admin identity exists, this should record
+      // that instead. It must stay distinguishable from a real identity so
+      // a disputed release is never mistaken for one.
       const { data, error } = await db
         .from("leader_training_progress")
         .update({
           checkpoint_status: "complete",
           checkpoint_completed_at: now,
-          checkpoint_completed_by: "admin",
+          checkpoint_completed_by: "admin-token",
           updated_at: now,
         })
         .eq("email", email)

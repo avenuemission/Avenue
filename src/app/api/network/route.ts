@@ -64,18 +64,20 @@ function splitName(full: string, email: string) {
 async function ensureNode(email: string): Promise<Row | null> {
   const db = getSupabaseAdmin();
 
-  const { data: leader } = await db
+  const { data: leader, error: leaderErr } = await db
     .from("leaders")
     .select("name")
     .eq("email", email)
     .maybeSingle();
+  if (leaderErr) throw new Error(leaderErr.message);
   if (!leader) return null;
 
-  const { data: existing } = await db
+  const { data: existing, error: existingErr } = await db
     .from("network_people")
     .select(COLUMNS)
     .eq("email", email)
     .maybeSingle();
+  if (existingErr) throw new Error(existingErr.message);
   if (existing) return existing as Row;
 
   const { first, last } = splitName(String(leader.name ?? ""), email);
