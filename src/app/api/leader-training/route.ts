@@ -24,6 +24,15 @@ const PROGRESS_COLUMNS =
 const MAX_IDS = 500;
 const ID_PATTERN = /^[a-z0-9]+$/;
 
+// How far a single PUT is allowed to advance the revision past whatever is
+// currently stored. Without a bound, `validateRevision` alone accepts any
+// finite integer, so one PUT carrying a revision near Number.MAX_SAFE_INTEGER
+// permanently wins and then refuses every later save from every device, with
+// no recovery available anywhere in the UI, and nothing but a leader's own
+// email is needed to send it. A normal client only ever sends stored + 1, so
+// a margin this generous never gets in the way of legitimate use.
+const MAX_REVISION_JUMP = 1000;
+
 function normaliseEmail(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const cleaned = raw.trim().toLowerCase();
@@ -199,6 +208,13 @@ export async function PUT(request: NextRequest) {
     const existing = await ensureProgress(email);
     if (!existing) return NextResponse.json({ error: "Not a leader account" }, { status: 403 });
 
+    if (revision > existing.revision + MAX_REVISION_JUMP) {
+      return NextResponse.json(
+        { error: `revision must be within ${MAX_REVISION_JUMP} of the stored revision` },
+        { status: 400 }
+      );
+    }
+
     // Explicit keys only, never a spread of the request body. checkpoint_status
     // is not one of them: a leader saving their own watched episodes and
     // completed modules can never touch their own checkpoint status, which is
@@ -290,6 +306,15 @@ export async function POST(request: NextRequest) {
       // complete is left untouched and reported as success, so a leader who
       // double-clicks, or reloads after their call is already booked, can
       // never downgrade a complete checkpoint back to requested.
+      //
+      // This is not just an upfront check on the `existing` row read above:
+      // the update itself is filtered on `.eq("checkpoint_status", "none")`,
+      // so the read-then-write gap between that check and this write cannot
+      // be exploited. If an admin's complete-checkpoint lands in that gap,
+      // the filter matches no row here, and the zero-row result is treated
+      // as the same no-op the upfront check already intends, rather than
+      // silently downgrading a checkpoint an admin just completed back to
+      // requested underneath them.
       if (existing.checkpoint_status !== "none") {
         return NextResponse.json({ ok: true, progress: toProgress(existing) });
       }
@@ -302,9 +327,26 @@ export async function POST(request: NextRequest) {
           updated_at: now,
         })
         .eq("email", email)
+        .eq("checkpoint_status", "none")
         .select(PROGRESS_COLUMNS)
-        .single();
+        .maybeSingle();
       if (error) throw new Error(error.message);
+
+      if (!data) {
+        // Lost the race: something else (an admin's complete-checkpoint, or
+        // another request-checkpoint) changed the status between the read
+        // above and this write. Re-fetch and report the current state as
+        // the no-op it already was meant to be, rather than erroring or
+        // silently applying a write that no longer reflects reality.
+        const { data: current, error: currentErr } = await db
+          .from("leader_training_progress")
+          .select(PROGRESS_COLUMNS)
+          .eq("email", email)
+          .single();
+        if (currentErr) throw new Error(currentErr.message);
+        return NextResponse.json({ ok: true, progress: toProgress(current as ProgressRow) });
+      }
+
       return NextResponse.json({ ok: true, progress: toProgress(data as ProgressRow) });
     }
 

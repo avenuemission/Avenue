@@ -313,9 +313,18 @@ export default function TrainingPage() {
       .then((data) => {
         if (cancelled) return;
         const progress = data.progress ?? {};
-        setPhases(
-          reconcilePhases(progress.watchedEpisodes ?? [], progress.completedModules ?? [])
+        const loadedPhases = reconcilePhases(
+          progress.watchedEpisodes ?? [],
+          progress.completedModules ?? []
         );
+        setPhases(loadedPhases);
+        // Assigned directly (not left to the `useEffect` that syncs it from
+        // `phases`), same reasoning as revisionRef below: that effect only
+        // runs after React commits and paints, which is later than a save
+        // that could in principle fire before the first render settles. Kept
+        // uniform with the 409 branch of performSave, where this is not
+        // optional (see the comment there).
+        phasesRef.current = loadedPhases;
         setCheckpointStatus((progress.checkpointStatus as CheckpointStatus) ?? "none");
         // Assigned directly (not left to a syncing effect) so the very first
         // save this page can send never races ahead of knowing the row's
@@ -372,15 +381,61 @@ export default function TrainingPage() {
         // rather than silently losing this attempt, or blindly retrying,
         // which would just fight whatever made the change.
         const body = await res.json().catch(() => null);
-        const serverProgress = body?.progress;
-        if (serverProgress) {
-          setPhases(
-            reconcilePhases(serverProgress.watchedEpisodes ?? [], serverProgress.completedModules ?? [])
-          );
-          const serverRevision =
-            typeof serverProgress.revision === "number" ? serverProgress.revision : revisionRef.current;
-          revisionRef.current = serverRevision;
+        let serverProgress = body?.progress ?? null;
+
+        if (!serverProgress) {
+          // The 409 body was unusable (parse failure, or a shape with no
+          // progress). Leaving revisionRef untouched here would mean every
+          // later save keeps resending the exact number that was just
+          // refused, locking saving permanently. Fall back to a plain GET to
+          // resynchronise instead.
+          try {
+            const freshRes = await fetch(
+              `/api/leader-training?email=${encodeURIComponent(user.email)}`
+            );
+            if (freshRes.ok) {
+              const freshBody = await freshRes.json().catch(() => null);
+              serverProgress = freshBody?.progress ?? null;
+            }
+          } catch {
+            // Network failure on the fallback GET too; fall through to the
+            // failed-save handling below.
+          }
         }
+
+        if (!serverProgress) {
+          setSaveError("Could not save your progress. It is kept on this page, try again shortly.");
+          return;
+        }
+
+        // phasesRef is assigned directly here, not left to the `useEffect`
+        // that normally syncs it from `phases`, because that effect only
+        // runs after React commits and paints. If a tick landed while this
+        // request was in flight, runSave's dirty flag makes it call
+        // performSave() again immediately, in the same microtask turn, well
+        // before that effect has a chance to run. Without this direct
+        // assignment, that chained call would read the pre-conflict
+        // phasesRef and re-send it under the newly-adopted, now-valid
+        // revision, silently overwriting the write that just won: the exact
+        // bug this guard exists to prevent, one layer up in the client.
+        const adoptedPhases = reconcilePhases(
+          serverProgress.watchedEpisodes ?? [],
+          serverProgress.completedModules ?? []
+        );
+        setPhases(adoptedPhases);
+        phasesRef.current = adoptedPhases;
+        const serverRevision =
+          typeof serverProgress.revision === "number" ? serverProgress.revision : revisionRef.current;
+        revisionRef.current = serverRevision;
+
+        // Any tick that landed during this request is already superseded by
+        // the server's copy just adopted above (a full overwrite, by
+        // design): chaining a follow-up save here would either needlessly
+        // resend that same content or, without the phasesRef fix above,
+        // fight the write that just won. There is nothing left to save, so
+        // runSave's loop should stop here rather than fire again.
+        dirtyRef.current = false;
+
         setSaveError(null);
         setConflictNotice(
           "Your progress was refreshed from the server because it had been updated elsewhere."
@@ -599,7 +654,14 @@ export default function TrainingPage() {
             <span className="text-red-400 text-xs hidden sm:inline max-w-[220px]">{saveError}</span>
           )}
           {!saving && !saveError && conflictNotice && (
-            <span className="text-amber-400 text-xs hidden sm:inline max-w-[260px]">{conflictNotice}</span>
+            // Visible at every width, not `hidden sm:inline` like the
+            // neighbouring indicators: a leader whose tick just silently
+            // reverted needs the explanation most on the device class most
+            // likely to be the "second device" in a conflict, and that is
+            // exactly the narrow viewport this would otherwise hide it on.
+            <span className="text-amber-400 text-xs inline-block max-w-[200px] sm:max-w-[260px]">
+              {conflictNotice}
+            </span>
           )}
           <span className="text-gray-400 text-sm hidden sm:inline">Welcome, {user.name}</span>
           <button onClick={handleLogout} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">

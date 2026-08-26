@@ -14,7 +14,7 @@ const { error } = await createClient(url, key)
   .from("leader_training_progress")
   .select(
     "email, watched_episodes, completed_modules, checkpoint_status, " +
-      "checkpoint_requested_at, checkpoint_completed_at, checkpoint_completed_by, updated_at"
+      "checkpoint_requested_at, checkpoint_completed_at, checkpoint_completed_by, updated_at, revision"
   )
   .limit(1);
 

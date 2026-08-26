@@ -278,6 +278,42 @@ try {
   });
   check("returns 400", nonNumericRevision.status === 400, JSON.stringify(nonNumericRevision.json));
 
+  console.log("revision guard: two PUTs carrying the SAME revision, fired concurrently, produce exactly one 200 and one 409");
+  // This is the check that actually proves atomicity. Every check above
+  // sends one request at a time, so all of them would still pass against a
+  // route that reads the revision, decides in JavaScript that it is
+  // strictly greater, and only then writes: that shape is exactly what this
+  // whole guard exists to forbid, since two requests racing that read could
+  // both see the same stale revision and both go on to write. Firing two
+  // requests via Promise.all, genuinely overlapping in flight rather than
+  // sequenced by this script, is what actually exercises that race.
+  const concurrentRevision = currentRevision + 1;
+  const [concurrentA, concurrentB] = await Promise.all([
+    put({ email: LEADER, watchedEpisodes: ["p1m4e1"], completedModules: ["p1m4"], revision: concurrentRevision }),
+    put({ email: LEADER, watchedEpisodes: ["p1m5e1"], completedModules: ["p1m5"], revision: concurrentRevision }),
+  ]);
+  const concurrentStatuses = [concurrentA.status, concurrentB.status].sort();
+  check(
+    "exactly one 200 and one 409 among the two concurrent PUTs",
+    JSON.stringify(concurrentStatuses) === JSON.stringify([200, 409]),
+    `statuses=${JSON.stringify([concurrentA.status, concurrentB.status])}`
+  );
+  const concurrentWinner =
+    concurrentA.status === 200 ? concurrentA : concurrentB.status === 200 ? concurrentB : null;
+  check(
+    "a winner was found among the two concurrent PUTs",
+    !!concurrentWinner,
+    JSON.stringify([concurrentA.json, concurrentB.json])
+  );
+  if (concurrentWinner) {
+    check(
+      "the winner's stored revision matches what both requests sent",
+      concurrentWinner.json?.progress?.revision === concurrentRevision,
+      concurrentWinner.json?.progress?.revision
+    );
+    currentRevision = concurrentWinner.json?.progress?.revision ?? concurrentRevision;
+  }
+
   console.log("complete-checkpoint without the admin header");
   const completeNoAuth = await post({ action: "complete-checkpoint", email: LEADER });
   check("returns 401", completeNoAuth.status === 401, JSON.stringify(completeNoAuth.json));
