@@ -12,13 +12,14 @@ interface ProgressRow {
   checkpoint_completed_at: string | null;
   checkpoint_completed_by: string | null;
   updated_at: string;
+  revision: number;
 }
 
 // A single string literal, not a concatenation: Supabase's type-level
 // column parser only reads the exact literal type of this constant, and
 // string concatenation widens that to plain `string`, breaking it.
 const PROGRESS_COLUMNS =
-  "email, watched_episodes, completed_modules, checkpoint_status, checkpoint_requested_at, checkpoint_completed_at, checkpoint_completed_by, updated_at";
+  "email, watched_episodes, completed_modules, checkpoint_status, checkpoint_requested_at, checkpoint_completed_at, checkpoint_completed_by, updated_at, revision";
 
 const MAX_IDS = 500;
 const ID_PATTERN = /^[a-z0-9]+$/;
@@ -52,7 +53,19 @@ function toProgress(row: ProgressRow) {
     completedModules: row.completed_modules ?? [],
     checkpointStatus: row.checkpoint_status,
     checkpointCompletedAt: row.checkpoint_completed_at,
+    revision: row.revision,
   };
+}
+
+// Validates the body's `revision` field: it must be present and a finite
+// integer. Missing, non-numeric, NaN, Infinity, and fractional values are
+// all rejected here rather than reaching the database, since a malformed
+// revision can never legitimately win the `revision < incoming` guard.
+function validateRevision(value: unknown): { revision: number } | { error: string } {
+  if (typeof value !== "number" || !Number.isFinite(value) || !Number.isInteger(value)) {
+    return { error: "revision must be a finite integer" };
+  }
+  return { revision: value };
 }
 
 // Every leader gets a progress row the first time anything touches their
@@ -163,7 +176,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/leader-training  { email, watchedEpisodes, completedModules }
+// PUT /api/leader-training  { email, watchedEpisodes, completedModules, revision }
 export async function PUT(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
@@ -178,6 +191,10 @@ export async function PUT(request: NextRequest) {
   const completed = validateIdList(body.completedModules, "completedModules");
   if ("error" in completed) return NextResponse.json({ error: completed.error }, { status: 400 });
 
+  const revisionResult = validateRevision(body.revision);
+  if ("error" in revisionResult) return NextResponse.json({ error: revisionResult.error }, { status: 400 });
+  const revision = revisionResult.revision;
+
   try {
     const existing = await ensureProgress(email);
     if (!existing) return NextResponse.json({ error: "Not a leader account" }, { status: 403 });
@@ -188,17 +205,51 @@ export async function PUT(request: NextRequest) {
     // exactly the field the whole Launch gate depends on (design spec section
     // 4.2). A spread here would let a PUT body smuggle checkpointStatus in and
     // complete its own checkpoint.
+    //
+    // The `.lt("revision", revision)` filter is the whole guard: the write
+    // only lands when the row's CURRENT revision is strictly less than the
+    // incoming one, and Postgres evaluates that filter against the row as it
+    // stands at write time, atomically, as part of the same statement as the
+    // update itself. Two simultaneous requests carrying the same stale
+    // revision both race the same filter, but only one of them can still see
+    // a matching row once the other has already advanced it, so only one can
+    // ever win. Reading the revision first and comparing it in JavaScript
+    // before deciding whether to write would reopen exactly the same
+    // check-then-act race one layer up, since both requests could pass the
+    // JS comparison before either has written anything.
     const { data, error } = await getSupabaseAdmin()
       .from("leader_training_progress")
       .update({
         watched_episodes: watched.ids,
         completed_modules: completed.ids,
+        revision,
         updated_at: new Date().toISOString(),
       })
       .eq("email", email)
+      .lt("revision", revision)
       .select(PROGRESS_COLUMNS)
-      .single();
+      .maybeSingle();
     if (error) throw new Error(error.message);
+
+    if (!data) {
+      // The update matched no row: the incoming revision was not strictly
+      // greater than what is currently stored, so nothing was written. This
+      // is the guard doing its job, not a server error, so it is reported as
+      // 409 rather than 500. The current stored progress is fetched fresh
+      // (not the pre-update `existing`, which may itself be stale relative
+      // to whatever write actually won) so the caller can resynchronise from
+      // the real state of the row.
+      const { data: current, error: currentErr } = await getSupabaseAdmin()
+        .from("leader_training_progress")
+        .select(PROGRESS_COLUMNS)
+        .eq("email", email)
+        .single();
+      if (currentErr) throw new Error(currentErr.message);
+      return NextResponse.json(
+        { error: "Revision conflict", progress: toProgress(current as ProgressRow) },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ ok: true, progress: toProgress(data as ProgressRow) });
   } catch (e) {

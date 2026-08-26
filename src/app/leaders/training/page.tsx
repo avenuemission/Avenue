@@ -249,6 +249,28 @@ export default function TrainingPage() {
   const phasesRef = useRef<Phase[]>(phases);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // The row's revision, as last seen from the server (either the initial GET
+  // or the outcome of a save). This is a ref rather than state: nothing in
+  // the UI renders it, and performSave must always read whatever is current
+  // at fire time, the same reason phasesRef exists instead of closing over
+  // `phases`. Every save sends revisionRef.current + 1; a successful save or
+  // a 409 conflict response both replace it with whatever the server says is
+  // now current.
+  const revisionRef = useRef<number | null>(null);
+
+  // Shown briefly after a 409 conflict overwrites local state with the
+  // server's copy, so a leader whose click silently lost is told why,
+  // instead of the tick just vanishing with no explanation.
+  const [conflictNotice, setConflictNotice] = useState<string | null>(null);
+  const conflictNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleConflictNoticeClear = useCallback(() => {
+    if (conflictNoticeTimeoutRef.current) clearTimeout(conflictNoticeTimeoutRef.current);
+    conflictNoticeTimeoutRef.current = setTimeout(() => {
+      conflictNoticeTimeoutRef.current = null;
+      setConflictNotice(null);
+    }, 6000);
+  }, []);
+
   useEffect(() => {
     phasesRef.current = phases;
   }, [phases]);
@@ -295,6 +317,10 @@ export default function TrainingPage() {
           reconcilePhases(progress.watchedEpisodes ?? [], progress.completedModules ?? [])
         );
         setCheckpointStatus((progress.checkpointStatus as CheckpointStatus) ?? "none");
+        // Assigned directly (not left to a syncing effect) so the very first
+        // save this page can send never races ahead of knowing the row's
+        // real starting revision.
+        revisionRef.current = typeof progress.revision === "number" ? progress.revision : 0;
         setProgressLoaded(true);
       })
       .catch(() => {
@@ -314,9 +340,17 @@ export default function TrainingPage() {
 
   // A single save attempt. Collects the current watched episode ids and
   // completed module ids from phasesRef (not `phases`, since this can fire
-  // long after the tick that scheduled it) and PUTs them.
+  // long after the tick that scheduled it) and PUTs them, carrying the
+  // revision this save believes it is advancing to.
   const performSave = useCallback(async () => {
     if (!user) return;
+    // Nothing to save against yet: the initial GET has not landed. This
+    // should not be reachable in practice (the interactive UI that calls
+    // scheduleSave only renders once progressLoaded is true, which is set
+    // in the same pass as revisionRef), but guards against sending a
+    // malformed revision if it ever is.
+    if (revisionRef.current === null) return;
+
     const currentPhases = phasesRef.current;
     const watchedEpisodes = currentPhases.flatMap((phase) =>
       phase.modules.flatMap((m) => (m.episodes ?? []).filter((e) => e.watched).map((e) => e.id))
@@ -324,20 +358,49 @@ export default function TrainingPage() {
     const completedModules = currentPhases.flatMap((phase) =>
       phase.modules.filter((m) => m.completed).map((m) => m.id)
     );
+    const nextRevision = revisionRef.current + 1;
     try {
       const res = await fetch("/api/leader-training", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, watchedEpisodes, completedModules }),
+        body: JSON.stringify({ email: user.email, watchedEpisodes, completedModules, revision: nextRevision }),
       });
+
+      if (res.status === 409) {
+        // Another tab or device saved a newer revision first. The server's
+        // copy wins: adopt its progress and its revision into this page
+        // rather than silently losing this attempt, or blindly retrying,
+        // which would just fight whatever made the change.
+        const body = await res.json().catch(() => null);
+        const serverProgress = body?.progress;
+        if (serverProgress) {
+          setPhases(
+            reconcilePhases(serverProgress.watchedEpisodes ?? [], serverProgress.completedModules ?? [])
+          );
+          const serverRevision =
+            typeof serverProgress.revision === "number" ? serverProgress.revision : revisionRef.current;
+          revisionRef.current = serverRevision;
+        }
+        setSaveError(null);
+        setConflictNotice(
+          "Your progress was refreshed from the server because it had been updated elsewhere."
+        );
+        scheduleConflictNoticeClear();
+        return;
+      }
+
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
+
+      const body = await res.json();
+      const savedRevision = typeof body?.progress?.revision === "number" ? body.progress.revision : nextRevision;
+      revisionRef.current = savedRevision;
       setSaveError(null);
     } catch {
       // Never revert a leader's tick because the network failed. Local
       // state is left exactly as it is; only the error banner changes.
       setSaveError("Could not save your progress. It is kept on this page, try again shortly.");
     }
-  }, [user]);
+  }, [scheduleConflictNoticeClear, user]);
 
   // Serialises saves so at most one PUT is ever in flight. Two overlapping
   // full-overwrite PUTs race: whichever response lands last at the server
@@ -374,11 +437,12 @@ export default function TrainingPage() {
     }, 800);
   }, [runSave]);
 
-  // Clear the pending timeout on unmount so a save cannot fire after the
-  // component is gone.
+  // Clear the pending timeouts on unmount so a save, or a notice clear,
+  // cannot fire after the component is gone.
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      if (conflictNoticeTimeoutRef.current) clearTimeout(conflictNoticeTimeoutRef.current);
     };
   }, []);
 
@@ -533,6 +597,9 @@ export default function TrainingPage() {
           )}
           {!saving && saveError && (
             <span className="text-red-400 text-xs hidden sm:inline max-w-[220px]">{saveError}</span>
+          )}
+          {!saving && !saveError && conflictNotice && (
+            <span className="text-amber-400 text-xs hidden sm:inline max-w-[260px]">{conflictNotice}</span>
           )}
           <span className="text-gray-400 text-sm hidden sm:inline">Welcome, {user.name}</span>
           <button onClick={handleLogout} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
