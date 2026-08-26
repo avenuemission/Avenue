@@ -314,6 +314,169 @@ try {
     currentRevision = concurrentWinner.json?.progress?.revision ?? concurrentRevision;
   }
 
+  console.log("revision guard: merge-on-conflict keeps an addition made during the flight, alongside the competing write");
+  // Mirrors mergeIdsSinceSend in src/app/leaders/training/page.tsx: the
+  // client cannot be exercised directly from this script, so the same
+  // contract is reproduced here (server ids, plus ids added since send,
+  // minus ids removed since send) and driven through the real API, to catch
+  // a regression in either side of that contract rather than just in the
+  // route's own conditional-update behaviour.
+  function mergeIdsSinceSend(serverIds, sentIds, localIds) {
+    const sentSet = new Set(sentIds);
+    const localSet = new Set(localIds);
+    const merged = new Set(serverIds);
+    for (const id of localSet) {
+      if (!sentSet.has(id)) merged.add(id);
+    }
+    for (const id of sentSet) {
+      if (!localSet.has(id)) merged.delete(id);
+    }
+    return Array.from(merged);
+  }
+
+  // Shared baseline both "devices" start from.
+  const mergeBaseline = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: ["p1m0"],
+    revision: currentRevision + 1,
+  });
+  check("merge test baseline PUT succeeds", mergeBaseline.status === 200, JSON.stringify(mergeBaseline.json));
+  currentRevision = mergeBaseline.json?.progress?.revision ?? currentRevision + 1;
+
+  // Device B's own PUT resends the baseline unchanged (isolates the check to
+  // the during-flight delta, rather than to whatever Device B's own PUT
+  // happened to contain, which is a separate question from what this merge
+  // is specifically responsible for).
+  const sentCompleted = ["p1m0"];
+  const sentRevision = currentRevision + 1;
+
+  // Device A wins the race: writes directly, advancing past the revision
+  // Device B's PUT is about to carry.
+  const deviceAWrite = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: ["p1m0", "p1m1"],
+    revision: sentRevision,
+  });
+  check("device A's competing write succeeds", deviceAWrite.status === 200, JSON.stringify(deviceAWrite.json));
+
+  // Device B's PUT, built on the now-stale revision, conflicts.
+  const deviceBAttempt = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: sentCompleted,
+    revision: sentRevision,
+  });
+  check("device B's PUT is refused with 409", deviceBAttempt.status === 409, JSON.stringify(deviceBAttempt.json));
+  const addMergeServerProgress = deviceBAttempt.json?.progress;
+  check(
+    "the 409 carries the server's progress to merge against",
+    !!addMergeServerProgress,
+    JSON.stringify(deviceBAttempt.json)
+  );
+
+  // While Device B's PUT was in flight, its leader also ticked p1m2: local
+  // now holds an addition sentCompleted never carried.
+  const addMergeLocal = ["p1m0", "p1m2"];
+  const addMerged = mergeIdsSinceSend(addMergeServerProgress.completedModules ?? [], sentCompleted, addMergeLocal);
+  check(
+    "the merge keeps the server's competing change and the in-flight addition together",
+    JSON.stringify(addMerged.slice().sort()) === JSON.stringify(["p1m0", "p1m1", "p1m2"]),
+    JSON.stringify(addMerged)
+  );
+
+  const addMergedPut = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: addMerged,
+    revision: addMergeServerProgress.revision + 1,
+  });
+  check(
+    "the merged PUT succeeds against the freshly adopted revision",
+    addMergedPut.status === 200,
+    JSON.stringify(addMergedPut.json)
+  );
+  currentRevision = addMergedPut.json?.progress?.revision ?? addMergeServerProgress.revision + 1;
+
+  const afterAddMerge = await get(`email=${encodeURIComponent(LEADER)}`);
+  check(
+    "the database holds both the competing change and the in-flight addition",
+    JSON.stringify((afterAddMerge.json?.progress?.completedModules ?? []).slice().sort()) ===
+      JSON.stringify(["p1m0", "p1m1", "p1m2"]),
+    JSON.stringify(afterAddMerge.json?.progress?.completedModules)
+  );
+
+  console.log("revision guard: merge-on-conflict keeps an un-tick made during the flight, not resurrected by the server's copy");
+  // New shared baseline: both p1m0 and p1m2 already complete.
+  const untickBaseline = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: ["p1m0", "p1m2"],
+    revision: currentRevision + 1,
+  });
+  check("un-tick test baseline PUT succeeds", untickBaseline.status === 200, JSON.stringify(untickBaseline.json));
+  currentRevision = untickBaseline.json?.progress?.revision ?? currentRevision + 1;
+
+  // Device B's own PUT again resends the baseline unchanged.
+  const untickSent = ["p1m0", "p1m2"];
+  const untickRevision = currentRevision + 1;
+
+  // Device A wins the race again, this time purely additive (keeps p1m2).
+  const deviceAWrite2 = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: ["p1m0", "p1m1", "p1m2"],
+    revision: untickRevision,
+  });
+  check("device A's second competing write succeeds", deviceAWrite2.status === 200, JSON.stringify(deviceAWrite2.json));
+
+  const deviceBAttempt2 = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: untickSent,
+    revision: untickRevision,
+  });
+  check("device B's second PUT is refused with 409", deviceBAttempt2.status === 409, JSON.stringify(deviceBAttempt2.json));
+  const untickServerProgress = deviceBAttempt2.json?.progress;
+  check(
+    "the second 409 carries the server's progress to merge against",
+    !!untickServerProgress,
+    JSON.stringify(deviceBAttempt2.json)
+  );
+
+  // While Device B's second PUT was in flight, its leader UN-ticked p1m2:
+  // local now lacks an id sentCompleted carried, even though the server's
+  // own copy (from Device A) still has it.
+  const untickLocal = ["p1m0"];
+  const untickMerged = mergeIdsSinceSend(untickServerProgress.completedModules ?? [], untickSent, untickLocal);
+  check(
+    "the merge drops the in-flight un-tick rather than letting the server's copy resurrect it",
+    JSON.stringify(untickMerged.slice().sort()) === JSON.stringify(["p1m0", "p1m1"]),
+    JSON.stringify(untickMerged)
+  );
+
+  const untickMergedPut = await put({
+    email: LEADER,
+    watchedEpisodes: [],
+    completedModules: untickMerged,
+    revision: untickServerProgress.revision + 1,
+  });
+  check(
+    "the un-tick merged PUT succeeds against the freshly adopted revision",
+    untickMergedPut.status === 200,
+    JSON.stringify(untickMergedPut.json)
+  );
+  currentRevision = untickMergedPut.json?.progress?.revision ?? untickServerProgress.revision + 1;
+
+  const afterUntickMerge = await get(`email=${encodeURIComponent(LEADER)}`);
+  check(
+    "the database reflects the un-tick surviving, not resurrected",
+    JSON.stringify((afterUntickMerge.json?.progress?.completedModules ?? []).slice().sort()) ===
+      JSON.stringify(["p1m0", "p1m1"]),
+    JSON.stringify(afterUntickMerge.json?.progress?.completedModules)
+  );
+
   console.log("complete-checkpoint without the admin header");
   const completeNoAuth = await post({ action: "complete-checkpoint", email: LEADER });
   check("returns 401", completeNoAuth.status === 401, JSON.stringify(completeNoAuth.json));

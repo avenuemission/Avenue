@@ -208,6 +208,45 @@ function reconcilePhases(
   }));
 }
 
+// Extracts the two id lists (watched episode ids, completed module ids)
+// that the API contract carries, from a Phase[] tree. Used both to build
+// the payload a save sends and, later, to read back whatever is locally
+// current when a save conflicts.
+function extractProgressIds(phases: Phase[]): { watchedEpisodes: string[]; completedModules: string[] } {
+  const watchedEpisodes = phases.flatMap((phase) =>
+    phase.modules.flatMap((m) => (m.episodes ?? []).filter((e) => e.watched).map((e) => e.id))
+  );
+  const completedModules = phases.flatMap((phase) =>
+    phase.modules.filter((m) => m.completed).map((m) => m.id)
+  );
+  return { watchedEpisodes, completedModules };
+}
+
+// Merges edits made locally after `sent` was captured on top of the
+// server's own copy, instead of discarding them. `sent` is the payload a
+// conflicted save went out with; `local` is whatever the page holds now,
+// which may have changed while that save was in flight. The difference
+// between them is exactly what changed during the flight:
+//   - an id in `local` but not in `sent` was added during the flight (a
+//     tick) and must survive into the merge
+//   - an id in `sent` but not in `local` was removed during the flight (an
+//     un-tick) and must stay removed, not be resurrected by the server's
+//     copy just because the server doesn't know about it
+// Ids the server already has (from whoever won the conflicting write) are
+// kept unless this page's own in-flight edit explicitly removed them.
+function mergeIdsSinceSend(serverIds: string[], sentIds: string[], localIds: string[]): string[] {
+  const sentSet = new Set(sentIds);
+  const localSet = new Set(localIds);
+  const merged = new Set(serverIds);
+  for (const id of localSet) {
+    if (!sentSet.has(id)) merged.add(id);
+  }
+  for (const id of sentSet) {
+    if (!localSet.has(id)) merged.delete(id);
+  }
+  return Array.from(merged);
+}
+
 // No separate component needed - inline in the layout below
 
 // Module Type Icons
@@ -360,26 +399,32 @@ export default function TrainingPage() {
     // malformed revision if it ever is.
     if (revisionRef.current === null) return;
 
-    const currentPhases = phasesRef.current;
-    const watchedEpisodes = currentPhases.flatMap((phase) =>
-      phase.modules.flatMap((m) => (m.episodes ?? []).filter((e) => e.watched).map((e) => e.id))
-    );
-    const completedModules = currentPhases.flatMap((phase) =>
-      phase.modules.filter((m) => m.completed).map((m) => m.id)
+    // Captured now, before the request goes out, so that if this save
+    // conflicts we can tell exactly what changed locally afterward: the
+    // difference between this snapshot and whatever phasesRef holds when
+    // the response comes back.
+    const { watchedEpisodes: sentWatched, completedModules: sentCompleted } = extractProgressIds(
+      phasesRef.current
     );
     const nextRevision = revisionRef.current + 1;
     try {
       const res = await fetch("/api/leader-training", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, watchedEpisodes, completedModules, revision: nextRevision }),
+        body: JSON.stringify({
+          email: user.email,
+          watchedEpisodes: sentWatched,
+          completedModules: sentCompleted,
+          revision: nextRevision,
+        }),
       });
 
       if (res.status === 409) {
-        // Another tab or device saved a newer revision first. The server's
-        // copy wins: adopt its progress and its revision into this page
-        // rather than silently losing this attempt, or blindly retrying,
-        // which would just fight whatever made the change.
+        // Another tab or device saved a newer revision first. Rather than
+        // discarding whatever happened on this page since sentWatched /
+        // sentCompleted were captured, or blindly retrying and fighting
+        // whatever made the change, the two are merged: the server's copy,
+        // with this page's own since-send edits re-applied on top.
         const body = await res.json().catch(() => null);
         let serverProgress = body?.progress ?? null;
 
@@ -408,37 +453,56 @@ export default function TrainingPage() {
           return;
         }
 
-        // phasesRef is assigned directly here, not left to the `useEffect`
-        // that normally syncs it from `phases`, because that effect only
-        // runs after React commits and paints. If a tick landed while this
+        // Whatever phasesRef holds right now reflects every edit made since
+        // sentWatched / sentCompleted were captured, including one made
+        // while this very request was in flight: the difference between
+        // that snapshot and this one is exactly what changed during the
+        // flight, ticks and un-ticks both. Merging that difference onto the
+        // server's copy, rather than replacing local state with the
+        // server's copy wholesale, is what keeps an in-flight edit from
+        // silently vanishing the moment a conflict resolves.
+        const { watchedEpisodes: localWatched, completedModules: localCompleted } = extractProgressIds(
+          phasesRef.current
+        );
+        const mergedWatched = mergeIdsSinceSend(
+          serverProgress.watchedEpisodes ?? [],
+          sentWatched,
+          localWatched
+        );
+        const mergedCompleted = mergeIdsSinceSend(
+          serverProgress.completedModules ?? [],
+          sentCompleted,
+          localCompleted
+        );
+
+        // phasesRef is assigned directly here, not left to the useEffect
+        // that normally syncs it from phases, because that effect only
+        // runs after React commits and paints. If an edit landed while this
         // request was in flight, runSave's dirty flag makes it call
         // performSave() again immediately, in the same microtask turn, well
         // before that effect has a chance to run. Without this direct
-        // assignment, that chained call would read the pre-conflict
-        // phasesRef and re-send it under the newly-adopted, now-valid
-        // revision, silently overwriting the write that just won: the exact
-        // bug this guard exists to prevent, one layer up in the client.
-        const adoptedPhases = reconcilePhases(
-          serverProgress.watchedEpisodes ?? [],
-          serverProgress.completedModules ?? []
-        );
-        setPhases(adoptedPhases);
-        phasesRef.current = adoptedPhases;
+        // assignment, that chained call would read a stale phasesRef
+        // instead of the merged state just computed above.
+        const mergedPhases = reconcilePhases(mergedWatched, mergedCompleted);
+        setPhases(mergedPhases);
+        phasesRef.current = mergedPhases;
         const serverRevision =
           typeof serverProgress.revision === "number" ? serverProgress.revision : revisionRef.current;
         revisionRef.current = serverRevision;
 
-        // Any tick that landed during this request is already superseded by
-        // the server's copy just adopted above (a full overwrite, by
-        // design): chaining a follow-up save here would either needlessly
-        // resend that same content or, without the phasesRef fix above,
-        // fight the write that just won. There is nothing left to save, so
-        // runSave's loop should stop here rather than fire again.
-        dirtyRef.current = false;
-
+        // dirtyRef is deliberately left untouched here, not cleared. Any
+        // edit that landed during this request's flight already set it, via
+        // the same debounce-then-runSave path every other tick uses; that is
+        // precisely the signal that the merged state above still needs to
+        // be persisted, since only phasesRef and revisionRef were updated
+        // just now, nothing has actually been sent yet. Leaving it as-is
+        // means runSave's loop fires exactly one more save, carrying the
+        // merged state at the newly-adopted revision + 1, only when there
+        // is genuinely something left to save; if nothing changed during
+        // the flight, dirtyRef is still false and the loop ends here.
         setSaveError(null);
         setConflictNotice(
-          "Your progress was refreshed from the server because it had been updated elsewhere."
+          "Your progress was merged with an update from elsewhere."
         );
         scheduleConflictNoticeClear();
         return;
