@@ -282,6 +282,43 @@ const RPMS_GAUGES: { key: "relational" | "physical" | "mental" | "spiritual"; la
 // How many recent weeks the history strip shows.
 const CHECKIN_HISTORY_WEEKS = 12;
 
+// Hero Maker's five apprenticeship steps (Dave Ferguson). Index 0 is not one
+// of the book's five, it is "not started yet" so every person in the network
+// always has a valid label, including someone just added. The names are the
+// teaching, so the UI always shows the label, never the bare number.
+const APPRENTICE_STEPS: { value: number; label: string }[] = [
+  { value: 0, label: "Not started yet" },
+  { value: 1, label: "I do, you watch" },
+  { value: 2, label: "I do, you help" },
+  { value: 3, label: "You do, I help" },
+  { value: 4, label: "You do, I watch" },
+  { value: 5, label: "You do, someone else watches" },
+];
+
+function apprenticeStepLabel(step: number): string {
+  return APPRENTICE_STEPS[step]?.label ?? APPRENTICE_STEPS[0].label;
+}
+
+// A person from the discipleship network (/api/network), as seen from phase
+// 5. This is a separate shape from lib/networkLayout's NetworkPerson because
+// it also carries apprenticeStep, which that shared type does not yet.
+interface NetworkPerson {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+  sentOutBy: string | null;
+  linkStatus: "pending" | "confirmed";
+  joined: boolean;
+  apprenticeStep: number;
+}
+
+interface NetworkDepth {
+  generations: number;
+  people: number;
+}
+
 // One gauge's 1-to-10 picker: ten small buttons, one tap sets the score.
 // This is the whole "four taps" the check-in is meant to cost, times four
 // gauges. No slider, no text field, nothing that needs explaining.
@@ -359,6 +396,20 @@ export default function TrainingPage() {
   const [checkinSaveError, setCheckinSaveError] = useState<string | null>(null);
   const [checkinSaved, setCheckinSaved] = useState(false);
   const checkinSavedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Phase 5's discipleship network view. Also a completely separate data
+  // source from training progress: it talks to /api/network, which already
+  // carries apprenticeStep on every person and this viewer's depth. The step
+  // itself is never duplicated into any local, page-owned state beyond a
+  // one-for-one mirror of what the API returned, so the network row stays
+  // the single source of truth for it.
+  const [networkPeople, setNetworkPeople] = useState<NetworkPerson[]>([]);
+  const [networkViewerId, setNetworkViewerId] = useState<string | null>(null);
+  const [networkDepth, setNetworkDepth] = useState<NetworkDepth>({ generations: 0, people: 0 });
+  const [networkLoaded, setNetworkLoaded] = useState(false);
+  const [networkError, setNetworkError] = useState<string | null>(null);
+  const [stepUpdatingId, setStepUpdatingId] = useState<string | null>(null);
+  const [stepError, setStepError] = useState<{ id: string; message: string } | null>(null);
 
   // Debounced save state.
   const [saving, setSaving] = useState(false);
@@ -521,6 +572,36 @@ export default function TrainingPage() {
         // than blocking the whole page.
         setCheckinsLoaded(true);
         setCheckinSaveError("Could not load your check-in history. Refresh to try again.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessChecked, hasAccess, user]);
+
+  // Load this leader's discipleship network, independently of training
+  // progress and check-ins above. Phase 5 reads apprenticeStep and depth
+  // straight off this response; it never computes either itself, so the
+  // family tree (/leaders/network) and this page are always the same data
+  // seen twice, not two places that can disagree.
+  useEffect(() => {
+    if (!accessChecked || !hasAccess || !user) return;
+    let cancelled = false;
+    fetch(`/api/network?email=${encodeURIComponent(user.email)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load network (${res.status})`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setNetworkPeople(data.people ?? []);
+        setNetworkViewerId(data.viewerId ?? null);
+        setNetworkDepth(data.depth ?? { generations: 0, people: 0 });
+        setNetworkLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setNetworkLoaded(true);
+        setNetworkError("Could not load your network. Refresh to try again.");
       });
     return () => {
       cancelled = true;
@@ -834,6 +915,37 @@ export default function TrainingPage() {
     }
   };
 
+  // Advances or lowers one person's apprenticeship step. A separate call
+  // from the training-progress save machinery above: no debounce, no
+  // revision guard, one request per click, straight to /api/network. The
+  // API itself is the authority on whether this leader may touch this
+  // person (it only writes a row whose sent_out_by matches the actor), so a
+  // 403 here is a real refusal, not a local guess, and is shown against
+  // that person rather than failing silently.
+  const setApprenticeStep = async (id: string, step: number) => {
+    if (!user) return;
+    setStepUpdatingId(id);
+    setStepError(null);
+    try {
+      const res = await fetch("/api/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set-apprentice-step", actorEmail: user.email, id, step }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || `Could not update that step (${res.status})`);
+      }
+      setNetworkPeople((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, apprenticeStep: step } : p))
+      );
+    } catch (e) {
+      setStepError({ id, message: (e as Error).message });
+    } finally {
+      setStepUpdatingId(null);
+    }
+  };
+
   const getPhaseProgress = (phase: Phase) => {
     const completed = phase.modules.filter((m) => m.completed).length;
     return { completed, total: phase.modules.length, percent: Math.round((completed / phase.modules.length) * 100) };
@@ -852,6 +964,11 @@ export default function TrainingPage() {
   const closeVideo = () => {
     setVideoModal(null);
   };
+
+  // Used by both the orbital summary and phase 5's own content below, so
+  // both read the exact same computation rather than two that could drift.
+  const sentByViewer = networkPeople.filter((p) => p.sentOutBy === networkViewerId);
+  const checkedInThisWeek = checkins.some((c) => c.weekStart === mondayOf(new Date()));
 
   if (!mounted || !user || !accessChecked || !hasAccess) {
     return (
@@ -1006,11 +1123,11 @@ export default function TrainingPage() {
                 {phases.map((phase, i) => {
                   const progress = getPhaseProgress(phase);
                   const isActive = expandedPhase === phase.id;
-                  // Growth is an ongoing rhythm, not a checklist, so its node
-                  // never reads as a percentage: the ring stays full and a
-                  // single steady colour, standing for "always in motion"
-                  // rather than "this much done".
-                  const isOngoing = phase.id === "phase4";
+                  // Growth and Multiplication are both ongoing rhythms, not
+                  // checklists, so neither node ever reads as a percentage:
+                  // the ring stays full and a single steady colour, standing
+                  // for "always in motion" rather than "this much done".
+                  const isOngoing = phase.id === "phase4" || phase.id === "phase5";
                   // Distribute 5 phases evenly: start from top (-90°)
                   const angleDeg = -90 + (360 / phases.length) * i;
                   const angleRad = (angleDeg * Math.PI) / 180;
@@ -1083,7 +1200,7 @@ export default function TrainingPage() {
                 if (!phase) return null;
                 const progress = getPhaseProgress(phase);
                 const color = phase.number <= 3 ? "blue" : "purple";
-                const isOngoing = phase.id === "phase4";
+                const isOngoing = phase.id === "phase4" || phase.id === "phase5";
 
                 return (
                   <div className={`mt-6 p-5 rounded-xl border ${
@@ -1106,11 +1223,16 @@ export default function TrainingPage() {
                       </div>
 
                       {isOngoing ? (
-                        // Growth is a rhythm, not a checklist: no percentage
-                        // ring, no modules-complete count. Just a marker
-                        // that this phase stays open rather than finishing.
+                        // Growth and Multiplication are rhythms, not
+                        // checklists: no percentage ring, no
+                        // modules-complete count. Just a marker that each
+                        // phase stays open rather than finishing.
                         <div className="flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border border-[var(--border)] bg-[var(--accent)]/10">
-                          <Heart className="w-6 h-6 text-[var(--accent)]" />
+                          {phase.id === "phase4" ? (
+                            <Heart className="w-6 h-6 text-[var(--accent)]" />
+                          ) : (
+                            <Users className="w-6 h-6 text-[var(--accent)]" />
+                          )}
                         </div>
                       ) : (
                         /* Circular progress */
@@ -1133,7 +1255,15 @@ export default function TrainingPage() {
                       )}
                     </div>
                     {isOngoing ? (
-                      <p className="text-xs text-gray-500 mt-2">A weekly rhythm, not a checklist to finish.</p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {phase.id === "phase4"
+                          ? checkedInThisWeek
+                            ? "Checked in this week: a rhythm, not a checklist to finish."
+                            : "A weekly rhythm, not a checklist to finish."
+                          : sentByViewer.length === 0
+                            ? "Not sending anyone out yet: a rhythm to begin, not a checklist to finish."
+                            : `Sending ${sentByViewer.length} ${sentByViewer.length === 1 ? "person" : "people"} out: a rhythm, not a checklist to finish.`}
+                      </p>
                     ) : (
                       <p className="text-xs text-gray-500 mt-2">{progress.completed} of {progress.total} modules complete</p>
                     )}
@@ -1152,10 +1282,12 @@ export default function TrainingPage() {
 
             if (!isExpanded) return null;
 
-            // Growth is an ongoing rhythm, not a checklist: phase 4 gets its
-            // own content below instead of the modules grid every other
-            // phase uses, and never shows a completion percentage.
+            // Growth and Multiplication are both ongoing rhythms, not
+            // checklists: phases 4 and 5 each get their own content below
+            // instead of the modules grid every other phase uses, and
+            // neither ever shows a completion percentage.
             const isGrowthPhase = phase.id === "phase4";
+            const isMultiplyPhase = phase.id === "phase5";
             const currentWeekStart = mondayOf(new Date());
             const currentWeekLabel = new Date(`${currentWeekStart}T00:00:00`).toLocaleDateString("en-AU", {
               day: "numeric",
@@ -1183,7 +1315,7 @@ export default function TrainingPage() {
                       </h2>
                       <p className="text-gray-400">{phase.description}</p>
                     </div>
-                    {/* Orbital Progress (Growth shows an ongoing marker instead) */}
+                    {/* Orbital Progress (Growth and Multiplication show an ongoing marker instead) */}
                     {isGrowthPhase ? (
                       <div className="flex flex-col items-center">
                         <div className="w-20 h-20 rounded-full border border-[var(--border)] bg-[var(--accent)]/10 flex items-center justify-center">
@@ -1191,6 +1323,17 @@ export default function TrainingPage() {
                         </div>
                         <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">
                           {hasCheckedInThisWeek ? "Checked in this week" : "Not yet this week"}
+                        </span>
+                      </div>
+                    ) : isMultiplyPhase ? (
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-20 rounded-full border border-[var(--border)] bg-[var(--accent)]/10 flex items-center justify-center">
+                          <Users className="w-8 h-8 text-[var(--accent)]" />
+                        </div>
+                        <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                          {sentByViewer.length === 0
+                            ? "Sending nobody yet"
+                            : `Sending ${sentByViewer.length} out`}
                         </span>
                       </div>
                     ) : (
@@ -1328,6 +1471,164 @@ export default function TrainingPage() {
                       </div>
                     </div>
                   </div>
+                ) : isMultiplyPhase ? (
+                  <div className="p-6 md:p-8 space-y-6">
+                    {/* Hero Maker crash course: a clearly marked placeholder,
+                        laid out for the five practices as a daily rhythm.
+                        No invented teaching goes here. */}
+                    <div className="panel p-6">
+                      <span className="eyebrow">Placeholder</span>
+                      <h3 className="text-lg font-semibold text-white mt-1 mb-2">Hero Maker, by Dave Ferguson</h3>
+                      <p className="text-sm text-[var(--muted)] leading-relaxed mb-5">
+                        Ferguson&rsquo;s case is that multiplication is not a course you finish, it is a
+                        five-step apprenticeship you run with a named person, moved through a step at a
+                        time below. The crash course on each step as a daily rhythm goes here.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        {APPRENTICE_STEPS.slice(1).map(({ value, label }) => (
+                          <div key={value} className="rounded-lg border border-dashed border-[var(--border)] p-3 text-center">
+                            <span className="text-xs uppercase tracking-wider text-[var(--muted)]">{value}. {label}</span>
+                            <p className="text-[11px] text-[var(--muted)] mt-2 italic">
+                              As a daily rhythm: crash course notes coming soon
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Your people: the core of the phase */}
+                    <div className="panel p-6">
+                      <span className="eyebrow">Your people</span>
+                      <h3 className="text-lg font-semibold text-white mt-1 mb-4">Who you&rsquo;re sending out</h3>
+                      {!networkLoaded ? (
+                        <p className="text-sm text-[var(--muted)]">Loading your network...</p>
+                      ) : networkError ? (
+                        <p className="text-sm text-red-400">{networkError}</p>
+                      ) : sentByViewer.length === 0 ? (
+                        // The common case, not a broken screen: most leaders
+                        // are sending nobody out yet, and that is a
+                        // beginning with an obvious next step, not an error.
+                        <div className="rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
+                          <Users className="w-6 h-6 text-[var(--accent)] mx-auto mb-3" />
+                          <p className="text-sm text-white mb-1">You&rsquo;re not sending anyone out yet.</p>
+                          <p className="text-sm text-[var(--muted)] mb-4">
+                            That&rsquo;s the starting line, not a gap. Add the first person you&rsquo;re sending
+                            out and the apprenticeship steps below start to mean something.
+                          </p>
+                          <Link
+                            href="/leaders/network"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90"
+                          >
+                            Add someone to your network
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {sentByViewer.map((person) => {
+                            const name = [person.firstName, person.lastName].filter(Boolean).join(" ");
+                            const isUpdating = stepUpdatingId === person.id;
+                            return (
+                              <div
+                                key={person.id}
+                                className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-[var(--border)]"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-white truncate">{name}</p>
+                                  <p className="text-sm text-[var(--accent)] mt-0.5">
+                                    {apprenticeStepLabel(person.apprenticeStep)}
+                                  </p>
+                                  {stepError?.id === person.id && (
+                                    <p className="text-xs text-red-400 mt-1">{stepError.message}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => setApprenticeStep(person.id, person.apprenticeStep - 1)}
+                                    disabled={isUpdating || person.apprenticeStep <= 0}
+                                    aria-label={`Lower ${name}'s apprenticeship step`}
+                                    className="px-3 py-1.5 rounded-full border border-[var(--border)] text-xs font-semibold text-white transition-colors hover:border-[var(--border-strong)] disabled:opacity-30"
+                                  >
+                                    Back
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setApprenticeStep(person.id, person.apprenticeStep + 1)}
+                                    disabled={isUpdating || person.apprenticeStep >= 5}
+                                    aria-label={`Advance ${name}'s apprenticeship step`}
+                                    className="px-3 py-1.5 rounded-full bg-[var(--accent)] text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                  >
+                                    {isUpdating ? "Saving..." : "Advance"}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Multiplication depth: Ferguson's Kingdom Building
+                        measure. Counts kingdom advance, not a score, and a
+                        zero reads as a beginning rather than a failure. */}
+                    <div className="panel p-6 text-center">
+                      <span className="eyebrow">Kingdom advance</span>
+                      {networkDepth.people === 0 ? (
+                        <>
+                          <p className="text-3xl font-bold text-white mt-2">This is the beginning</p>
+                          <p className="text-sm text-[var(--muted)] mt-2 max-w-md mx-auto">
+                            Nobody is multiplying below you yet. The first person you send out is where a
+                            multiplication depth starts counting.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-4xl font-bold text-white mt-2 tabular-nums">{networkDepth.people}</p>
+                          <p className="text-sm text-[var(--muted)] mt-2">
+                            {networkDepth.people === 1 ? "person" : "people"} multiplying through{" "}
+                            {networkDepth.generations} {networkDepth.generations === 1 ? "generation" : "generations"}{" "}
+                            below you
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    {/* The family tree link, and an ICNU nudge */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <Link
+                        href="/leaders/network"
+                        className="panel p-6 flex flex-col justify-between transition-colors hover:border-[var(--border-strong)]"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="w-4 h-4 text-[var(--accent)]" />
+                          <span className="eyebrow">Family tree</span>
+                        </div>
+                        <h3 className="text-base font-semibold text-white mb-2">See the whole network</h3>
+                        <p className="text-sm text-[var(--muted)] leading-relaxed">
+                          The same steps, seen as a chart: everyone sent out, and everyone they have sent
+                          out in turn.
+                        </p>
+                      </Link>
+                      <div className="panel p-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageCircle className="w-4 h-4 text-[var(--accent)]" />
+                          <span className="eyebrow">ICNU</span>
+                        </div>
+                        <h3 className="text-base font-semibold text-white mb-2">Permission Giving</h3>
+                        <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">
+                          Ferguson&rsquo;s ICNU tool: name one person, then finish the sentence, &ldquo;I see
+                          in you...&rdquo; That&rsquo;s the whole conversation. Nothing here is saved or
+                          logged, so have it, then add them.
+                        </p>
+                        <Link
+                          href="/leaders/network"
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] text-white text-sm font-semibold transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
+                        >
+                          Add them to your network
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                 <div className="p-6 md:p-8">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1417,18 +1718,6 @@ export default function TrainingPage() {
                         </div>
                       </div>
 
-                      {/* Coming Soon Notice */}
-                      {(phase.id === "phase5") && (
-                        <div className="p-4 rounded-xl bg-purple-600/10 border border-purple-500/30">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Lightbulb className="w-4 h-4 text-purple-400" />
-                            <span className="text-sm font-semibold text-purple-400">Coming Soon</span>
-                          </div>
-                          <p className="text-xs text-gray-400">
-                            Discipleship quizzes and apprenticeship videos will be available soon.
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
