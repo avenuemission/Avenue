@@ -14,7 +14,7 @@ export function mondayOf(date: Date): string {
   // We need to find the Monday of this week.
   // If dayOfWeek is 0 (Sunday), we go back 6 days to get to Monday
   // Otherwise, we go back (dayOfWeek - 1) days
-  let daysBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const daysBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
   // Move the date back by daysBack days
   d.setDate(d.getDate() - daysBack);
