@@ -57,7 +57,7 @@ const INITIAL_PHASES: Phase[] = [
   {
     id: "phase1",
     number: 1,
-    title: "Early Church Model",
+    title: "Foundations",
     subtitle: "Acts 2:42-47",
     scripture: "Acts 2:42-47",
     description: "In the early church, the framework laid out for what the church is was simple. After Pentecost, people journeyed as disciples of Jesus from household to household. They read the word together, prayed, fellowshipped, and ate together (Acts 2:42). Together, the church praised God, enjoyed each other's company as the Lord added people who were being saved (Acts 2:47). At the heart of what makes up the DNA of a church is 3 things: worship, community and mission. These 3 expressions are what we define as a minimum ecclesiology. Whenever Jesus is Lord, people feel a part of a family and have a mission for their world; church exists. We have set up our church around these 3 essential aspects of church.",
@@ -74,11 +74,11 @@ const INITIAL_PHASES: Phase[] = [
         duration: "5 episodes",
         completed: false,
         episodes: [
-          { id: "p1m0e1", title: "Avenue DNA Episode 1", youtubeId: "-yjMDB8OXsg", watched: false },
-          { id: "p1m0e2", title: "Avenue DNA Episode 2", youtubeId: "etpNJoyRNZ0", watched: false },
-          { id: "p1m0e3", title: "Avenue DNA Episode 3", youtubeId: "Lkx09wZpFmw", watched: false },
-          { id: "p1m0e4", title: "Avenue DNA Episode 4", youtubeId: "0EE9n_LEMtw", watched: false },
-          { id: "p1m0e5", title: "Avenue DNA Episode 5", youtubeId: "uod2tVf0M6E", watched: false },
+          { id: "p1m0e1", title: "1. The Mission", youtubeId: "-yjMDB8OXsg", watched: false },
+          { id: "p1m0e2", title: "2. The Vision", youtubeId: "etpNJoyRNZ0", watched: false },
+          { id: "p1m0e3", title: "3. The Values", youtubeId: "Lkx09wZpFmw", watched: false },
+          { id: "p1m0e4", title: "4. What is a Microchurch?", youtubeId: "0EE9n_LEMtw", watched: false },
+          { id: "p1m0e5", title: "5. Living as a Healthy Family", youtubeId: "uod2tVf0M6E", watched: false },
         ],
       },
       {
@@ -89,9 +89,9 @@ const INITIAL_PHASES: Phase[] = [
         duration: "3 parts",
         completed: false,
         episodes: [
-          { id: "p1m1e1", title: "Pathways Part 1", youtubeId: "CDyxXOcMIJw", watched: false },
-          { id: "p1m1e2", title: "Pathways Part 2", youtubeId: "rYxLb_jBdiU", watched: false },
-          { id: "p1m1e3", title: "Pathways Part 3", youtubeId: "dQTBIhpfpq4", watched: false },
+          { id: "p1m1e1", title: "1. How do I start my leadership journey?", youtubeId: "CDyxXOcMIJw", watched: false },
+          { id: "p1m1e2", title: "2. What is required of me as a leader?", youtubeId: "rYxLb_jBdiU", watched: false },
+          { id: "p1m1e3", title: "3. Leading a Bible Discussion", youtubeId: "dQTBIhpfpq4", watched: false },
         ],
       },
       {
@@ -102,7 +102,7 @@ const INITIAL_PHASES: Phase[] = [
         duration: "1 video",
         completed: false,
         episodes: [
-          { id: "p1m2e1", title: "Intersection", youtubeId: "-TEHae7KRx4", watched: false },
+          { id: "p1m2e1", title: "1. Gathering for Worship", youtubeId: "-TEHae7KRx4", watched: false },
         ],
       },
       {
@@ -113,11 +113,11 @@ const INITIAL_PHASES: Phase[] = [
         duration: "5 parts",
         completed: false,
         episodes: [
-          { id: "p1m3e1", title: "Streetlights Part 1", youtubeId: "-Aj49FeIiT8", watched: false },
-          { id: "p1m3e2", title: "Streetlights Part 2", youtubeId: "LDbaw6ipOmM", watched: false },
-          { id: "p1m3e3", title: "Streetlights Part 3", youtubeId: "rJjcWIlndb4", watched: false },
-          { id: "p1m3e4", title: "Streetlights Part 4", youtubeId: "qJ6PAfMmACY", watched: false },
-          { id: "p1m3e5", title: "Streetlights Part 5", youtubeId: "Va4WjPK1U8M", watched: false },
+          { id: "p1m3e1", title: "1. An Overview of Streetlights", youtubeId: "-Aj49FeIiT8", watched: false },
+          { id: "p1m3e2", title: "2. The Core Mission", youtubeId: "LDbaw6ipOmM", watched: false },
+          { id: "p1m3e3", title: "3. Defining Your Mission Field", youtubeId: "rJjcWIlndb4", watched: false },
+          { id: "p1m3e4", title: "4. The BLESS Model for Evangelism", youtubeId: "qJ6PAfMmACY", watched: false },
+          { id: "p1m3e5", title: "5. Personal and Financial Support for Initiatives", youtubeId: "Va4WjPK1U8M", watched: false },
         ],
       },
     ],

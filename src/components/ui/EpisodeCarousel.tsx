@@ -87,17 +87,21 @@ export default function EpisodeCarousel({
       )}
 
       <div className="flex items-center gap-2">
-        {!isSingle && (
-          <button
-            type="button"
-            aria-label="Previous videos"
-            onClick={() => scrollByCards(-1)}
-            disabled={!canScrollLeft}
-            className={arrowClass}
-          >
-            <ChevronLeft className="w-4 h-4 text-white" />
-          </button>
-        )}
+        {/* A single video has nothing to page through, so the arrows go
+            invisible rather than unmounting. Keeping their slot in the row
+            means the tile computes the same width as a tile inside a real
+            carousel, instead of stretching into the space they vacated. */}
+        <button
+          type="button"
+          aria-label="Previous videos"
+          onClick={() => scrollByCards(-1)}
+          disabled={isSingle || !canScrollLeft}
+          aria-hidden={isSingle}
+          tabIndex={isSingle ? -1 : 0}
+          className={`${arrowClass} ${isSingle ? "invisible" : ""}`}
+        >
+          <ChevronLeft className="w-4 h-4 text-white" />
+        </button>
 
         <div
           ref={scrollerRef}
@@ -106,9 +110,7 @@ export default function EpisodeCarousel({
           {episodes.map((ep) => (
             <div
               key={ep.id}
-              className={`snap-start flex-shrink-0 ${
-                isSingle ? "w-full max-w-[280px]" : "w-[78%] sm:w-[48%] lg:w-[31.5%]"
-              }`}
+              className="snap-start flex-shrink-0 w-[78%] sm:w-[48%] lg:w-[31.5%]"
             >
               <div className="relative group">
                 <button
@@ -159,17 +161,17 @@ export default function EpisodeCarousel({
           ))}
         </div>
 
-        {!isSingle && (
-          <button
-            type="button"
-            aria-label="More videos"
-            onClick={() => scrollByCards(1)}
-            disabled={!canScrollRight}
-            className={arrowClass}
-          >
-            <ChevronRight className="w-4 h-4 text-white" />
-          </button>
-        )}
+        <button
+          type="button"
+          aria-label="More videos"
+          onClick={() => scrollByCards(1)}
+          disabled={isSingle || !canScrollRight}
+          aria-hidden={isSingle}
+          tabIndex={isSingle ? -1 : 0}
+          className={`${arrowClass} ${isSingle ? "invisible" : ""}`}
+        >
+          <ChevronRight className="w-4 h-4 text-white" />
+        </button>
       </div>
     </div>
   );
