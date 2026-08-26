@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Video,
   FileText,
-  MessageSquare,
   BookOpen,
   Lightbulb,
   X,
@@ -46,9 +45,6 @@ interface Phase {
   scripture: string;
   description: string;
   modules: Module[];
-  debriefRequired: boolean;
-  debriefScheduled: boolean;
-  debriefCompleted: boolean;
   locked: boolean;
 }
 
@@ -61,9 +57,6 @@ const INITIAL_PHASES: Phase[] = [
     subtitle: "Acts 2:42-47",
     scripture: "Acts 2:42-47",
     description: "In the early church, the framework laid out for what the church is was simple. After Pentecost, people journeyed as disciples of Jesus from household to household. They read the word together, prayed, fellowshipped, and ate together (Acts 2:42). Together, the church praised God, enjoyed each other's company as the Lord added people who were being saved (Acts 2:47). At the heart of what makes up the DNA of a church is 3 things: worship, community and mission. These 3 expressions are what we define as a minimum ecclesiology. Whenever Jesus is Lord, people feel a part of a family and have a mission for their world; church exists. We have set up our church around these 3 essential aspects of church.",
-    debriefRequired: true,
-    debriefScheduled: false,
-    debriefCompleted: false,
     locked: false,
     modules: [
       {
@@ -129,9 +122,6 @@ const INITIAL_PHASES: Phase[] = [
     subtitle: "Ephesians 4",
     scripture: "Ephesians 4",
     description: "We are all one body with many parts (Ephesians 4). Each person is uniquely gifted and called by God to serve in a specific way. Just as Pentecost unleashed a diverse community of Spirit-filled people, this phase helps you discern your calling, understand your gifts, and align your leadership with Avenue's mission and theology.",
-    debriefRequired: true,
-    debriefScheduled: false,
-    debriefCompleted: false,
     locked: false,
     modules: [
       { id: "p2m1", title: "Discernment of Calling", type: "video", description: "Understanding internal and external calling", duration: "18 min", completed: false },
@@ -148,9 +138,6 @@ const INITIAL_PHASES: Phase[] = [
     subtitle: "Nehemiah Approach",
     scripture: "Nehemiah 1–2",
     description: "Nehemiah had the responsibility of rebuilding the walls of Jerusalem, when embarking on a new ministry endeavour, here are some leadership principles we see. When Nehemiah heard the state of his city and the walls fallen down, he starts by brings his sorrow to prayer and fasting (Neh. 1). When he arrives in Jerusalem, he creates a core team, taking a few men with him and doesn't tell anyone what God had laid on his heart (Neh. 2:11-15). He then establishes a strong 'why' and emphasises the importance of his project and from there they get to work (Neh. 2:17-18). Even with opposition, Nehemiah is reminded of the calling God had placed on his life and does the work faithfully (2:19-20).",
-    debriefRequired: true,
-    debriefScheduled: false,
-    debriefCompleted: false,
     locked: false,
     modules: [
       { id: "p3m1", title: "Planning Pathways", type: "document", description: "Fill out a planning document (Nehemiah approach)", completed: false },
@@ -175,9 +162,6 @@ const INITIAL_PHASES: Phase[] = [
     subtitle: "Jethro & Moses Model",
     scripture: "Exodus 18",
     description: "Ongoing coaching is essential to the longevity and success of a leader. When Jethro visits Moses, he praises God for the mighty things he's done through Moses (Ex. 18:8) and spends time eating with Moses and the leaders (Ex. 18:12). Then he offers Moses some gentle but crucial advice saying that his current system of managing the people is inefficient, advising Moses to delegate responsibility to other leaders. (Ex. 18:13-23) Moses listens to the wisdom of a counsellor he trusts and is better off for it in the long run (Ex. 18:25-26).",
-    debriefRequired: false,
-    debriefScheduled: false,
-    debriefCompleted: false,
     locked: false,
     modules: [
       { id: "p4m1", title: "Weekly Check-in / Touch Point (RPMS)", type: "action", description: "Relational weekly touch point using RPMS", completed: false },
@@ -193,9 +177,6 @@ const INITIAL_PHASES: Phase[] = [
     subtitle: "Paul & Timothy Legacy",
     scripture: "2 Timothy 2:2",
     description: "The gospel multiplied through intentional apprenticeship in the New Testament. Barnabus saw something in Saul who became Paul, even when everyone else was afraid of him (Acts 9:26-27). Paul then released many other leaders such as a younger Timothy who he encouraged that things that he had heard from Paul would be passed on to others, who would be able to teach others also (2 Tim. 2:2). Great leaders intentionally reproduce who they are in others, with the fruit of their ministry growing on other people's trees.",
-    debriefRequired: false,
-    debriefScheduled: false,
-    debriefCompleted: false,
     locked: false,
     modules: [
       { id: "p5m1", title: "Identify an Apprentice", type: "action", description: "Spot potential in future leaders", completed: false },
@@ -296,28 +277,6 @@ export default function TrainingPage() {
         return { ...phase, modules: updatedModules };
       })
     );
-  };
-
-  const scheduleDebrief = (phaseId: string) => {
-    setPhases((prev) =>
-      prev.map((phase) =>
-        phase.id === phaseId ? { ...phase, debriefScheduled: true } : phase
-      )
-    );
-  };
-
-  const completeDebrief = (phaseId: string) => {
-    setPhases((prev) => {
-      const updated = prev.map((phase) =>
-        phase.id === phaseId ? { ...phase, debriefCompleted: true, locked: false } : phase
-      );
-      // Unlock next phase
-      const currentIndex = updated.findIndex((p) => p.id === phaseId);
-      if (currentIndex < updated.length - 1) {
-        updated[currentIndex + 1].locked = false;
-      }
-      return updated;
-    });
   };
 
   const getPhaseProgress = (phase: Phase) => {
@@ -575,7 +534,6 @@ export default function TrainingPage() {
           {phases.map((phase) => {
             const progress = getPhaseProgress(phase);
             const isExpanded = expandedPhase === phase.id;
-            const allModulesComplete = progress.completed === progress.total;
 
             if (!isExpanded) return null;
 
@@ -694,52 +652,8 @@ export default function TrainingPage() {
                       ))}
                     </div>
 
-                    {/* Right: Debrief & Status */}
+                    {/* Right: Status */}
                     <div className="space-y-6">
-                      {phase.debriefRequired && (
-                        <div className="p-6 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center">
-                              <MessageSquare className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-white">Phase Debrief</h4>
-                              <p className="text-xs text-gray-400">Required to unlock next phase</p>
-                            </div>
-                          </div>
-
-                          {!phase.debriefScheduled && !phase.debriefCompleted && (
-                            <button
-                              onClick={() => scheduleDebrief(phase.id)}
-                              className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent)] text-white rounded-full font-semibold uppercase text-sm tracking-wider transition-colors"
-                            >
-                              Schedule Zoom Call
-                            </button>
-                          )}
-
-                          {phase.debriefScheduled && !phase.debriefCompleted && (
-                            <div className="space-y-3">
-                              <div className="p-3 bg-[var(--accent)]/10 rounded-lg border border-[var(--border)]">
-                                <p className="text-sm text-[var(--accent)] text-center">Zoom call scheduled</p>
-                              </div>
-                              <button
-                                onClick={() => completeDebrief(phase.id)}
-                                className="w-full py-3 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 rounded-full font-semibold uppercase text-sm tracking-wider transition-colors"
-                              >
-                                Mark Debrief Complete
-                              </button>
-                            </div>
-                          )}
-
-                          {phase.debriefCompleted && (
-                            <div className="p-3 bg-green-600/10 rounded-lg border border-green-500/30 flex items-center justify-center gap-2">
-                              <CheckCircle2 className="w-5 h-5 text-green-400" />
-                              <span className="text-green-400 font-semibold">Debrief Complete</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
                       {/* Phase Status */}
                       <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
                         <h4 className="font-semibold text-white mb-4">Phase Status</h4>
@@ -754,16 +668,6 @@ export default function TrainingPage() {
                               style={{ width: `${progress.percent}%` }}
                             />
                           </div>
-                          {allModulesComplete && !phase.debriefCompleted && phase.debriefRequired && (
-                            <p className="text-sm text-amber-400 text-center">
-                              Complete your debrief to unlock the next phase
-                            </p>
-                          )}
-                          {allModulesComplete && phase.debriefCompleted && (
-                            <p className="text-sm text-green-400 text-center">
-                              Phase complete! Next phase unlocked.
-                            </p>
-                          )}
                         </div>
                       </div>
 
