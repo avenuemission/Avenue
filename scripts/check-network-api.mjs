@@ -7,16 +7,21 @@ const LEADER = "info@avenuemission.com";
 const TEST_EMAIL = "network-check-temp@example.invalid";
 const STRANGER_EMAIL = "network-check-stranger@example.invalid";
 
-// Apprenticeship-step and depth checks need a viewer with a fully isolated,
-// zero-descendant starting point, which neither real leader account can
-// promise (production data already hangs real people off them). Rather than
-// touch a real account, we register a throwaway leader of our own: a row in
-// `leaders` with an @example.invalid email, which is exactly what makes
-// ensureNode() treat it as a real leader for the duration of this run. It
-// gets a network_people node the same way any first-time leader does, and
-// everything about it, including the `leaders` row itself, is deleted by
-// exact email in cleanup().
-const APPRENTICE_LEADER_ID = "network-check-apprentice-leader";
+// Depth and apprenticeship-step checks used to register a throwaway `leaders`
+// row so they had a viewer with a fully isolated, zero-descendant starting
+// point. `leaders` is the entire authorisation gate for this site (every
+// route decides who you are purely by whether your email is in it, no
+// password involved), so a script that writes to it and then fails to clean
+// up perfectly leaves a working leader account in production. The depth and
+// apprenticeship-step checks below no longer need that: they hang a small
+// extra chain off the real LEADER's own already-owned TEST_EMAIL node
+// (`row`, added earlier) and check the DELTA in what LEADER's own GET
+// reports, cross-checked against an independent reimplementation of the
+// depth walk. That proves the walk is correct without ever inserting into
+// `leaders`. APPRENTICE_LEADER_EMAIL is kept only as a cleanup/verification
+// target (see cleanup() below): nothing in this script writes it anymore,
+// but cleanup still asserts no row exists there, as a safety net in case a
+// future edit reintroduces such a write without updating cleanup to match.
 const APPRENTICE_LEADER_EMAIL = "network-check-apprentice-leader@example.invalid";
 const APPRENTICE_CHILD_EMAIL = "network-check-apprentice-child@example.invalid";
 const APPRENTICE_GRANDCHILD_EMAIL = "network-check-apprentice-grandchild@example.invalid";
@@ -43,13 +48,44 @@ const post = (body, headers = {}) =>
     body: JSON.stringify(body),
   }).then(async (r) => ({ status: r.status, json: await r.json() }));
 
+// Deletes every temporary row this script could have created, by exact
+// email, one table/email pair at a time. Every delete's `error` is captured
+// and surfaced through check() (never dropped), so a failed delete shows up
+// as a failing check and a non-zero exit instead of a silent no-op. The
+// `leaders` row gets an extra, independent re-read afterwards: even if the
+// delete above reported no error, this confirms by direct query that no row
+// for APPRENTICE_LEADER_EMAIL actually exists in `leaders`, because that
+// table is the entire authorisation gate for the site and a leftover row
+// there is a working leader account in production, not just messy test data.
 async function cleanup() {
-  await db.from("network_people").delete().eq("email", TEST_EMAIL);
-  await db.from("network_people").delete().eq("email", STRANGER_EMAIL);
-  await db.from("network_people").delete().eq("email", APPRENTICE_LEADER_EMAIL);
-  await db.from("network_people").delete().eq("email", APPRENTICE_CHILD_EMAIL);
-  await db.from("network_people").delete().eq("email", APPRENTICE_GRANDCHILD_EMAIL);
-  await db.from("leaders").delete().eq("email", APPRENTICE_LEADER_EMAIL);
+  const targets = [
+    ["network_people", TEST_EMAIL],
+    ["network_people", STRANGER_EMAIL],
+    ["network_people", APPRENTICE_LEADER_EMAIL],
+    ["network_people", APPRENTICE_CHILD_EMAIL],
+    ["network_people", APPRENTICE_GRANDCHILD_EMAIL],
+    ["leaders", APPRENTICE_LEADER_EMAIL],
+  ];
+  for (const [table, email] of targets) {
+    const { error } = await db.from(table).delete().eq("email", email);
+    check(`cleanup: ${table} delete for ${email}`, !error, error?.message ?? "");
+  }
+
+  const { data: leftoverLeader, error: leftoverLeaderErr } = await db
+    .from("leaders")
+    .select("email")
+    .eq("email", APPRENTICE_LEADER_EMAIL)
+    .maybeSingle();
+  check(
+    "cleanup: could re-read the leaders table to confirm it is clean",
+    !leftoverLeaderErr,
+    leftoverLeaderErr?.message ?? ""
+  );
+  check(
+    "cleanup: no leftover leaders row for the temp apprentice-leader email",
+    !leftoverLeader,
+    leftoverLeader ? JSON.stringify(leftoverLeader) : ""
+  );
 }
 
 // The LEADER row is real production data (info@avenuemission.com), not a
@@ -164,10 +200,22 @@ try {
   // borrow-and-restore shape as the decline test further down: capture
   // LEADER's row by id with an error check, mutate it to a known pending
   // state, exercise the route, assert the write it made, then restore by
-  // that same id with an error-checked named check before moving on. This
-  // restore is inline and immediate (not deferred to the outer finally)
-  // so the leader's row is back to its real state well before decline's
-  // own borrow, and well before the temp-person cleanup at the end.
+  // that same id with an error-checked named check before moving on.
+  //
+  // The exercise-and-restore step is wrapped in its own try/finally, NOT
+  // left to run inline and NOT deferred to the outer script-level finally.
+  // The outer finally only restores from `leaderBefore`, and that variable
+  // is not assigned until the decline test further down - so if anything
+  // between the borrow above and an inline restore were to throw (a network
+  // hiccup on the confirm POST, for instance), execution would jump straight
+  // to the outer finally while leaderBefore was still null, and the outer
+  // restore would silently do nothing. That would leave LEADER's real row
+  // holding link_status: "confirmed" with a borrowed (and soon to be
+  // deleted) sender. A local try/finally guarantees the restore below runs
+  // immediately after the borrow no matter what happens in between, so the
+  // leader's row is back to its real state well before decline's own
+  // borrow, and well before the temp-person cleanup at the end, regardless
+  // of any failure along the way.
   const { data: confirmLeaderBefore, error: confirmLeaderReadErr } = await db
     .from("network_people")
     .select("sent_out_by, link_status")
@@ -181,27 +229,29 @@ try {
     .eq("id", leaderId);
   if (confirmBorrowErr) throw new Error(confirmBorrowErr.message);
 
-  const confirmed = await post({ action: "confirm", actorEmail: LEADER });
-  check("confirm succeeds", confirmed.status === 200, JSON.stringify(confirmed.json));
-  const { data: confirmedRow } = await db
-    .from("network_people")
-    .select("link_status")
-    .eq("id", leaderId)
-    .maybeSingle();
-  check("confirm sets link_status to confirmed", confirmedRow?.link_status === "confirmed");
-
-  const { error: confirmRestoreErr } = await db
-    .from("network_people")
-    .update({
-      sent_out_by: confirmLeaderBefore.sent_out_by,
-      link_status: confirmLeaderBefore.link_status,
-    })
-    .eq("id", leaderId);
-  check(
-    "restores the leader's own record after confirm",
-    !confirmRestoreErr,
-    confirmRestoreErr?.message ?? ""
-  );
+  try {
+    const confirmed = await post({ action: "confirm", actorEmail: LEADER });
+    check("confirm succeeds", confirmed.status === 200, JSON.stringify(confirmed.json));
+    const { data: confirmedRow } = await db
+      .from("network_people")
+      .select("link_status")
+      .eq("id", leaderId)
+      .maybeSingle();
+    check("confirm sets link_status to confirmed", confirmedRow?.link_status === "confirmed");
+  } finally {
+    const { error: confirmRestoreErr } = await db
+      .from("network_people")
+      .update({
+        sent_out_by: confirmLeaderBefore.sent_out_by,
+        link_status: confirmLeaderBefore.link_status,
+      })
+      .eq("id", leaderId);
+    check(
+      "restores the leader's own record after confirm",
+      !confirmRestoreErr,
+      confirmRestoreErr?.message ?? ""
+    );
+  }
 
   console.log("confirm with nothing pending (expected refusal)");
   // Run right after the restore above, while the leader's own sent_out_by
@@ -406,47 +456,78 @@ try {
     JSON.stringify(stepGraph.people?.map((p) => p.apprenticeStep))
   );
 
-  console.log("depth: register a throwaway leader with zero descendants");
-  const { error: apprenticeLeaderErr } = await db.from("leaders").insert({
-    id: APPRENTICE_LEADER_ID,
-    email: APPRENTICE_LEADER_EMAIL,
-    name: "Apprentice Depth Check",
-  });
-  if (apprenticeLeaderErr) throw new Error(apprenticeLeaderErr.message);
+  // Reimplements computeDepth() from src/app/api/network/route.ts against
+  // the same `people` array a GET response already returns. Running this
+  // independently and comparing it to the server's own `depth` field
+  // cross-checks the real algorithm against real, current data, with no
+  // need for an isolated fixture leader.
+  function depthFromPeople(people, viewerId) {
+    const childrenOf = new Map();
+    for (const p of people ?? []) {
+      if (p.sentOutBy) {
+        const list = childrenOf.get(p.sentOutBy) ?? [];
+        list.push(p.id);
+        childrenOf.set(p.sentOutBy, list);
+      }
+    }
+    const visited = new Set([viewerId]);
+    let peopleCount = 0;
+    let generations = 0;
+    let frontier = [viewerId];
+    while (frontier.length > 0) {
+      const next = [];
+      for (const id of frontier) {
+        for (const childId of childrenOf.get(id) ?? []) {
+          if (visited.has(childId)) continue;
+          visited.add(childId);
+          next.push(childId);
+          peopleCount++;
+        }
+      }
+      if (next.length === 0) break;
+      generations++;
+      frontier = next;
+    }
+    return { generations, people: peopleCount };
+  }
 
-  console.log("depth: zero for a leader sending nobody out");
-  const zeroDepthRes = await fetch(
-    `${BASE}/api/network?email=${encodeURIComponent(APPRENTICE_LEADER_EMAIL)}`
-  );
-  const zeroDepthGraph = await zeroDepthRes.json();
+  console.log("depth: server's depth matches an independent BFS reimplementation on LEADER's real graph");
+  // No isolated fixture leader needed for this: LEADER is a real leader
+  // account, its real graph (whatever shape production has given it) is
+  // fair game to check the algorithm against, and nothing here writes to
+  // `leaders`.
+  const beforeChainRes = await fetch(`${BASE}/api/network?email=${encodeURIComponent(LEADER)}`);
+  const beforeChainGraph = await beforeChainRes.json();
+  const localDepthBefore = depthFromPeople(beforeChainGraph.people, leaderId);
   check(
-    "fresh leader GET returns 200",
-    zeroDepthRes.status === 200,
-    JSON.stringify(zeroDepthGraph).slice(0, 200)
-  );
-  check(
-    "depth is generations:0, people:0 for a leader sending nobody out",
-    zeroDepthGraph.depth?.generations === 0 && zeroDepthGraph.depth?.people === 0,
-    JSON.stringify(zeroDepthGraph.depth)
+    "matches before any chain is added",
+    localDepthBefore.generations === beforeChainGraph.depth?.generations &&
+      localDepthBefore.people === beforeChainGraph.depth?.people,
+    JSON.stringify({ local: localDepthBefore, server: beforeChainGraph.depth })
   );
 
-  console.log("depth: counts a two-generation chain correctly");
-  const chainChild = await post({
-    action: "add",
-    actorEmail: APPRENTICE_LEADER_EMAIL,
-    firstName: "Apprentice",
-    lastName: "Child",
-    email: APPRENTICE_CHILD_EMAIL,
-  });
-  check("adds the chain's first generation", chainChild.status === 200, JSON.stringify(chainChild.json));
-
-  const { data: childRow, error: childReadErr } = await db
+  console.log("depth: counts a two-generation chain hung off an already-owned node correctly");
+  // `row` (TEST_EMAIL) has been sent_out_by === leaderId since the adopt-path
+  // re-add above, and it was only just created this run, so it has no
+  // children of its own yet. Hanging two more generations off it - direct
+  // inserts, the same shape a real grandchild link takes, no `leaders` row
+  // involved - extends LEADER's tree by exactly these two new, freshly
+  // created people, which is checkable against the "before" snapshot above
+  // as a delta, regardless of whatever else LEADER's real graph contains.
+  const { data: chainChildRow, error: chainChildErr } = await db
     .from("network_people")
+    .insert({
+      email: APPRENTICE_CHILD_EMAIL,
+      first_name: "Apprentice",
+      last_name: "Child",
+      sent_out_by: row.id,
+      link_status: "pending",
+      joined: false,
+      added_by_email: TEST_EMAIL,
+    })
     .select("id")
-    .eq("email", APPRENTICE_CHILD_EMAIL)
-    .maybeSingle();
-  if (childReadErr) throw new Error(childReadErr.message);
-  check("chain's first generation was stored", !!childRow);
+    .single();
+  if (chainChildErr) throw new Error(chainChildErr.message);
 
   const { data: grandchildRow, error: grandchildErr } = await db
     .from("network_people")
@@ -454,7 +535,7 @@ try {
       email: APPRENTICE_GRANDCHILD_EMAIL,
       first_name: "Apprentice",
       last_name: "Grandchild",
-      sent_out_by: childRow.id,
+      sent_out_by: chainChildRow.id,
       link_status: "pending",
       joined: false,
       added_by_email: APPRENTICE_CHILD_EMAIL,
@@ -463,23 +544,33 @@ try {
     .single();
   if (grandchildErr) throw new Error(grandchildErr.message);
 
-  const chainRes = await fetch(
-    `${BASE}/api/network?email=${encodeURIComponent(APPRENTICE_LEADER_EMAIL)}`
-  );
+  const chainRes = await fetch(`${BASE}/api/network?email=${encodeURIComponent(LEADER)}`);
   const chainGraph = await chainRes.json();
+  const localDepthAfter = depthFromPeople(chainGraph.people, leaderId);
   check(
-    "depth counts the two-generation chain as generations:2, people:2",
-    chainGraph.depth?.generations === 2 && chainGraph.depth?.people === 2,
-    JSON.stringify(chainGraph.depth)
+    "server depth still matches the independent BFS reimplementation after the chain is added",
+    localDepthAfter.generations === chainGraph.depth?.generations &&
+      localDepthAfter.people === chainGraph.depth?.people,
+    JSON.stringify({ local: localDepthAfter, server: chainGraph.depth })
+  );
+  check(
+    "adding the two-person chain increases depth.people by exactly 2",
+    chainGraph.depth?.people === (beforeChainGraph.depth?.people ?? 0) + 2,
+    JSON.stringify({ before: beforeChainGraph.depth, after: chainGraph.depth })
+  );
+  check(
+    "adding the 3-hop chain (LEADER -> row -> child -> grandchild) sets generations to max(before, 3)",
+    chainGraph.depth?.generations === Math.max(beforeChainGraph.depth?.generations ?? 0, 3),
+    JSON.stringify({ before: beforeChainGraph.depth, after: chainGraph.depth })
   );
 
   console.log("apprentice step: refused when the person is a generation out of reach");
-  // The grandchild's sent_out_by is the CHILD, not the throwaway leader, so
-  // the leader trying to set the grandchild's step must be refused even
-  // though the leader can see the grandchild in their own network graph.
+  // The grandchild's sent_out_by is the chain's CHILD node, not LEADER, so
+  // LEADER trying to set the grandchild's step must be refused even though
+  // LEADER can see the grandchild in their own network graph.
   const grandchildStepAttempt = await post({
     action: "set-apprentice-step",
-    actorEmail: APPRENTICE_LEADER_EMAIL,
+    actorEmail: LEADER,
     id: grandchildRow.id,
     step: 1,
   });

@@ -16,6 +16,17 @@ interface Row {
 const COLUMNS =
   "id, email, first_name, last_name, sent_out_by, link_status, joined, apprentice_step";
 
+// network_people.id is a uuid column. A malformed value passed straight to
+// Postgres as a filter or write comes back as a raw database error (uuid
+// cast failure), which would otherwise surface as a 500 with the database's
+// own message in the response body. Check the shape here instead and 400
+// on anything that cannot possibly be a uuid, before it ever reaches a
+// query.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
 async function loadRows(): Promise<Row[]> {
   const { data, error } = await getSupabaseAdmin().from("network_people").select(COLUMNS);
   if (error) throw new Error(error.message);
@@ -185,7 +196,16 @@ export async function POST(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
-  const body = await request.json().catch(() => ({}));
+  // request.json() only rejects on malformed JSON, so a literal `null` body
+  // (valid JSON) sails past the .catch() below and would make every
+  // following `body.xyz` property access throw a TypeError outside the
+  // try block, producing an unhandled 500. Collapse anything that is not
+  // a genuine object (null, an array, a number, ...) to {} first.
+  const parsedBody: unknown = await request.json().catch(() => ({}));
+  const body: Record<string, unknown> =
+    typeof parsedBody === "object" && parsedBody !== null && !Array.isArray(parsedBody)
+      ? (parsedBody as Record<string, unknown>)
+      : {};
   const action = String(body.action ?? "");
   const db = getSupabaseAdmin();
   const now = new Date().toISOString();
@@ -307,6 +327,7 @@ export async function POST(request: NextRequest) {
     if (action === "set-apprentice-step") {
       const id = String(body.id ?? "");
       if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+      if (!isUuid(id)) return NextResponse.json({ error: "id must be a valid id" }, { status: 400 });
 
       const step = body.step;
       if (typeof step !== "number" || !Number.isInteger(step) || step < 0 || step > 5) {
@@ -345,27 +366,31 @@ export async function POST(request: NextRequest) {
     if (action === "decline" || action === "remove") {
       const id = action === "decline" ? actor.id : String(body.id ?? "");
       if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+      if (!isUuid(id)) return NextResponse.json({ error: "id must be a valid id" }, { status: 400 });
 
-      const { data: found } = await db
+      // Authorisation lives in the filter itself, same shape as
+      // set-apprentice-step just above: there is no separate read to decide
+      // in JavaScript first, so there is no window between a read and this
+      // write where a concurrent re-parent could change who is allowed to
+      // act. A leader may act on `id` when they ARE that person (id equals
+      // the actor) OR they are that person's sender (sent_out_by equals the
+      // actor) - .or() expresses that second predicate, combined with the
+      // .eq("id", id) above by AND, matching Supabase's PostgREST semantics.
+      // A zero-row result collapses "no such person" and "not yours" into
+      // the same 403, so the actor gets no signal about which.
+      const { data, error } = await db
         .from("network_people")
-        .select(COLUMNS)
+        .update({ sent_out_by: null, link_status: "pending", updated_at: now })
         .eq("id", id)
-        .maybeSingle();
-      if (!found) return NextResponse.json({ error: "Person not found" }, { status: 404 });
-
-      const row = found as Row;
-      if (row.id !== actor.id && row.sent_out_by !== actor.id) {
+        .or(`id.eq.${actor.id},sent_out_by.eq.${actor.id}`)
+        .select("id");
+      if (error) throw new Error(error.message);
+      if (!data || data.length === 0) {
         return NextResponse.json(
           { error: "You can only remove your own links" },
           { status: 403 }
         );
       }
-
-      const { error } = await db
-        .from("network_people")
-        .update({ sent_out_by: null, link_status: "pending", updated_at: now })
-        .eq("id", id);
-      if (error) throw new Error(error.message);
       return NextResponse.json({ ok: true });
     }
 

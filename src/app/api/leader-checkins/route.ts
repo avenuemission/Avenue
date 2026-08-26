@@ -175,7 +175,16 @@ export async function PUT(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
-  const body = await request.json().catch(() => ({}));
+  // request.json() only rejects on malformed JSON, so a literal `null` body
+  // (valid JSON) sails past the .catch() below and would make every
+  // following `body.xyz` property access throw a TypeError outside the
+  // try block, producing an unhandled 500. Collapse anything that is not a
+  // genuine object (null, an array, a number, ...) to {} first.
+  const parsedBody: unknown = await request.json().catch(() => ({}));
+  const body: Record<string, unknown> =
+    typeof parsedBody === "object" && parsedBody !== null && !Array.isArray(parsedBody)
+      ? (parsedBody as Record<string, unknown>)
+      : {};
   const email = normaliseEmail(body.email);
   if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
 

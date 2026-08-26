@@ -58,6 +58,30 @@ const WEEK_NOT_MONDAY = (() => {
 // offset.
 const WEEK_FUTURE = mondayWeeksAgo(-1);
 
+// Mirrors route.ts's own melbourneTodayISO(): asks for "today" directly in
+// the Australia/Melbourne zone via Intl, en-CA formatting to get YYYY-MM-DD.
+// WEEK_FUTURE above is deliberately timezone-agnostic (a full week's margin
+// swamps any offset), which is exactly why it CANNOT tell a Melbourne-aware
+// implementation apart from a server-UTC one: both agree next Monday is in
+// the future. This constant exists for the opposite job - proving the
+// CURRENT week is accepted - which only distinguishes the two
+// implementations because Melbourne runs 10-11 hours ahead of UTC, so for
+// roughly the first eleven hours of every Monday in Melbourne, the UTC
+// calendar date is still Sunday. A regression to server-UTC "today" would
+// reject exactly this PUT during that window, locking every Melbourne
+// leader out of their own current week.
+function melbourneTodayISO() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Melbourne" }).format(new Date());
+}
+function currentMelbourneMonday() {
+  const [y, m, d] = melbourneTodayISO().split("-").map(Number);
+  const asUTC = new Date(Date.UTC(y, m - 1, d));
+  const daysSinceMonday = (asUTC.getUTCDay() + 6) % 7;
+  asUTC.setUTCDate(asUTC.getUTCDate() - daysSinceMonday);
+  return asUTC.toISOString().slice(0, 10);
+}
+const WEEK_CURRENT_MELBOURNE = currentMelbourneMonday();
+
 const validBody = { email: LEADER, weekStart: WEEK, relational: 7, physical: 6, mental: 8, spiritual: 9 };
 
 async function cleanupStranger() {
@@ -76,10 +100,13 @@ async function countRows(email, weekStart) {
 }
 
 // The LEADER row (info@avenuemission.com) is real production data. This
-// script only ever writes to WEEK for that email, so only that one
-// (email, week_start) pair needs capturing and restoring, by the same
-// exact-match filter used in both directions.
+// script writes to two weeks for that email - WEEK (a fixed week safely in
+// the past) and WEEK_CURRENT_MELBOURNE (today's actual current week, used
+// only by the regression guard below) - so each (email, week_start) pair
+// gets its own capture/restore, by the same exact-match filter used in both
+// directions.
 let leaderWeekBefore = null;
+let leaderCurrentWeekBefore = null;
 
 const preRunCleanupErr = await cleanupStranger();
 if (preRunCleanupErr) {
@@ -97,6 +124,16 @@ try {
   if (captureErr) throw new Error(captureErr.message);
   leaderWeekBefore = captured; // null is a valid captured state: no row yet.
 
+  console.log(`capture the leader's existing check-in for the current Melbourne week ${WEEK_CURRENT_MELBOURNE}, if any`);
+  const { data: capturedCurrent, error: captureCurrentErr } = await db
+    .from("leader_checkins")
+    .select("relational, physical, mental, spiritual, reflection, created_at, updated_at")
+    .eq("email", LEADER)
+    .eq("week_start", WEEK_CURRENT_MELBOURNE)
+    .maybeSingle();
+  if (captureCurrentErr) throw new Error(captureCurrentErr.message);
+  leaderCurrentWeekBefore = capturedCurrent; // null is a valid captured state: no row yet.
+
   console.log("GET for a real leader");
   const got = await get(`email=${encodeURIComponent(LEADER)}`);
   check("returns 200", got.status === 200, JSON.stringify(got.json));
@@ -105,6 +142,15 @@ try {
   console.log("GET for an email not in leaders");
   const denied = await get(`email=${encodeURIComponent(STRANGER_EMAIL)}`);
   check("returns 403", denied.status === 403, JSON.stringify(denied.json));
+
+  console.log("PUT for an email not in leaders");
+  // The leaders check must be the first database touch on this path, so
+  // this stranger PUT must be refused before any upsert happens - if the
+  // leaders check were ever dropped from PUT specifically (while GET kept
+  // it), all thirty prior assertions in this file would still pass while
+  // anyone on earth could write check-ins for any leader.
+  const deniedPut = await put({ ...validBody, email: STRANGER_EMAIL });
+  check("returns 403", deniedPut.status === 403, JSON.stringify(deniedPut.json));
 
   console.log("PUT stores a check-in and GET reads it back identically");
   const putOk = await put({ ...validBody, reflection: "Steady week, low sleep." });
@@ -165,6 +211,24 @@ try {
     future.json?.error
   );
 
+  console.log(`the CURRENT Melbourne week (${WEEK_CURRENT_MELBOURNE}) is accepted with 200`);
+  // Regression guard: WEEK_FUTURE above proves next Monday is rejected, but
+  // that holds true whether "today" is computed in Melbourne or in server
+  // UTC, so it cannot tell the two implementations apart. This PUT is the
+  // check that can: it is only guaranteed to pass under the real,
+  // Melbourne-aware implementation. A refactor to server-UTC "today" would
+  // make this fail (loudly, as a genuine FAIL line below) for roughly the
+  // first eleven hours of every Monday in Melbourne, which is exactly the
+  // window where it would otherwise silently lock leaders out of their own
+  // current week.
+  const currentWeekPut = await put({ ...validBody, weekStart: WEEK_CURRENT_MELBOURNE });
+  check("returns 200", currentWeekPut.status === 200, JSON.stringify(currentWeekPut.json));
+  check(
+    "PUT response echoes weekStart",
+    currentWeekPut.json?.checkin?.weekStart === WEEK_CURRENT_MELBOURNE,
+    currentWeekPut.json?.checkin?.weekStart
+  );
+
   console.log("a relational score of 0 is refused with 400");
   const zeroScore = await put({ ...validBody, relational: 0 });
   check("returns 400", zeroScore.status === 400, JSON.stringify(zeroScore.json));
@@ -222,39 +286,47 @@ try {
   const rowCountFinal = await countRows(LEADER, WEEK);
   check("still exactly one row for (email, week_start)", rowCountFinal === 1, rowCountFinal);
 } finally {
-  let restoreOk;
-  if (leaderWeekBefore) {
-    const { error: restoreErr } = await db
-      .from("leader_checkins")
-      .update({
-        relational: leaderWeekBefore.relational,
-        physical: leaderWeekBefore.physical,
-        mental: leaderWeekBefore.mental,
-        spiritual: leaderWeekBefore.spiritual,
-        reflection: leaderWeekBefore.reflection,
-        updated_at: leaderWeekBefore.updated_at,
-      })
-      .eq("email", LEADER)
-      .eq("week_start", WEEK);
-    restoreOk = !restoreErr;
-    check("restores the leader's original row for this week", restoreOk, restoreErr?.message ?? "");
-  } else {
-    // No row existed for (LEADER, WEEK) before this run: delete exactly
-    // that row, by exact email AND exact week_start, never anything
-    // broader. No neq, no like, no unfiltered delete, no truncate.
-    const { error: deleteErr } = await db
-      .from("leader_checkins")
-      .delete()
-      .eq("email", LEADER)
-      .eq("week_start", WEEK);
-    restoreOk = !deleteErr;
-    check("removes the row this run created for the leader", restoreOk, deleteErr?.message ?? "");
+  // Restores (or, if none existed before, deletes) the leader's row for one
+  // (email, week_start) pair, by exact email AND exact week_start, never
+  // anything broader (no neq, no like, no unfiltered delete, no truncate).
+  // Shared by both weeks this script can write to: WEEK and
+  // WEEK_CURRENT_MELBOURNE each get their own capture/before-state and their
+  // own call here, since they are independent rows.
+  async function restoreLeaderWeek(weekStart, before, label) {
+    let restoreOk;
+    if (before) {
+      const { error: restoreErr } = await db
+        .from("leader_checkins")
+        .update({
+          relational: before.relational,
+          physical: before.physical,
+          mental: before.mental,
+          spiritual: before.spiritual,
+          reflection: before.reflection,
+          updated_at: before.updated_at,
+        })
+        .eq("email", LEADER)
+        .eq("week_start", weekStart);
+      restoreOk = !restoreErr;
+      check(`restores the leader's original row for ${label}`, restoreOk, restoreErr?.message ?? "");
+    } else {
+      const { error: deleteErr } = await db
+        .from("leader_checkins")
+        .delete()
+        .eq("email", LEADER)
+        .eq("week_start", weekStart);
+      restoreOk = !deleteErr;
+      check(`removes the row this run created for the leader's ${label}`, restoreOk, deleteErr?.message ?? "");
+    }
+    console.log(
+      restoreOk
+        ? `restored the leader's own record for ${label}`
+        : `FAILED to restore the leader's own record for ${label}, see the check above`
+    );
   }
-  console.log(
-    restoreOk
-      ? "restored the leader's own record"
-      : "FAILED to restore the leader's own record, see the check above"
-  );
+
+  await restoreLeaderWeek(WEEK, leaderWeekBefore, "this week");
+  await restoreLeaderWeek(WEEK_CURRENT_MELBOURNE, leaderCurrentWeekBefore, "the current Melbourne week");
 
   const cleanupErr = await cleanupStranger();
   check("cleaned up the temporary stranger row", !cleanupErr, cleanupErr?.message ?? "");
