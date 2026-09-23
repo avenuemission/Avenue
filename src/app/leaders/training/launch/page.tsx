@@ -5,12 +5,18 @@ import { useRouter } from "next/navigation";
 import WizardShell, { OutcomeButton } from "@/components/journey/WizardShell";
 import {
   filled,
+  isIsoDate,
+  launchCompleteCount,
   launchStepComplete,
   LAUNCH_STEP_IDS,
+  LAUNCH_TOTAL,
   type CallingData,
   type LaunchData,
   type LaunchStepId,
 } from "@/lib/journey";
+import { LAUNCH_LAMP_LABELS } from "@/lib/avenue";
+import { useMoment } from "@/components/avenue/useMoment";
+import Moment from "@/components/avenue/Moment";
 import { SPACES, type Space } from "@/lib/people";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
@@ -46,16 +52,18 @@ function isLaunchStepId(id: string): id is LaunchStepId {
 
 function ErrorPanel({ message }: { message: string }) {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="panel p-5 md:p-8">
-        <p className="text-amber-400">{message}</p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="mt-4 min-h-[44px] px-5 rounded-full border border-[var(--border)] text-white text-sm font-semibold"
-        >
-          Try again
-        </button>
+    <div className="avenue-night">
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="panel p-5 md:p-8">
+          <p className="text-amber-400">{message}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 min-h-[44px] px-5 rounded-full border border-[var(--border)] text-white text-sm font-semibold"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -103,12 +111,29 @@ export default function LaunchPage() {
     window.scrollTo({ top: 0 });
   };
 
+  // Moments that happen in this wizard (spec 3): setting a launch date, and
+  // Launch walked (all seven planning steps). Empty until loaded.
+  // RhythmStep saves on every change, and typing a year into a date input
+  // passes through values like "0002-10-03", which are valid ISO dates. Only
+  // a date in this year or later counts as set (F5), so the moment waits for
+  // the real year.
+  const launchDate = data.rhythm?.launchDate;
+  const launchDateSet = isIsoDate(launchDate) && Number(launchDate.slice(0, 4)) >= new Date().getFullYear();
+  const momentFlags: Record<string, boolean> =
+    loaded && !launch.error
+      ? {
+          launchDate: launchDateSet,
+          "walked:phase3": launchCompleteCount(data) === LAUNCH_TOTAL,
+        }
+      : {};
+  const { moment, dismiss } = useMoment(momentFlags, launchDateSet ? launchDate : undefined);
+
   if (gateError) return <ErrorPanel message={gateError} />;
 
   if (!ready || !loaded) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="avenue-night flex items-center justify-center">
+        <div className="text-[var(--ink)]">Loading...</div>
       </div>
     );
   }
@@ -242,20 +267,31 @@ export default function LaunchPage() {
   }
 
   return (
-    <WizardShell
-      eyebrow="Launch"
-      title="Plan your launch"
-      steps={steps}
-      current={current}
-      onSelect={goTo}
-      saving={launch.savingSection !== null}
-      saveError={launch.saveError}
-    >
-      <div className="space-y-6">
-        <h2 className="text-xl md:text-2xl font-semibold text-white">{step.title}</h2>
-        {/* key resets local step state (typed text, choices) when the step changes */}
-        <div key={step.id}>{activity}</div>
-      </div>
-    </WizardShell>
+    <>
+      <WizardShell
+        phaseId="phase3"
+        name="Launch"
+        title="Plan your launch"
+        steps={steps}
+        lampLabels={LAUNCH_LAMP_LABELS}
+        current={current}
+        onSelect={goTo}
+        saving={launch.savingSection !== null}
+        saveError={launch.saveError}
+      >
+        <div className="space-y-6">
+          <h2 className="text-[var(--ink)]">{step.title}</h2>
+          {/* key resets local step state (typed text, choices) when the step changes */}
+          <div key={step.id}>{activity}</div>
+        </div>
+      </WizardShell>
+      <Moment
+        play={moment !== null}
+        playKey={moment?.n}
+        title={moment?.title ?? ""}
+        caption={moment?.caption ?? ""}
+        onDismiss={dismiss}
+      />
+    </>
   );
 }

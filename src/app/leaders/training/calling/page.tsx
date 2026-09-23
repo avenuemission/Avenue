@@ -3,7 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import WizardShell from "@/components/journey/WizardShell";
-import { callingSectionComplete, type CallingData, type CallingSectionId } from "@/lib/journey";
+import {
+  CALLING_TOTAL,
+  callingCompleteCount,
+  callingSectionComplete,
+  type CallingData,
+  type CallingSectionId,
+} from "@/lib/journey";
+import { CALLING_LAMP_LABELS } from "@/lib/avenue";
+import { useMoment } from "@/components/avenue/useMoment";
+import Moment from "@/components/avenue/Moment";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
 import { useMyPeople } from "@/lib/useMyPeople";
@@ -46,18 +55,33 @@ export default function CallingPage() {
     window.scrollTo({ top: 0 });
   };
 
+  // Moments that happen in this wizard (spec 3): yes to the Shared Call,
+  // booking the pastor conversation, and Calling walked (all six sections).
+  // Empty until the worksheet has loaded, so loading never plays one.
+  const momentFlags: Record<string, boolean> =
+    loaded && !error
+      ? {
+          sharedYes: data.shared?.yes === true,
+          conversationBooked: data.conversation?.booked === true,
+          "walked:phase2": callingCompleteCount(data) === CALLING_TOTAL,
+        }
+      : {};
+  const { moment, dismiss } = useMoment(momentFlags);
+
   if (gateError) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="panel p-5 md:p-8">
-          <p className="text-amber-400">{gateError}</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="mt-4 min-h-[44px] px-5 rounded-full border border-[var(--border)] text-white text-sm font-semibold"
-          >
-            Try again
-          </button>
+      <div className="avenue-night">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="panel p-5 md:p-8">
+            <p className="text-amber-400">{gateError}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 min-h-[44px] px-5 rounded-full border border-[var(--border)] text-white text-sm font-semibold"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -65,24 +89,26 @@ export default function CallingPage() {
 
   if (!ready || !loaded) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="avenue-night flex items-center justify-center">
+        <div className="text-[var(--ink)]">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="panel p-5 md:p-8">
-          <p className="text-amber-400">{error}</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="mt-4 min-h-[44px] px-5 rounded-full border border-[var(--border)] text-white text-sm font-semibold"
-          >
-            Try again
-          </button>
+      <div className="avenue-night">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="panel p-5 md:p-8">
+            <p className="text-amber-400">{error}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 min-h-[44px] px-5 rounded-full border border-[var(--border)] text-white text-sm font-semibold"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -132,23 +158,34 @@ export default function CallingPage() {
   }
 
   return (
-    <WizardShell
-      eyebrow="Calling"
-      title="Discover your calling"
-      steps={steps}
-      current={current}
-      onSelect={goTo}
-      saving={savingSection !== null}
-      saveError={saveError}
-    >
-      <div className="space-y-6">
-        <h2 className="text-xl md:text-2xl font-semibold text-white">
-          Section {section.number}: {section.title}
-        </h2>
-        <SectionVideo section={section} />
-        {/* key resets local step state (selection, typed text) when the section changes */}
-        <div key={section.id}>{activity}</div>
-      </div>
-    </WizardShell>
+    <>
+      <WizardShell
+        phaseId="phase2"
+        name="Calling"
+        title="Discover your calling"
+        steps={steps}
+        lampLabels={CALLING_LAMP_LABELS}
+        current={current}
+        onSelect={goTo}
+        saving={savingSection !== null}
+        saveError={saveError}
+      >
+        <div className="space-y-6">
+          <h2 className="text-[var(--ink)]">
+            Section {section.number}: {section.title}
+          </h2>
+          <SectionVideo section={section} />
+          {/* key resets local step state (selection, typed text) when the section changes */}
+          <div key={section.id}>{activity}</div>
+        </div>
+      </WizardShell>
+      <Moment
+        play={moment !== null}
+        playKey={moment?.n}
+        title={moment?.title ?? ""}
+        caption={moment?.caption ?? ""}
+        onDismiss={dismiss}
+      />
+    </>
   );
 }
