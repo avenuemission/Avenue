@@ -8,6 +8,7 @@ import { getCurrentUser, logout, User } from "@/lib/auth";
 import { leaderFetch } from "@/lib/leaderFetch";
 import Reveal from "@/components/ui/Reveal";
 import ProfileCard from "@/components/ui/ProfileCard";
+import NextStepCard from "@/components/journey/NextStepCard";
 import {
   GraduationCap,
   BookOpen,
@@ -201,6 +202,12 @@ export default function LeadersPage() {
         <Reveal className="max-w-4xl mx-auto mb-5">
           <ProfileCard email={user.email} fallbackName={user.name} collapsible />
         </Reveal>
+
+        {accessChecked && hasFullAccess && (
+          <Reveal className="max-w-4xl mx-auto mb-5">
+            <NextStepCard enabled />
+          </Reveal>
+        )}
 
         {/* Featured */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">

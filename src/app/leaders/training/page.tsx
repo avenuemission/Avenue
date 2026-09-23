@@ -37,7 +37,11 @@ export default function TrainingPage() {
   const [mounted, setMounted] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
-  const [expandedPhase, setExpandedPhase] = useState<string | null>("phase1");
+  const [expandedPhase, setExpandedPhase] = useState<string | null>(() => {
+    if (typeof window === "undefined") return "phase1";
+    const p = new URLSearchParams(window.location.search).get("phase");
+    return p && /^phase[1-5]$/.test(p) ? p : "phase1";
+  });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [videoModal, setVideoModal] = useState<{ youtubeId: string; title: string } | null>(null);
 
