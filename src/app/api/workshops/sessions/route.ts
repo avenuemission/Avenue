@@ -6,6 +6,7 @@ import { requireLeader } from "@/lib/requireLeader";
 export async function GET(request: NextRequest) {
   const auth = await requireLeader(request);
   if ("response" in auth) return auth.response;
+  if (!auth.leader.fullAccess) return NextResponse.json({ error: "Access denied. Full leader access required." }, { status: 403 });
 
   const { data, error } = await supabase
     .from("workshop_sessions")
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await requireLeader(request);
   if ("response" in auth) return auth.response;
+  if (!auth.leader.fullAccess) return NextResponse.json({ error: "Access denied. Full leader access required." }, { status: 403 });
 
   const { code, include_life_3 } = await request.json();
 

@@ -6,6 +6,7 @@ export const maxDuration = 60;
 export async function POST(request: NextRequest) {
   const auth = await requireLeader(request);
   if ("response" in auth) return auth.response;
+  if (!auth.leader.fullAccess) return NextResponse.json({ error: "Access denied. Full leader access required." }, { status: 403 });
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

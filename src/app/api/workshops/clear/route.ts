@@ -5,6 +5,7 @@ import { requireLeader } from "@/lib/requireLeader";
 export async function DELETE(request: NextRequest) {
   const auth = await requireLeader(request);
   if ("response" in auth) return auth.response;
+  if (!auth.leader.fullAccess) return NextResponse.json({ error: "Access denied. Full leader access required." }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
