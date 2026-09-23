@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import PrintButton from "@/components/journey/PrintButton";
+import PhaseOpening from "@/components/avenue/PhaseOpening";
+import JourneyFooter from "@/components/avenue/JourneyFooter";
+import { VERSES } from "../../verses";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
 import { useMyPeople } from "@/lib/useMyPeople";
@@ -53,9 +56,11 @@ export default function LaunchPlanPage() {
 
   if (gateError) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="panel p-5 md:p-8">
-          <p className="text-amber-400">{gateError}</p>
+      <div className="avenue-night">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="panel p-5 md:p-8">
+            <p className="text-amber-400">{gateError}</p>
+          </div>
         </div>
       </div>
     );
@@ -63,17 +68,19 @@ export default function LaunchPlanPage() {
 
   if (!ready || !loaded) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="avenue-night flex items-center justify-center">
+        <div className="text-[var(--ink)]">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="panel p-5 md:p-8">
-          <p className="text-amber-400">{error}</p>
+      <div className="avenue-night">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="panel p-5 md:p-8">
+            <p className="text-amber-400">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -143,7 +150,8 @@ export default function LaunchPlanPage() {
   };
 
   return (
-    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-4">
+    <div className="avenue-night">
+    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-8 print:space-y-4">
       <div className="no-print flex items-center justify-between">
         <Link
           href="/leaders/training/launch"
@@ -154,14 +162,28 @@ export default function LaunchPlanPage() {
         <PrintButton />
       </div>
 
-      <div>
+      {/* Print keeps the original title block; the screen shows the phase opening. */}
+      <div className="hidden print:block">
         <h1 className="text-2xl md:text-3xl font-bold text-white">My Launch Plan</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">Private to you.</p>
       </div>
+      <div className="no-print">
+        <PhaseOpening
+          size="small"
+          headingLevel={1}
+          stop={3}
+          name="My Launch Plan"
+          reference={VERSES.phase3.reference}
+          short={VERSES.phase3.short}
+          verse={VERSES.phase3.text}
+        >
+          <p className="text-sm text-[var(--muted)]">Private to you.</p>
+        </PhaseOpening>
+      </div>
 
       {/* Why and prayer */}
-      <section className="panel p-5">
-        <p className="eyebrow">Why and prayer</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Why and prayer</h2>
         {hasPrayer ? (
           <div className="mt-2 space-y-2">
             {filled(prayer?.when) ? (
@@ -189,8 +211,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Mission group */}
-      <section className="panel p-5">
-        <p className="eyebrow">Mission group</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Mission group</h2>
         {hasMission ? (
           <div className="mt-2 space-y-2">
             {filled(mission?.who) ? (
@@ -218,8 +240,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Space */}
-      <section className="panel p-5">
-        <p className="eyebrow">Space</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Space</h2>
         {hasSpace ? (
           <div className="mt-2 space-y-2">
             {hosting ? (
@@ -241,8 +263,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Launch team */}
-      <section className="panel p-5">
-        <p className="eyebrow">Launch team</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Launch team</h2>
         {teamIds.length === 0 ? (
           <EmptyPanel step={4} />
         ) : peopleError ? (
@@ -255,8 +277,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Commitments */}
-      <section className="panel p-5">
-        <p className="eyebrow">Commitments</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Commitments</h2>
         {hasIntentional ? (
           <div className="mt-2 space-y-2">
             {commitments.length > 0 ? (
@@ -281,8 +303,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Rhythm and launch date */}
-      <section className="panel p-5">
-        <p className="eyebrow">Rhythm and launch date</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Rhythm and launch date</h2>
         {hasRhythm ? (
           <div className="mt-2 space-y-2">
             {launchDate ? (
@@ -315,8 +337,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Invite list */}
-      <section className="panel p-5">
-        <p className="eyebrow">Invite list</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Invite list</h2>
         {peopleError ? (
           <p className="mt-2 text-sm text-amber-400">{PEOPLE_ERROR}</p>
         ) : !peopleLoaded ? (
@@ -331,8 +353,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Shepherding */}
-      <section className="panel p-5">
-        <p className="eyebrow">Shepherding</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Shepherding</h2>
         {hasShepherding ? (
           <div className="mt-2 space-y-2">
             {filled(invite?.tracking) ? (
@@ -355,8 +377,8 @@ export default function LaunchPlanPage() {
 
       {/* Principles learned */}
       {showArenaSection ? (
-        <section className="panel p-5">
-          <p className="eyebrow">Principles learned</p>
+        <section className="panel night-section p-5">
+          <h2 className="night-h2">Principles learned</h2>
           {arenaBroken ? (
             <p className="mt-2 text-sm text-gray-300">Your Arena run no longer matches the current months.</p>
           ) : arenaEarned && arenaEarned.length > 0 ? (
@@ -375,8 +397,8 @@ export default function LaunchPlanPage() {
       ) : null}
 
       {/* Where your plan is thin */}
-      <section className="panel p-5">
-        <p className="eyebrow">Where your plan is thin</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Where your plan is thin</h2>
         {apprenticeCount === null ? (
           <p className="mt-2 text-sm text-[var(--muted)]">
             Could not load your network, so apprentices are not checked here.
@@ -397,7 +419,7 @@ export default function LaunchPlanPage() {
                     type="checkbox"
                     checked={doneIds.includes(id)}
                     onChange={() => toggle(id)}
-                    className="mt-1 h-4 w-4"
+                    className="mt-1 h-4 w-4 accent-[var(--lamp)] print:accent-auto"
                   />
                   <span>
                     <span className="block text-sm text-white">{sentence}</span>
@@ -411,8 +433,8 @@ export default function LaunchPlanPage() {
       </section>
 
       {/* Next actions */}
-      <section className="panel p-5">
-        <p className="eyebrow">Next actions</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">Next actions</h2>
         {nextActions.length === 0 ? (
           <p className="mt-2 text-sm text-[var(--muted)]">Fill in the steps and your next actions appear here.</p>
         ) : (
@@ -424,7 +446,7 @@ export default function LaunchPlanPage() {
                   type="checkbox"
                   checked={doneIds.includes(action.id)}
                   onChange={() => toggle(action.id)}
-                  className="mt-1 h-4 w-4"
+                  className="mt-1 h-4 w-4 accent-[var(--lamp)] print:accent-auto"
                 />
                 <span className="text-sm text-white">{action.text}</span>
               </label>
@@ -432,6 +454,9 @@ export default function LaunchPlanPage() {
           </div>
         )}
       </section>
+
+      <JourneyFooter />
+    </div>
     </div>
   );
 }

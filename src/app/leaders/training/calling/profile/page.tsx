@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import PrintButton from "@/components/journey/PrintButton";
+import PhaseOpening from "@/components/avenue/PhaseOpening";
+import JourneyFooter from "@/components/avenue/JourneyFooter";
+import { VERSES } from "../../verses";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
 import { useMyPeople } from "@/lib/useMyPeople";
@@ -58,9 +61,11 @@ export default function CallingProfilePage() {
 
   if (gateError) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="panel p-5 md:p-8">
-          <p className="text-amber-400">{gateError}</p>
+      <div className="avenue-night">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="panel p-5 md:p-8">
+            <p className="text-amber-400">{gateError}</p>
+          </div>
         </div>
       </div>
     );
@@ -68,17 +73,19 @@ export default function CallingProfilePage() {
 
   if (!ready || !loaded) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="avenue-night flex items-center justify-center">
+        <div className="text-[var(--ink)]">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="panel p-5 md:p-8">
-          <p className="text-amber-400">{error}</p>
+      <div className="avenue-night">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="panel p-5 md:p-8">
+            <p className="text-amber-400">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -120,7 +127,8 @@ export default function CallingProfilePage() {
   const conversationDate = dateAU(conversation?.date);
 
   return (
-    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-4">
+    <div className="avenue-night">
+    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-8 print:space-y-4">
       <div className="no-print flex items-center justify-between">
         <Link href="/leaders/training/calling" className="min-h-[44px] inline-flex items-center text-sm text-[var(--muted)] hover:text-white">
           Back to Calling
@@ -128,16 +136,30 @@ export default function CallingProfilePage() {
         <PrintButton />
       </div>
 
-      <div>
+      {/* Print keeps the original title block; the screen shows the phase opening. */}
+      <div className="hidden print:block">
         <h1 className="text-2xl md:text-3xl font-bold text-white">My Calling Profile</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
           Private to you. Your sender and the admins cannot see it.
         </p>
       </div>
+      <div className="no-print">
+        <PhaseOpening
+          size="small"
+          headingLevel={1}
+          stop={2}
+          name="My Calling Profile"
+          reference={VERSES.phase2.reference}
+          short={VERSES.phase2.short}
+          verse={VERSES.phase2.text}
+        >
+          <p className="text-sm text-[var(--muted)]">Private to you. Your sender and the admins cannot see it.</p>
+        </PhaseOpening>
+      </div>
 
       {/* My three layers */}
-      <section className="panel p-5">
-        <p className="eyebrow">My three layers</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">My three layers</h2>
         {hasLayers ? (
           <div className="mt-2 space-y-2">
             <p className="text-white font-semibold">{layersScore(placements, LAYER_KEY)} of 9 in the right layer</p>
@@ -154,8 +176,8 @@ export default function CallingProfilePage() {
       </section>
 
       {/* My availability */}
-      <section className="panel p-5">
-        <p className="eyebrow">My availability</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">My availability</h2>
         {hasWilling ? (
           <div className="mt-2 space-y-2">
             <p className="text-white font-semibold">
@@ -185,8 +207,8 @@ export default function CallingProfilePage() {
       </section>
 
       {/* My yes to the Shared Call */}
-      <section className="panel p-5">
-        <p className="eyebrow">My yes to the Shared Call</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">My yes to the Shared Call</h2>
         {hasShared ? (
           <p className="mt-2 text-white font-semibold">
             Said yes {sharedDate ? `on ${sharedDate}` : ""}
@@ -197,8 +219,8 @@ export default function CallingProfilePage() {
       </section>
 
       {/* My gifts */}
-      <section className="panel p-5">
-        <p className="eyebrow">My gifts</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">My gifts</h2>
         {hasApest && gifts.length >= 2 ? (
           <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
             {gifts.map((role) => {
@@ -236,8 +258,8 @@ export default function CallingProfilePage() {
       </section>
 
       {/* My mission field */}
-      <section className="panel p-5">
-        <p className="eyebrow">My mission field</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">My mission field</h2>
         {hasSeasonal ? (
           <div className="mt-2 space-y-2">
             {peopleError ? (
@@ -291,14 +313,17 @@ export default function CallingProfilePage() {
       </section>
 
       {/* My conversation */}
-      <section className="panel p-5">
-        <p className="eyebrow">My conversation</p>
+      <section className="panel night-section p-5">
+        <h2 className="night-h2">My conversation</h2>
         {hasConversation ? (
           <p className="mt-2 text-white font-semibold">{conversationDate ? `Booked for ${conversationDate}` : "Booked"}</p>
         ) : (
           <EmptyNext line="Not booked yet." label="Book the conversation" step={STEP_NUMBER.conversation} />
         )}
       </section>
+
+      <JourneyFooter />
+    </div>
     </div>
   );
 }
