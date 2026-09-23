@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
-import { getStore } from "@netlify/blobs";
 
 interface LeaderRecord {
   id: string;
@@ -10,9 +9,7 @@ interface LeaderRecord {
   created_at: string;
 }
 
-const isLocal = !process.env.NETLIFY;
-
-// GET: admin — list all leaders (Supabase + Netlify Blobs fallback)
+// GET: admin, list all leaders from Supabase (the only source requireLeader reads)
 export async function GET(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,41 +17,16 @@ export async function GET(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
-  const leaders: LeaderRecord[] = [];
+  const { data, error } = await getSupabaseAdmin()
+    .from("leaders")
+    .select("id, email, name, full_access, created_at")
+    .order("created_at", { ascending: false });
 
-  // Read from Supabase
-  try {
-    const { data, error } = await getSupabaseAdmin()
-      .from("leaders")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (!error && data) {
-      leaders.push(...data as LeaderRecord[]);
-    }
-  } catch (error) {
-    console.error("Supabase leaders read error:", error);
-  }
-
-  // Read from Netlify Blobs fallback (merge without duplicates)
-  if (!isLocal) {
-    try {
-      const store = getStore({ name: "leaders", consistency: "strong" });
-      const { blobs } = await store.list();
-      for (const blob of blobs) {
-        const leader = await store.get(blob.key, { type: "json" });
-        if (leader && !leaders.some((l) => l.email === leader.email)) {
-          leaders.push(leader as LeaderRecord);
-        }
-      }
-    } catch (error) {
-      console.error("Netlify Blobs leaders read error:", error);
-    }
-  }
-
-  return NextResponse.json({ leaders });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ leaders: (data ?? []) as LeaderRecord[] });
 }
 
-// PUT: admin — update a leader's access
+// PUT: admin, update a leader's access
 export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -78,7 +50,7 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json({ leader: data[0] });
 }
 
-// DELETE: admin — remove a leader
+// DELETE: admin, remove a leader
 export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -90,16 +62,18 @@ export async function DELETE(request: NextRequest) {
   const email = searchParams.get("email");
   if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
 
-  const { error } = await getSupabaseAdmin()
+  const { data, error } = await getSupabaseAdmin()
     .from("leaders")
     .delete()
-    .eq("email", email.toLowerCase());
+    .eq("email", email.toLowerCase())
+    .select("email");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data || data.length === 0) return NextResponse.json({ error: "Leader not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }
 
-// POST: admin — create a leader directly
+// POST: admin, create a leader directly
 export async function POST(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

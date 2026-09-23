@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { getStore } from "@netlify/blobs";
-
-interface LeaderRecord {
-  id: string;
-  email: string;
-  name: string;
-  full_access: boolean;
-  created_at: string;
-}
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 // Simple admin key check (set ADMIN_API_KEY in Netlify environment variables)
 function isAuthorized(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization");
   const adminKey = process.env.ADMIN_API_KEY;
-  
+
   if (!adminKey) return false;
   return authHeader === `Bearer ${adminKey}`;
 }
+
+// The Supabase `leaders` table is the only source of truth for leader
+// access: requireLeader reads it and nothing else.
+const LEADER_COLUMNS = "id, email, name, full_access, created_at";
 
 // GET: List all leaders (requires admin auth)
 export async function GET(request: NextRequest) {
@@ -26,18 +22,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const store = getStore({ name: "leaders", consistency: "strong" });
-    const { blobs } = await store.list();
-    const leaders: LeaderRecord[] = [];
+    const { data, error } = await getSupabaseAdmin()
+      .from("leaders")
+      .select(LEADER_COLUMNS)
+      .order("created_at", { ascending: false });
 
-    for (const blob of blobs) {
-      const leader = await store.get(blob.key, { type: "json" });
-      if (leader) {
-        leaders.push(leader as LeaderRecord);
-      }
+    if (error) {
+      console.error("Error listing leaders:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ leaders });
+    return NextResponse.json({ leaders: data ?? [] });
   } catch (error) {
     console.error("Error listing leaders:", error);
     return NextResponse.json(
@@ -57,35 +52,33 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { email, full_access } = body;
 
-    if (!email || typeof full_access !== "boolean") {
+    if (!email || typeof email !== "string" || typeof full_access !== "boolean") {
       return NextResponse.json(
         { error: "Email and full_access (boolean) required" },
         { status: 400 }
       );
     }
 
-    const store = getStore({ name: "leaders", consistency: "strong" });
-    const key = email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
-    
-    const existing = await store.get(key, { type: "json" }) as LeaderRecord | null;
-    
-    if (!existing) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("leaders")
+      .update({ full_access })
+      .eq("email", email.toLowerCase())
+      .select(LEADER_COLUMNS);
+
+    if (error) {
+      console.error("Error updating leader:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    if (!data || data.length === 0) {
       return NextResponse.json(
         { error: "Leader not found" },
         { status: 404 }
       );
     }
 
-    const updated: LeaderRecord = {
-      ...existing,
-      full_access,
-    };
-
-    await store.setJSON(key, updated);
-
     return NextResponse.json({
       success: true,
-      leader: updated,
+      leader: data[0],
     });
   } catch (error) {
     console.error("Error updating leader:", error);
@@ -113,10 +106,22 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const store = getStore({ name: "leaders", consistency: "strong" });
-    const key = email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
-    
-    await store.delete(key);
+    const { data, error } = await getSupabaseAdmin()
+      .from("leaders")
+      .delete()
+      .eq("email", email.toLowerCase())
+      .select("email");
+
+    if (error) {
+      console.error("Error deleting leader:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { error: "Leader not found" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
