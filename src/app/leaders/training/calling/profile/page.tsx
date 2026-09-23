@@ -6,7 +6,7 @@ import PrintButton from "@/components/journey/PrintButton";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
 import { useMyPeople } from "@/lib/useMyPeople";
-import { layersScore, type CallingData } from "@/lib/journey";
+import { filled, isSpace, layersScore, recordOf, textOf, type CallingData } from "@/lib/journey";
 import { APEST_ORDER, topTwoRoles, type RoleKey } from "@/lib/apest";
 import {
   APEST_CALLING_TEXT,
@@ -53,7 +53,7 @@ function EmptyNext({ line, label, step }: { line: string; label: string; step: n
 export default function CallingProfilePage() {
   const { ready, error: gateError } = useLeaderGate();
   const { data, loaded, error } = useWorksheet<CallingData>("calling", ready);
-  const { people, peopleLoaded } = useMyPeople(ready);
+  const { people, peopleLoaded, peopleError } = useMyPeople(ready);
   const [showJournal, setShowJournal] = useState(false);
 
   if (gateError) {
@@ -84,13 +84,15 @@ export default function CallingProfilePage() {
     );
   }
 
-  const layers = data.layers;
-  const placements = (layers?.placements ?? {}) as Record<string, string>;
+  // Every stored read below is shape-checked: a value of an unexpected
+  // shape reads as not answered yet rather than throwing.
+  const placements = recordOf(recordOf(data.layers).placements);
   const hasLayers = Object.keys(placements).length > 0;
 
-  const callable = data.callable;
-  const hasWilling = !!callable?.willing;
-  const willingOption = WILLING_OPTIONS.find((o) => o.value === callable?.willing);
+  const callable = recordOf(data.callable);
+  const willing = textOf(callable.willing);
+  const hasWilling = willing.length > 0;
+  const willingOption = WILLING_OPTIONS.find((o) => o.value === willing);
 
   const shared = data.shared;
   const hasShared = shared?.yes === true;
@@ -104,10 +106,14 @@ export default function CallingProfilePage() {
   const topFallback = hasApest && apest?.results && top.length < 2 ? topTwoRoles(apest.results) : null;
   const gifts = top.length >= 2 ? top : topFallback ?? [];
 
-  const seasonal = data.seasonal;
-  const hasSeasonal = !!seasonal && (!!seasonal.peopleGroup || !!seasonal.hostingSpace);
-  const rice = seasonal?.rice;
-  const hasRice = !!rice && Object.values(rice).some((v) => typeof v === "string" && v.trim().length > 0);
+  const seasonal = recordOf(data.seasonal);
+  const peopleGroup = filled(seasonal.peopleGroup) ? (seasonal.peopleGroup as string) : null;
+  const hostingSpace = isSpace(seasonal.hostingSpace) ? seasonal.hostingSpace : null;
+  const hasSeasonal = !!peopleGroup || !!hostingSpace;
+  const rice = recordOf(seasonal.rice);
+  const riceDecision = filled(rice.decision) ? (rice.decision as string) : null;
+  const riceFields = RICE_FIELDS.filter((f) => filled(rice[f.key]));
+  const hasRice = riceFields.length > 0;
 
   const conversation = data.conversation;
   const hasConversation = conversation?.booked === true;
@@ -153,7 +159,7 @@ export default function CallingProfilePage() {
         {hasWilling ? (
           <div className="mt-2 space-y-2">
             <p className="text-white font-semibold">
-              Willing and available: {willingOption?.label ?? callable?.willing}
+              Willing and available: {willingOption?.label ?? willing}
             </p>
             <button
               type="button"
@@ -167,7 +173,7 @@ export default function CallingProfilePage() {
                 {JOURNAL_PROMPTS.map((p) => (
                   <div key={p.key}>
                     <p className="text-sm text-[var(--muted)]">{p.label}</p>
-                    <p className="mt-1 text-sm text-white">{callable?.[p.key] || "(not answered)"}</p>
+                    <p className="mt-1 text-sm text-white">{textOf(callable[p.key]) || "(not answered)"}</p>
                   </div>
                 ))}
               </div>
@@ -219,37 +225,42 @@ export default function CallingProfilePage() {
         <p className="eyebrow">My mission field</p>
         {hasSeasonal ? (
           <div className="mt-2 space-y-2">
-            {peopleLoaded &&
+            {peopleError ? (
+              <p className="text-sm text-amber-400">We couldn&rsquo;t load your people. Reload to try again.</p>
+            ) : !peopleLoaded ? (
+              <p className="text-sm text-[var(--muted)]">Loading your people...</p>
+            ) : (
               (["first", "second", "third"] as const).map((s) => {
-                const n = people.filter((p) => p.spaces.includes(s)).length;
+                const n = people.filter((p) => Array.isArray(p.spaces) && p.spaces.includes(s)).length;
                 return (
                   <p key={s} className="text-sm text-gray-300">
                     {SPACE_CONTENT[s].name} ({SPACE_CONTENT[s].short}): {n} people
                   </p>
                 );
-              })}
-            {seasonal?.peopleGroup ? (
-              <p className="text-sm text-gray-300">People group: &ldquo;{seasonal.peopleGroup}&rdquo;</p>
+              })
+            )}
+            {peopleGroup ? (
+              <p className="text-sm text-gray-300">People group: &ldquo;{peopleGroup}&rdquo;</p>
             ) : null}
-            {seasonal?.hostingSpace ? (
+            {hostingSpace ? (
               <p className="text-sm text-gray-300">
-                Hosting space: {SPACE_CONTENT[seasonal.hostingSpace].name}: {SPACE_CONTENT[seasonal.hostingSpace].pro}
+                Hosting space: {SPACE_CONTENT[hostingSpace].name}: {SPACE_CONTENT[hostingSpace].pro}
               </p>
             ) : null}
-            {rice?.decision ? (
+            {riceDecision ? (
               <p className="text-sm text-gray-300">
                 <span className="font-semibold text-white">Decision: </span>
-                {rice.decision}
+                {riceDecision}
               </p>
             ) : null}
             {hasRice && (
               <div className="space-y-1">
-                {RICE_FIELDS.filter((f) => rice?.[f.key]).map((f) => (
+                {riceFields.map((f) => (
                   <p key={f.key} className="text-sm text-gray-300">
                     <span className="font-semibold text-white">
                       {f.letter} ({f.label}):{" "}
                     </span>
-                    {rice?.[f.key]}
+                    {textOf(rice[f.key])}
                   </p>
                 ))}
               </div>

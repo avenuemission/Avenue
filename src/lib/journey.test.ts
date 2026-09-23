@@ -5,11 +5,16 @@ import {
   callingSectionComplete,
   filled,
   isIsoDate,
+  isSpace,
   isTime,
+  isWeekday,
   launchCompleteCount,
   launchStepComplete,
   layersScore,
   overallPercent,
+  recordOf,
+  stringList,
+  textOf,
   type CallingData,
   type Layer,
   type LaunchData,
@@ -141,5 +146,36 @@ describe("overallPercent", () => {
     expect(overallPercent({ foundationsDone: 2, foundationsTotal: 4, callingDone: 3, launchDone: 0 })).toBe(29);
     expect(overallPercent({ foundationsDone: 4, foundationsTotal: 4, callingDone: 6, launchDone: 7 })).toBe(100);
     expect(overallPercent({ foundationsDone: 0, foundationsTotal: 4, callingDone: 0, launchDone: 0 })).toBe(0);
+  });
+});
+
+describe("stored shape guards", () => {
+  it("isSpace accepts only the three spaces", () => {
+    expect(isSpace("first")).toBe(true);
+    expect(isSpace("fourth")).toBe(false);
+    expect(isSpace(1)).toBe(false);
+    expect(isSpace({ first: true })).toBe(false);
+  });
+  it("isWeekday accepts only lower-case weekday names", () => {
+    expect(isWeekday("monday")).toBe(true);
+    expect(isWeekday("Monday")).toBe(false);
+    expect(isWeekday(null)).toBe(false);
+  });
+  it("stringList keeps the strings of an array and drops anything else", () => {
+    expect(stringList(["a", 2, null, "b"])).toEqual(["a", "b"]);
+    expect(stringList("a")).toEqual([]);
+    expect(stringList({ 0: "a" })).toEqual([]);
+    expect(stringList(undefined)).toEqual([]);
+  });
+  it("textOf returns strings only", () => {
+    expect(textOf("hi")).toBe("hi");
+    expect(textOf(3)).toBe("");
+    expect(textOf({ text: "hi" })).toBe("");
+  });
+  it("recordOf returns plain objects only", () => {
+    expect(recordOf({ a: 1 })).toEqual({ a: 1 });
+    expect(recordOf(["a"])).toEqual({});
+    expect(recordOf("a")).toEqual({});
+    expect(recordOf(null)).toEqual({});
   });
 });

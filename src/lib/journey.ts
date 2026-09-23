@@ -64,8 +64,28 @@ export function isTime(value: unknown): value is string {
   return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
-function isSpace(value: unknown): value is Space {
+export function isSpace(value: unknown): value is Space {
   return typeof value === "string" && (SPACES as readonly string[]).includes(value);
+}
+
+export function isWeekday(value: unknown): value is Weekday {
+  return typeof value === "string" && (WEEKDAYS as readonly string[]).includes(value);
+}
+
+// The strings in a stored list, or an empty list when the stored value is
+// not an array. Used where a page renders a list read back from the server.
+export function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((x): x is string => typeof x === "string") : [];
+}
+
+// A stored text field, or "" when it is missing or not a string.
+export function textOf(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+// A stored sub-object, or {} when it is missing, an array or a primitive.
+export function recordOf(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
 function isResults(value: unknown): value is ApestResults {

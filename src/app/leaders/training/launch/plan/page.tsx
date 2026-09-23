@@ -7,7 +7,7 @@ import { useWorksheet } from "@/lib/useWorksheet";
 import { useMyPeople } from "@/lib/useMyPeople";
 import { arenaPlanFrom, detectGaps, playArena, thinSentence, thinSpots, GAP_TEXT, type EarnedPrinciple } from "@/lib/arena";
 import { buildPlanActions, formatIsoDate, gapActions, gatheringsInFirstSixMonths, weeksUntil } from "@/lib/launch";
-import { filled, type LaunchData } from "@/lib/journey";
+import { filled, isSpace, isWeekday, stringList, type LaunchData } from "@/lib/journey";
 import { SPACE_CONTENT } from "../../calling/content";
 import { ARENA_ENABLED, CURVEBALLS, DEFAULT_ORDER } from "../arenaContent";
 import { useNetworkView } from "../../useNetworkView";
@@ -27,6 +27,9 @@ function GoToStep({ step }: { step: number }) {
   );
 }
 
+const PEOPLE_LOADING = "Loading your people...";
+const PEOPLE_ERROR = "We couldn't load your people. Reload to try again.";
+
 function EmptyPanel({ step }: { step: number }) {
   return (
     <div className="mt-2 space-y-2">
@@ -41,7 +44,7 @@ function EmptyPanel({ step }: { step: number }) {
 export default function LaunchPlanPage() {
   const { user, ready, error: gateError } = useLeaderGate();
   const { data, loaded, error, saveSection } = useWorksheet<LaunchData>("launch", ready);
-  const { people, peopleLoaded } = useMyPeople(ready);
+  const { people, peopleLoaded, peopleError } = useMyPeople(ready);
   const network = useNetworkView(user, ready, ready);
   const apprenticeCount =
     !network.networkLoaded || network.networkError
@@ -83,10 +86,12 @@ export default function LaunchPlanPage() {
   const hasMission = filled(mission?.who) || filled(mission?.needs) || filled(mission?.gather);
 
   const space = data.space;
-  const hasSpace = !!space?.hosting || filled(space?.place);
+  // A stored value of an unexpected shape reads as not written yet rather
+  // than throwing (SPACE_CONTENT has no entry for it).
+  const hosting = isSpace(space?.hosting) ? space.hosting : null;
+  const hasSpace = !!hosting || filled(space?.place);
 
-  const rawTeamIds = data.team?.personIds;
-  const teamIds = Array.isArray(rawTeamIds) ? rawTeamIds.filter((x): x is string => typeof x === "string") : [];
+  const teamIds = stringList(data.team?.personIds);
   const teamNames = teamIds
     .map((id) => {
       const p = people.find((x) => x.id === id);
@@ -94,23 +99,25 @@ export default function LaunchPlanPage() {
     })
     .join(", ");
 
-  const rawCommitments = data.intentional?.commitments;
-  const commitments = (Array.isArray(rawCommitments) ? rawCommitments : []).filter(filled);
+  const commitments = stringList(data.intentional?.commitments).filter(filled);
   const needPosition = data.intentional?.needPosition;
   const hasIntentional = commitments.length > 0 || filled(needPosition);
 
   const rhythm = data.rhythm;
-  const hasRhythm = filled(rhythm?.launchDate) || !!rhythm?.weeklyDay || filled(rhythm?.weeklyTime);
-  const weeks = rhythm?.launchDate ? weeksUntil(rhythm.launchDate, new Date()) : null;
-  const gatherings =
-    rhythm?.launchDate && rhythm?.weeklyDay ? gatheringsInFirstSixMonths(rhythm.launchDate, rhythm.weeklyDay) : null;
+  const launchDate = filled(rhythm?.launchDate) ? (rhythm!.launchDate as string) : null;
+  const weeklyDay = isWeekday(rhythm?.weeklyDay) ? rhythm!.weeklyDay! : null;
+  const weeklyTime = filled(rhythm?.weeklyTime) ? (rhythm!.weeklyTime as string) : null;
+  const hasRhythm = !!launchDate || !!weeklyDay || !!weeklyTime;
+  const weeks = launchDate ? weeksUntil(launchDate, new Date()) : null;
+  const gatherings = launchDate && weeklyDay ? gatheringsInFirstSixMonths(launchDate, weeklyDay) : null;
 
   const inviteCount = people.filter((p) => p.invitee).length;
 
   const invite = data.invite;
   const hasShepherding = filled(invite?.tracking) || filled(invite?.shepherding);
 
-  const picks = data.arena?.picks ?? [];
+  const rawPicks = data.arena?.picks;
+  const picks = Array.isArray(rawPicks) ? rawPicks : [];
   const showArenaSection = ARENA_ENABLED && picks.length > 0;
   let arenaEarned: EarnedPrinciple[] | null = null;
   let arenaBroken = false;
@@ -128,7 +135,7 @@ export default function LaunchPlanPage() {
 
   const nextActions = buildPlanActions(data);
   const gapChecks = gapActions(gaps);
-  const doneIds = data.actions?.done ?? [];
+  const doneIds = stringList(data.actions?.done);
 
   const toggle = (id: string) => {
     const next = doneIds.includes(id) ? doneIds.filter((x) => x !== id) : [...doneIds, id];
@@ -215,10 +222,10 @@ export default function LaunchPlanPage() {
         <p className="eyebrow">Space</p>
         {hasSpace ? (
           <div className="mt-2 space-y-2">
-            {space?.hosting ? (
+            {hosting ? (
               <p className="text-sm text-gray-300">
                 <span className="font-semibold text-white">Hosting: </span>
-                {SPACE_CONTENT[space.hosting].name} ({SPACE_CONTENT[space.hosting].short})
+                {SPACE_CONTENT[hosting].name} ({SPACE_CONTENT[hosting].short})
               </p>
             ) : null}
             {filled(space?.place) ? (
@@ -236,10 +243,14 @@ export default function LaunchPlanPage() {
       {/* Launch team */}
       <section className="panel p-5">
         <p className="eyebrow">Launch team</p>
-        {teamIds.length > 0 ? (
-          <p className="mt-2 text-sm text-gray-300">{peopleLoaded ? teamNames : "Loading..."}</p>
-        ) : (
+        {teamIds.length === 0 ? (
           <EmptyPanel step={4} />
+        ) : peopleError ? (
+          <p className="mt-2 text-sm text-amber-400">{PEOPLE_ERROR}</p>
+        ) : !peopleLoaded ? (
+          <p className="mt-2 text-sm text-[var(--muted)]">{PEOPLE_LOADING}</p>
+        ) : (
+          <p className="mt-2 text-sm text-gray-300">{teamNames}</p>
         )}
       </section>
 
@@ -274,15 +285,15 @@ export default function LaunchPlanPage() {
         <p className="eyebrow">Rhythm and launch date</p>
         {hasRhythm ? (
           <div className="mt-2 space-y-2">
-            {filled(rhythm?.launchDate) ? (
+            {launchDate ? (
               <p className="text-sm text-gray-300">
                 <span className="font-semibold text-white">Launch date: </span>
-                {formatIsoDate(rhythm!.launchDate!)}
+                {formatIsoDate(launchDate)}
               </p>
             ) : null}
-            {rhythm?.weeklyDay && filled(rhythm?.weeklyTime) ? (
+            {weeklyDay && weeklyTime ? (
               <p className="text-sm text-gray-300">
-                Every {capitalise(rhythm.weeklyDay)} at {rhythm.weeklyTime}
+                Every {capitalise(weeklyDay)} at {weeklyTime}
               </p>
             ) : null}
             {weeks !== null && gatherings !== null ? (
@@ -306,7 +317,11 @@ export default function LaunchPlanPage() {
       {/* Invite list */}
       <section className="panel p-5">
         <p className="eyebrow">Invite list</p>
-        {peopleLoaded && inviteCount > 0 ? (
+        {peopleError ? (
+          <p className="mt-2 text-sm text-amber-400">{PEOPLE_ERROR}</p>
+        ) : !peopleLoaded ? (
+          <p className="mt-2 text-sm text-[var(--muted)]">{PEOPLE_LOADING}</p>
+        ) : inviteCount > 0 ? (
           <p className="mt-2 text-sm text-gray-300">
             {inviteCount} {inviteCount === 1 ? "person" : "people"} on your invite list
           </p>
