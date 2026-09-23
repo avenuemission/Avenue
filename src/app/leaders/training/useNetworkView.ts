@@ -22,6 +22,10 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
   const [networkError, setNetworkError] = useState<string | null>(null);
   const [stepUpdatingId, setStepUpdatingId] = useState<string | null>(null);
   const [stepError, setStepError] = useState<{ id: string; message: string } | null>(null);
+  // Bumped after adding someone from Multiply so the load effect below
+  // refetches the network: /api/network is the only source of truth.
+  const [reloadKey, setReloadKey] = useState(0);
+  const [addingPerson, setAddingPerson] = useState(false);
 
   // Load this leader's discipleship network, independently of training
   // progress and check-ins above. Phase 5 reads apprenticeStep and depth
@@ -51,7 +55,31 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
     return () => {
       cancelled = true;
     };
-  }, [accessChecked, hasAccess, user]);
+  }, [accessChecked, hasAccess, user, reloadKey]);
+
+  // Adds someone this leader is sending out, using the same "add" action as
+  // the network page (it links an existing account when the email matches).
+  // Returns an error message to show, or null on success.
+  const addPerson = async (fields: { firstName: string; lastName: string; email: string }): Promise<string | null> => {
+    if (!user) return "Please sign in again.";
+    setAddingPerson(true);
+    try {
+      const res = await leaderFetch("/api/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add", ...fields }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || `Could not add that person (${res.status})`);
+      setReloadKey((k) => k + 1);
+      return null;
+    } catch (e) {
+      console.error("Multiply add failed", e);
+      return (e as Error).message;
+    } finally {
+      setAddingPerson(false);
+    }
+  };
 
   // Advances or lowers one person's apprenticeship step. A separate call
   // from the training-progress save machinery above: no debounce, no
@@ -93,5 +121,7 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
     stepUpdatingId,
     stepError,
     setApprenticeStep,
+    addPerson,
+    addingPerson,
   };
 }

@@ -85,6 +85,8 @@ export default function TrainingPage() {
     stepUpdatingId,
     stepError,
     setApprenticeStep,
+    addPerson,
+    addingPerson,
   } = useNetworkView(user, accessChecked, hasAccess);
   const ready = accessChecked && hasAccess && !!user;
   const { people, peopleLoaded, peopleError, upsertPerson, patchPerson, ensurePersonForNetwork, icnuDrafts } =
@@ -544,6 +546,8 @@ export default function TrainingPage() {
                     ensurePersonForNetwork={ensurePersonForNetwork}
                     patchPerson={patchPerson}
                     icnuDrafts={icnuDrafts}
+                    addPerson={addPerson}
+                    addingPerson={addingPerson}
                   />
                 ) : isCallingPhase ? (
                   <div className="p-6 md:p-8">
