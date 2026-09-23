@@ -71,7 +71,7 @@ export default function TrainingPage() {
     stepError,
     setApprenticeStep,
   } = useNetworkView(user, accessChecked, hasAccess);
-  const { people, peopleLoaded, peopleError, upsertPerson, createPerson, patchPerson } = useMyPeople(
+  const { people, peopleLoaded, peopleError, upsertPerson, patchPerson, ensurePersonForNetwork } = useMyPeople(
     accessChecked && hasAccess && !!user
   );
 
@@ -590,7 +590,7 @@ export default function TrainingPage() {
                     people={people}
                     peopleLoaded={peopleLoaded}
                     peopleError={peopleError}
-                    createPerson={createPerson}
+                    ensurePersonForNetwork={ensurePersonForNetwork}
                     patchPerson={patchPerson}
                   />
                 ) : (

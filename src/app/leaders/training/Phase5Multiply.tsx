@@ -55,7 +55,7 @@ interface Phase5MultiplyProps {
   people: Person[];
   peopleLoaded: boolean;
   peopleError: string | null;
-  createPerson: (fields: Record<string, unknown>) => Promise<Person>;
+  ensurePersonForNetwork: (networkPerson: NetworkPerson) => Promise<Person>;
   patchPerson: (id: string, fields: Record<string, unknown>) => Promise<Person>;
 }
 
@@ -75,7 +75,7 @@ export default function Phase5Multiply({
   people,
   peopleLoaded,
   peopleError,
-  createPerson,
+  ensurePersonForNetwork,
   patchPerson,
 }: Phase5MultiplyProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -163,7 +163,7 @@ export default function Phase5Multiply({
                         <IcnuEditor
                           networkPerson={person}
                           linked={linked}
-                          createPerson={createPerson}
+                          ensurePersonForNetwork={ensurePersonForNetwork}
                           patchPerson={patchPerson}
                         />
                       )}

@@ -9,7 +9,7 @@ const SAVE_DELAY_MS = 800;
 interface IcnuEditorProps {
   networkPerson: NetworkPerson;
   linked: Person | undefined;
-  createPerson: (fields: Record<string, unknown>) => Promise<Person>;
+  ensurePersonForNetwork: (networkPerson: NetworkPerson) => Promise<Person>;
   patchPerson: (id: string, fields: Record<string, unknown>) => Promise<Person>;
 }
 
@@ -17,12 +17,15 @@ interface IcnuEditorProps {
 // network person, autosaved to My People. If this person has no linked My
 // People row yet, the first save creates one (named from the network row)
 // and links it via networkPersonId; every save after that patches it.
-export default function IcnuEditor({ networkPerson, linked, createPerson, patchPerson }: IcnuEditorProps) {
+// ensurePersonForNetwork holds the create lock at the page's useMyPeople
+// instance, not here, so a collapse-then-reopen remount of this component
+// (its own linkedIdRef reset to null) shares the same in-flight create as
+// the unmounting instance's flush, instead of racing a second insert.
+export default function IcnuEditor({ networkPerson, linked, ensurePersonForNetwork, patchPerson }: IcnuEditorProps) {
   const [text, setText] = useState(linked?.icnu ?? "");
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const linkedIdRef = useRef<string | null>(linked?.id ?? null);
-  const creatingRef = useRef<Promise<Person> | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef(linked?.icnu ?? "");
   const textRef = useRef(text);
@@ -31,26 +34,14 @@ export default function IcnuEditor({ networkPerson, linked, createPerson, patchP
     if (value.trim() === lastSavedRef.current.trim()) return;
     setStatus("saving");
     try {
-      if (linkedIdRef.current) {
-        await patchPerson(linkedIdRef.current, { icnu: value });
-      } else if (creatingRef.current) {
-        const created = await creatingRef.current;
-        await patchPerson(created.id, { icnu: value });
-      } else {
-        const promise = createPerson({
-          firstName: networkPerson.firstName,
-          lastName: networkPerson.lastName,
-          networkPersonId: networkPerson.id,
-          icnu: value,
-        });
-        creatingRef.current = promise;
-        const created = await promise;
-        linkedIdRef.current = created.id;
-        creatingRef.current = null;
-      }
+      const id = linkedIdRef.current ?? (await ensurePersonForNetwork(networkPerson)).id;
+      linkedIdRef.current = id;
+      await patchPerson(id, { icnu: value });
       lastSavedRef.current = value;
       setStatus("saved");
     } catch (e) {
+      // linkedIdRef.current is left unset on a failed create, so the next
+      // save retries ensurePersonForNetwork rather than getting stuck.
       setStatus("error");
       setErrorMessage((e as Error).message);
     }
