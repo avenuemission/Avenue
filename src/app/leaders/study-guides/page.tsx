@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import { getStudyGuides } from "@/lib/content";
 import {
   LogOut,
@@ -47,7 +48,7 @@ export default function StudyGuidesPage() {
     setUser(currentUser);
     
     // Check leader access
-    fetch(`/api/leader-access?email=${encodeURIComponent(currentUser.email)}`)
+    leaderFetch("/api/leader-access")
       .then((res) => res.json())
       .then((data) => {
         setHasAccess(data.full_access === true);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import type { NetworkPerson, NetworkDepth } from "./Phase5Multiply";
 
 // Phase 5's discipleship network view for the leader training page: state,
@@ -30,7 +31,7 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
   useEffect(() => {
     if (!accessChecked || !hasAccess || !user) return;
     let cancelled = false;
-    fetch(`/api/network?email=${encodeURIComponent(user.email)}`)
+    leaderFetch("/api/network")
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load network (${res.status})`);
         return res.json();
@@ -64,10 +65,10 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
     setStepUpdatingId(id);
     setStepError(null);
     try {
-      const res = await fetch("/api/network", {
+      const res = await leaderFetch("/api/network", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "set-apprentice-step", actorEmail: user.email, id, step }),
+        body: JSON.stringify({ action: "set-apprentice-step", id, step }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {

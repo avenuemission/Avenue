@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import Reveal from "@/components/ui/Reveal";
 import ProfileCard from "@/components/ui/ProfileCard";
 import {
@@ -47,7 +48,7 @@ export default function LeadersPage() {
     } else {
       setUser(currentUser);
       // Check leader access
-      fetch(`/api/leader-access?email=${encodeURIComponent(currentUser.email)}`)
+      leaderFetch("/api/leader-access")
         .then((res) => res.json())
         .then((data) => {
           setHasFullAccess(data.full_access === true);
@@ -58,7 +59,7 @@ export default function LeadersPage() {
         });
 
       // Has someone claimed to have sent this person out?
-      fetch(`/api/network?email=${encodeURIComponent(currentUser.email)}`)
+      leaderFetch("/api/network")
         .then((res) => res.json())
         .then((data) => {
           const me = data.people?.find((p: { id: string }) => p.id === data.viewerId);
@@ -82,10 +83,10 @@ export default function LeadersPage() {
     setConfirming(true);
     setPendingError(null);
     try {
-      const res = await fetch("/api/network", {
+      const res = await leaderFetch("/api/network", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action, actorEmail: user.email }),
+        body: JSON.stringify({ action }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);

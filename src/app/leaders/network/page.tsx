@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Plus, Users, X } from "lucide-react";
 import { getCurrentUser, type User } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import Reveal from "@/components/ui/Reveal";
 import NetworkGraph from "@/components/ui/NetworkGraph";
 import type { NetworkPerson } from "@/lib/networkLayout";
@@ -23,10 +24,10 @@ export default function NetworkPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "" });
 
-  const load = useCallback(async (email: string) => {
+  const load = useCallback(async () => {
     setError("");
     try {
-      const res = await fetch(`/api/network?email=${encodeURIComponent(email)}`);
+      const res = await leaderFetch("/api/network");
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not load the network.");
       setPeople(data.people ?? []);
@@ -50,7 +51,7 @@ export default function NetworkPage() {
       return;
     }
     setUser(current);
-    load(current.email);
+    load();
   }, [router, load]);
 
   const act = async (body: Record<string, unknown>) => {
@@ -58,14 +59,14 @@ export default function NetworkPage() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/network", {
+      const res = await leaderFetch("/api/network", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...body, actorEmail: user.email }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "That did not work.");
-      return await load(user.email);
+      return await load();
     } catch (e) {
       setError((e as Error).message);
       return false;

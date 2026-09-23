@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { User } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import { CheckinEntry } from "@/components/ui/CheckinHistory";
 import { mondayOf } from "@/lib/weeks";
 
@@ -64,7 +65,7 @@ export function useCheckins(user: User | null, accessChecked: boolean, hasAccess
     if (!accessChecked || !hasAccess || !user) return;
     let cancelled = false;
     setCheckinLoadError(null);
-    fetch(`/api/leader-checkins?email=${encodeURIComponent(user.email)}`)
+    leaderFetch("/api/leader-checkins")
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load check-ins (${res.status})`);
         return res.json();
@@ -116,11 +117,10 @@ export function useCheckins(user: User | null, accessChecked: boolean, hasAccess
     setCheckinSaving(true);
     setCheckinSaveError(null);
     try {
-      const res = await fetch("/api/leader-checkins", {
+      const res = await leaderFetch("/api/leader-checkins", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
           weekStart: editingWeekStart,
           relational: checkinForm.relational,
           physical: checkinForm.physical,

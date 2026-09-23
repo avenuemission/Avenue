@@ -22,6 +22,7 @@ import PhaseModules from "./PhaseModules";
 import { useTrainingProgress } from "./useTrainingProgress";
 import { useCheckins } from "./useCheckins";
 import { useNetworkView } from "./useNetworkView";
+import { leaderFetch } from "@/lib/leaderFetch";
 
 // No separate component needed - inline in the layout below
 
@@ -77,7 +78,7 @@ export default function TrainingPage() {
       router.push("/login");
     } else {
       setUser(currentUser);
-      fetch(`/api/leader-access?email=${encodeURIComponent(currentUser.email)}`)
+      leaderFetch("/api/leader-access")
         .then((res) => res.json())
         .then((data) => {
           setHasAccess(data.full_access === true);

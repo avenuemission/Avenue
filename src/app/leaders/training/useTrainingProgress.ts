@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { User } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import { INITIAL_PHASES, Phase, CheckpointStatus } from "./phases";
 import { reconcilePhases, extractProgressIds, mergeAgainstBase } from "./progressMerge";
 
@@ -76,7 +77,7 @@ export function useTrainingProgress(user: User | null, accessChecked: boolean, h
   useEffect(() => {
     if (!accessChecked || !hasAccess || !user) return;
     let cancelled = false;
-    fetch(`/api/leader-training?email=${encodeURIComponent(user.email)}`)
+    leaderFetch("/api/leader-training")
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load progress (${res.status})`);
         return res.json();
@@ -146,11 +147,10 @@ export function useTrainingProgress(user: User | null, accessChecked: boolean, h
     );
     const nextRevision = revisionRef.current + 1;
     try {
-      const res = await fetch("/api/leader-training", {
+      const res = await leaderFetch("/api/leader-training", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
           watchedEpisodes: sentWatched,
           completedModules: sentCompleted,
           revision: nextRevision,
@@ -180,8 +180,8 @@ export function useTrainingProgress(user: User | null, accessChecked: boolean, h
           // refused, locking saving permanently. Fall back to a plain GET to
           // resynchronise instead.
           try {
-            const freshRes = await fetch(
-              `/api/leader-training?email=${encodeURIComponent(user.email)}`
+            const freshRes = await leaderFetch(
+              "/api/leader-training"
             );
             if (freshRes.ok) {
               const freshBody = await freshRes.json().catch(() => null);

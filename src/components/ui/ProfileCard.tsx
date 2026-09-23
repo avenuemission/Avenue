@@ -14,6 +14,7 @@ import {
   Loader2,
   ChevronUp,
 } from "lucide-react";
+import { leaderFetch } from "@/lib/leaderFetch";
 
 interface Profile {
   display_name: string;
@@ -118,7 +119,7 @@ export default function ProfileCard({ email, fallbackName, collapsible = false }
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/leader-profile?email=${encodeURIComponent(email)}`);
+      const res = await leaderFetch("/api/leader-profile");
       const json = await res.json();
       const loaded: Profile = { ...EMPTY };
       if (json.profile) {
@@ -133,11 +134,13 @@ export default function ProfileCard({ email, fallbackName, collapsible = false }
     } finally {
       setLoading(false);
     }
-  }, [email, fallbackName]);
+  }, [fallbackName]);
 
+  // The profile is always the signed-in leader's own (the server reads the
+  // email from the session), but a change of signed-in email still reloads it.
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, email]);
 
   useEffect(() => {
     fetch("/api/content/pathway-groups")
@@ -175,10 +178,10 @@ export default function ProfileCard({ email, fallbackName, collapsible = false }
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/leader-profile", {
+      const res = await leaderFetch("/api/leader-profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, ...draft }),
+        body: JSON.stringify(draft),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Could not save your profile.");
