@@ -1,7 +1,10 @@
 // ============================================
-// SIMPLE AUTH SYSTEM
-// Uses localStorage for session management
+// LEADER AUTH
+// Sign-in is an emailed 6-digit code (Supabase Auth). supabase-js keeps
+// the real session. The small cache under avenue_auth_session only lets
+// pages render a name without waiting: the server never trusts it.
 // ============================================
+import { supabase } from "@/lib/supabase";
 
 export interface User {
   id: string;
@@ -9,119 +12,62 @@ export interface User {
   name: string;
 }
 
-interface StoredUser {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
+const AUTH_STORAGE_KEY = "avenue_auth_session";
+const LEGACY_USERS_KEY = "avenue_users";
+
+async function postJson(url: string, body: unknown): Promise<Response> {
+  return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 }
 
-const AUTH_STORAGE_KEY = "avenue_auth_session";
-const USERS_STORAGE_KEY = "avenue_users";
-
-// Default users (seeded on first load)
-const DEFAULT_USERS: StoredUser[] = [
-  {
-    id: "1",
-    email: "info@avenuemission.com",
-    password: "avenue",
-    name: "Avenue Admin",
-  },
-];
-
-// Initialize users in localStorage if not present
-const initializeUsers = (): void => {
-  if (typeof window === "undefined") return;
-  
-  const existingUsers = localStorage.getItem(USERS_STORAGE_KEY);
-  if (!existingUsers) {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
+export async function requestCode(email: string): Promise<void> {
+  const res = await postJson("/api/auth/request-code", { email });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Could not send a code. Please try again.");
   }
-};
+}
 
-// Get all users
-const getUsers = (): StoredUser[] => {
-  if (typeof window === "undefined") return DEFAULT_USERS;
-  
-  initializeUsers();
-  const users = localStorage.getItem(USERS_STORAGE_KEY);
-  return users ? JSON.parse(users) : DEFAULT_USERS;
-};
+export async function verifyCode(email: string, code: string): Promise<User> {
+  const cleanEmail = email.trim().toLowerCase();
+  const { data, error } = await supabase.auth.verifyOtp({ email: cleanEmail, token: code.trim(), type: "email" });
+  if (error || !data.session) throw new Error(error?.message || "That code did not work. Please try again.");
 
-// Login function
-export const login = (email: string, password: string): User | null => {
-  const users = getUsers();
-  const user = users.find(
-    (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-  );
-
-  if (user) {
-    const sessionUser: User = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    };
-    if (typeof window !== "undefined") {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionUser));
-    }
-    return sessionUser;
+  const res = await fetch("/api/leader-access", {
+    headers: { authorization: `Bearer ${data.session.access_token}` },
+  });
+  const info = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    await supabase.auth.signOut();
+    throw new Error(info.error || "This email is not registered as a leader.");
   }
 
-  return null;
-};
+  const user: User = { id: data.session.user.id, email: cleanEmail, name: info.name || cleanEmail };
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+  localStorage.removeItem(LEGACY_USERS_KEY);
+  return user;
+}
 
-// Signup function
-export const signup = async (email: string, password: string, name: string): Promise<User | null> => {
-  const users = getUsers();
-  
-  // Check if email already exists
-  if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-    return null;
+// Creates a pending leaders row (admin is notified), then sends a code.
+export async function requestAccess(name: string, email: string): Promise<void> {
+  const res = await postJson("/api/leader-access", { email: email.trim().toLowerCase(), name: name.trim() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Could not register. Please try again.");
   }
+  await requestCode(email);
+}
 
-  const newUser: StoredUser = {
-    id: Date.now().toString(),
-    email,
-    password,
-    name,
-  };
-
-  users.push(newUser);
-  if (typeof window !== "undefined") {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-    
-    // Register leader in server-side CSV for access control
-    try {
-      await fetch("/api/leader-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: newUser.id, email, name }),
-      });
-    } catch (error) {
-      console.error("Failed to register leader access:", error);
-    }
-  }
-
-  // Auto-login after signup
-  return login(email, password);
-};
-
-// Logout function
 export const logout = (): void => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_USERS_KEY);
+  void supabase.auth.signOut();
 };
 
-// Get current user
 export const getCurrentUser = (): User | null => {
   if (typeof window === "undefined") return null;
-  
   const session = localStorage.getItem(AUTH_STORAGE_KEY);
-  return session ? JSON.parse(session) : null;
+  return session ? (JSON.parse(session) as User) : null;
 };
 
-// Check if user is authenticated
-export const isAuthenticated = (): boolean => {
-  return getCurrentUser() !== null;
-};
+export const isAuthenticated = (): boolean => getCurrentUser() !== null;
