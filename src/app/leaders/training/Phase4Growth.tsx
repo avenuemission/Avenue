@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import CheckinHistory, { CheckinEntry } from "@/components/ui/CheckinHistory";
 import TaggedPeople from "@/components/people/TaggedPeople";
+import Glow from "@/components/avenue/Glow";
 import type { Metric, Person } from "@/lib/people";
 
 // The four RPMS gauges from Ferguson's Multiplier, in the fixed order the
@@ -131,11 +132,11 @@ export default function Phase4Growth({
   onPersonChange,
 }: Phase4GrowthProps) {
   return (
-    <div className="p-6 md:p-8 space-y-6">
-      {/* The weekly check-in */}
-      <div className="panel p-6">
+    <div className="space-y-12">
+      {/* The weekly check-in: a raised card because it takes input */}
+      <div className="night-card p-6">
         <span className="eyebrow">This week</span>
-        <h3 className="text-lg font-semibold text-white mt-1 mb-2">Week of {currentWeekLabel}</h3>
+        <h3 className="mt-1 mb-2 font-serif text-2xl text-[var(--ink)]">Week of {currentWeekLabel}</h3>
         <p className="text-sm text-[var(--muted)] mb-4">
           Four gauges from Dave Ferguson&rsquo;s Multiplier: Relational, Physical, Mental and Spiritual.
         </p>
@@ -146,7 +147,7 @@ export default function Phase4Growth({
           // at its 5/5/5/5 defaults with Save enabled would
           // let a leader whose real scores simply failed to
           // load overwrite them with defaults they never saw.
-          <div className="rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
+          <div className="rounded-xl border border-dashed border-[var(--line-2)] p-6 text-center">
             <p className="text-sm text-white mb-1">This week&rsquo;s check-in could not be loaded.</p>
             <p className="text-sm text-[var(--muted)] mb-4">{checkinLoadError}</p>
             <button
@@ -155,7 +156,7 @@ export default function Phase4Growth({
                 setCheckinsLoaded(false);
                 setCheckinLoadAttempt((n) => n + 1);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] text-white text-sm font-semibold transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
+              className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 rounded-full border border-[var(--line-2)] text-white text-sm font-semibold"
             >
               Try again
             </button>
@@ -183,7 +184,7 @@ export default function Phase4Growth({
                 maxLength={2000}
                 rows={2}
                 placeholder="How this week actually went."
-                className="w-full rounded-lg bg-[var(--surface-hover)] border border-[var(--border)] p-3 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] resize-none"
+                className="w-full rounded-lg bg-[var(--night)] border border-[var(--line-2)] p-3 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] resize-none"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -191,25 +192,21 @@ export default function Phase4Growth({
                 type="button"
                 onClick={saveCheckin}
                 disabled={checkinSaving}
-                className="px-5 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="min-h-[44px] px-5 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {checkinSaving ? "Saving..." : "Save check-in"}
               </button>
-              {checkinSaved && !checkinSaving && (
-                <span className="text-xs text-[var(--accent)]">Saved.</span>
-              )}
-              {checkinSaveError && (
-                <span className="text-xs text-red-400">{checkinSaveError}</span>
-              )}
+              {checkinSaved && !checkinSaving && <span className="text-xs text-[var(--lamp)]">Saved.</span>}
+              {checkinSaveError && <span className="text-xs text-red-400">{checkinSaveError}</span>}
             </div>
           </>
         )}
       </div>
 
-      {/* Your three metrics */}
-      <div className="panel p-6">
-        <span className="eyebrow">Your three metrics</span>
-        <p className="text-sm text-[var(--muted)] mt-1 mb-4">
+      {/* Your three metrics: three columns of names, no card per metric */}
+      <div>
+        <h3 className="night-h2">Your three metrics</h3>
+        <p className="text-sm text-[var(--muted)] mt-1 mb-6">
           Three separate lists, not a ladder. Anyone can sit in more than one.
         </p>
         {!peopleLoaded ? (
@@ -217,16 +214,26 @@ export default function Phase4Growth({
         ) : peopleError ? (
           <p className="text-sm text-red-400">{peopleError}</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 border-t border-[var(--line)] md:grid-cols-3 md:divide-x md:divide-[var(--line)]">
             {METRIC_PANELS.map(({ metric, title, definition, empty }) => {
               const count = people.filter((p) => p.metrics.includes(metric)).length;
               return (
-                <div key={metric} className="panel p-5">
-                  <h4 className="text-base font-semibold text-white mb-1">{title}</h4>
-                  <p className="text-xs text-[var(--muted)] mb-3">{definition}</p>
-                  <p className="text-2xl font-bold tabular-nums text-white mb-3">
-                    {count} named
-                  </p>
+                <div
+                  key={metric}
+                  className="border-b border-[var(--line)] py-6 md:border-b-0 md:px-5 md:first:pl-0 md:last:pr-0"
+                >
+                  <h4 className="font-serif text-xl text-[var(--ink)]">{title}</h4>
+                  <p className="mt-1 mb-3 text-xs text-[var(--muted)]">{definition}</p>
+                  <Glow as="div" trigger={count} className="-mx-2 mb-3 inline-block rounded-lg px-2">
+                    <p className="tabular-nums">
+                      <span
+                        className={`font-serif text-4xl ${count > 0 ? "text-[var(--lamp)]" : "text-[var(--dim)]"}`}
+                      >
+                        {count}
+                      </span>
+                      <span className="ml-2 text-sm text-[var(--muted)]">named</span>
+                    </p>
+                  </Glow>
                   <TaggedPeople
                     tag={{ kind: "metric", value: metric }}
                     people={people}
@@ -241,9 +248,8 @@ export default function Phase4Growth({
       </div>
 
       {/* The history */}
-      <div className="panel p-6">
-        <span className="eyebrow">History</span>
-        <h3 className="text-lg font-semibold text-white mt-1 mb-4">Recent weeks</h3>
+      <div>
+        <h3 className="night-h2 mb-4">Recent weeks</h3>
         <CheckinHistory weeks={historyWeeks} checkins={checkins} />
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Users, ChevronDown, CheckCircle2, Circle, UserPlus } from "lucide-react
 import { rungAfterTap } from "@/lib/apprentice";
 import type { Person } from "@/lib/people";
 import IcnuEditor from "./IcnuEditor";
+import Glow from "@/components/avenue/Glow";
 
 // Hero Maker's five apprenticeship steps (Dave Ferguson). Index 0 is not one
 // of the book's five, it is "not started yet" so every person in the network
@@ -204,13 +205,13 @@ export default function Phase5Multiply({
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="space-y-10">
       <p className="text-sm text-[var(--muted)]">
         Hero Maker&rsquo;s five practices: Multiplication Thinking, Permission Giving, Disciple
         Multiplying, Gift Activating, Kingdom Building.
       </p>
 
-      <p className="text-sm text-white">
+      <p className="text-sm text-[var(--ink)]">
         {!networkLoaded ? (
           "Loading your network..."
         ) : networkError ? (
@@ -222,103 +223,113 @@ export default function Phase5Multiply({
         )}
       </p>
 
-      {/* Your people: the core of the phase */}
-      <div className="panel p-6">
+      {/* Your people: the core of the phase, a list on the night ground */}
+      <div>
         <span className="eyebrow">Your people</span>
-        <h3 className="text-lg font-semibold text-white mt-1 mb-4">Who you&rsquo;re sending out</h3>
+        <h3 className="night-h2 mt-1 mb-4">Who you&rsquo;re sending out</h3>
         {!networkLoaded ? (
           <p className="text-sm text-[var(--muted)]">Loading your network...</p>
         ) : networkError ? (
           <p className="text-sm text-red-400">{networkError}</p>
         ) : sentByViewer.length === 0 ? (
           <div className="space-y-3">
-            <p className="text-sm text-white">
+            <p className="text-sm text-[var(--ink)]">
               No one yet. Add someone you&rsquo;re apprenticing, then tap their name for your
               &ldquo;What I see in you&rdquo; note and the five apprenticeship steps.
             </p>
             <AddPersonForm addPerson={addPerson} addingPerson={addingPerson} startOpen />
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {peopleError && <p className="text-red-400 text-sm">{peopleError}</p>}
-            {sentByViewer.map((person) => {
-              const name = [person.firstName, person.lastName].filter(Boolean).join(" ");
-              const isOpen = expandedId === person.id;
-              const isUpdating = stepUpdatingId === person.id;
-              const linked = people.find((p) => p.networkPersonId === person.id);
-              return (
-                <div key={person.id} className="rounded-xl border border-[var(--border)]">
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId(isOpen ? null : person.id)}
-                    aria-expanded={isOpen}
-                    className="w-full min-h-[44px] flex items-center gap-3 text-left p-4"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{name}</p>
-                      <p className="text-sm text-[var(--accent)] mt-0.5">
-                        {apprenticeStepLabel(person.apprenticeStep)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {[1, 2, 3, 4, 5].map((rung) => (
-                        <span
-                          key={rung}
-                          className={`w-2.5 h-2.5 rounded-full ${
-                            rung <= person.apprenticeStep ? "bg-[var(--accent)]" : "bg-[var(--surface-hover)]"
+            <ul className="border-t border-[var(--line)]">
+              {sentByViewer.map((person) => {
+                const name = [person.firstName, person.lastName].filter(Boolean).join(" ");
+                const isOpen = expandedId === person.id;
+                const isUpdating = stepUpdatingId === person.id;
+                const linked = people.find((p) => p.networkPersonId === person.id);
+                return (
+                  <li key={person.id} className="border-b border-[var(--line)]">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(isOpen ? null : person.id)}
+                      aria-expanded={isOpen}
+                      className="w-full min-h-[44px] flex items-center gap-3 text-left py-4"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate font-serif text-xl text-[var(--ink)]">{name}</p>
+                        <p
+                          className={`text-sm mt-0.5 ${
+                            person.apprenticeStep >= 1 ? "text-[var(--lamp)]" : "text-[var(--muted)]"
                           }`}
-                        />
-                      ))}
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 text-[var(--muted)] transition-transform flex-shrink-0 ${
-                        isOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 pb-4 space-y-4 border-t border-[var(--border)] pt-4">
-                      {peopleLoaded && !peopleError && (
-                        <IcnuEditor
-                          networkPerson={person}
-                          linked={linked}
-                          ensurePersonForNetwork={ensurePersonForNetwork}
-                          patchPerson={patchPerson}
-                          icnuDrafts={icnuDrafts}
-                        />
-                      )}
-                      <div>
-                        <span className="eyebrow">Apprenticeship steps</span>
-                        <div className="space-y-1 mt-2">
-                          {APPRENTICE_STEPS.filter((s) => s.value >= 1).map(({ value: rung, label }) => (
-                            <button
-                              key={rung}
-                              type="button"
-                              onClick={() =>
-                                setApprenticeStep(person.id, rungAfterTap(person.apprenticeStep, rung))
-                              }
-                              disabled={isUpdating}
-                              aria-pressed={rung <= person.apprenticeStep}
-                              className="min-h-[44px] w-full flex items-center gap-3 text-left disabled:opacity-50"
-                            >
-                              {rung <= person.apprenticeStep ? (
-                                <CheckCircle2 className="w-5 h-5 text-[var(--accent)] flex-shrink-0" />
-                              ) : (
-                                <Circle className="w-5 h-5 text-[var(--muted)] flex-shrink-0" />
-                              )}
-                              <span className="text-sm text-white">{label}</span>
-                            </button>
-                          ))}
-                        </div>
-                        {stepError?.id === person.id && (
-                          <p className="text-xs text-red-400 mt-1">{stepError.message}</p>
-                        )}
+                        >
+                          {apprenticeStepLabel(person.apprenticeStep)}
+                        </p>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                      <Glow
+                        trigger={person.apprenticeStep}
+                        className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full p-1"
+                      >
+                        {[1, 2, 3, 4, 5].map((rung) => (
+                          <span
+                            key={rung}
+                            aria-hidden="true"
+                            className={`h-2.5 w-2.5 rounded-full ${
+                              rung <= person.apprenticeStep
+                                ? "bg-[var(--lamp)] shadow-[0_0_8px_2px_rgba(255,197,107,0.45)]"
+                                : "bg-[var(--line-2)]"
+                            }`}
+                          />
+                        ))}
+                      </Glow>
+                      <ChevronDown
+                        className={`w-4 h-4 text-[var(--muted)] transition-transform flex-shrink-0 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="pb-5 space-y-4">
+                        {peopleLoaded && !peopleError && (
+                          <IcnuEditor
+                            networkPerson={person}
+                            linked={linked}
+                            ensurePersonForNetwork={ensurePersonForNetwork}
+                            patchPerson={patchPerson}
+                            icnuDrafts={icnuDrafts}
+                          />
+                        )}
+                        <div>
+                          <span className="eyebrow">Apprenticeship steps</span>
+                          <div className="space-y-1 mt-2">
+                            {APPRENTICE_STEPS.filter((s) => s.value >= 1).map(({ value: rung, label }) => (
+                              <button
+                                key={rung}
+                                type="button"
+                                onClick={() => setApprenticeStep(person.id, rungAfterTap(person.apprenticeStep, rung))}
+                                disabled={isUpdating}
+                                aria-pressed={rung <= person.apprenticeStep}
+                                className="min-h-[44px] w-full flex items-center gap-3 text-left disabled:opacity-50"
+                              >
+                                {rung <= person.apprenticeStep ? (
+                                  <CheckCircle2 className="w-5 h-5 text-[var(--lamp)] flex-shrink-0" />
+                                ) : (
+                                  <Circle className="w-5 h-5 text-[var(--dim)] flex-shrink-0" />
+                                )}
+                                <span className="text-sm text-[var(--ink)]">{label}</span>
+                              </button>
+                            ))}
+                          </div>
+                          {stepError?.id === person.id && (
+                            <p className="text-xs text-red-400 mt-1">{stepError.message}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
             <AddPersonForm addPerson={addPerson} addingPerson={addingPerson} startOpen={false} />
           </div>
         )}
@@ -327,7 +338,7 @@ export default function Phase5Multiply({
       {/* The family tree link */}
       <Link
         href="/leaders/network"
-        className="panel p-6 flex flex-col justify-between transition-colors hover:border-[var(--border-strong)]"
+        className="panel p-6 flex flex-col justify-between"
       >
         <div className="flex items-center gap-2 mb-2">
           <Users className="w-4 h-4 text-[var(--accent)]" />

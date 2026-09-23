@@ -1,4 +1,5 @@
 import EpisodeCarousel from "@/components/ui/EpisodeCarousel";
+import Glow from "@/components/avenue/Glow";
 import { CheckCircle2, Video, FileText, Lightbulb } from "lucide-react";
 import { Module, Phase } from "./phases";
 
@@ -23,9 +24,9 @@ interface PhaseModulesProps {
   openVideo: (youtubeId: string, title: string) => void;
 }
 
-// The modules list used by Foundations. Progress state and the tick
-// handlers come from useTrainingProgress via the page. The phase header
-// already shows progress, so there is no separate status panel.
+// The modules list used by Foundations, as a clean list on the night ground
+// (spec 4.1). Progress state and the tick handlers come from
+// useTrainingProgress via the page. A ticked module's lamp is lit.
 export default function PhaseModules({
   phase,
   toggleModuleComplete,
@@ -33,53 +34,40 @@ export default function PhaseModules({
   openVideo,
 }: PhaseModulesProps) {
   return (
-    <div className="p-6 md:p-8">
-      <div>
-        <div className="space-y-3">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
-            Training Modules
-          </h3>
-          {phase.modules.map((module) => (
-            <div key={module.id}>
-              {module.sectionHeader && (
-                <div className="flex items-center gap-3 mt-4 mb-2">
-                  <div className="h-px flex-1 bg-[var(--surface-hover)]" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] whitespace-nowrap">
-                    {module.sectionHeader}
-                  </span>
-                  <div className="h-px flex-1 bg-[var(--surface-hover)]" />
-                </div>
-              )}
-            <div
-              className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
-                module.completed
-                  ? "bg-[var(--surface)] border-green-500/30"
-                  : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
-              }`}
-            >
+    <div>
+      <h3 className="night-h2 mb-4">Training modules</h3>
+      <ul className="border-t border-[var(--line)]">
+        {phase.modules.map((module) => (
+          <li key={module.id} className="border-b border-[var(--line)] py-5">
+            {module.sectionHeader && <p className="night-label mb-3">{module.sectionHeader}</p>}
+            <div className="flex items-start gap-3">
               <button
+                type="button"
                 onClick={() => toggleModuleComplete(phase.id, module.id)}
-                className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  module.completed
-                    ? "bg-green-500 border-green-500"
-                    : "border-gray-500 hover:border-blue-400"
-                }`}
+                aria-pressed={module.completed}
+                aria-label={module.completed ? `${module.title}: done. Tap to untick.` : `${module.title}: mark done`}
+                className="-ml-3 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
               >
-                {module.completed && <CheckCircle2 className="w-4 h-4 text-black" />}
+                <Glow trigger={module.completed ? "lit" : null}>
+                  <span
+                    aria-hidden="true"
+                    className={`block h-[14px] w-[14px] rounded-full border ${
+                      module.completed
+                        ? "border-[var(--lamp)] bg-[var(--lamp)] shadow-[0_0_18px_4px_rgba(255,197,107,0.45)]"
+                        : "border-[var(--line-2)] bg-[#131926]"
+                    }`}
+                  />
+                </Glow>
               </button>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-gray-400 ${module.completed ? "text-green-400" : ""}`}>
+              <div className="min-w-0 flex-1 pt-2">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className={module.completed ? "text-[var(--lamp)]" : "text-[var(--muted)]"}>
                     <ModuleTypeIcon type={module.type} />
                   </span>
-                  <h4 className={`font-semibold ${module.completed ? "text-green-400 line-through" : "text-white"}`}>
-                    {module.title}
-                  </h4>
+                  <h4 className="font-serif text-xl text-[var(--ink)]">{module.title}</h4>
                 </div>
-                <p className="text-sm text-gray-400">{module.description}</p>
-                {module.duration && (
-                  <span className="text-xs text-gray-500 mt-1 inline-block">{module.duration}</span>
-                )}
+                <p className="text-sm text-[var(--muted)]">{module.description}</p>
+                {module.duration && <span className="night-label mt-2 inline-block">{module.duration}</span>}
               </div>
             </div>
             {/* Episode carousel: thumbnails with watched progress */}
@@ -87,15 +75,12 @@ export default function PhaseModules({
               <EpisodeCarousel
                 episodes={module.episodes}
                 onPlay={openVideo}
-                onToggleWatched={(episodeId) =>
-                  toggleEpisodeWatched(phase.id, module.id, episodeId)
-                }
+                onToggleWatched={(episodeId) => toggleEpisodeWatched(phase.id, module.id, episodeId)}
               />
             )}
-            </div>
-          ))}
-        </div>
-      </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
