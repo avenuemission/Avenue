@@ -261,3 +261,39 @@ html {
     scroll-behavior: auto;
   }
 }
+
+/* ============================================================ */
+/* PRINT: Calling Profile and Launch Plan                       */
+/* ============================================================ */
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  nav,
+  header,
+  button,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    padding-top: 0 !important;
+  }
+  .print-page,
+  .print-page * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .print-page .panel {
+    background: #fff !important;
+    border: 1px solid #000 !important;
+    border-radius: 0.5rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .print-page a {
+    text-decoration: none;
+  }
+}
