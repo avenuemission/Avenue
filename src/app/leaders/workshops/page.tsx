@@ -24,6 +24,7 @@ export default function WorkshopsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
   const [includeLife3, setIncludeLife3] = useState(true);
 
   useEffect(() => {
@@ -67,10 +68,21 @@ export default function WorkshopsPage() {
 
   const handleClear = async (code: string) => {
     setClearing(true);
-    await leaderFetch(`/api/workshops/clear?code=${code}`, { method: "DELETE" });
-    setConfirmClear(null);
-    setClearing(false);
-    fetchSessions();
+    setClearError(null);
+    try {
+      const res = await leaderFetch(`/api/workshops/clear?code=${code}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setClearError(data.error || "Those responses could not be cleared. Please try again.");
+        return;
+      }
+      setConfirmClear(null);
+      fetchSessions();
+    } catch (err) {
+      setClearError(err instanceof Error ? err.message : "Those responses could not be cleared. Please try again.");
+    } finally {
+      setClearing(false);
+    }
   };
 
   const suggestedCode = () => {
@@ -177,6 +189,8 @@ export default function WorkshopsPage() {
             </p>
           </div>
         )}
+
+        {clearError && <p className="text-red-400 text-sm mb-3">{clearError}</p>}
 
         {/* Sessions list */}
         {loading ? (
