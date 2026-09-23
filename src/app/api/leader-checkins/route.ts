@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
+import { requireLeader } from "@/lib/requireLeader";
 
 interface CheckinRow {
   email: string;
@@ -23,12 +24,6 @@ const COLUMNS = "email, week_start, relational, physical, mental, spiritual, ref
 const MAX_CHECKINS = 52;
 
 const WEEK_START_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-function normaliseEmail(raw: unknown): string | null {
-  if (typeof raw !== "string") return null;
-  const cleaned = raw.trim().toLowerCase();
-  return cleaned === "" ? null : cleaned;
-}
 
 // Timezone decision, spelled out because both halves of the weekStart check
 // (Monday, not in the future) are easy to get subtly wrong across zones:
@@ -170,14 +165,14 @@ async function isLeader(email: string): Promise<boolean> {
   return !!data;
 }
 
-// GET /api/leader-checkins?email=<leader>
+// GET /api/leader-checkins: the signed-in leader's own check-ins
 export async function GET(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
-  const url = new URL(request.url);
-  const email = normaliseEmail(url.searchParams.get("email"));
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+  const email = auth.leader.email;
 
   try {
     const leader = await isLeader(email);
@@ -197,7 +192,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/leader-checkins  { email, weekStart, relational, physical, mental, spiritual, reflection }
+// PUT /api/leader-checkins  { weekStart, relational, physical, mental, spiritual, reflection }
 export async function PUT(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
@@ -212,8 +207,9 @@ export async function PUT(request: NextRequest) {
     typeof parsedBody === "object" && parsedBody !== null && !Array.isArray(parsedBody)
       ? (parsedBody as Record<string, unknown>)
       : {};
-  const email = normaliseEmail(body.email);
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+  const email = auth.leader.email;
 
   const weekStartResult = validateWeekStart(body.weekStart);
   if ("error" in weekStartResult) return NextResponse.json({ error: weekStartResult.error }, { status: 400 });

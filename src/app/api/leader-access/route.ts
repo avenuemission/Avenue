@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { getStore } from "@netlify/blobs";
 import { sendLeaderSignupNotification } from "@/lib/email";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireLeader } from "@/lib/requireLeader";
 
 interface LeaderRecord {
   id: string;
@@ -171,29 +172,16 @@ async function listLeaders(): Promise<LeaderRecord[]> {
   return leaders;
 }
 
-// GET: Check access for a specific email
+// GET: Check access for the signed-in leader (email from the verified session)
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email");
-
-    if (!email) {
-      return NextResponse.json({ error: "Email required" }, { status: 400 });
-    }
-
-    const leader = await getLeader(email);
-
-    if (!leader) {
-      return NextResponse.json({
-        found: false,
-        full_access: false,
-      });
-    }
+    const auth = await requireLeader(request);
+    if ("response" in auth) return auth.response;
 
     return NextResponse.json({
       found: true,
-      full_access: leader.full_access,
-      name: leader.name,
+      full_access: auth.leader.fullAccess,
+      name: auth.leader.name,
     });
   } catch (error) {
     console.error("Error checking leader access:", error);

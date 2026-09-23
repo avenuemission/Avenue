@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/supabaseAdmin";
 import { normaliseEmail, wouldCreateCycle } from "@/lib/network";
+import { requireLeader } from "@/lib/requireLeader";
 
 interface Row {
   id: string;
@@ -155,13 +156,14 @@ async function ensureNode(email: string): Promise<Row | null> {
   return data as Row;
 }
 
-// GET /api/network?email=<viewer>
+// GET /api/network  (viewer is the signed-in leader)
 export async function GET(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
-  const email = normaliseEmail(new URL(request.url).searchParams.get("email"));
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+  const email = auth.leader.email;
 
   try {
     const viewer = await ensureNode(email);
@@ -191,7 +193,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/network  { action, actorEmail, ... }
+// POST /api/network  { action, ... }  (actor is the signed-in leader)
 export async function POST(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
@@ -245,8 +247,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const actorEmail = normaliseEmail(body.actorEmail);
-    if (!actorEmail) return NextResponse.json({ error: "actorEmail required" }, { status: 400 });
+    // The actor is always the signed-in leader. body.actorEmail is ignored.
+    const auth = await requireLeader(request);
+    if ("response" in auth) return auth.response;
+    const actorEmail = auth.leader.email;
 
     const actor = await ensureNode(actorEmail);
     if (!actor) return NextResponse.json({ error: "Not a leader account" }, { status: 403 });

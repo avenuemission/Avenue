@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/supabaseAdmin";
+import { requireLeader } from "@/lib/requireLeader";
 
 type CheckpointStatus = "none" | "requested" | "complete";
 
@@ -121,7 +122,7 @@ async function ensureProgress(email: string): Promise<ProgressRow | null> {
   return data as ProgressRow;
 }
 
-// GET /api/leader-training?email=<leader>
+// GET /api/leader-training  (the signed-in leader's own progress)
 // GET /api/leader-training?all=1  (admin)
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -173,8 +174,9 @@ export async function GET(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
-  const email = normaliseEmail(url.searchParams.get("email"));
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+  const email = auth.leader.email;
 
   try {
     const row = await ensureProgress(email);
@@ -185,14 +187,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/leader-training  { email, watchedEpisodes, completedModules, revision }
+// PUT /api/leader-training  { watchedEpisodes, completedModules, revision }
 export async function PUT(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
   const body = await request.json().catch(() => ({}));
-  const email = normaliseEmail(body.email);
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+  const email = auth.leader.email;
 
   const watched = validateIdList(body.watchedEpisodes, "watchedEpisodes");
   if ("error" in watched) return NextResponse.json({ error: watched.error }, { status: 400 });
@@ -273,24 +276,37 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// POST /api/leader-training  { action, email }
+// POST /api/leader-training  { action }  (leader, email from the session)
+// POST /api/leader-training  { action, email }  (admin checkpoint actions)
 export async function POST(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
   const body = await request.json().catch(() => ({}));
   const action = String(body.action ?? "");
-  const email = normaliseEmail(body.email);
   const now = new Date().toISOString();
+  const isAdminAction = action === "complete-checkpoint" || action === "reopen-checkpoint";
 
   // complete-checkpoint and reopen-checkpoint are admin-only and must be
   // refused before any read or write happens, the same lesson already
   // proven on /api/network: an authorisation check that runs after a read
   // has already let the read happen for an unauthorised caller.
-  if (action === "complete-checkpoint" || action === "reopen-checkpoint") {
+  if (isAdminAction) {
     if (!isAdminAuthorized(request)) {
       return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
     }
+  }
+
+  // The admin names the target leader in body.email for its two checkpoint
+  // actions. Every other action acts on the caller, whose email comes only
+  // from the verified session.
+  let email: string | null;
+  if (isAdminAction) {
+    email = normaliseEmail(body.email);
+  } else {
+    const auth = await requireLeader(request);
+    if ("response" in auth) return auth.response;
+    email = auth.leader.email;
   }
 
   if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });

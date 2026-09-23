@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
+import { requireLeader } from "@/lib/requireLeader";
 
 // Columns a client is allowed to write. Anything else in the body is ignored,
 // so a caller can't set updated_at or invent columns.
@@ -29,19 +30,18 @@ function normalise(key: string, value: unknown): string | null {
   return s === "" ? null : s;
 }
 
-// GET /api/leader-profile?email=...
+// GET /api/leader-profile: the signed-in leader's own profile
 export async function GET(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
-  const { searchParams } = new URL(request.url);
-  const email = searchParams.get("email");
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
 
   const { data, error } = await getSupabaseAdmin()
     .from("leader_profiles")
     .select("*")
-    .eq("email", email.toLowerCase())
+    .eq("email", auth.leader.email)
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -53,9 +53,11 @@ export async function PUT(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
 
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+
+  // body.email is ignored: the profile row is always the caller's own.
   const body = await request.json();
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
 
   if (typeof body.avatar_url === "string" && body.avatar_url.length > MAX_AVATAR_CHARS) {
     return NextResponse.json(
@@ -65,7 +67,7 @@ export async function PUT(request: NextRequest) {
   }
 
   const row: Record<string, string | null> = {
-    email,
+    email: auth.leader.email,
     updated_at: new Date().toISOString(),
   };
   for (const key of WRITABLE) {
