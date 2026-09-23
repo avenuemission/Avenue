@@ -215,10 +215,12 @@ function NightStreet() {
       <rect x="0" y="480" width="1000" height="120" fill="#0b0f18" />
       <line x1="0" y1="480" x2="1000" y2="480" stroke="#1f2736" />
       <line x1="0" y1="540" x2="1000" y2="540" stroke="#2b3446" strokeDasharray="18 16" />
-      <polygon points="880,262 800,480 960,480" fill="url(#login-cone)" />
-      <circle cx="880" cy="254" r="40" fill="url(#login-halo)" />
-      <rect x="878" y="254" width="4" height="226" fill="#3a4458" />
-      <rect x="864" y="246" width="32" height="10" rx="3" fill="#ffc56b" />
+      <g className="sm:max-lg:hidden">
+        <polygon points="880,262 800,480 960,480" fill="url(#login-cone)" />
+        <circle cx="880" cy="254" r="40" fill="url(#login-halo)" />
+        <rect x="878" y="254" width="4" height="226" fill="#3a4458" />
+        <rect x="864" y="246" width="32" height="10" rx="3" fill="#ffc56b" />
+      </g>
     </svg>
   );
 }

@@ -365,7 +365,7 @@ html {
   display: flex;
   flex-wrap: wrap;
   gap: 18px;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 .av-lamp {
   display: flex;
