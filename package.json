@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "guard": "node --env-file=.env.local scripts/guard-test-rows.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^10.6.0",
