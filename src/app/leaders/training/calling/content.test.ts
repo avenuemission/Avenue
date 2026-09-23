@@ -21,6 +21,6 @@ describe("Calling content", () => {
     expect(Object.keys(content.APEST_CALLING_TEXT).sort()).toEqual([...APEST_ORDER].sort());
   });
   it("contains no em dash anywhere", () => {
-    expect(JSON.stringify(content)).not.toContain("—");
+    expect(JSON.stringify(content)).not.toContain(String.fromCharCode(0x2014));
   });
 });
