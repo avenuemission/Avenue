@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut, Trash2, Monitor } from "lucide-react";
 import { logout } from "@/lib/auth";
 
@@ -33,7 +34,7 @@ export default function WorkshopsPage() {
 
   const fetchSessions = async () => {
     setLoading(true);
-    const res = await fetch("/api/workshops/sessions");
+    const res = await leaderFetch("/api/workshops/sessions");
     const data = await res.json();
     setSessions(Array.isArray(data) ? data : []);
     setLoading(false);
@@ -48,7 +49,7 @@ export default function WorkshopsPage() {
       return;
     }
     setCreating(true);
-    const res = await fetch("/api/workshops/sessions", {
+    const res = await leaderFetch("/api/workshops/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: normalized, include_life_3: includeLife3 }),
@@ -66,7 +67,7 @@ export default function WorkshopsPage() {
 
   const handleClear = async (code: string) => {
     setClearing(true);
-    await fetch(`/api/workshops/clear?code=${code}`, { method: "DELETE" });
+    await leaderFetch(`/api/workshops/clear?code=${code}`, { method: "DELETE" });
     setConfirmClear(null);
     setClearing(false);
     fetchSessions();

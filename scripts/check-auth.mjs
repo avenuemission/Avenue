@@ -38,7 +38,6 @@ try {
   await createFixtureLeader({ email: A, name: "Auth Check A", fullAccess: false });
   await createFixtureLeader({ email: B, name: "Auth Check B", fullAccess: true });
   const tokenA = await tokenFor(A);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used by the Task 7 resource checks
   const tokenB = await tokenFor(B);
   const tokenOutsider = await tokenFor(OUTSIDER);
 
@@ -78,7 +77,41 @@ try {
     check("A asking about B still gets A", r.status === 200 && r.json?.name === "Auth Check A" && r.json?.full_access === false, JSON.stringify(r));
   }
 
-  // Task 7 appends: resources, workshops, seed.
+  console.log("resources need full access");
+  {
+    const a = await call("GET", "/api/leader-resources", { token: tokenA });
+    check("A (no full access) is 403 on resources", a.status === 403, `got ${a.status}`);
+    const b = await call("GET", "/api/leader-resources", { token: tokenB });
+    check("B (full access) lists resources", b.status === 200 && Array.isArray(b.json?.resources), `got ${b.status}`);
+    const none = await call("GET", "/api/leader-resources");
+    check("resources without token is 401", none.status === 401);
+  }
+
+  console.log("workshop admin routes need a leader");
+  for (const [method, path] of [
+    ["GET", "/api/workshops/results?code=ALL"],
+    ["GET", "/api/workshops/sessions"],
+    ["POST", "/api/workshops/sessions"],
+    ["DELETE", "/api/workshops/clear?code=ZZZZZZ"],
+    ["POST", "/api/workshops/ai-speak"],
+    ["POST", "/api/workshops/ai-recommendation"],
+  ]) {
+    const r = await call(method, path, { body: method === "GET" || method === "DELETE" ? undefined : {} });
+    check(`${method} ${path} without token is 401`, r.status === 401, `got ${r.status}`);
+  }
+  {
+    const r = await call("GET", "/api/workshops/sessions", { token: tokenA });
+    check("a leader can list workshop sessions", r.status === 200, `got ${r.status}`);
+    const v = await call("POST", "/api/workshops/validate-code", { body: { code: "ZZZZZZ" } });
+    check("validate-code stays public (not 401)", v.status !== 401, `got ${v.status}`);
+  }
+
+  console.log("seed route needs admin");
+  {
+    const r = await call("POST", "/api/leader-access/seed");
+    check("seed without admin key is 401", r.status === 401, `got ${r.status}`);
+  }
+
   // Task 8 appends: people.
 } finally {
   await cleanupFixtures(ALL);

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import {
   LogOut,
   ArrowLeft,
@@ -94,6 +95,7 @@ export default function ResourcesPage() {
   const [downloads, setDownloads] = useState<DownloadableResource[]>([]);
   const [musicDownloads, setMusicDownloads] = useState<DownloadableResource[]>([]);
   const [loadingDownloads, setLoadingDownloads] = useState(true);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -106,7 +108,7 @@ export default function ResourcesPage() {
     setUser(currentUser);
     
     // Check leader access
-    fetch(`/api/leader-access?email=${encodeURIComponent(currentUser.email)}`)
+    leaderFetch(`/api/leader-access`)
       .then((res) => res.json())
       .then((data) => {
         setHasAccess(data.full_access === true);
@@ -115,7 +117,7 @@ export default function ResourcesPage() {
           router.push("/leaders");
         } else {
           // Fetch all downloadable resources
-          fetch(`/api/leader-resources?email=${encodeURIComponent(currentUser.email)}`)
+          leaderFetch(`/api/leader-resources`)
             .then((res) => res.json())
             .then((data) => {
               const allResources = data.resources || [];
@@ -144,9 +146,23 @@ export default function ResourcesPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const handleDownload = (filename: string) => {
+  const handleDownload = async (filename: string) => {
     if (!user) return;
-    window.open(`/api/leader-resources/${encodeURIComponent(filename)}?email=${encodeURIComponent(user.email)}`, "_blank");
+    setDownloadError(null);
+    const res = await leaderFetch(`/api/leader-resources/${encodeURIComponent(filename)}`);
+    if (!res.ok) {
+      setDownloadError("That file could not be downloaded. Please try again.");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
   if (!mounted || !user || !accessChecked || !hasAccess) {
@@ -332,6 +348,7 @@ export default function ResourcesPage() {
               <FileDown className="w-6 h-6 text-purple-400" />
               <h2 className="text-xl font-semibold text-white">Downloads</h2>
             </div>
+            {downloadError && <p className="text-red-400 text-sm mb-3">{downloadError}</p>}
             {loadingDownloads ? (
               <p className="text-gray-500 text-sm">Loading resources...</p>
             ) : downloads.length === 0 ? (

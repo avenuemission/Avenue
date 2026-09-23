@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { requireLeader } from "@/lib/requireLeader";
 
 // GET all sessions
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+
   const { data, error } = await supabase
     .from("workshop_sessions")
     .select("*, survey_responses(count)")
@@ -16,6 +20,9 @@ export async function GET() {
 
 // POST create a new session
 export async function POST(request: NextRequest) {
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+
   const { code, include_life_3 } = await request.json();
 
   if (!code) {

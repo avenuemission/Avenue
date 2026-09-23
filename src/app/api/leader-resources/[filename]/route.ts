@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
+import { requireLeader } from "@/lib/requireLeader";
 
 // MIME types for common file extensions
 const MIME_TYPES: Record<string, string> = {
@@ -21,50 +22,18 @@ const MIME_TYPES: Record<string, string> = {
   ".txt": "text/plain",
 };
 
-// Check if running locally
-const isLocal = !process.env.NETLIFY;
-
-// Verify leader has full access
-async function verifyLeaderAccess(email: string): Promise<boolean> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/leader-access?email=${encodeURIComponent(email)}`);
-    const data = await response.json();
-    return data.found && data.full_access;
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
+    const auth = await requireLeader(request);
+    if ("response" in auth) return auth.response;
+    if (!auth.leader.fullAccess) {
+      return NextResponse.json({ error: "Access denied. Full leader access required." }, { status: 403 });
+    }
+
     const { filename } = await params;
-    
-    // Get email from query params (passed from client with auth)
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email");
-
-    if (!email) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
-    // Verify leader has full access
-    // Skip verification in local dev for easier testing
-    if (!isLocal) {
-      const hasAccess = await verifyLeaderAccess(email);
-      if (!hasAccess) {
-        return NextResponse.json(
-          { error: "Access denied. Full leader access required." },
-          { status: 403 }
-        );
-      }
-    }
 
     // Sanitize filename to prevent directory traversal
     const sanitizedFilename = path.basename(filename);

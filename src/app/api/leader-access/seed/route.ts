@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getStore } from "@netlify/blobs";
+import { isAdminAuthorized } from "@/lib/supabaseAdmin";
 
 interface LeaderRecord {
   id: string;
@@ -28,7 +29,11 @@ const INITIAL_ADMINS: LeaderRecord[] = [
 ];
 
 // POST: Seed initial admin users (run once after deployment)
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (!isAdminAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
   try {
     const store = getStore({ name: "leaders", consistency: "strong" });
     const seeded: string[] = [];

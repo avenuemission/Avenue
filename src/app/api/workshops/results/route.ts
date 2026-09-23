@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { requireLeader } from "@/lib/requireLeader";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
 

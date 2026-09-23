@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readdir, stat } from "fs/promises";
 import path from "path";
-
-// Check if running locally
-const isLocal = !process.env.NETLIFY;
-
-// Verify leader has full access
-async function verifyLeaderAccess(email: string): Promise<boolean> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/leader-access?email=${encodeURIComponent(email)}`);
-    const data = await response.json();
-    return data.found && data.full_access;
-  } catch {
-    return false;
-  }
-}
+import { requireLeader } from "@/lib/requireLeader";
 
 interface ResourceFile {
   name: string;
@@ -60,27 +46,14 @@ async function getFilesRecursive(dir: string, category?: string): Promise<Resour
 // GET: List all available resources
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireLeader(request);
+    if ("response" in auth) return auth.response;
+    if (!auth.leader.fullAccess) {
+      return NextResponse.json({ error: "Access denied. Full leader access required." }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email");
     const category = searchParams.get("category");
-
-    if (!email) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
-    // Verify leader has full access (skip in local dev)
-    if (!isLocal) {
-      const hasAccess = await verifyLeaderAccess(email);
-      if (!hasAccess) {
-        return NextResponse.json(
-          { error: "Access denied. Full leader access required." },
-          { status: 403 }
-        );
-      }
-    }
 
     const resourcesDir = path.join(process.cwd(), "private", "leader-resources");
     const allResources = await getFilesRecursive(resourcesDir);

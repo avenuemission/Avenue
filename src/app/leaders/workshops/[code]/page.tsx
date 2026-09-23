@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { leaderFetch } from "@/lib/leaderFetch";
 import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles, Volume2, Square, RotateCcw, Download, FileText } from "lucide-react";
 
 interface Response {
@@ -358,8 +359,8 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
   const loadData = async () => {
     setLoading(true);
     const [resultsRes, sessionRes] = await Promise.all([
-      fetch(`/api/workshops/results?code=${code}`),
-      fetch(`/api/workshops/sessions`),
+      leaderFetch(`/api/workshops/results?code=${code}`),
+      leaderFetch(`/api/workshops/sessions`),
     ]);
     const resultsData = await resultsRes.json();
     const sessionsData = await sessionRes.json();
@@ -544,7 +545,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
                   // Stop any existing audio
                   if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
                   try {
-                    const recRes = await fetch("/api/workshops/ai-recommendation", {
+                    const recRes = await leaderFetch("/api/workshops/ai-recommendation", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ responses }),
@@ -554,7 +555,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
                     setAiWritten(written);
                     setAiSpoken(spoken);
                     // Generate audio
-                    const ttsRes = await fetch("/api/workshops/ai-speak", {
+                    const ttsRes = await leaderFetch("/api/workshops/ai-speak", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ text: spoken }),

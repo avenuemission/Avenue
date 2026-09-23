@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireLeader } from "@/lib/requireLeader";
 
 export const maxDuration = 60;
 
@@ -103,6 +104,9 @@ OPEN TEXT RESPONSES: ${quotes || "None provided"}
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireLeader(request);
+  if ("response" in auth) return auth.response;
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "OpenAI API key not configured" }, { status: 500 });
