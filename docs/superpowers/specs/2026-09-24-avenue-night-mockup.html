@@ -1,0 +1,337 @@
+<title>Avenue at Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+/* Deliberately single-theme: the direction IS the night. */
+:root{
+  color-scheme:dark;
+  --night:#05070c; --night-2:#0a0e16; --surface:#0e131d; --line:#1b2230; --line-2:#263042;
+  --ink:#eef1f7; --muted:#8b94a7; --dim:#566074;
+  --blue:#4f7cff; --blue-soft:rgba(79,124,255,.14);
+  --lamp:#ffc56b; --lamp-2:#ffdca0; --lamp-soft:rgba(255,197,107,.16);
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --mono:"Geist Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--night);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:40px 80px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:64px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue)}
+.lampword{color:var(--lamp)}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(34px,6vw,58px);line-height:1.05;margin:10px 0 12px;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(26px,4vw,36px);line-height:1.1;margin:6px 0 8px;text-wrap:balance}
+.lede{color:var(--muted);max-width:62ch;margin:0}
+.note{color:var(--muted);font-size:13.5px;max-width:70ch;margin:0}
+
+/* Tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 20px}
+.tab{appearance:none;border:1px solid var(--line-2);background:transparent;color:var(--muted);font:600 13px/1 var(--sans);padding:12px 16px;border-radius:999px;cursor:pointer;min-height:44px}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--blue);background:var(--blue-soft)}
+.tab:focus-visible,.btn:focus-visible{outline:2px solid var(--lamp);outline-offset:3px}
+.option{display:flex;flex-direction:column;gap:14px}
+.stage{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--night-2)}
+.stage svg{display:block;width:100%;height:auto}
+.caption{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.caption div{font-size:13.5px;color:var(--muted)}
+.caption b{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+
+/* Section 2: phase opening */
+.opening{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:clamp(24px,5vw,56px);background:
+  radial-gradient(120% 90% at 85% -10%, rgba(255,197,107,.10), transparent 55%), var(--night-2)}
+.opening .stop{display:flex;align-items:center;gap:10px;color:var(--muted);font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase}
+.opening .stop .bulb{width:10px;height:10px;border-radius:50%;background:var(--lamp);box-shadow:0 0 0 4px var(--lamp-soft),0 0 22px 4px rgba(255,197,107,.55)}
+.phase-title{font-family:var(--serif);font-weight:400;font-size:clamp(56px,11vw,120px);line-height:.92;margin:18px 0 22px;letter-spacing:-.02em}
+.verse{font-family:var(--serif);font-style:italic;font-size:clamp(19px,2.6vw,26px);line-height:1.4;max-width:30ch;color:#dfe4ee;margin:0}
+.verse-ref{margin-top:10px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--lamp)}
+.lamps{display:flex;gap:18px;flex-wrap:wrap;margin-top:34px;align-items:flex-end}
+.lamp-step{display:flex;flex-direction:column;align-items:center;gap:8px;width:64px}
+.lamp-step .glass{width:14px;height:14px;border-radius:50%;border:1px solid var(--line-2);background:#131926}
+.lamp-step.on .glass{background:var(--lamp);border-color:var(--lamp);box-shadow:0 0 18px 4px rgba(255,197,107,.45)}
+.lamp-step.now .glass{border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-soft)}
+.lamp-step .post{width:2px;height:26px;background:var(--line-2)}
+.lamp-step span{font-size:11.5px;color:var(--muted);text-align:center;line-height:1.3}
+.lamp-step.on span{color:var(--ink)}
+.row2{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+@media (max-width:820px){.row2{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:18px;background:var(--night-2);padding:clamp(20px,4vw,34px);position:relative;overflow:hidden}
+.q{font-family:var(--serif);font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin:10px 0 20px;max-width:24ch}
+.btn{appearance:none;border:0;cursor:pointer;min-height:48px;padding:0 22px;border-radius:999px;font:600 14px/1 var(--sans)}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line-2)}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+/* The moment */
+.moment{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:320px;gap:6px;background:
+  radial-gradient(60% 55% at 50% 38%, rgba(255,197,107,0) 0%, transparent 70%), var(--night-2)}
+.moment.lit{background:radial-gradient(60% 55% at 50% 30%, rgba(255,197,107,.22) 0%, rgba(255,197,107,.05) 45%, transparent 70%), var(--night-2);transition:background 1.2s ease}
+.moment svg{width:120px;height:auto}
+.moment h3{font-family:var(--serif);font-weight:400;font-size:clamp(26px,3.6vw,34px);margin:6px 0 0}
+.moment p{margin:0;color:var(--muted);font-size:14px}
+.halo{opacity:0;transform-origin:60px 34px;transform:scale(.6)}
+.moment.lit .halo{animation:ignite 1.4s cubic-bezier(.2,.7,.2,1) forwards}
+.moment.lit .bulbfill{animation:bulb .9s ease forwards}
+@keyframes ignite{0%{opacity:0;transform:scale(.6)}35%{opacity:1}100%{opacity:1;transform:scale(1)}}
+@keyframes bulb{from{fill:#1a2130}to{fill:var(--lamp)}}
+@media (prefers-reduced-motion:reduce){.moment.lit .halo,.moment.lit .bulbfill{animation:none;opacity:1;transform:none;fill:var(--lamp)}}
+.replay{margin-top:12px;background:none;border:0;color:var(--blue);font:600 13px var(--sans);cursor:pointer;min-height:44px}
+
+/* Section 3: phone */
+.phones{display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.phone{width:min(340px,100%);border:1px solid var(--line-2);border-radius:34px;padding:14px;background:#030408}
+.screen{border-radius:24px;background:var(--night-2);overflow:hidden;min-height:620px;position:relative;padding:22px 18px}
+.street{position:relative;margin-top:22px;padding-left:34px}
+.street::before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--lamp) 0 38%, var(--line-2) 38% 100%)}
+.stopv{position:relative;padding:0 0 26px}
+.stopv .dot{position:absolute;left:-29px;top:4px;width:14px;height:14px;border-radius:50%;background:#131926;border:1px solid var(--line-2)}
+.stopv.on .dot{background:var(--lamp);border-color:var(--lamp);box-shadow:0 0 16px 4px rgba(255,197,107,.5)}
+.stopv.now .dot{border:2px solid var(--blue);background:var(--night-2);box-shadow:0 0 0 5px var(--blue-soft)}
+.stopv .t{font-family:var(--serif);font-size:24px;line-height:1.1}
+.stopv .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.stopv.now .panelv{margin-top:12px;border:1px solid var(--line-2);border-radius:14px;padding:14px}
+.stopv.now .panelv p{margin:0 0 10px;font-size:13.5px;color:#cfd5e1}
+.stopv.off .t{color:var(--dim)}
+.small{font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.foot{font-family:var(--mono);font-size:12px;color:var(--dim)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Avenue · Leadership Journey · design directions · 24 September 2026</div>
+    <h1>The journey as an avenue at night.</h1>
+    <p class="lede">Five stops along one street. A streetlight turns on as each phase is walked. Blue means where you are now; <span class="lampword">warm light</span> means something done. Pick the map you like below, then look at a phase and a phone.</p>
+  </header>
+
+  <!-- 1. Pick the map -->
+  <section aria-labelledby="maps">
+    <div class="eyebrow">1 · The map</div>
+    <h2 id="maps">Three ways to draw the street</h2>
+    <p class="note">Same example leader in all three: Foundations and Calling done, standing at Launch.</p>
+    <div class="tabs" role="tablist" aria-label="Map directions">
+      <button class="tab" role="tab" id="tab-a" aria-controls="opt-a" aria-selected="true">A · The Avenue</button>
+      <button class="tab" role="tab" id="tab-b" aria-controls="opt-b" aria-selected="false">B · Street map</button>
+      <button class="tab" role="tab" id="tab-c" aria-controls="opt-c" aria-selected="false">C · Road to the horizon</button>
+    </div>
+
+    <!-- A -->
+    <div class="option" id="opt-a" role="tabpanel" aria-labelledby="tab-a">
+      <div class="stage">
+        <svg viewBox="0 0 1000 420" role="img" aria-label="A street seen from the side with five streetlights, two lit">
+          <defs>
+            <radialGradient id="glowA" cx="50%" cy="0%" r="100%">
+              <stop offset="0%" stop-color="#ffc56b" stop-opacity=".55"/>
+              <stop offset="60%" stop-color="#ffc56b" stop-opacity=".08"/>
+              <stop offset="100%" stop-color="#ffc56b" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="haloA"><stop offset="0%" stop-color="#ffdca0" stop-opacity=".9"/><stop offset="100%" stop-color="#ffc56b" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="1000" height="420" fill="#07090f"/>
+          <!-- stars -->
+          <g fill="#c9d3ea" opacity=".55">
+            <circle cx="60" cy="40" r="1"/><circle cx="180" cy="80" r="1.2"/><circle cx="320" cy="30" r=".9"/><circle cx="470" cy="70" r="1"/><circle cx="610" cy="26" r="1.3"/><circle cx="760" cy="60" r=".9"/><circle cx="900" cy="34" r="1.1"/><circle cx="960" cy="96" r=".8"/><circle cx="120" cy="120" r=".7"/><circle cx="540" cy="110" r=".8"/>
+          </g>
+          <!-- ground -->
+          <rect x="0" y="300" width="1000" height="120" fill="#0b0f18"/>
+          <line x1="0" y1="300" x2="1000" y2="300" stroke="#1f2736"/>
+          <line x1="0" y1="350" x2="1000" y2="350" stroke="#2b3446" stroke-dasharray="18 16"/>
+          <!-- lamps: x positions -->
+          <!-- lit 1 -->
+          <polygon points="120,120 60,300 180,300" fill="url(#glowA)"/>
+          <circle cx="120" cy="112" r="34" fill="url(#haloA)"/>
+          <rect x="118" y="112" width="4" height="188" fill="#3a4458"/><rect x="104" y="104" width="32" height="10" rx="3" fill="#ffc56b"/>
+          <!-- lit 2 -->
+          <polygon points="310,120 250,300 370,300" fill="url(#glowA)"/>
+          <circle cx="310" cy="112" r="34" fill="url(#haloA)"/>
+          <rect x="308" y="112" width="4" height="188" fill="#3a4458"/><rect x="294" y="104" width="32" height="10" rx="3" fill="#ffc56b"/>
+          <!-- now: 3 -->
+          <rect x="498" y="112" width="4" height="188" fill="#3a4458"/><rect x="484" y="104" width="32" height="10" rx="3" fill="#1a2130" stroke="#4f7cff" stroke-width="2"/>
+          <circle cx="500" cy="322" r="9" fill="#4f7cff"/><circle cx="500" cy="322" r="18" fill="none" stroke="#4f7cff" stroke-opacity=".35" stroke-width="2"/>
+          <!-- off 4,5 -->
+          <rect x="688" y="112" width="4" height="188" fill="#252d3c"/><rect x="674" y="104" width="32" height="10" rx="3" fill="#161c28"/>
+          <rect x="878" y="112" width="4" height="188" fill="#252d3c"/><rect x="864" y="104" width="32" height="10" rx="3" fill="#161c28"/>
+          <!-- labels -->
+          <g font-family="Newsreader, Georgia, serif" font-size="26" fill="#eef1f7" text-anchor="middle">
+            <text x="120" y="392">Foundations</text><text x="310" y="392">Calling</text><text x="500" y="392">Launch</text>
+            <text x="690" y="392" fill="#566074">Growth</text><text x="880" y="392" fill="#566074">Multiply</text>
+          </g>
+          <g font-family="Geist Mono, monospace" font-size="11" letter-spacing="2" text-anchor="middle">
+            <text x="120" y="410" fill="#ffc56b">WALKED</text><text x="310" y="410" fill="#ffc56b">WALKED</text><text x="500" y="410" fill="#4f7cff">YOU ARE HERE</text>
+            <text x="690" y="410" fill="#566074">AHEAD</text><text x="880" y="410" fill="#566074">AHEAD</text>
+          </g>
+        </svg>
+      </div>
+      <div class="caption">
+        <div><b>What it feels like</b>Standing on your street at night. Simple, calm, instantly readable.</div>
+        <div><b>On a phone</b>Turns into the vertical street shown in section 3.</div>
+        <div><b>Build effort</b>Lowest. One illustration, lamps light from real progress.</div>
+      </div>
+    </div>
+
+    <!-- B -->
+    <div class="option" id="opt-b" role="tabpanel" aria-labelledby="tab-b" hidden>
+      <div class="stage">
+        <svg viewBox="0 0 1000 440" role="img" aria-label="A top-down street map with five intersections along one avenue, two lit">
+          <defs>
+            <radialGradient id="poolB"><stop offset="0%" stop-color="#ffc56b" stop-opacity=".42"/><stop offset="100%" stop-color="#ffc56b" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="1000" height="440" fill="#07090f"/>
+          <!-- faint street grid -->
+          <g stroke="#131a26" stroke-width="10">
+            <line x1="0" y1="90" x2="1000" y2="90"/><line x1="0" y1="350" x2="1000" y2="350"/>
+            <line x1="150" y1="0" x2="150" y2="440"/><line x1="340" y1="0" x2="340" y2="440"/><line x1="530" y1="0" x2="530" y2="440"/><line x1="720" y1="0" x2="720" y2="440"/><line x1="880" y1="0" x2="880" y2="440"/>
+          </g>
+          <!-- the avenue (diagonal-ish) -->
+          <path d="M40 390 C 200 330, 250 260, 340 230 S 520 190, 560 160 S 760 110, 960 60" stroke="#1d2536" stroke-width="22" fill="none" stroke-linecap="round"/>
+          <path d="M40 390 C 200 330, 250 260, 340 230 S 520 190, 560 160" stroke="#ffc56b" stroke-opacity=".75" stroke-width="3" fill="none"/>
+          <path d="M560 160 S 760 110, 960 60" stroke="#566074" stroke-width="2" stroke-dasharray="6 10" fill="none"/>
+          <!-- pools of light -->
+          <circle cx="150" cy="325" r="80" fill="url(#poolB)"/><circle cx="340" cy="230" r="80" fill="url(#poolB)"/>
+          <!-- intersections -->
+          <g font-family="Newsreader, Georgia, serif" font-size="24" fill="#eef1f7">
+            <circle cx="150" cy="325" r="11" fill="#ffc56b"/><text x="170" y="365">Foundations</text>
+            <circle cx="340" cy="230" r="11" fill="#ffc56b"/><text x="360" y="270">Calling</text>
+            <circle cx="560" cy="160" r="11" fill="#07090f" stroke="#4f7cff" stroke-width="3"/><circle cx="560" cy="160" r="22" fill="none" stroke="#4f7cff" stroke-opacity=".35" stroke-width="2"/><text x="582" y="200">Launch</text>
+            <circle cx="760" cy="110" r="9" fill="#161c28" stroke="#2b3446"/><text x="740" y="150" fill="#566074">Growth</text>
+            <circle cx="930" cy="68" r="9" fill="#161c28" stroke="#2b3446"/><text x="850" y="40" fill="#566074">Multiply</text>
+          </g>
+          <g font-family="Geist Mono, monospace" font-size="11" letter-spacing="2">
+            <text x="582" y="220" fill="#4f7cff">YOU ARE HERE</text>
+            <text x="30" y="30" fill="#566074">AVENUE · YOUR ROUTE</text>
+          </g>
+        </svg>
+      </div>
+      <div class="caption">
+        <div><b>What it feels like</b>A map of your city from above, your route lit behind you, dashed ahead.</div>
+        <div><b>On a phone</b>The map rotates to run top to bottom.</div>
+        <div><b>Build effort</b>Medium. The route line has to be drawn per screen size.</div>
+      </div>
+    </div>
+
+    <!-- C -->
+    <div class="option" id="opt-c" role="tabpanel" aria-labelledby="tab-c" hidden>
+      <div class="stage">
+        <svg viewBox="0 0 1000 460" role="img" aria-label="A road running toward the horizon under stars, with five markers, the near ones lit">
+          <defs>
+            <linearGradient id="skyC" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#05070c"/><stop offset="100%" stop-color="#101829"/></linearGradient>
+            <radialGradient id="haloC"><stop offset="0%" stop-color="#ffdca0" stop-opacity=".9"/><stop offset="100%" stop-color="#ffc56b" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="1000" height="460" fill="url(#skyC)"/>
+          <g fill="#c9d3ea" opacity=".6"><circle cx="80" cy="50" r="1"/><circle cx="230" cy="100" r="1.3"/><circle cx="400" cy="40" r=".9"/><circle cx="640" cy="70" r="1.1"/><circle cx="820" cy="30" r="1"/><circle cx="930" cy="110" r="1.2"/><circle cx="520" cy="120" r=".8"/><circle cx="330" cy="150" r=".7"/></g>
+          <!-- horizon -->
+          <line x1="0" y1="190" x2="1000" y2="190" stroke="#1f2736"/>
+          <polygon points="470,190 530,190 900,460 100,460" fill="#0b0f18"/>
+          <polyline points="500,200 500,460" stroke="#2b3446" stroke-width="3" stroke-dasharray="20 18"/>
+          <!-- markers: near (lit) to far (dim) -->
+          <circle cx="210" cy="420" r="40" fill="url(#haloC)"/><rect x="206" y="330" width="6" height="95" fill="#3a4458"/><rect x="190" y="322" width="38" height="12" rx="3" fill="#ffc56b"/>
+          <circle cx="330" cy="318" r="28" fill="url(#haloC)"/><rect x="327" y="262" width="4" height="60" fill="#3a4458"/><rect x="316" y="256" width="26" height="8" rx="2" fill="#ffc56b"/>
+          <rect x="604" y="236" width="3" height="40" fill="#3a4458"/><rect x="596" y="232" width="19" height="6" rx="2" fill="#1a2130" stroke="#4f7cff" stroke-width="2"/>
+          <rect x="419" y="214" width="2" height="22" fill="#252d3c"/><rect x="414" y="211" width="12" height="4" rx="1" fill="#161c28"/>
+          <rect x="560" y="201" width="2" height="12" fill="#252d3c"/><rect x="556" y="199" width="9" height="3" rx="1" fill="#161c28"/>
+          <g font-family="Newsreader, Georgia, serif" fill="#eef1f7">
+            <text x="120" y="455" font-size="26">Foundations</text>
+            <text x="250" y="352" font-size="22">Calling</text>
+            <text x="630" y="262" font-size="20">Launch</text>
+            <text x="360" y="225" font-size="15" fill="#566074">Growth</text>
+            <text x="575" y="208" font-size="13" fill="#566074">Multiply</text>
+          </g>
+          <text x="630" y="282" font-family="Geist Mono, monospace" font-size="11" letter-spacing="2" fill="#4f7cff">YOU ARE HERE</text>
+        </svg>
+      </div>
+      <div class="caption">
+        <div><b>What it feels like</b>The most dramatic: the road ahead disappears into the night. Big emotion, closest to the home page.</div>
+        <div><b>On a phone</b>Works well: it is already tall and narrow.</div>
+        <div><b>Build effort</b>Highest. Far stops get small, so labels need care.</div>
+      </div>
+    </div>
+    <div class="legend" style="margin-top:14px"><span><i style="background:var(--lamp);box-shadow:0 0 10px var(--lamp)"></i>Walked (warm light)</span><span><i style="border:2px solid var(--blue)"></i>You are here (blue)</span><span><i style="background:#161c28;border:1px solid var(--line-2)"></i>Ahead</span></div>
+  </section>
+
+  <!-- 2. Inside a phase -->
+  <section aria-labelledby="inside">
+    <div class="eyebrow">2 · Inside a phase</div>
+    <h2 id="inside">Opening a stop, and one moment</h2>
+    <p class="note">Shared by all three maps. Scripture becomes the headline; each wizard step is a small lamp that lights when done. Verse shown from the World English Bible as a stand-in.</p>
+
+    <div class="opening" style="margin-top:18px">
+      <div class="stop"><span class="bulb" aria-hidden="true"></span>Stop 2 of 5 · Ephesians 4</div>
+      <div class="phase-title">Calling</div>
+      <p class="verse">&ldquo;He gave some to be apostles; and some, prophets; and some, evangelists; and some, shepherds and teachers; for the perfecting of the saints.&rdquo;</p>
+      <div class="verse-ref">EPHESIANS 4:11&ndash;12</div>
+      <div class="lamps" aria-label="Calling progress: 3 of 6 sections">
+        <div class="lamp-step on"><div class="glass"></div><div class="post"></div><span>What is a calling</span></div>
+        <div class="lamp-step on"><div class="glass"></div><div class="post"></div><span>Callable</span></div>
+        <div class="lamp-step on"><div class="glass"></div><div class="post"></div><span>Shared call</span></div>
+        <div class="lamp-step now"><div class="glass"></div><div class="post"></div><span>Specific call</span></div>
+        <div class="lamp-step"><div class="glass"></div><div class="post"></div><span>Seasonal call</span></div>
+        <div class="lamp-step"><div class="glass"></div><div class="post"></div><span>Conversation</span></div>
+      </div>
+    </div>
+
+    <div class="row2" style="margin-top:18px">
+      <div class="card">
+        <div class="eyebrow">Step 3 of 6 · The Shared Call</div>
+        <p class="q">Are you willing to say yes to this Shared Call?</p>
+        <p class="note" style="margin-bottom:20px">Nobody is ready to be a disciple of Jesus. We say yes first, and then we are made ready as we follow Him.</p>
+        <div class="btns">
+          <button class="btn primary" id="sayYes" type="button">Yes, I&rsquo;m in</button>
+          <button class="btn ghost" type="button">Not yet</button>
+        </div>
+      </div>
+      <div class="card moment" id="moment" aria-live="polite">
+        <svg viewBox="0 0 120 150" aria-hidden="true">
+          <circle class="halo" cx="60" cy="34" r="46" fill="url(#haloMoment)"/>
+          <defs><radialGradient id="haloMoment"><stop offset="0%" stop-color="#ffdca0" stop-opacity=".95"/><stop offset="100%" stop-color="#ffc56b" stop-opacity="0"/></radialGradient></defs>
+          <rect x="57" y="40" width="6" height="104" fill="#3a4458"/>
+          <rect class="bulbfill" x="40" y="28" width="40" height="13" rx="4" fill="#1a2130"/>
+        </svg>
+        <h3 id="momentTitle">Tap &ldquo;Yes, I&rsquo;m in&rdquo;</h3>
+        <p id="momentSub">A light turns on here, and stays lit on your Calling Profile.</p>
+        <button class="replay" id="replay" type="button" hidden>Play it again</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. On a phone -->
+  <section aria-labelledby="phone">
+    <div class="eyebrow">3 · On a phone</div>
+    <h2 id="phone">The street runs down the screen</h2>
+    <p class="note">Most leaders will open this on a phone. The map becomes one vertical street; the stop you are at opens in place with one clear next action.</p>
+    <div class="phones" style="margin-top:20px">
+      <div class="phone"><div class="screen">
+        <div class="eyebrow">Your journey</div>
+        <div style="font-family:var(--serif);font-size:30px;line-height:1.05;margin-top:6px">Good evening, Sam.</div>
+        <div class="small" style="margin-top:4px">Two streetlights on. Launch is next.</div>
+        <div class="street">
+          <div class="stopv on"><span class="dot"></span><div class="t">Foundations</div><div class="s">Walked · 4 of 4</div></div>
+          <div class="stopv on"><span class="dot"></span><div class="t">Calling</div><div class="s">Walked · profile ready</div></div>
+          <div class="stopv now"><span class="dot"></span><div class="t">Launch</div><div class="s" style="color:var(--blue)">You are here · step 4 of 9</div>
+            <div class="panelv"><p>Name at least two people to pray and plan with you.</p><button class="btn primary" type="button" style="width:100%">Continue Launch</button></div>
+          </div>
+          <div class="stopv off"><span class="dot"></span><div class="t">Growth</div><div class="s">Ahead</div></div>
+          <div class="stopv off"><span class="dot"></span><div class="t">Multiply</div><div class="s">Ahead</div></div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <p class="foot">Mockup only · example leader · colours: night #05070C, blue #4F7CFF, streetlight #FFC56B · type: Newsreader (serif) + Geist</p>
+</div>
+
+<script>
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  function show(id){
+    tabs.forEach(function(t){var on=t.id===id;t.setAttribute('aria-selected',on?'true':'false');document.getElementById(t.getAttribute('aria-controls')).hidden=!on;});
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){show(t.id);});});
+  var m=document.getElementById('moment'),yes=document.getElementById('sayYes'),rep=document.getElementById('replay');
+  function light(){
+    m.classList.remove('lit');void m.offsetWidth;m.classList.add('lit');
+    document.getElementById('momentTitle').textContent='You said yes.';
+    document.getElementById('momentSub').textContent='24 September 2026 · the Shared Call';
+    rep.hidden=false;
+  }
+  yes.addEventListener('click',light);rep.addEventListener('click',light);
+})();
+</script>
