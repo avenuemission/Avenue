@@ -18,7 +18,7 @@ import SharedCall from "./SharedCall";
 // "calling" worksheet.
 export default function CallingPage() {
   const router = useRouter();
-  const { ready } = useLeaderGate();
+  const { ready, error: gateError } = useLeaderGate();
   const { data, loaded, error, saveSection, flushSection, savingSection, saveError } = useWorksheet<CallingData>(
     "calling",
     ready
@@ -40,6 +40,23 @@ export default function CallingPage() {
     setChosen(i);
     window.scrollTo({ top: 0 });
   };
+
+  if (gateError) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="panel p-5 md:p-8">
+          <p className="text-amber-400">{gateError}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 min-h-[44px] px-5 rounded-full border border-[var(--border)] text-white text-sm font-semibold"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!ready || !loaded) {
     return (
