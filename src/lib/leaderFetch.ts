@@ -13,7 +13,12 @@ function toLogin(): void {
 // session it sends the leader to /login and rejects, so callers' existing
 // error paths run. A 401 from the server does the same.
 export async function leaderFetch(input: string, init: RequestInit = {}): Promise<Response> {
-  const { data } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error("leaderFetch: getSession failed", error);
+    toLogin();
+    throw new Error(`Please sign in again: ${error.message}`);
+  }
   const token = data.session?.access_token;
   if (!token) {
     toLogin();
