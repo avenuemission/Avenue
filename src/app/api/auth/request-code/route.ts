@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
 
 // POST /api/auth/request-code  { email }
-// Sends a 6-digit sign-in code, but only to an email already in `leaders`.
+// Sends a numeric sign-in code, but only to an email already in `leaders`.
 // The reply is the same whether or not the email is a leader, so this
 // endpoint cannot be used to discover who the leaders are.
 const NEUTRAL = "If that email is registered, a code is on its way.";

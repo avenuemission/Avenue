@@ -1,6 +1,6 @@
 // ============================================
 // LEADER AUTH
-// Sign-in is an emailed 6-digit code (Supabase Auth). supabase-js keeps
+// Sign-in is an emailed numeric code (Supabase Auth). supabase-js keeps
 // the real session. The small cache under avenue_auth_session only lets
 // pages render a name without waiting: the server never trusts it.
 // ============================================

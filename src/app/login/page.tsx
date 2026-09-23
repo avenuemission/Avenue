@@ -39,14 +39,14 @@ export default function LoginPage() {
     if (mode === "email") {
       run(async () => {
         await requestCode(email);
-        setNotice(`If ${email.trim()} is registered, we've sent it a 6-digit code.`);
+        setNotice(`If ${email.trim()} is registered, we've sent it a sign-in code.`);
         setMode("code");
       });
     } else if (mode === "request") {
       run(async () => {
         if (!name.trim()) throw new Error("Please enter your name");
         await requestAccess(name, email);
-        setNotice(`We've sent a 6-digit code to ${email.trim()}.`);
+        setNotice(`We've sent a sign-in code to ${email.trim()}.`);
         setMode("code");
       });
     } else {
@@ -99,19 +99,19 @@ export default function LoginPage() {
 
             {mode === "code" && (
               <div>
-                <label className={LABEL}>6-digit code</label>
+                <label className={LABEL}>Sign-in code</label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    maxLength={6}
+                    pattern="[0-9]{6,10}"
+                    maxLength={10}
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                    className={`${INPUT} tracking-[0.4em] text-lg`}
-                    placeholder="000000"
+                    className={`${INPUT} tracking-[0.4em] text-lg placeholder:tracking-normal placeholder:text-sm`}
+                    placeholder="Code from your email"
                     required
                     autoFocus
                   />
