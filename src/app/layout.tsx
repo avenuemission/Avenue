@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
@@ -13,13 +13,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// The serif for phase titles, big questions and scripture (Avenue at night).
+// Variable font: weight 400 and 500 plus the optical size axis.
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+});
+
 export const metadata: Metadata = {
   title: "Avenue - On Earth As In Heaven",
   description:
     "Avenue is a decentralised movement of people following Jesus, convinced that disciple-making doesn’t require more church buildings, just the willingness to open the spaces we already have",
   // Icons come from the app-directory files: icon.png (browsers/Android),
   // apple-icon.png (iOS home screen) and favicon.ico (legacy). Don't set
-  // metadata.icons here — it overrides those files.
+  // metadata.icons here, because it overrides those files.
 };
 
 export default function RootLayout({
@@ -115,7 +124,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} antialiased bg-black text-white`}
       >
         <Navbar />
         <main className="pt-16">{children}</main>
