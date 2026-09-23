@@ -32,63 +32,61 @@ function getLeadersStore() {
   return getStore({ name: "leaders", consistency: "strong" });
 }
 
-// Read a leader by email — Supabase first, then Netlify Blobs fallback
+// Read a leader by email from Supabase, the only source requireLeader
+// reads. A lookup error throws (the POST handler returns 500) so a
+// transient failure never makes an existing leader look new.
 async function getLeader(email: string): Promise<LeaderRecord | null> {
-  try {
-    const { data: sb } = await getSupabaseAdmin()
-      .from("leaders")
-      .select("id, email, name, full_access, created_at")
-      .eq("email", email.toLowerCase())
-      .single();
+  const { data, error } = await getSupabaseAdmin()
+    .from("leaders")
+    .select("id, email, name, full_access, created_at")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
 
-    if (sb) {
-      return {
-        id: sb.id,
-        email: sb.email,
-        name: sb.name,
-        full_access: sb.full_access,
-        created_at: sb.created_at,
-      };
-    }
-  } catch (error) {
-    console.error("Supabase leader lookup error:", error);
+  if (error) {
+    throw new Error(`Supabase leader lookup failed: ${error.message}`);
   }
-
-  const key = email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
-  
-  if (isLocal) {
-    return localLeaders.get(email.toLowerCase()) || null;
-  }
-  
-  const store = getLeadersStore();
-  const leader = await store.get(key, { type: "json" });
-  return leader as LeaderRecord | null;
+  if (!data) return null;
+  return {
+    id: data.id,
+    email: data.email,
+    name: data.name,
+    full_access: data.full_access,
+    created_at: data.created_at,
+  };
 }
 
-// Save a leader record — Supabase first, then Netlify Blobs fallback
+// Save a NEW leader. The insert ignores an existing row with the same
+// email, so an existing leader's full_access is never overwritten. A
+// Supabase error throws before any mirror write happens.
 async function saveLeader(leader: LeaderRecord): Promise<void> {
-  try {
-    await getSupabaseAdmin()
-      .from("leaders")
-      .upsert({
-        id: leader.id,
-        email: leader.email.toLowerCase(),
-        name: leader.name,
-        full_access: leader.full_access,
-        created_at: leader.created_at,
-      }, { onConflict: "email" });
-  } catch (error) {
-    console.error("Supabase save leader failed:", error);
+  const { error } = await getSupabaseAdmin()
+    .from("leaders")
+    .upsert({
+      id: leader.id,
+      email: leader.email.toLowerCase(),
+      name: leader.name,
+      full_access: leader.full_access,
+      created_at: leader.created_at,
+    }, { onConflict: "email", ignoreDuplicates: true });
+
+  if (error) {
+    throw new Error(`Supabase save leader failed: ${error.message}`);
   }
 
+  // Legacy Netlify Blobs mirror. Supabase is the source of truth, so a
+  // mirror failure is logged and does not fail the signup.
   const key = leader.email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
   if (isLocal) {
     localLeaders.set(leader.email.toLowerCase(), leader);
     return;
   }
 
-  const store = getLeadersStore();
-  await store.setJSON(key, leader);
+  try {
+    const store = getLeadersStore();
+    await store.setJSON(key, leader);
+  } catch (mirrorError) {
+    console.error("Netlify Blobs leader mirror write failed:", mirrorError);
+  }
 }
 
 // When someone signs up, take over any node their discipler already
@@ -140,7 +138,7 @@ async function claimNetworkNode(email: string, name: string): Promise<void> {
   }
 }
 
-// List all leaders — Supabase first, then Netlify Blobs fallback
+// List all leaders: Supabase first, then Netlify Blobs fallback
 async function listLeaders(): Promise<LeaderRecord[]> {
   if (isLocal) {
     return Array.from(localLeaders.values());
