@@ -9,7 +9,6 @@ import {
   LogOut,
   ArrowLeft,
   ChevronDown,
-  BookOpen,
   X,
   Heart,
   Users,
@@ -557,7 +556,6 @@ export default function TrainingPage() {
                 ) : (
                   <PhaseModules
                     phase={phase}
-                    progress={progress}
                     toggleModuleComplete={toggleModuleComplete}
                     toggleEpisodeWatched={toggleEpisodeWatched}
                     openVideo={openVideo}
@@ -566,19 +564,6 @@ export default function TrainingPage() {
               </div>
             );
           })}
-        </div>
-
-        {/* Footer Info */}
-        <div className="mt-12 p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-          <div className="flex items-start gap-4">
-            <BookOpen className="w-6 h-6 text-[var(--accent)] flex-shrink-0 mt-1" />
-            <div>
-              <h4 className="font-semibold text-white mb-2">About This Journey</h4>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                This five-phase training pathway equips leaders from initial calling through multiplication. Each phase includes video training, assessments, and practical action items. Work through each phase with your coach.
-              </p>
-            </div>
-          </div>
         </div>
       </main>
     </div>

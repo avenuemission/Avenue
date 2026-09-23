@@ -246,10 +246,6 @@ export default function Phase4Growth({
         <h3 className="text-lg font-semibold text-white mt-1 mb-4">Recent weeks</h3>
         <CheckinHistory weeks={historyWeeks} checkins={checkins} />
       </div>
-
-      <p className="text-sm text-[var(--muted)]">
-        Coming soon: healthy group check and prayer requests.
-      </p>
     </div>
   );
 }

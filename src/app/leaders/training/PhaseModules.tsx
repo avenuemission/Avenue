@@ -18,26 +18,24 @@ const ModuleTypeIcon = ({ type }: { type: Module["type"] }) => {
 
 interface PhaseModulesProps {
   phase: Phase;
-  progress: { completed: number; total: number; percent: number };
   toggleModuleComplete: (phaseId: string, moduleId: string) => void;
   toggleEpisodeWatched: (phaseId: string, moduleId: string, episodeId: string) => void;
   openVideo: (youtubeId: string, title: string) => void;
 }
 
-// The modules grid and phase status panel used by phases 1 to 3. Progress
-// state and the tick handlers come from useTrainingProgress via the page.
+// The modules list used by Foundations. Progress state and the tick
+// handlers come from useTrainingProgress via the page. The phase header
+// already shows progress, so there is no separate status panel.
 export default function PhaseModules({
   phase,
-  progress,
   toggleModuleComplete,
   toggleEpisodeWatched,
   openVideo,
 }: PhaseModulesProps) {
   return (
     <div className="p-6 md:p-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Modules */}
-        <div className="lg:col-span-2 space-y-3">
+      <div>
+        <div className="space-y-3">
           <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
             Training Modules
           </h3>
@@ -96,27 +94,6 @@ export default function PhaseModules({
             )}
             </div>
           ))}
-        </div>
-
-        {/* Right: Status */}
-        <div className="space-y-6">
-          {/* Phase Status */}
-          <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-            <h4 className="font-semibold text-white mb-4">Phase Status</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Modules Complete</span>
-                <span className="text-white">{progress.completed}/{progress.total}</span>
-              </div>
-              <div className="h-2 bg-[var(--surface-hover)] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>

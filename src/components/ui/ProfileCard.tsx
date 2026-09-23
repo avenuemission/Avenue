@@ -13,7 +13,10 @@ import {
   X,
   Loader2,
   ChevronUp,
+  Compass,
+  Rocket,
 } from "lucide-react";
+import Link from "next/link";
 import { leaderFetch } from "@/lib/leaderFetch";
 
 interface Profile {
@@ -521,6 +524,23 @@ export default function ProfileCard({ email, fallbackName, collapsible = false }
           Add a photo and a few details to make this yours.
         </p>
       )}
+
+      <div className="mt-6 flex flex-wrap gap-3 border-t border-[var(--border)] pt-5">
+        <Link
+          href="/leaders/training/calling/profile"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-semibold text-white hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)] transition-all"
+        >
+          <Compass className="w-4 h-4 text-[var(--accent)]" />
+          My Calling Profile
+        </Link>
+        <Link
+          href="/leaders/training/launch/plan"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 text-sm font-semibold text-white hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)] transition-all"
+        >
+          <Rocket className="w-4 h-4 text-[var(--accent)]" />
+          My Launch Plan
+        </Link>
+      </div>
     </div>
   );
 }
