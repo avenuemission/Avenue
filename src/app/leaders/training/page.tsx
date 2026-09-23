@@ -4,48 +4,26 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
-import EpisodeCarousel from "@/components/ui/EpisodeCarousel";
-import CheckinHistory from "@/components/ui/CheckinHistory";
 import { recentMondays } from "@/lib/weeks";
 import {
   LogOut,
   ArrowLeft,
-  Play,
   ChevronDown,
-  CheckCircle2,
-  Video,
-  FileText,
   BookOpen,
-  Lightbulb,
   X,
   Heart,
   Users,
-  MessageCircle,
 } from "lucide-react";
 
-import { Module, Phase } from "./phases";
-import { RPMS_GAUGES, CHECKIN_HISTORY_WEEKS, ScoreRow } from "./Phase4Growth";
-import { HERO_MAKER_PRACTICES, apprenticeStepLabel } from "./Phase5Multiply";
+import { Phase } from "./phases";
+import Phase4Growth, { CHECKIN_HISTORY_WEEKS } from "./Phase4Growth";
+import Phase5Multiply from "./Phase5Multiply";
+import PhaseModules from "./PhaseModules";
 import { useTrainingProgress } from "./useTrainingProgress";
 import { useCheckins } from "./useCheckins";
 import { useNetworkView } from "./useNetworkView";
 
 // No separate component needed - inline in the layout below
-
-// Module Type Icons
-const ModuleTypeIcon = ({ type }: { type: Module["type"] }) => {
-  switch (type) {
-    case "video":
-      return <Video className="w-4 h-4" />;
-    case "quiz":
-      return <Lightbulb className="w-4 h-4" />;
-    case "document":
-      return <FileText className="w-4 h-4" />;
-    case "action":
-      return <CheckCircle2 className="w-4 h-4" />;
-  }
-};
-
 
 export default function TrainingPage() {
   const router = useRouter();
@@ -576,394 +554,39 @@ export default function TrainingPage() {
                 </div>
 
                 {isGrowthPhase ? (
-                  <div className="p-6 md:p-8 space-y-6">
-                    {/* Healthy leader: a recommendation, not a module */}
-                    <div className="panel p-6">
-                      <span className="eyebrow">Healthy leader</span>
-                      <h3 className="text-lg font-semibold text-white mt-1 mb-2">Multiplier, by Dave Ferguson</h3>
-                      <p className="text-sm text-[var(--muted)] leading-relaxed mb-5">
-                        Ferguson&rsquo;s case is that a leader reproduces who they are, not what they teach, so
-                        health comes before technique. He tracks that health across four gauges: Relational,
-                        Physical, Mental and Spiritual, RPMS for short. The weekly check-in below uses the same
-                        four.
-                      </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {RPMS_GAUGES.map(({ key, label }) => (
-                          <div key={key} className="rounded-lg border border-dashed border-[var(--border)] p-3 text-center">
-                            <span className="text-xs uppercase tracking-wider text-[var(--muted)]">{label}</span>
-                            <p className="text-[11px] text-[var(--muted)] mt-2 italic">
-                              Crash course notes coming soon
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* The weekly check-in */}
-                    <div className="panel p-6">
-                      <span className="eyebrow">This week&rsquo;s check-in</span>
-                      <h3 className="text-lg font-semibold text-white mt-1 mb-4">Week of {currentWeekLabel}</h3>
-                      {!checkinsLoaded ? (
-                        <p className="text-sm text-[var(--muted)]">Loading your check-in...</p>
-                      ) : checkinLoadError ? (
-                        // No form is rendered here on purpose. Rendering it
-                        // at its 5/5/5/5 defaults with Save enabled would
-                        // let a leader whose real scores simply failed to
-                        // load overwrite them with defaults they never saw.
-                        <div className="rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
-                          <p className="text-sm text-white mb-1">This week&rsquo;s check-in could not be loaded.</p>
-                          <p className="text-sm text-[var(--muted)] mb-4">{checkinLoadError}</p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCheckinsLoaded(false);
-                              setCheckinLoadAttempt((n) => n + 1);
-                            }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] text-white text-sm font-semibold transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
-                          >
-                            Try again
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="space-y-4 mb-5">
-                            {RPMS_GAUGES.map(({ key, label }) => (
-                              <ScoreRow
-                                key={key}
-                                label={label}
-                                value={checkinForm[key]}
-                                onChange={(next) => setCheckinForm((prev) => ({ ...prev, [key]: next }))}
-                              />
-                            ))}
-                          </div>
-                          <div className="mb-4">
-                            <label htmlFor="checkin-reflection" className="text-sm text-white mb-1.5 block">
-                              One sentence
-                            </label>
-                            <textarea
-                              id="checkin-reflection"
-                              value={checkinForm.reflection}
-                              onChange={(e) => setCheckinForm((prev) => ({ ...prev, reflection: e.target.value }))}
-                              maxLength={2000}
-                              rows={2}
-                              placeholder="How this week actually went."
-                              className="w-full rounded-lg bg-[var(--surface-hover)] border border-[var(--border)] p-3 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] resize-none"
-                            />
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              type="button"
-                              onClick={saveCheckin}
-                              disabled={checkinSaving}
-                              className="px-5 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
-                            >
-                              {checkinSaving ? "Saving..." : "Save check-in"}
-                            </button>
-                            {checkinSaved && !checkinSaving && (
-                              <span className="text-xs text-[var(--accent)]">Saved.</span>
-                            )}
-                            {checkinSaveError && (
-                              <span className="text-xs text-red-400">{checkinSaveError}</span>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* The history */}
-                    <div className="panel p-6">
-                      <span className="eyebrow">History</span>
-                      <h3 className="text-lg font-semibold text-white mt-1 mb-4">Recent weeks</h3>
-                      <CheckinHistory weeks={historyWeeks} checkins={checkins} />
-                    </div>
-
-                    {/* Two coming soon cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="panel p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users className="w-4 h-4 text-[var(--accent)]" />
-                          <span className="eyebrow">Coming soon</span>
-                        </div>
-                        <h3 className="text-base font-semibold text-white mb-2">Healthy group</h3>
-                        <p className="text-sm text-[var(--muted)] leading-relaxed">
-                          A monthly check on how your pathway group is going, taken at or before the pathway
-                          huddle. Part of the monthly rhythm, not built yet.
-                        </p>
-                      </div>
-                      <div className="panel p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageCircle className="w-4 h-4 text-[var(--accent)]" />
-                          <span className="eyebrow">Coming soon</span>
-                        </div>
-                        <h3 className="text-base font-semibold text-white mb-2">Prayer requests</h3>
-                        <p className="text-sm text-[var(--muted)] leading-relaxed">
-                          Raise a prayer request here, and later share it with other leaders. Not stored yet.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <Phase4Growth
+                    currentWeekLabel={currentWeekLabel}
+                    historyWeeks={historyWeeks}
+                    checkins={checkins}
+                    checkinsLoaded={checkinsLoaded}
+                    setCheckinsLoaded={setCheckinsLoaded}
+                    checkinLoadError={checkinLoadError}
+                    setCheckinLoadAttempt={setCheckinLoadAttempt}
+                    checkinForm={checkinForm}
+                    setCheckinForm={setCheckinForm}
+                    checkinSaving={checkinSaving}
+                    checkinSaveError={checkinSaveError}
+                    checkinSaved={checkinSaved}
+                    saveCheckin={saveCheckin}
+                  />
                 ) : isMultiplyPhase ? (
-                  <div className="p-6 md:p-8 space-y-6">
-                    {/* Hero Maker crash course: a clearly marked placeholder,
-                        laid out for the five practices, not the five
-                        apprenticeship steps (those are already shown, per
-                        person, in "Your people" below). No invented
-                        teaching goes here. */}
-                    <div className="panel p-6">
-                      <span className="eyebrow">Placeholder</span>
-                      <h3 className="text-lg font-semibold text-white mt-1 mb-2">Hero Maker, by Dave Ferguson</h3>
-                      <p className="text-sm text-[var(--muted)] leading-relaxed mb-5">
-                        Ferguson&rsquo;s case is that multiplication is not a course you finish, it is five
-                        practices you build as habits. The crash course on each practice goes here.
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                        {HERO_MAKER_PRACTICES.map((practice) => (
-                          <div key={practice} className="rounded-lg border border-dashed border-[var(--border)] p-3 text-center">
-                            <span className="text-xs uppercase tracking-wider text-[var(--muted)]">{practice}</span>
-                            <p className="text-[11px] text-[var(--muted)] mt-2 italic">
-                              Crash course notes coming soon
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Your people: the core of the phase */}
-                    <div className="panel p-6">
-                      <span className="eyebrow">Your people</span>
-                      <h3 className="text-lg font-semibold text-white mt-1 mb-4">Who you&rsquo;re sending out</h3>
-                      {!networkLoaded ? (
-                        <p className="text-sm text-[var(--muted)]">Loading your network...</p>
-                      ) : networkError ? (
-                        <p className="text-sm text-red-400">{networkError}</p>
-                      ) : sentByViewer.length === 0 ? (
-                        // The common case, not a broken screen: most leaders
-                        // are sending nobody out yet, and that is a
-                        // beginning with an obvious next step, not an error.
-                        <div className="rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
-                          <Users className="w-6 h-6 text-[var(--accent)] mx-auto mb-3" />
-                          <p className="text-sm text-white mb-1">You&rsquo;re not sending anyone out yet.</p>
-                          <p className="text-sm text-[var(--muted)] mb-4">
-                            That&rsquo;s the starting line, not a gap. Add the first person you&rsquo;re sending
-                            out and the apprenticeship steps below start to mean something.
-                          </p>
-                          <Link
-                            href="/leaders/network"
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90"
-                          >
-                            Add someone to your network
-                          </Link>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {sentByViewer.map((person) => {
-                            const name = [person.firstName, person.lastName].filter(Boolean).join(" ");
-                            const isUpdating = stepUpdatingId === person.id;
-                            return (
-                              <div
-                                key={person.id}
-                                className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-[var(--border)]"
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-white truncate">{name}</p>
-                                  <p className="text-sm text-[var(--accent)] mt-0.5">
-                                    {apprenticeStepLabel(person.apprenticeStep)}
-                                  </p>
-                                  {stepError?.id === person.id && (
-                                    <p className="text-xs text-red-400 mt-1">{stepError.message}</p>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <button
-                                    type="button"
-                                    onClick={() => setApprenticeStep(person.id, person.apprenticeStep - 1)}
-                                    disabled={isUpdating || person.apprenticeStep <= 0}
-                                    aria-label={`Lower ${name}'s apprenticeship step`}
-                                    className="px-3 py-1.5 rounded-full border border-[var(--border)] text-xs font-semibold text-white transition-colors hover:border-[var(--border-strong)] disabled:opacity-30"
-                                  >
-                                    Back
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setApprenticeStep(person.id, person.apprenticeStep + 1)}
-                                    disabled={isUpdating || person.apprenticeStep >= 5}
-                                    aria-label={`Advance ${name}'s apprenticeship step`}
-                                    className="px-3 py-1.5 rounded-full bg-[var(--accent)] text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                  >
-                                    {isUpdating ? "Saving..." : "Advance"}
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Multiplication depth: Ferguson's Kingdom Building
-                        measure. Counts kingdom advance, not a score, and a
-                        zero reads as a beginning rather than a failure. */}
-                    <div className="panel p-6 text-center">
-                      <span className="eyebrow">Kingdom advance</span>
-                      {/* Gated on networkLoaded/networkError, same as "Your
-                          people" above: without this, a leader with a real
-                          network briefly saw "This is the beginning" before
-                          it corrected, and on a failed load saw a red error
-                          right next to a confident "This is the
-                          beginning" with no indication the count was
-                          unknown rather than genuinely zero. */}
-                      {!networkLoaded ? (
-                        <p className="text-sm text-[var(--muted)] mt-2">Loading your network...</p>
-                      ) : networkError ? (
-                        <p className="text-sm text-red-400 mt-2">{networkError}</p>
-                      ) : networkDepth.people === 0 ? (
-                        <>
-                          <p className="text-3xl font-bold text-white mt-2">This is the beginning</p>
-                          <p className="text-sm text-[var(--muted)] mt-2 max-w-md mx-auto">
-                            Nobody is multiplying below you yet. The first person you send out is where a
-                            multiplication depth starts counting.
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-4xl font-bold text-white mt-2 tabular-nums">{networkDepth.people}</p>
-                          <p className="text-sm text-[var(--muted)] mt-2">
-                            {networkDepth.people === 1 ? "person" : "people"} multiplying through{" "}
-                            {networkDepth.generations} {networkDepth.generations === 1 ? "generation" : "generations"}{" "}
-                            below you
-                          </p>
-                        </>
-                      )}
-                    </div>
-
-                    {/* The family tree link, and an ICNU nudge */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <Link
-                        href="/leaders/network"
-                        className="panel p-6 flex flex-col justify-between transition-colors hover:border-[var(--border-strong)]"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users className="w-4 h-4 text-[var(--accent)]" />
-                          <span className="eyebrow">Family tree</span>
-                        </div>
-                        <h3 className="text-base font-semibold text-white mb-2">See the whole network</h3>
-                        <p className="text-sm text-[var(--muted)] leading-relaxed">
-                          The same steps, seen as a chart: everyone sent out, and everyone they have sent
-                          out in turn.
-                        </p>
-                      </Link>
-                      <div className="panel p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageCircle className="w-4 h-4 text-[var(--accent)]" />
-                          <span className="eyebrow">ICNU</span>
-                        </div>
-                        <h3 className="text-base font-semibold text-white mb-2">Permission Giving</h3>
-                        <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">
-                          Ferguson&rsquo;s ICNU tool: name one person, then finish the sentence, &ldquo;I see
-                          in you...&rdquo; That&rsquo;s the whole conversation. Nothing here is saved or
-                          logged, so have it, then add them.
-                        </p>
-                        <Link
-                          href="/leaders/network"
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] text-white text-sm font-semibold transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
-                        >
-                          Add them to your network
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                  <Phase5Multiply
+                    sentByViewer={sentByViewer}
+                    networkLoaded={networkLoaded}
+                    networkError={networkError}
+                    networkDepth={networkDepth}
+                    stepUpdatingId={stepUpdatingId}
+                    stepError={stepError}
+                    setApprenticeStep={setApprenticeStep}
+                  />
                 ) : (
-                <div className="p-6 md:p-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left: Modules */}
-                    <div className="lg:col-span-2 space-y-3">
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
-                        Training Modules
-                      </h3>
-                      {phase.modules.map((module) => (
-                        <div key={module.id}>
-                          {module.sectionHeader && (
-                            <div className="flex items-center gap-3 mt-4 mb-2">
-                              <div className="h-px flex-1 bg-[var(--surface-hover)]" />
-                              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] whitespace-nowrap">
-                                {module.sectionHeader}
-                              </span>
-                              <div className="h-px flex-1 bg-[var(--surface-hover)]" />
-                            </div>
-                          )}
-                        <div
-                          className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
-                            module.completed
-                              ? "bg-[var(--surface)] border-green-500/30"
-                              : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-strong)]"
-                          }`}
-                        >
-                          <button
-                            onClick={() => toggleModuleComplete(phase.id, module.id)}
-                            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                              module.completed
-                                ? "bg-green-500 border-green-500"
-                                : "border-gray-500 hover:border-blue-400"
-                            }`}
-                          >
-                            {module.completed && <CheckCircle2 className="w-4 h-4 text-black" />}
-                          </button>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-gray-400 ${module.completed ? "text-green-400" : ""}`}>
-                                <ModuleTypeIcon type={module.type} />
-                              </span>
-                              <h4 className={`font-semibold ${module.completed ? "text-green-400 line-through" : "text-white"}`}>
-                                {module.title}
-                              </h4>
-                            </div>
-                            <p className="text-sm text-gray-400">{module.description}</p>
-                            {module.duration && (
-                              <span className="text-xs text-gray-500 mt-1 inline-block">{module.duration}</span>
-                            )}
-                          </div>
-                          {module.type === "video" && !module.episodes && (
-                            <button className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center hover:brightness-110/30 transition-colors">
-                              <Play className="w-4 h-4 text-[var(--accent)]" />
-                            </button>
-                          )}
-                        </div>
-                        {/* Episode carousel: thumbnails with watched progress */}
-                        {module.episodes && (
-                          <EpisodeCarousel
-                            episodes={module.episodes}
-                            onPlay={openVideo}
-                            onToggleWatched={(episodeId) =>
-                              toggleEpisodeWatched(phase.id, module.id, episodeId)
-                            }
-                          />
-                        )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Right: Status */}
-                    <div className="space-y-6">
-                      {/* Phase Status */}
-                      <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                        <h4 className="font-semibold text-white mb-4">Phase Status</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Modules Complete</span>
-                            <span className="text-white">{progress.completed}/{progress.total}</span>
-                          </div>
-                          <div className="h-2 bg-[var(--surface-hover)] rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
-                              style={{ width: `${progress.percent}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
+                  <PhaseModules
+                    phase={phase}
+                    progress={progress}
+                    toggleModuleComplete={toggleModuleComplete}
+                    toggleEpisodeWatched={toggleEpisodeWatched}
+                    openVideo={openVideo}
+                  />
                 )}
               </div>
             );
