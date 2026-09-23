@@ -27,7 +27,15 @@ import { useNetworkView } from "./useNetworkView";
 import { useMyPeople } from "@/lib/useMyPeople";
 import { useWorksheet } from "@/lib/useWorksheet";
 import { leaderFetch } from "@/lib/leaderFetch";
-import { callingCompleteCount, launchCompleteCount, overallPercent, type CallingData, type LaunchData } from "@/lib/journey";
+import {
+  CALLING_TOTAL,
+  LAUNCH_TOTAL,
+  callingCompleteCount,
+  launchCompleteCount,
+  overallPercent,
+  type CallingData,
+  type LaunchData,
+} from "@/lib/journey";
 
 // No separate component needed - inline in the layout below
 
@@ -121,10 +129,10 @@ export default function TrainingPage() {
 
   const getPhaseProgress = (phase: Phase) => {
     if (phase.id === "phase2") {
-      return { completed: callingDone, total: 6, percent: Math.round((callingDone / 6) * 100) };
+      return { completed: callingDone, total: CALLING_TOTAL, percent: Math.round((callingDone / CALLING_TOTAL) * 100) };
     }
     if (phase.id === "phase3") {
-      return { completed: launchDone, total: 7, percent: Math.round((launchDone / 7) * 100) };
+      return { completed: launchDone, total: LAUNCH_TOTAL, percent: Math.round((launchDone / LAUNCH_TOTAL) * 100) };
     }
     const completed = phase.modules.filter((m) => m.completed).length;
     return { completed, total: phase.modules.length, percent: Math.round((completed / phase.modules.length) * 100) };

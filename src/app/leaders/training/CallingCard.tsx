@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CALLING_TOTAL } from "@/lib/journey";
 
 export interface CallingCardProps {
   completed: number;
@@ -9,10 +10,10 @@ export interface CallingCardProps {
 }
 
 // Phase 2's hub card (spec 4.3): replaces the module grid. Sections
-// complete out of 6, and the two ways in: resume the wizard, or view the
-// printable profile.
+// complete out of CALLING_TOTAL, and the two ways in: resume the wizard, or
+// view the printable profile.
 export default function CallingCard({ completed, loaded, error }: CallingCardProps) {
-  const total = 6;
+  const total = CALLING_TOTAL;
   const percent = Math.round((completed / total) * 100);
 
   return (
@@ -25,7 +26,7 @@ export default function CallingCard({ completed, loaded, error }: CallingCardPro
       ) : error ? (
         <p className="text-sm text-red-400">{error}</p>
       ) : (
-        <p className="text-sm text-[var(--muted)]">{completed} of 6 sections complete</p>
+        <p className="text-sm text-[var(--muted)]">{completed} of {total} sections complete</p>
       )}
 
       <div className="h-1 w-full rounded-full border border-[var(--border)]">

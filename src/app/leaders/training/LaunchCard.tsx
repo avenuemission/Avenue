@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LAUNCH_TOTAL } from "@/lib/journey";
 
 export interface LaunchCardProps {
   completed: number;
@@ -9,10 +10,10 @@ export interface LaunchCardProps {
 }
 
 // Phase 3's hub card (spec 5.3): replaces the module grid. Steps complete
-// out of 7, and the two ways in: resume the wizard, or view the printable
-// plan.
+// out of LAUNCH_TOTAL, and the two ways in: resume the wizard, or view the
+// printable plan.
 export default function LaunchCard({ completed, loaded, error }: LaunchCardProps) {
-  const total = 7;
+  const total = LAUNCH_TOTAL;
   const percent = Math.round((completed / total) * 100);
 
   return (
@@ -25,7 +26,7 @@ export default function LaunchCard({ completed, loaded, error }: LaunchCardProps
       ) : error ? (
         <p className="text-sm text-red-400">{error}</p>
       ) : (
-        <p className="text-sm text-[var(--muted)]">{completed} of 7 steps complete</p>
+        <p className="text-sm text-[var(--muted)]">{completed} of {total} steps complete</p>
       )}
 
       <div className="h-1 w-full rounded-full border border-[var(--border)]">
