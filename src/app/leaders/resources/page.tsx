@@ -149,20 +149,26 @@ export default function ResourcesPage() {
   const handleDownload = async (filename: string) => {
     if (!user) return;
     setDownloadError(null);
-    const res = await leaderFetch(`/api/leader-resources/${encodeURIComponent(filename)}`);
-    if (!res.ok) {
+    try {
+      const res = await leaderFetch(`/api/leader-resources/${encodeURIComponent(filename)}`);
+      if (!res.ok) {
+        setDownloadError("That file could not be downloaded. Please try again.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      // Save as the file's own name, not its folder path.
+      a.download = filename.split(/[/\\]/).pop() || filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (err) {
+      console.error("Resource download failed:", err);
       setDownloadError("That file could not be downloaded. Please try again.");
-      return;
     }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
   if (!mounted || !user || !accessChecked || !hasAccess) {
