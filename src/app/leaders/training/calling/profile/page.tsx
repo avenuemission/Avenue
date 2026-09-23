@@ -214,6 +214,21 @@ export default function CallingProfilePage() {
                 </div>
               );
             })}
+            {typeof apest?.reflection === "string" && apest.reflection.trim() ? (
+              <div className="md:col-span-2 space-y-2 border-t border-[var(--border)] pt-3">
+                <p className="text-white font-semibold">A personal reflection</p>
+                {apest.reflection
+                  .split(/\n\s*\n/)
+                  .map((para) => para.trim())
+                  .filter(Boolean)
+                  .map((para, i) => (
+                    <p key={i} className="text-sm text-gray-300">
+                      {para}
+                    </p>
+                  ))}
+                <p className="text-xs text-[var(--muted)]">Written by AI from your results.</p>
+              </div>
+            ) : null}
           </div>
         ) : (
           <EmptyNext line="You haven't taken the APEST quiz yet." label="Take the quiz" step={STEP_NUMBER.apest} />

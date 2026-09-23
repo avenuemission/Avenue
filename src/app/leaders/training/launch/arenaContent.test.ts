@@ -3,7 +3,7 @@ import { parseCounters } from "@/lib/arena";
 import { ARENA_ENABLED, CURVEBALLS, DEFAULT_ORDER } from "./arenaContent";
 
 describe("Arena content transcription", () => {
-  it("stays off until Henry signs it off", () => expect(ARENA_ENABLED).toBe(false));
+  it("is on for Henry's review (24 Sep)", () => expect(ARENA_ENABLED).toBe(true));
   it("has curveballs 1 to 10 in order with four choices each", () => {
     expect(CURVEBALLS.map((c) => c.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     for (const c of CURVEBALLS) expect(c.choices).toHaveLength(4);

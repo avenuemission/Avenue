@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { StepProps } from "@/components/journey/WizardShell";
 import { OutcomeButton } from "@/components/journey/WizardShell";
 import { callingSectionComplete, type CallingData } from "@/lib/journey";
@@ -24,13 +24,54 @@ function isRole(value: unknown): value is RoleKey {
   return typeof value === "string" && (APEST_ORDER as string[]).includes(value);
 }
 
-// Section 4: the APEST quiz, scored on the device. No fetch of any kind:
-// the result text is Henry's own words from content.ts (Ruling C2).
+// Asks the same OpenAI route the public quiz uses for a personal reflection
+// on these results. Costs one gpt-4o call, so it runs once per result set:
+// automatically when the quiz is scored, or when the leader asks after a
+// failure. Throws with a readable message on any failure.
+async function fetchReflection(results: Apest["results"]): Promise<string> {
+  const res = await fetch("/api/apest-results", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ results }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || typeof data.response !== "string" || !data.response.trim()) {
+    throw new Error(typeof data.error === "string" ? data.error : `Reflection request failed (${res.status})`);
+  }
+  return data.response.trim();
+}
+
+// Section 4: the APEST quiz, scored on the device. The result cards are
+// Henry's own words from content.ts. Henry switched on (24 Sep) the same
+// personal AI reflection the public quiz page shows, saved with the
+// results so it is written once, not on every visit.
 export default function ApestStep({ value, save, finish }: StepProps<Apest>) {
   const [index, setIndex] = useState(() => {
     const first = fullAnswers(value?.answers).findIndex((a) => a === 0);
     return first === -1 ? QUESTIONS.length : first;
   });
+  const [reflecting, setReflecting] = useState(false);
+  const [reflectError, setReflectError] = useState<string | null>(null);
+  // Bumped on every new request and on retake, so a reflection that comes
+  // back after the leader retook the quiz is dropped, not saved over it.
+  const requestIdRef = useRef(0);
+
+  const requestReflection = async (base: Apest) => {
+    const id = ++requestIdRef.current;
+    setReflecting(true);
+    setReflectError(null);
+    try {
+      const reflection = await fetchReflection(base.results);
+      if (id === requestIdRef.current) save({ ...base, reflection });
+    } catch (e) {
+      console.error("APEST reflection failed", e);
+      if (id === requestIdRef.current) {
+        setReflectError("We couldn't write your personal reflection just now. Your results are saved. Try again below.");
+      }
+    } finally {
+      if (id === requestIdRef.current) setReflecting(false);
+    }
+  };
 
   const hasResults = callingSectionComplete("apest", { apest: value });
 
@@ -43,6 +84,9 @@ export default function ApestStep({ value, save, finish }: StepProps<Apest>) {
         : topTwoRoles(results);
 
     const retake = () => {
+      requestIdRef.current++;
+      setReflecting(false);
+      setReflectError(null);
       save({ answers: [] });
       setIndex(0);
     };
@@ -86,6 +130,39 @@ export default function ApestStep({ value, save, finish }: StepProps<Apest>) {
           })}
         </div>
 
+        <div className="panel p-4 md:p-5">
+          <p className="eyebrow">A personal reflection</p>
+          {typeof value.reflection === "string" && value.reflection ? (
+            <>
+              <div className="mt-2 space-y-3">
+                {value.reflection
+                  .split(/\n\s*\n/)
+                  .map((para) => para.trim())
+                  .filter(Boolean)
+                  .map((para, i) => (
+                    <p key={i} className="text-sm leading-relaxed text-gray-300">
+                      {para}
+                    </p>
+                  ))}
+              </div>
+              <p className="mt-3 text-xs text-[var(--muted)]">Written by AI from your results. Talk it over with your coach.</p>
+            </>
+          ) : reflecting ? (
+            <p className="mt-2 text-sm text-[var(--muted)]">Writing your personal reflection...</p>
+          ) : (
+            <>
+              {reflectError ? <p className="mt-2 text-sm text-amber-400">{reflectError}</p> : null}
+              <button
+                type="button"
+                onClick={() => requestReflection(value)}
+                className="mt-3 min-h-[44px] rounded-full border border-[var(--border)] px-5 text-sm font-semibold text-white"
+              >
+                Write my personal reflection
+              </button>
+            </>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={retake}
@@ -114,7 +191,9 @@ export default function ApestStep({ value, save, finish }: StepProps<Apest>) {
       setIndex(at + 1);
     } else {
       const results = scoreApest(next);
-      save({ answers: next, results, top: topTwoRoles(results) });
+      const scored: Apest = { answers: next, results, top: topTwoRoles(results) };
+      save(scored);
+      void requestReflection(scored);
     }
   };
 

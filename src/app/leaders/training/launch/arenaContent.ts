@@ -1,11 +1,12 @@
 // The Arena content, transcribed from docs/launch-arena-content.md (first
-// draft, 23 Sep). Henry has NOT signed it off (handover 3.2): every
+// draft, 23 Sep). Henry has NOT signed it off yet (handover 3.2): every
 // scripture reference is still to be checked, and curveball 6 needs his
-// pastoral eye. ARENA_ENABLED stays false until he has. To review the
-// draft in the real screens, set it to true locally and do not commit it.
+// pastoral eye. Henry asked on 24 Sep for it switched on so he can review
+// the draft in the real screens. Set it back to false if the review is
+// not finished before other leaders reach Launch.
 import type { Curveball } from "@/lib/arena";
 
-export const ARENA_ENABLED = false;
+export const ARENA_ENABLED = true;
 
 // Months 1 to 6. Curveballs 3, 6, 9 and 10 are the alternate pool.
 export const DEFAULT_ORDER = [1, 2, 4, 5, 8, 7] as const;

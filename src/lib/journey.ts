@@ -15,7 +15,7 @@ export interface CallingData {
   layers?: { placements?: Record<string, Layer> };
   callable?: { crowding?: string; shadow?: string; fear?: string; ifCalled?: string; willing?: Willing };
   shared?: { scenario?: "event" | "dinner"; yes?: boolean; date?: string };
-  apest?: { answers?: number[]; results?: ApestResults; top?: RoleKey[] };
+  apest?: { answers?: number[]; results?: ApestResults; top?: RoleKey[]; reflection?: string };
   seasonal?: {
     peopleGroup?: string;
     hostingSpace?: Space;
