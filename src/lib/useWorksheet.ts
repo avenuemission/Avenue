@@ -122,6 +122,8 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     const timers = timersRef.current;
+    const pending = pendingRef.current;
+    const inFlight = inFlightRef.current;
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
       for (const [section, t] of timers) {
@@ -129,6 +131,13 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
         void sendRef.current(section);
       }
       timers.clear();
+      // A section whose last save failed has no timer (the catch path
+      // does not reschedule one), so it would otherwise never be sent
+      // again if the component unmounts before the next edit. Flush it
+      // here too, skipping anything already in flight from the loop above.
+      for (const section of pending.keys()) {
+        if (!inFlight.has(section)) void sendRef.current(section);
+      }
     };
   }, []);
 
