@@ -1,9 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Users, MessageCircle } from "lucide-react";
 import CheckinHistory, { CheckinEntry } from "@/components/ui/CheckinHistory";
+import TaggedPeople from "@/components/people/TaggedPeople";
+import type { Metric, Person } from "@/lib/people";
 
 // The four RPMS gauges from Ferguson's Multiplier, in the fixed order the
-// weekly check-in and the crash course placeholder both use.
+// weekly check-in form uses.
 const RPMS_GAUGES: { key: "relational" | "physical" | "mental" | "spiritual"; label: string }[] = [
   { key: "relational", label: "Relational" },
   { key: "physical", label: "Physical" },
@@ -13,6 +14,29 @@ const RPMS_GAUGES: { key: "relational" | "physical" | "mental" | "spiritual"; la
 
 // How many recent weeks the history strip shows.
 export const CHECKIN_HISTORY_WEEKS = 12;
+
+// The three named metrics, Henry's definitions from HANDOVER.md 3.3,
+// verbatim. Three separate lists, not a ladder.
+const METRIC_PANELS: { metric: Metric; title: string; definition: string; empty: string }[] = [
+  {
+    metric: "pathways",
+    title: "Pathways",
+    definition: "A new person feels like they belong in a Pathway and is comfortable inviting someone else into the community",
+    empty: "No one named yet.",
+  },
+  {
+    metric: "intersections",
+    title: "Intersections",
+    definition: "A person is baptised or makes a decision of faith and is then apprenticed to lead in a Pathway",
+    empty: "No one named yet.",
+  },
+  {
+    metric: "streetlights",
+    title: "Streetlights",
+    definition: "A disciple responds to the Holy Spirit by stepping out to plant, lead or serve in a new Pathways or Streetlights initiative",
+    empty: "No one named yet.",
+  },
+];
 
 // One gauge's 1-to-10 picker: ten small buttons, one tap sets the score.
 // This is the whole "four taps" the check-in is meant to cost, times four
@@ -78,10 +102,15 @@ interface Phase4GrowthProps {
   checkinSaveError: string | null;
   checkinSaved: boolean;
   saveCheckin: () => Promise<void>;
+  people: Person[];
+  peopleLoaded: boolean;
+  peopleError: string | null;
+  onPersonChange: (person: Person) => void;
 }
 
 // Phase 4 (Growth) content, shown instead of the modules grid. State and
-// handlers come from useCheckins via the page.
+// handlers for the check-in come from useCheckins via the page, and the
+// three metric lists read and write My People via useMyPeople.
 export default function Phase4Growth({
   currentWeekLabel,
   historyWeeks,
@@ -96,35 +125,20 @@ export default function Phase4Growth({
   checkinSaveError,
   checkinSaved,
   saveCheckin,
+  people,
+  peopleLoaded,
+  peopleError,
+  onPersonChange,
 }: Phase4GrowthProps) {
   return (
     <div className="p-6 md:p-8 space-y-6">
-      {/* Healthy leader: a recommendation, not a module */}
-      <div className="panel p-6">
-        <span className="eyebrow">Healthy leader</span>
-        <h3 className="text-lg font-semibold text-white mt-1 mb-2">Multiplier, by Dave Ferguson</h3>
-        <p className="text-sm text-[var(--muted)] leading-relaxed mb-5">
-          Ferguson&rsquo;s case is that a leader reproduces who they are, not what they teach, so
-          health comes before technique. He tracks that health across four gauges: Relational,
-          Physical, Mental and Spiritual, RPMS for short. The weekly check-in below uses the same
-          four.
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {RPMS_GAUGES.map(({ key, label }) => (
-            <div key={key} className="rounded-lg border border-dashed border-[var(--border)] p-3 text-center">
-              <span className="text-xs uppercase tracking-wider text-[var(--muted)]">{label}</span>
-              <p className="text-[11px] text-[var(--muted)] mt-2 italic">
-                Crash course notes coming soon
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* The weekly check-in */}
       <div className="panel p-6">
-        <span className="eyebrow">This week&rsquo;s check-in</span>
-        <h3 className="text-lg font-semibold text-white mt-1 mb-4">Week of {currentWeekLabel}</h3>
+        <span className="eyebrow">This week</span>
+        <h3 className="text-lg font-semibold text-white mt-1 mb-2">Week of {currentWeekLabel}</h3>
+        <p className="text-sm text-[var(--muted)] mb-4">
+          Four gauges from Dave Ferguson&rsquo;s Multiplier: Relational, Physical, Mental and Spiritual.
+        </p>
         {!checkinsLoaded ? (
           <p className="text-sm text-[var(--muted)]">Loading your check-in...</p>
         ) : checkinLoadError ? (
@@ -192,6 +206,40 @@ export default function Phase4Growth({
         )}
       </div>
 
+      {/* Your three metrics */}
+      <div className="panel p-6">
+        <span className="eyebrow">Your three metrics</span>
+        <p className="text-sm text-[var(--muted)] mt-1 mb-4">
+          Three separate lists, not a ladder. Anyone can sit in more than one.
+        </p>
+        {!peopleLoaded ? (
+          <p className="text-sm text-[var(--muted)]">Loading your people...</p>
+        ) : peopleError ? (
+          <p className="text-sm text-red-400">{peopleError}</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {METRIC_PANELS.map(({ metric, title, definition, empty }) => {
+              const count = people.filter((p) => p.metrics.includes(metric)).length;
+              return (
+                <div key={metric} className="panel p-5">
+                  <h4 className="text-base font-semibold text-white mb-1">{title}</h4>
+                  <p className="text-xs text-[var(--muted)] mb-3">{definition}</p>
+                  <p className="text-2xl font-bold tabular-nums text-white mb-3">
+                    {count} named
+                  </p>
+                  <TaggedPeople
+                    tag={{ kind: "metric", value: metric }}
+                    people={people}
+                    onChange={onPersonChange}
+                    emptyText={empty}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* The history */}
       <div className="panel p-6">
         <span className="eyebrow">History</span>
@@ -199,30 +247,9 @@ export default function Phase4Growth({
         <CheckinHistory weeks={historyWeeks} checkins={checkins} />
       </div>
 
-      {/* Two coming soon cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="panel p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="w-4 h-4 text-[var(--accent)]" />
-            <span className="eyebrow">Coming soon</span>
-          </div>
-          <h3 className="text-base font-semibold text-white mb-2">Healthy group</h3>
-          <p className="text-sm text-[var(--muted)] leading-relaxed">
-            A monthly check on how your pathway group is going, taken at or before the pathway
-            huddle. Part of the monthly rhythm, not built yet.
-          </p>
-        </div>
-        <div className="panel p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <MessageCircle className="w-4 h-4 text-[var(--accent)]" />
-            <span className="eyebrow">Coming soon</span>
-          </div>
-          <h3 className="text-base font-semibold text-white mb-2">Prayer requests</h3>
-          <p className="text-sm text-[var(--muted)] leading-relaxed">
-            Raise a prayer request here, and later share it with other leaders. Not stored yet.
-          </p>
-        </div>
-      </div>
+      <p className="text-sm text-[var(--muted)]">
+        Coming soon: healthy group check and prayer requests.
+      </p>
     </div>
   );
 }

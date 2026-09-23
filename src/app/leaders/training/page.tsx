@@ -74,8 +74,6 @@ export default function TrainingPage() {
   const { people, peopleLoaded, peopleError, upsertPerson, createPerson, patchPerson } = useMyPeople(
     accessChecked && hasAccess && !!user
   );
-  // upsertPerson is consumed by Task 4's My People UI, not by Multiply.
-  void upsertPerson;
 
   useEffect(() => {
     setMounted(true);
@@ -575,6 +573,10 @@ export default function TrainingPage() {
                     checkinSaveError={checkinSaveError}
                     checkinSaved={checkinSaved}
                     saveCheckin={saveCheckin}
+                    people={people}
+                    peopleLoaded={peopleLoaded}
+                    peopleError={peopleError}
+                    onPersonChange={upsertPerson}
                   />
                 ) : isMultiplyPhase ? (
                   <Phase5Multiply

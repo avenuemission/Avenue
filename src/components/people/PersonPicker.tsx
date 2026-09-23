@@ -24,6 +24,13 @@ function tagCreate(tag: PickerTag): Record<string, unknown> {
   return { invitee: true };
 }
 
+// The PATCH body that removes this tag from a person, leaving their other tags.
+export function untagPatch(p: Person, tag: PickerTag): Record<string, unknown> {
+  if (tag.kind === "space") return { spaces: p.spaces.filter((s) => s !== tag.value) };
+  if (tag.kind === "metric") return { metrics: p.metrics.filter((m) => m !== tag.value) };
+  return { invitee: false };
+}
+
 // Type a name: pick someone already on My People to tag them, or add a new
 // person with the tag already applied. One person record, many features.
 export default function PersonPicker({
