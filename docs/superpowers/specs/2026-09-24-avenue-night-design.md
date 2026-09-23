@@ -60,7 +60,7 @@ A stop is **walked** when: Foundations, all phase 1 modules ticked; Calling, all
 ## 3. Where the moments happen
 
 Full `Moment` (milestones only):
-- A phase becomes walked: shown once, the first time the leader lands on the hub after it happens (remembered in the worksheet or progress data, not localStorage, so it does not replay on another device).
+- A phase becomes walked: played at the instant it happens, where it happens (ticking the last Foundations module, finishing the last Calling section or Launch step, the first Growth check-in, the first apprentice reaching rung 1). No stored "seen" flag is needed, so nothing new is saved.
 - Yes to the Shared Call (Calling section 3).
 - Booking the pastor conversation (Calling section 6).
 - Setting a launch date (Launch step 6).
