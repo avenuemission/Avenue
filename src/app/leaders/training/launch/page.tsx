@@ -23,6 +23,10 @@ import TeamStep from "./TeamStep";
 import IntentionalStep from "./IntentionalStep";
 import RhythmStep from "./RhythmStep";
 import InviteStep from "./InviteStep";
+import ArenaStep from "./ArenaStep";
+import { ARENA_ENABLED } from "./arenaContent";
+import { arenaPlanFrom } from "@/lib/arena";
+import { useNetworkView } from "../useNetworkView";
 
 const LAUNCH_STEPS = [
   { id: "prayer", title: "Pray first", minutes: 4 },
@@ -63,17 +67,29 @@ function ErrorPanel({ message }: { message: string }) {
 // only, to carry the people group and hosting space forward.
 export default function LaunchPage() {
   const router = useRouter();
-  const { ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate();
   const launch = useWorksheet<LaunchData>("launch", ready);
   const calling = useWorksheet<CallingData>("calling", ready);
   const { people, peopleLoaded, peopleError, upsertPerson } = useMyPeople(ready);
+  // The Arena's "no apprentice" gap: people this leader sent out who are on
+  // at least the first apprenticeship rung. Null (gap not claimed) until the
+  // network loads, or when it fails.
+  const network = useNetworkView(user, ready, ready);
+  const apprenticeCount =
+    !network.networkLoaded || network.networkError
+      ? null
+      : network.networkPeople.filter((p) => p.sentOutBy === network.networkViewerId && p.apprenticeStep >= 1).length;
   const data = launch.data;
 
   const steps: WizardStepMeta[] = LAUNCH_STEPS.map((s) => ({
     id: s.id,
     title: s.title,
     minutes: s.minutes,
-    complete: isLaunchStepId(s.id) ? launchStepComplete(s.id, data) : false,
+    complete: isLaunchStepId(s.id)
+      ? launchStepComplete(s.id, data)
+      : s.id === "arena"
+        ? !ARENA_ENABLED || data.arena?.done === true
+        : false,
   }));
 
   const loaded = launch.loaded && calling.loaded;
@@ -180,17 +196,31 @@ export default function LaunchPage() {
         <InviteStep
           value={data.invite}
           save={(v) => launch.saveSection("invite", v)}
-          finish={finishFor("invite", current)}
+          finish={async () => {
+            await launch.flushSection("invite");
+            // With the Arena off, step 8 is skipped straight to the plan.
+            goTo(ARENA_ENABLED ? 7 : 8);
+          }}
           people={people}
           peopleLoaded={peopleLoaded}
           peopleError={peopleError}
           onPersonChange={upsertPerson}
+          arenaEnabled={ARENA_ENABLED}
         />
       );
       break;
     case "arena":
-      // Task 10 replaces this with the Arena (behind ARENA_ENABLED).
-      activity = (
+      activity = ARENA_ENABLED ? (
+        <ArenaStep
+          plan={arenaPlanFrom(data, apprenticeCount)}
+          value={data.arena}
+          save={(v) => launch.saveSection("arena", v)}
+          onShowPlan={async () => {
+            await launch.flushSection("arena");
+            goTo(8);
+          }}
+        />
+      ) : (
         <div className="space-y-6">
           <div className="panel p-4">
             <p className="text-sm leading-relaxed text-gray-300">

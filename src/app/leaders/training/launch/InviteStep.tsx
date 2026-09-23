@@ -20,11 +20,13 @@ export default function InviteStep({
   peopleLoaded,
   peopleError,
   onPersonChange,
+  arenaEnabled,
 }: StepProps<Invite> & {
   people: Person[];
   peopleLoaded: boolean;
   peopleError: string | null;
   onPersonChange: (p: Person) => void;
+  arenaEnabled: boolean;
 }) {
   const [local, setLocal] = useState<Invite>(() => ({
     tracking: text(value?.tracking),
@@ -73,7 +75,7 @@ export default function InviteStep({
         onChange={(v) => onField("shepherding", v)}
       />
       <OutcomeButton
-        label="Enter the Arena"
+        label={arenaEnabled ? "Enter the Arena" : "Show my launch plan"}
         onClick={finish}
         disabled={!complete}
         hint="Answer both questions to continue."
