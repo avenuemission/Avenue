@@ -21,7 +21,7 @@ A career is what you get paid to do, but a calling is what you are made to do. E
 | Statement | Layer | Why |
 |---|---|---|
 | Go and make disciples of all nations. | Shared | This is the Great Commission, the Shared Call every disciple of Jesus has. It never changes, regardless of your stage of life or job title. |
-| Paul moving to a new region to plant the gospel there. | Seasonal | His seasonal assignments shifted, but his identity remained firm. A particular place for a particular season is the Seasonal Call. |
+| Paul discerning whether God is leading him to Rome or to a new region. | Seasonal | Paul leaned into God to discern where He might be calling him next. His seasonal assignments shifted, but his identity remained firm. |
 | Your personality, spiritual gifting and skills, fused together. | Specific | The Specific Call is a fusion of our personality, spiritual gifting and skills. |
 | Being an ambassador for Christ, carrying the ministry of reconciliation. | Shared | In 2 Corinthians 5 Paul writes that God has given all of us the ministry of reconciliation. Before any specific assignment, Paul grounded his life in this shared, universal mission. |
 | Applying for a new job or changing careers. | Seasonal | God calls us for a particular season. We might be called to change careers or apply for a new job. That is the Seasonal Call, and it is often changing. |

@@ -94,9 +94,9 @@ export const LAYER_STATEMENTS: LayerStatement[] = [
   },
   {
     id: "s2",
-    text: "Paul moving to a new region to plant the gospel there.",
+    text: "Paul discerning whether God is leading him to Rome or to a new region.",
     layer: "seasonal",
-    reason: "His seasonal assignments shifted, but his identity remained firm. A particular place for a particular season is the Seasonal Call.",
+    reason: "Paul leaned into God to discern where He might be calling him next. His seasonal assignments shifted, but his identity remained firm.",
   },
   {
     id: "s3",
