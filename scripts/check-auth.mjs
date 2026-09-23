@@ -85,6 +85,21 @@ try {
     check("B (full access) lists resources", b.status === 200 && Array.isArray(b.json?.resources), `got ${b.status}`);
     const none = await call("GET", "/api/leader-resources");
     check("resources without token is 401", none.status === 401);
+
+    const listed = b.json?.resources ?? [];
+    const nested = listed.find((r) => typeof r.name === "string" && r.name.includes("/"));
+    if (nested) {
+      const dl = await fetch(`${BASE}/api/leader-resources/${encodeURIComponent(nested.name)}`, {
+        headers: { authorization: `Bearer ${tokenB}` },
+      });
+      check("B downloads a file in a subfolder", dl.status === 200, `got ${dl.status} for ${nested.name}`);
+    } else {
+      console.log("  SKIP no nested resource listed");
+    }
+    const escape = await fetch(`${BASE}/api/leader-resources/${encodeURIComponent("../../package.json")}`, {
+      headers: { authorization: `Bearer ${tokenB}` },
+    });
+    check("path traversal is refused", escape.status === 404, `got ${escape.status}`);
   }
 
   console.log("workshop admin routes need a leader");

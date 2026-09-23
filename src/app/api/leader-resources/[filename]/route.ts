@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { requireLeader } from "@/lib/requireLeader";
+import { resolveResourcePath } from "@/lib/resourcePath";
 
 // MIME types for common file extensions
 const MIME_TYPES: Record<string, string> = {
@@ -35,22 +36,30 @@ export async function GET(
 
     const { filename } = await params;
 
-    // Sanitize filename to prevent directory traversal
-    const sanitizedFilename = path.basename(filename);
-    const filePath = path.join(process.cwd(), "private", "leader-resources", sanitizedFilename);
+    // Next may already decode %2F in the dynamic segment depending on version.
+    // Only decode ourselves when the param still carries an encoded separator,
+    // so a literal "%" in a real filename is left alone.
+    const decoded = /%2f|%5c/i.test(filename) ? decodeURIComponent(filename) : filename;
+
+    const root = path.join(process.cwd(), "private", "leader-resources");
+    const filePath = resolveResourcePath(root, decoded);
+    if (!filePath) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+    const downloadName = path.basename(filePath);
 
     // Read the file
     const fileBuffer = await readFile(filePath);
 
     // Determine content type
-    const ext = path.extname(sanitizedFilename).toLowerCase();
+    const ext = path.extname(downloadName).toLowerCase();
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
     // Return the file
     return new NextResponse(fileBuffer, {
       headers: {
         "Content-Type": contentType,
-        "Content-Disposition": `inline; filename="${sanitizedFilename}"`,
+        "Content-Disposition": `inline; filename="${downloadName}"`,
         "Cache-Control": "private, no-cache",
       },
     });
