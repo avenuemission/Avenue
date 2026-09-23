@@ -6,7 +6,7 @@ import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
 import { useMyPeople } from "@/lib/useMyPeople";
 import { arenaPlanFrom, detectGaps, playArena, thinSentence, thinSpots, GAP_TEXT, type EarnedPrinciple } from "@/lib/arena";
-import { buildPlanActions, formatIsoDate, gatheringsInFirstSixMonths, weeksUntil } from "@/lib/launch";
+import { buildPlanActions, formatIsoDate, gapActions, gatheringsInFirstSixMonths, weeksUntil } from "@/lib/launch";
 import { filled, type LaunchData } from "@/lib/journey";
 import { SPACE_CONTENT } from "../../calling/content";
 import { ARENA_ENABLED, CURVEBALLS, DEFAULT_ORDER } from "../arenaContent";
@@ -127,6 +127,7 @@ export default function LaunchPlanPage() {
   const spots = showArenaSection && !arenaBroken ? thinSpots(CURVEBALLS, DEFAULT_ORDER, gaps) : null;
 
   const nextActions = buildPlanActions(data);
+  const gapChecks = gapActions(gaps);
   const doneIds = data.actions?.done ?? [];
 
   const toggle = (id: string) => {
@@ -370,10 +371,10 @@ export default function LaunchPlanPage() {
           <p className="mt-2 text-sm text-gray-300">Nothing in your plan stands out as thin.</p>
         ) : (
           <div className="mt-2 space-y-3">
-            {gaps.map((gap) => {
+            {gaps.map((gap, i) => {
               const spot = spots?.find((s) => s.gap === gap);
               const sentence = spot ? thinSentence(spot) : GAP_TEXT[gap].thin;
-              const id = `gap-${gap}`;
+              const { id, text: actionText } = gapChecks[i];
               return (
                 <label key={id} htmlFor={id} className="flex min-h-[44px] items-start gap-3">
                   <input
@@ -385,7 +386,7 @@ export default function LaunchPlanPage() {
                   />
                   <span>
                     <span className="block text-sm text-white">{sentence}</span>
-                    <span className="block mt-1 text-sm text-gray-300">{GAP_TEXT[gap].action}</span>
+                    <span className="block mt-1 text-sm text-gray-300">{actionText}</span>
                   </span>
                 </label>
               );
