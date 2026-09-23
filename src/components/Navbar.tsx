@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import CountdownTimer from "./CountdownTimer";
-import { LogIn, ChevronDown, Heart } from "lucide-react";
+import { LogIn, LayoutDashboard, ChevronDown, Heart } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth";
+
+function subscribeToAuth(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
 
 const streetlightsDropdown = [
   { href: "/streetlights", label: "Overview" },
@@ -28,6 +34,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [streetlightsOpen, setStreetlightsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const signedIn = useSyncExternalStore(subscribeToAuth, () => getCurrentUser() !== null, () => false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -117,12 +124,16 @@ export default function Navbar() {
               </span>
             </Link>
             <Link
-              href="/login"
+              href={signedIn ? "/leaders" : "/login"}
               className="flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
             >
-              <LogIn className="w-4 h-4 text-white" />
+              {signedIn ? (
+                <LayoutDashboard className="w-4 h-4 text-white" />
+              ) : (
+                <LogIn className="w-4 h-4 text-white" />
+              )}
               <span className="text-xs font-medium text-white uppercase tracking-wider">
-                Login
+                {signedIn ? "Leaders" : "Login"}
               </span>
             </Link>
           </div>
@@ -206,13 +217,17 @@ export default function Navbar() {
                 </span>
               </Link>
               <Link
-                href="/login"
+                href={signedIn ? "/leaders" : "/login"}
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
               >
-                <LogIn className="w-4 h-4 text-white" />
+                {signedIn ? (
+                  <LayoutDashboard className="w-4 h-4 text-white" />
+                ) : (
+                  <LogIn className="w-4 h-4 text-white" />
+                )}
                 <span className="text-xs font-medium text-white uppercase tracking-wider">
-                  Login
+                  {signedIn ? "Leaders" : "Login"}
                 </span>
               </Link>
             </div>

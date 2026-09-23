@@ -210,14 +210,20 @@ export default function LeadersPage() {
             if (restricted) {
               return (
                 <Reveal key={card.id} delay={index * 60}>
-                  <div className="panel p-8 h-full opacity-60 cursor-not-allowed">
-                    <card.icon className="w-10 h-10 text-gray-500 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-400 mb-2">
+                  <div className="panel p-8 h-full cursor-not-allowed">
+                    <card.icon className="w-10 h-10 text-gray-500 mb-4 opacity-60" />
+                    <h3 className="text-xl font-semibold text-gray-400 mb-2 opacity-60">
                       {card.title}
                     </h3>
-                    <div className="flex items-center text-amber-400/80 text-sm font-medium">
-                      <span>Pending Authorization</span>
-                    </div>
+                    <p className="text-sm text-[var(--muted)]">
+                      Your access opens after your first call with a pastor.
+                    </p>
+                    <Link
+                      href="/leaders/support"
+                      className="mt-2 min-h-[44px] inline-flex items-center text-[var(--accent)]"
+                    >
+                      Book it through Leader Support
+                    </Link>
                   </div>
                 </Reveal>
               );
@@ -255,7 +261,7 @@ export default function LeadersPage() {
                     <div
                       key={card.id}
                       className="panel flex items-center gap-3 p-4 opacity-50 cursor-not-allowed"
-                      title="Pending authorization"
+                      title="Your access opens after your first call with a pastor"
                     >
                       <card.icon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                       <span className="text-sm font-medium text-gray-400 truncate">
@@ -286,8 +292,7 @@ export default function LeadersPage() {
         {accessChecked && !hasFullAccess && (
           <div className="mt-6 max-w-4xl mx-auto text-center">
             <p className="text-[var(--muted)] text-sm italic">
-              Full access to training materials, study guides, and resources will be granted after your first Zoom call with our team.
-              Please use the Leader Support section to schedule a meeting. We look forward to connecting with you!
+              Your access opens after your first call with a pastor. Book it through Leader Support.
             </p>
           </div>
         )}

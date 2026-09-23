@@ -145,7 +145,6 @@ export default function TrainingPage() {
   // Used by both the orbital summary and phase 5's own content below, so
   // both read the exact same computation rather than two that could drift.
   const sentByViewer = networkPeople.filter((p) => p.sentOutBy === networkViewerId);
-  const checkedInThisWeek = checkins.some((c) => c.weekStart === editingWeekStart);
 
   if (!mounted || !user || !accessChecked || !hasAccess) {
     return (
@@ -180,7 +179,7 @@ export default function TrainingPage() {
     <div className="min-h-screen bg-black overflow-hidden relative">
       {/* Video Modal */}
       {videoModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeVideo}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90" onClick={closeVideo}>
           <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-semibold text-lg">{videoModal.title}</h3>
@@ -218,7 +217,7 @@ export default function TrainingPage() {
                   cy="20"
                   r="16"
                   fill="none"
-                  stroke="#b6c4ff"
+                  stroke="var(--accent)"
                   strokeWidth="3"
                   strokeDasharray={`${2 * Math.PI * 16}`}
                   strokeDashoffset={`${2 * Math.PI * 16 * (1 - getOverallProgress() / 100)}`}
@@ -267,8 +266,7 @@ export default function TrainingPage() {
             Leadership Journey
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl">
-            A five-phase pathway from initial calling to multiplying movements. 
-            Complete each phase and debrief with your coach to unlock the next.
+            A five-phase pathway from initial calling to multiplying movements. Work through each phase with your coach.
           </p>
         </div>
 
@@ -286,8 +284,30 @@ export default function TrainingPage() {
 
           {sidebarOpen && (
             <div className="w-full">
-              {/* Circular orbital layout */}
-              <div className="relative flex items-center justify-center" style={{ height: "340px" }}>
+              {/* Phone step list: compact horizontal tabs replace the orbit below md */}
+              <div className="md:hidden grid grid-cols-5 gap-1" role="tablist" aria-label="Phases">
+                {phases.map((phase) => {
+                  const active = expandedPhase === phase.id;
+                  return (
+                    <button
+                      key={phase.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => togglePhase(phase.id)}
+                      className={`min-h-[44px] flex flex-col items-center justify-center gap-1 rounded-lg border px-1 py-2 ${
+                        active ? "border-[var(--accent)] bg-[var(--accent)]/10 text-white" : "border-[var(--border)] text-gray-400"
+                      }`}
+                    >
+                      <span className="text-sm font-bold">{phase.number}</span>
+                      <span className="text-[10px] leading-tight text-center w-full truncate">{phase.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Circular orbital layout (desktop only) */}
+              <div className="hidden md:flex relative items-center justify-center" style={{ height: "340px" }}>
                 {/* Orbit ring */}
                 <div className="absolute w-[280px] h-[280px] rounded-full border-2 border-blue-400/50" />
 
@@ -320,9 +340,7 @@ export default function TrainingPage() {
                     ? "var(--accent)"
                     : progress.percent === 100
                       ? "#22c55e"
-                      : isActive
-                        ? "#60a5fa"
-                        : "#3b82f6";
+                      : "var(--accent)";
 
                   return (
                     <button
@@ -370,92 +388,6 @@ export default function TrainingPage() {
                   );
                 })}
               </div>
-
-              {/* Expanded phase detail below */}
-              {expandedPhase && (() => {
-                const phase = phases.find(p => p.id === expandedPhase);
-                if (!phase) return null;
-                const progress = getPhaseProgress(phase);
-                const color = phase.number <= 3 ? "blue" : "purple";
-                const isOngoing = phase.id === "phase4" || phase.id === "phase5";
-
-                return (
-                  <div className={`mt-6 p-5 rounded-xl border ${
-                    color === "blue"
-                      ? "bg-[var(--accent)]/10 border-[var(--border)]"
-                      : "bg-purple-600/10 border-purple-500/30"
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className={`text-xs font-bold uppercase tracking-wider ${
-                            color === "blue" ? "text-[var(--accent)]" : "text-purple-400"
-                          }`}>
-                            Phase {phase.number}
-                          </span>
-                          <span className="text-xs text-gray-500">{phase.scripture}</span>
-                        </div>
-                        <h4 className="text-xl font-semibold text-white">{phase.title}</h4>
-                        <p className="text-sm text-gray-400 mt-1">{phase.subtitle}</p>
-                      </div>
-
-                      {isOngoing ? (
-                        // Growth and Multiplication are rhythms, not
-                        // checklists: no percentage ring, no
-                        // modules-complete count. Just a marker that each
-                        // phase stays open rather than finishing.
-                        <div className="flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border border-[var(--border)] bg-[var(--accent)]/10">
-                          {phase.id === "phase4" ? (
-                            <Heart className="w-6 h-6 text-[var(--accent)]" />
-                          ) : (
-                            <Users className="w-6 h-6 text-[var(--accent)]" />
-                          )}
-                        </div>
-                      ) : (
-                        /* Circular progress */
-                        <div className="relative w-16 h-16 flex-shrink-0">
-                          <svg className="w-full h-full -rotate-90">
-                            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
-                            <circle
-                              cx="32" cy="32" r="28" fill="none"
-                              stroke={progress.percent === 100 ? "#22c55e" : color === "blue" ? "#3b82f6" : "#a855f7"}
-                              strokeWidth="3"
-                              strokeDasharray={`${2 * Math.PI * 28}`}
-                              strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress.percent / 100)}`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-sm font-bold text-white">{progress.percent}%</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {isOngoing ? (
-                      <p className="text-xs text-gray-500 mt-2">
-                        {phase.id === "phase4"
-                          ? checkedInThisWeek
-                            ? "Checked in this week: a rhythm, not a checklist to finish."
-                            : "A weekly rhythm, not a checklist to finish."
-                          // Gated on networkLoaded/networkError the same way
-                          // "Your people" below gates itself, so this never
-                          // shows the empty-network wording before the
-                          // network has actually loaded, or alongside a
-                          // failed load with no explanation.
-                          : !networkLoaded
-                            ? "Loading your network..."
-                            : networkError
-                              ? "Could not load your network."
-                              : sentByViewer.length === 0
-                                ? "Not sending anyone out yet: a rhythm to begin, not a checklist to finish."
-                                : `Sending ${sentByViewer.length} ${sentByViewer.length === 1 ? "person" : "people"} out: a rhythm, not a checklist to finish.`}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-500 mt-2">{progress.completed} of {progress.total} modules complete</p>
-                    )}
-                  </div>
-                );
-              })()}
             </div>
           )}
         </div>
@@ -548,7 +480,7 @@ export default function TrainingPage() {
                               cy="40"
                               r="36"
                               fill="none"
-                              stroke="#b6c4ff"
+                              stroke="var(--accent)"
                               strokeWidth="4"
                               strokeDasharray={`${2 * Math.PI * 36}`}
                               strokeDashoffset={`${2 * Math.PI * 36 * (1 - progress.percent / 100)}`}
@@ -629,9 +561,7 @@ export default function TrainingPage() {
             <div>
               <h4 className="font-semibold text-white mb-2">About This Journey</h4>
               <p className="text-gray-400 text-sm leading-relaxed">
-                This five-phase training pathway equips leaders from initial calling through multiplication. 
-                Each phase includes video training, assessments, and practical action items. 
-                Complete the debrief call with your coach at the end of phases 1-3 to unlock the next phase.
+                This five-phase training pathway equips leaders from initial calling through multiplication. Each phase includes video training, assessments, and practical action items. Work through each phase with your coach.
               </p>
             </div>
           </div>

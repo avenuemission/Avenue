@@ -1,5 +1,5 @@
 import EpisodeCarousel from "@/components/ui/EpisodeCarousel";
-import { Play, CheckCircle2, Video, FileText, Lightbulb } from "lucide-react";
+import { CheckCircle2, Video, FileText, Lightbulb } from "lucide-react";
 import { Module, Phase } from "./phases";
 
 // Module Type Icons
@@ -83,11 +83,6 @@ export default function PhaseModules({
                   <span className="text-xs text-gray-500 mt-1 inline-block">{module.duration}</span>
                 )}
               </div>
-              {module.type === "video" && !module.episodes && (
-                <button className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center hover:brightness-110/30 transition-colors">
-                  <Play className="w-4 h-4 text-[var(--accent)]" />
-                </button>
-              )}
             </div>
             {/* Episode carousel: thumbnails with watched progress */}
             {module.episodes && (
