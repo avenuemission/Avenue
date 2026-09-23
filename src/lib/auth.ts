@@ -5,6 +5,7 @@
 // pages render a name without waiting: the server never trusts it.
 // ============================================
 import { supabase } from "@/lib/supabase";
+import { parseStoredUser } from "@/lib/authSession";
 
 export interface User {
   id: string;
@@ -69,7 +70,15 @@ export const logout = (): void => {
 export const getCurrentUser = (): User | null => {
   if (typeof window === "undefined") return null;
   const session = localStorage.getItem(AUTH_STORAGE_KEY);
-  return session ? (JSON.parse(session) as User) : null;
+  if (!session) return null;
+  const user = parseStoredUser(session);
+  if (!user) {
+    // A corrupt cache must not crash every page that shows the nav: drop
+    // it and read as signed out. supabase-js still holds the real session.
+    console.error("getCurrentUser: removing a corrupt avenue_auth_session value");
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+  return user;
 };
 
 export const isAuthenticated = (): boolean => getCurrentUser() !== null;
