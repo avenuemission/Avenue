@@ -19,11 +19,14 @@ import { Phase } from "./phases";
 import Phase4Growth, { CHECKIN_HISTORY_WEEKS } from "./Phase4Growth";
 import Phase5Multiply from "./Phase5Multiply";
 import PhaseModules from "./PhaseModules";
+import CallingCard from "./CallingCard";
 import { useTrainingProgress } from "./useTrainingProgress";
 import { useCheckins } from "./useCheckins";
 import { useNetworkView } from "./useNetworkView";
 import { useMyPeople } from "@/lib/useMyPeople";
+import { useWorksheet } from "@/lib/useWorksheet";
 import { leaderFetch } from "@/lib/leaderFetch";
+import { callingCompleteCount, launchCompleteCount, overallPercent, type CallingData, type LaunchData } from "@/lib/journey";
 
 // No separate component needed - inline in the layout below
 
@@ -71,9 +74,12 @@ export default function TrainingPage() {
     stepError,
     setApprenticeStep,
   } = useNetworkView(user, accessChecked, hasAccess);
-  const { people, peopleLoaded, peopleError, upsertPerson, patchPerson, ensurePersonForNetwork } = useMyPeople(
-    accessChecked && hasAccess && !!user
-  );
+  const ready = accessChecked && hasAccess && !!user;
+  const { people, peopleLoaded, peopleError, upsertPerson, patchPerson, ensurePersonForNetwork } = useMyPeople(ready);
+  const calling = useWorksheet<CallingData>("calling", ready);
+  const launch = useWorksheet<LaunchData>("launch", ready);
+  const callingDone = callingCompleteCount(calling.data);
+  const launchDone = launchCompleteCount(launch.data);
 
   useEffect(() => {
     setMounted(true);
@@ -108,25 +114,23 @@ export default function TrainingPage() {
   };
 
   const getPhaseProgress = (phase: Phase) => {
+    if (phase.id === "phase2") {
+      return { completed: callingDone, total: 6, percent: Math.round((callingDone / 6) * 100) };
+    }
+    if (phase.id === "phase3") {
+      return { completed: launchDone, total: 7, percent: Math.round((launchDone / 7) * 100) };
+    }
     const completed = phase.modules.filter((m) => m.completed).length;
     return { completed, total: phase.modules.length, percent: Math.round((completed / phase.modules.length) * 100) };
   };
 
+  // Ruling C4: Foundations modules, Calling sections and Launch steps.
+  // Phases 4 and 5 are rhythms and never count.
   const getOverallProgress = () => {
-    // The denominator here is deliberately not every module in
-    // INITIAL_PHASES. Phases 4 and 5 (Growth and Multiplication) are
-    // ongoing rhythms, not checklists: their module grids are never
-    // rendered (see isGrowthPhase / isMultiplyPhase below, which replace
-    // the modules grid entirely for those two phases), so the modules
-    // still declared on them in INITIAL_PHASES can never be ticked.
-    // Counting them would cap this headline number below 100% forever with
-    // no way to close the gap, for every leader who finishes everything
-    // reachable. Excluding phases 4 and 5 matches the fact that they
-    // already show no completion percentage anywhere else in the page.
-    const reachablePhases = phases.filter((p) => p.id !== "phase4" && p.id !== "phase5");
-    const allModules = reachablePhases.flatMap((p) => p.modules);
-    const completed = allModules.filter((m) => m.completed).length;
-    return Math.round((completed / allModules.length) * 100);
+    const foundations = phases.find((p) => p.id === "phase1");
+    const foundationsDone = foundations ? foundations.modules.filter((m) => m.completed).length : 0;
+    const foundationsTotal = foundations ? foundations.modules.length : 0;
+    return overallPercent({ foundationsDone, foundationsTotal, callingDone, launchDone });
   };
 
   const openVideo = (youtubeId: string, title: string) => {
@@ -469,6 +473,7 @@ export default function TrainingPage() {
             // neither ever shows a completion percentage.
             const isGrowthPhase = phase.id === "phase4";
             const isMultiplyPhase = phase.id === "phase5";
+            const isCallingPhase = phase.id === "phase2";
             // editingWeekStart, not a fresh mondayOf(new Date()) here: this
             // label is shown right next to the form that edits it, and
             // saveCheckin sends this exact same value, so the two can never
@@ -593,6 +598,10 @@ export default function TrainingPage() {
                     ensurePersonForNetwork={ensurePersonForNetwork}
                     patchPerson={patchPerson}
                   />
+                ) : isCallingPhase ? (
+                  <div className="p-6 md:p-8">
+                    <CallingCard completed={callingDone} loaded={calling.loaded} error={calling.error} />
+                  </div>
                 ) : (
                   <PhaseModules
                     phase={phase}
