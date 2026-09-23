@@ -1,6 +1,7 @@
 // Exercises /api/network against the local dev server, then cleans up.
 // Run: node --env-file=.env.local scripts/check-network-api.mjs
 import { createClient } from "@supabase/supabase-js";
+import { tokenFor } from "./lib/fixtures.mjs";
 
 const BASE = "http://localhost:3000";
 const LEADER = "info@avenuemission.com";
@@ -41,7 +42,11 @@ function check(name, condition, detail = "") {
   }
 }
 
-const post = (body, headers = {}) =>
+// A real session token for LEADER. The route takes the actor and viewer
+// from this token only; nothing in a query string or body names the caller.
+const leaderHeaders = { authorization: `Bearer ${await tokenFor(LEADER)}` };
+
+const post = (body, headers = leaderHeaders) =>
   fetch(`${BASE}/api/network`, {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
@@ -101,7 +106,7 @@ await cleanup();
 
 try {
   console.log("GET");
-  const res = await fetch(`${BASE}/api/network?email=${encodeURIComponent(LEADER)}`);
+  const res = await fetch(`${BASE}/api/network`, { headers: leaderHeaders });
   const graph = await res.json();
   check("returns 200", res.status === 200, JSON.stringify(graph).slice(0, 200));
   check("gives the viewer a node", typeof graph.viewerId === "string");
@@ -170,14 +175,13 @@ try {
     String(graph.depth?.people)
   );
 
-  console.log("GET with an unknown email");
-  const denied = await fetch(`${BASE}/api/network?email=nobody@example.invalid`);
-  check("GET is refused with 403 (viewer not a leader)", denied.status === 403);
+  console.log("GET with no token");
+  const denied = await fetch(`${BASE}/api/network`);
+  check("GET is refused with 401 (no session)", denied.status === 401);
 
   console.log("add");
   const added = await post({
     action: "add",
-    actorEmail: LEADER,
     firstName: "Temp",
     lastName: "Check",
     email: TEST_EMAIL,
@@ -230,7 +234,7 @@ try {
   if (confirmBorrowErr) throw new Error(confirmBorrowErr.message);
 
   try {
-    const confirmed = await post({ action: "confirm", actorEmail: LEADER });
+    const confirmed = await post({ action: "confirm" });
     check("confirm succeeds", confirmed.status === 200, JSON.stringify(confirmed.json));
     const { data: confirmedRow } = await db
       .from("network_people")
@@ -257,54 +261,47 @@ try {
   // Run right after the restore above, while the leader's own sent_out_by
   // is genuinely null again, so this is testing the "Nothing to confirm"
   // branch rather than fighting leftover state from the previous test.
-  const nothingToConfirm = await post({ action: "confirm", actorEmail: LEADER });
+  const nothingToConfirm = await post({ action: "confirm" });
   check(
     "confirm is refused with 400 (nothing to confirm)",
     nothingToConfirm.status === 400,
     JSON.stringify(nothingToConfirm.json)
   );
 
-  console.log("confirm as a non-leader actor (expected refusal)");
-  // ensureNode() checks `leaders` FIRST and unconditionally, before it ever
-  // looks at network_people or at the confirm logic's own sent_out_by
-  // check. TEST_EMAIL has a network_people row (from the earlier "add"),
-  // but it is not a row in `leaders`, so ensureNode() returns null and the
-  // route refuses with 403 before the confirm logic ever runs. No setup on
-  // TEST_EMAIL's own row is needed or relevant here: the request never gets
-  // far enough to read it.
-  const confirmAsStranger = await post({ action: "confirm", actorEmail: TEST_EMAIL });
+  console.log("confirm with no token (expected refusal)");
+  // The actor now comes only from a verified session. Naming someone else
+  // in the body (the old actorEmail) must not help: with no token the route
+  // refuses with 401 before ensureNode() or the confirm logic ever runs.
+  const confirmAsStranger = await post({ action: "confirm", actorEmail: TEST_EMAIL }, {});
   check(
-    "confirm is refused with 403 (actor not a leader)",
-    confirmAsStranger.status === 403,
+    "confirm is refused with 401 (no session)",
+    confirmAsStranger.status === 401,
     JSON.stringify(confirmAsStranger.json)
   );
 
-  console.log("act as an actor unknown to the system entirely");
-  // This address has never had a network_people row and is not in `leaders`,
-  // so ensureNode() finds nothing on either lookup and the route correctly
-  // refuses with 403. Nothing is created for a rejected actor, so there is
-  // nothing to clean up afterwards.
-  const unknownActor = await post({
-    action: "confirm",
-    actorEmail: "network-check-unknown-actor@example.invalid",
-  });
+  console.log("act with a token the auth server does not recognise");
+  // A forged or expired token is refused with 401. Nothing is created for a
+  // rejected actor, so there is nothing to clean up afterwards.
+  const unknownActor = await post(
+    { action: "confirm", actorEmail: "network-check-unknown-actor@example.invalid" },
+    { authorization: "Bearer not-a-real-token" }
+  );
   check(
-    "confirm is refused with 403 (actor unknown to the system)",
-    unknownActor.status === 403,
+    "confirm is refused with 401 (unrecognised token)",
+    unknownActor.status === 401,
     JSON.stringify(unknownActor.json)
   );
 
   console.log("add the same person twice");
   const dup = await post({
     action: "add",
-    actorEmail: LEADER,
     firstName: "Temp",
     email: TEST_EMAIL,
   });
   check("is refused with 409", dup.status === 409, JSON.stringify(dup.json));
 
   console.log("remove");
-  const removed = await post({ action: "remove", actorEmail: LEADER, id: row.id });
+  const removed = await post({ action: "remove", id: row.id });
   check("remove succeeds", removed.status === 200, JSON.stringify(removed.json));
   const { data: after } = await db
     .from("network_people")
@@ -316,7 +313,6 @@ try {
   console.log("add again after removal (adopt path)");
   const readded = await post({
     action: "add",
-    actorEmail: LEADER,
     firstName: "Temp",
     email: TEST_EMAIL,
   });
@@ -338,7 +334,7 @@ try {
     .select("id")
     .single();
   if (strangerErr) throw new Error(strangerErr.message);
-  const notYours = await post({ action: "remove", actorEmail: LEADER, id: stranger.id });
+  const notYours = await post({ action: "remove", id: stranger.id });
   check(
     "remove is refused with 403 (not your link)",
     notYours.status === 403,
@@ -365,7 +361,7 @@ try {
     .eq("id", leaderId);
   if (leaderBorrowErr) throw new Error(leaderBorrowErr.message);
 
-  const declined = await post({ action: "decline", actorEmail: LEADER });
+  const declined = await post({ action: "decline" });
   check("decline succeeds", declined.status === 200, JSON.stringify(declined.json));
   const { data: leaderAfter } = await db
     .from("network_people")
@@ -378,7 +374,7 @@ try {
   // `row` (TEST_EMAIL) has sent_out_by === leaderId ever since the re-add
   // (adopt path) above, and nothing since has changed that, so this is a
   // genuine "person you sent out" for LEADER.
-  const ownStep = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: 3 });
+  const ownStep = await post({ action: "set-apprentice-step", id: row.id, step: 3 });
   check("own-person step set succeeds", ownStep.status === 200, JSON.stringify(ownStep.json));
   const { data: ownStepRow } = await db
     .from("network_people")
@@ -395,7 +391,6 @@ try {
   // `stranger` has sent_out_by === null, so LEADER is not their sender.
   const notMineStep = await post({
     action: "set-apprentice-step",
-    actorEmail: LEADER,
     id: stranger.id,
     step: 2,
   });
@@ -406,15 +401,14 @@ try {
   );
 
   console.log("apprentice step: rejects out-of-range and non-integer values");
-  const stepTooHigh = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: 6 });
+  const stepTooHigh = await post({ action: "set-apprentice-step", id: row.id, step: 6 });
   check("step of 6 is refused with 400", stepTooHigh.status === 400, JSON.stringify(stepTooHigh.json));
 
-  const stepNegative = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: -1 });
+  const stepNegative = await post({ action: "set-apprentice-step", id: row.id, step: -1 });
   check("step of -1 is refused with 400", stepNegative.status === 400, JSON.stringify(stepNegative.json));
 
   const stepFractional = await post({
     action: "set-apprentice-step",
-    actorEmail: LEADER,
     id: row.id,
     step: 2.5,
   });
@@ -424,7 +418,7 @@ try {
     JSON.stringify(stepFractional.json)
   );
 
-  const stepString = await post({ action: "set-apprentice-step", actorEmail: LEADER, id: row.id, step: "3" });
+  const stepString = await post({ action: "set-apprentice-step", id: row.id, step: "3" });
   check(
     'step of "3" (a string, not a number) is refused with 400',
     stepString.status === 400,
@@ -444,7 +438,7 @@ try {
   );
 
   console.log("GET carries apprenticeStep for every person");
-  const stepGraphRes = await fetch(`${BASE}/api/network?email=${encodeURIComponent(LEADER)}`);
+  const stepGraphRes = await fetch(`${BASE}/api/network`, { headers: leaderHeaders });
   const stepGraph = await stepGraphRes.json();
   check(
     "every person in GET has an integer apprenticeStep",
@@ -496,7 +490,7 @@ try {
   // account, its real graph (whatever shape production has given it) is
   // fair game to check the algorithm against, and nothing here writes to
   // `leaders`.
-  const beforeChainRes = await fetch(`${BASE}/api/network?email=${encodeURIComponent(LEADER)}`);
+  const beforeChainRes = await fetch(`${BASE}/api/network`, { headers: leaderHeaders });
   const beforeChainGraph = await beforeChainRes.json();
   const localDepthBefore = depthFromPeople(beforeChainGraph.people, leaderId);
   check(
@@ -544,7 +538,7 @@ try {
     .single();
   if (grandchildErr) throw new Error(grandchildErr.message);
 
-  const chainRes = await fetch(`${BASE}/api/network?email=${encodeURIComponent(LEADER)}`);
+  const chainRes = await fetch(`${BASE}/api/network`, { headers: leaderHeaders });
   const chainGraph = await chainRes.json();
   const localDepthAfter = depthFromPeople(chainGraph.people, leaderId);
   check(
@@ -570,7 +564,6 @@ try {
   // LEADER can see the grandchild in their own network graph.
   const grandchildStepAttempt = await post({
     action: "set-apprentice-step",
-    actorEmail: LEADER,
     id: grandchildRow.id,
     step: 1,
   });
@@ -581,11 +574,15 @@ try {
   );
 
   console.log("reparent without an Authorization header");
-  const reparentNoAuth = await post({ action: "reparent", id: row.id, newParentId: null });
+  const reparentNoAuth = await post({ action: "reparent", id: row.id, newParentId: null }, {});
   check("is refused with 401", reparentNoAuth.status === 401, JSON.stringify(reparentNoAuth.json));
 
+  console.log("reparent with a leader token (admin only, expected refusal)");
+  const reparentLeader = await post({ action: "reparent", id: row.id, newParentId: null });
+  check("is refused with 401", reparentLeader.status === 401, JSON.stringify(reparentLeader.json));
+
   console.log("unknown action");
-  const bogus = await post({ action: "nonsense", actorEmail: LEADER });
+  const bogus = await post({ action: "nonsense" });
   check("is refused with 400", bogus.status === 400);
 } finally {
   if (leaderBefore) {

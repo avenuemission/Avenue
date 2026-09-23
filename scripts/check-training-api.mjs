@@ -1,6 +1,7 @@
 // Exercises /api/leader-training against the local dev server, then cleans up.
 // Run: node --env-file=.env.local scripts/check-training-api.mjs
 import { createClient } from "@supabase/supabase-js";
+import { tokenFor } from "./lib/fixtures.mjs";
 
 const BASE = "http://localhost:3000";
 const LEADER = "info@avenuemission.com";
@@ -29,20 +30,24 @@ function check(name, condition, detail = "") {
 
 const authHeaders = { authorization: `Bearer ${ADMIN_KEY}` };
 
-const get = (qs, headers = {}) =>
+// A real session token for LEADER. Every leader request below sends it by
+// default; the route takes the caller's email from this token only.
+const leaderHeaders = { authorization: `Bearer ${await tokenFor(LEADER)}` };
+
+const get = (qs, headers = leaderHeaders) =>
   fetch(`${BASE}/api/leader-training?${qs}`, { headers }).then(async (r) => ({
     status: r.status,
     json: await r.json(),
   }));
 
-const put = (body, headers = {}) =>
+const put = (body, headers = leaderHeaders) =>
   fetch(`${BASE}/api/leader-training`, {
     method: "PUT",
     headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   }).then(async (r) => ({ status: r.status, json: await r.json() }));
 
-const post = (body, headers = {}) =>
+const post = (body, headers = leaderHeaders) =>
   fetch(`${BASE}/api/leader-training`, {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
@@ -103,7 +108,7 @@ try {
   let currentRevision = 0;
 
   console.log("GET for a real leader");
-  const got = await get(`email=${encodeURIComponent(LEADER)}`);
+  const got = await get("");
   check("returns 200", got.status === 200, JSON.stringify(got.json));
   const progress = got.json?.progress;
   check("returns a progress object", !!progress);
@@ -119,16 +124,24 @@ try {
   );
   check("revision is a number", typeof progress?.revision === "number", progress?.revision);
 
-  console.log("GET for an email not in leaders");
-  const denied = await get(`email=${encodeURIComponent(STRANGER_EMAIL)}`);
-  check("returns 403", denied.status === 403, JSON.stringify(denied.json));
+  console.log("GET with no token");
+  const denied = await get("", {});
+  check("returns 401", denied.status === 401, JSON.stringify(denied.json));
+
+  console.log("PUT with no token");
+  const deniedPut = await put({ watchedEpisodes: [], completedModules: [], revision: currentRevision + 1 }, {});
+  check("returns 401", deniedPut.status === 401, JSON.stringify(deniedPut.json));
+
+  console.log("request-checkpoint with no token");
+  const deniedPost = await post({ action: "request-checkpoint" }, {});
+  check("returns 401", deniedPost.status === 401, JSON.stringify(deniedPost.json));
 
   console.log("PUT stores arrays and GET reads them back identically");
   const arrays = { watchedEpisodes: ["p1m0e1", "p1m0e2"], completedModules: ["p1m0"] };
-  const putOk = await put({ email: LEADER, ...arrays, revision: currentRevision + 1 });
+  const putOk = await put({ ...arrays, revision: currentRevision + 1 });
   check("PUT succeeds", putOk.status === 200, JSON.stringify(putOk.json));
   currentRevision = putOk.json?.progress?.revision ?? currentRevision + 1;
-  const afterPut = await get(`email=${encodeURIComponent(LEADER)}`);
+  const afterPut = await get("");
   check(
     "watchedEpisodes round-trips",
     JSON.stringify(afterPut.json?.progress?.watchedEpisodes) === JSON.stringify(arrays.watchedEpisodes)
@@ -140,7 +153,6 @@ try {
 
   console.log("PUT with a 501-entry array");
   const tooLong = await put({
-    email: LEADER,
     watchedEpisodes: Array.from({ length: 501 }, (_, i) => `p1m0e${i}`),
     completedModules: [],
     revision: currentRevision + 1,
@@ -149,7 +161,6 @@ try {
 
   console.log("PUT with an entry containing punctuation");
   const badEntry = await put({
-    email: LEADER,
     watchedEpisodes: ["p1m0e1!"],
     completedModules: [],
     revision: currentRevision + 1,
@@ -158,7 +169,6 @@ try {
 
   console.log("PUT with a 501-entry completedModules array");
   const completedTooLong = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: Array.from({ length: 501 }, (_, i) => `p1m0e${i}`),
     revision: currentRevision + 1,
@@ -167,7 +177,6 @@ try {
 
   console.log("PUT with a completedModules entry containing punctuation");
   const completedBadEntry = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: ["p1m0!"],
     revision: currentRevision + 1,
@@ -176,7 +185,6 @@ try {
 
   console.log("PUT attempting to set checkpointStatus");
   const smuggle = await put({
-    email: LEADER,
     watchedEpisodes: ["p1m0e1"],
     completedModules: ["p1m0"],
     checkpointStatus: "complete",
@@ -184,7 +192,7 @@ try {
   });
   check("PUT still succeeds", smuggle.status === 200, JSON.stringify(smuggle.json));
   currentRevision = smuggle.json?.progress?.revision ?? currentRevision + 1;
-  const afterSmuggle = await get(`email=${encodeURIComponent(LEADER)}`);
+  const afterSmuggle = await get("");
   check(
     "checkpointStatus was NOT changed by the PUT body",
     afterSmuggle.json?.progress?.checkpointStatus === "none",
@@ -194,7 +202,7 @@ try {
   console.log("revision guard: PUT with a revision greater than stored succeeds and the stored revision advances");
   const revisionBefore = currentRevision;
   const advancingArrays = { watchedEpisodes: ["p1m1e1"], completedModules: ["p1m1"] };
-  const advance = await put({ email: LEADER, ...advancingArrays, revision: currentRevision + 1 });
+  const advance = await put({ ...advancingArrays, revision: currentRevision + 1 });
   check("PUT succeeds", advance.status === 200, JSON.stringify(advance.json));
   check(
     "stored revision advanced by exactly one",
@@ -202,7 +210,7 @@ try {
     `before=${revisionBefore} after=${advance.json?.progress?.revision}`
   );
   currentRevision = advance.json?.progress?.revision ?? currentRevision + 1;
-  const afterAdvance = await get(`email=${encodeURIComponent(LEADER)}`);
+  const afterAdvance = await get("");
   check(
     "GET reflects the advanced revision",
     afterAdvance.json?.progress?.revision === currentRevision,
@@ -216,16 +224,16 @@ try {
 
   console.log("revision guard: PUT with the SAME revision is refused with 409");
   const sameRevisionAttempt = { watchedEpisodes: ["p1m2e1"], completedModules: ["p1m2"] };
-  const sameRevision = await put({ email: LEADER, ...sameRevisionAttempt, revision: currentRevision });
+  const sameRevision = await put({ ...sameRevisionAttempt, revision: currentRevision });
   check("returns 409", sameRevision.status === 409, JSON.stringify(sameRevision.json));
 
   console.log("revision guard: PUT with a LOWER revision is refused with 409");
   const lowerRevisionAttempt = { watchedEpisodes: ["p1m3e1"], completedModules: ["p1m3"] };
-  const lowerRevision = await put({ email: LEADER, ...lowerRevisionAttempt, revision: currentRevision - 1 });
+  const lowerRevision = await put({ ...lowerRevisionAttempt, revision: currentRevision - 1 });
   check("returns 409", lowerRevision.status === 409, JSON.stringify(lowerRevision.json));
 
   console.log("revision guard: a refused PUT leaves the stored arrays completely unchanged");
-  const afterRefusals = await get(`email=${encodeURIComponent(LEADER)}`);
+  const afterRefusals = await get("");
   check(
     "watchedEpisodes unchanged by either refused PUT",
     JSON.stringify(afterRefusals.json?.progress?.watchedEpisodes) === JSON.stringify(advancingArrays.watchedEpisodes),
@@ -265,13 +273,12 @@ try {
   );
 
   console.log("revision guard: PUT with a missing revision is refused with 400");
-  const missingRevisionBody = { email: LEADER, watchedEpisodes: ["p1m1e1"], completedModules: ["p1m1"] };
+  const missingRevisionBody = { watchedEpisodes: ["p1m1e1"], completedModules: ["p1m1"] };
   const missingRevision = await put(missingRevisionBody);
   check("returns 400", missingRevision.status === 400, JSON.stringify(missingRevision.json));
 
   console.log("revision guard: PUT with a non-numeric revision is refused with 400");
   const nonNumericRevision = await put({
-    email: LEADER,
     watchedEpisodes: ["p1m1e1"],
     completedModules: ["p1m1"],
     revision: "not-a-number",
@@ -289,8 +296,8 @@ try {
   // sequenced by this script, is what actually exercises that race.
   const concurrentRevision = currentRevision + 1;
   const [concurrentA, concurrentB] = await Promise.all([
-    put({ email: LEADER, watchedEpisodes: ["p1m4e1"], completedModules: ["p1m4"], revision: concurrentRevision }),
-    put({ email: LEADER, watchedEpisodes: ["p1m5e1"], completedModules: ["p1m5"], revision: concurrentRevision }),
+    put({ watchedEpisodes: ["p1m4e1"], completedModules: ["p1m4"], revision: concurrentRevision }),
+    put({ watchedEpisodes: ["p1m5e1"], completedModules: ["p1m5"], revision: concurrentRevision }),
   ]);
   const concurrentStatuses = [concurrentA.status, concurrentB.status].sort();
   check(
@@ -342,7 +349,6 @@ try {
   // Shared base both "devices" start from.
   const case1Base = ["p1m0"];
   const case1BasePut = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case1Base,
     revision: currentRevision + 1,
@@ -357,7 +363,6 @@ try {
   // Device A wins the race: writes directly, advancing past the revision
   // Device B's PUT is about to carry.
   const case1DeviceA = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: ["p1m0", "p1m1"],
     revision: case1Revision,
@@ -366,7 +371,6 @@ try {
 
   // Device B's PUT, built on the now-stale revision, conflicts.
   const case1DeviceB = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case1Sent,
     revision: case1Revision,
@@ -386,7 +390,6 @@ try {
   );
 
   const case1MergedPut = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case1Merged,
     revision: case1Server.revision + 1,
@@ -394,7 +397,7 @@ try {
   check("case 1 the merged PUT succeeds against the freshly adopted revision", case1MergedPut.status === 200, JSON.stringify(case1MergedPut.json));
   currentRevision = case1MergedPut.json?.progress?.revision ?? case1Server.revision + 1;
 
-  const case1After = await get(`email=${encodeURIComponent(LEADER)}`);
+  const case1After = await get("");
   check(
     "case 1 the database holds the competing change, the in-flight addition, and the conflicted payload's own tick",
     JSON.stringify((case1After.json?.progress?.completedModules ?? []).slice().sort()) ===
@@ -406,7 +409,6 @@ try {
   // New shared base: p1m0 and p1m2 both already complete.
   const case2Base = ["p1m0", "p1m2"];
   const case2BasePut = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case2Base,
     revision: currentRevision + 1,
@@ -420,7 +422,6 @@ try {
 
   // Device A wins the race, purely additive (adds p1m1, keeps p1m2).
   const case2DeviceA = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: ["p1m0", "p1m1", "p1m2"],
     revision: case2Revision,
@@ -428,7 +429,6 @@ try {
   check("case 2 device A's competing write succeeds", case2DeviceA.status === 200, JSON.stringify(case2DeviceA.json));
 
   const case2DeviceB = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case2Sent,
     revision: case2Revision,
@@ -450,7 +450,6 @@ try {
   );
 
   const case2MergedPut = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case2Merged,
     revision: case2Server.revision + 1,
@@ -458,7 +457,7 @@ try {
   check("case 2 the merged PUT succeeds against the freshly adopted revision", case2MergedPut.status === 200, JSON.stringify(case2MergedPut.json));
   currentRevision = case2MergedPut.json?.progress?.revision ?? case2Server.revision + 1;
 
-  const case2After = await get(`email=${encodeURIComponent(LEADER)}`);
+  const case2After = await get("");
   check(
     "case 2 the database reflects the un-tick surviving, not resurrected",
     JSON.stringify((case2After.json?.progress?.completedModules ?? []).slice().sort()) ===
@@ -472,7 +471,6 @@ try {
   // triggered the very save that conflicted must still end up persisted.
   const case3Base = ["p1m0"];
   const case3BasePut = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case3Base,
     revision: currentRevision + 1,
@@ -484,7 +482,6 @@ try {
   const case3Revision = currentRevision + 1;
 
   const case3DeviceA = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: ["p1m0", "p1m1"],
     revision: case3Revision,
@@ -492,7 +489,6 @@ try {
   check("case 3 device A's competing write succeeds", case3DeviceA.status === 200, JSON.stringify(case3DeviceA.json));
 
   const case3DeviceB = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case3Sent,
     revision: case3Revision,
@@ -511,7 +507,6 @@ try {
   );
 
   const case3MergedPut = await put({
-    email: LEADER,
     watchedEpisodes: [],
     completedModules: case3Merged,
     revision: case3Server.revision + 1,
@@ -519,7 +514,7 @@ try {
   check("case 3 the merged PUT succeeds against the freshly adopted revision", case3MergedPut.status === 200, JSON.stringify(case3MergedPut.json));
   currentRevision = case3MergedPut.json?.progress?.revision ?? case3Server.revision + 1;
 
-  const case3After = await get(`email=${encodeURIComponent(LEADER)}`);
+  const case3After = await get("");
   check(
     "case 3 the database holds the conflicted payload's own tick, saved, with no edit ever made during the flight",
     JSON.stringify((case3After.json?.progress?.completedModules ?? []).slice().sort()) ===
@@ -527,16 +522,16 @@ try {
     JSON.stringify(case3After.json?.progress?.completedModules)
   );
 
-  console.log("complete-checkpoint without the admin header");
+  console.log("complete-checkpoint without the admin header (a leader token is not enough)");
   const completeNoAuth = await post({ action: "complete-checkpoint", email: LEADER });
   check("returns 401", completeNoAuth.status === 401, JSON.stringify(completeNoAuth.json));
 
-  console.log("reopen-checkpoint without the admin header");
+  console.log("reopen-checkpoint without the admin header (a leader token is not enough)");
   const reopenNoAuth = await post({ action: "reopen-checkpoint", email: LEADER });
   check("returns 401", reopenNoAuth.status === 401, JSON.stringify(reopenNoAuth.json));
 
   console.log("request-checkpoint moves none to requested");
-  const requested = await post({ action: "request-checkpoint", email: LEADER });
+  const requested = await post({ action: "request-checkpoint" });
   check("succeeds", requested.status === 200, JSON.stringify(requested.json));
   check(
     "status is now requested",
@@ -545,7 +540,7 @@ try {
   );
 
   console.log("a second request-checkpoint is a no-op");
-  const requestedAgain = await post({ action: "request-checkpoint", email: LEADER });
+  const requestedAgain = await post({ action: "request-checkpoint" });
   check("succeeds", requestedAgain.status === 200, JSON.stringify(requestedAgain.json));
   check(
     "status is still requested",
@@ -585,7 +580,7 @@ try {
   );
 
   console.log("unknown action");
-  const bogus = await post({ action: "nonsense", email: LEADER });
+  const bogus = await post({ action: "nonsense" });
   check("returns 400", bogus.status === 400, JSON.stringify(bogus.json));
 } finally {
   let restoreOk;

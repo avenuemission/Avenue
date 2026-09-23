@@ -1,6 +1,7 @@
 // Signs up a throwaway leader, checks a network node appeared, cleans up.
 // Run: node --env-file=.env.local scripts/check-network-signup.mjs
 import { createClient } from "@supabase/supabase-js";
+import { tokenFor, cleanupFixtures } from "./lib/fixtures.mjs";
 
 const BASE = "http://localhost:3000";
 const EMAIL = "signup-check-temp@example.invalid";
@@ -52,9 +53,29 @@ try {
     failures++;
   }
 
+  // The access check now reads the caller from a verified session, never
+  // from the query string: a token for the new leader sees their own row,
+  // and no token at all is refused.
+  const token = await tokenFor(EMAIL);
+  const accessRes = await fetch(`${BASE}/api/leader-access`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  const access = await accessRes.json().catch(() => null);
+  if (accessRes.status !== 200 || access?.found !== true || access?.full_access !== false) {
+    console.log("FAIL access GET with the new leader's token:", accessRes.status, JSON.stringify(access));
+    failures++;
+  }
+  const noTokenRes = await fetch(`${BASE}/api/leader-access`);
+  if (noTokenRes.status !== 401) {
+    console.log("FAIL access GET with no token was not 401:", noTokenRes.status);
+    failures++;
+  }
+
   console.log(failures === 0 ? "OK: signup claims the existing node" : `${failures} failure(s)`);
 } finally {
   await cleanup();
+  // Also removes the auth user tokenFor created, by exact fixture email.
+  await cleanupFixtures([EMAIL]);
   console.log("cleaned up the temporary rows");
 }
 

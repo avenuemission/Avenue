@@ -1,12 +1,17 @@
 // Exercises /api/leader-checkins against the local dev server, then cleans up.
 // Run: node --env-file=.env.local scripts/check-checkins-api.mjs
 import { createClient } from "@supabase/supabase-js";
+import { tokenFor } from "./lib/fixtures.mjs";
 
 const BASE = "http://localhost:3000";
 const LEADER = "info@avenuemission.com";
 const STRANGER_EMAIL = "checkins-check-temp@example.invalid";
 
 const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+// A real session token for LEADER. The route takes the caller's email from
+// this token only; nothing in a query string or body names the caller.
+const TOKEN = await tokenFor(LEADER);
 
 let failures = 0;
 function check(name, condition, detail = "") {
@@ -18,13 +23,18 @@ function check(name, condition, detail = "") {
   }
 }
 
-const get = (qs) =>
-  fetch(`${BASE}/api/leader-checkins?${qs}`).then(async (r) => ({ status: r.status, json: await r.json() }));
+const authHeaders = (token) => (token ? { authorization: `Bearer ${token}` } : {});
 
-const put = (body) =>
+const get = (token = TOKEN) =>
+  fetch(`${BASE}/api/leader-checkins`, { headers: authHeaders(token) }).then(async (r) => ({
+    status: r.status,
+    json: await r.json(),
+  }));
+
+const put = (body, token = TOKEN) =>
   fetch(`${BASE}/api/leader-checkins`, {
     method: "PUT",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...authHeaders(token) },
     body: JSON.stringify(body),
   }).then(async (r) => ({ status: r.status, json: await r.json() }));
 
@@ -82,7 +92,7 @@ function currentMelbourneMonday() {
 }
 const WEEK_CURRENT_MELBOURNE = currentMelbourneMonday();
 
-const validBody = { email: LEADER, weekStart: WEEK, relational: 7, physical: 6, mental: 8, spiritual: 9 };
+const validBody = { weekStart: WEEK, relational: 7, physical: 6, mental: 8, spiritual: 9 };
 
 async function cleanupStranger() {
   const { error } = await db.from("leader_checkins").delete().eq("email", STRANGER_EMAIL).eq("week_start", WEEK);
@@ -135,29 +145,28 @@ try {
   leaderCurrentWeekBefore = capturedCurrent; // null is a valid captured state: no row yet.
 
   console.log("GET for a real leader");
-  const got = await get(`email=${encodeURIComponent(LEADER)}`);
+  const got = await get();
   check("returns 200", got.status === 200, JSON.stringify(got.json));
   check("returns a checkins array", Array.isArray(got.json?.checkins), JSON.stringify(got.json));
 
-  console.log("GET for an email not in leaders");
-  const denied = await get(`email=${encodeURIComponent(STRANGER_EMAIL)}`);
-  check("returns 403", denied.status === 403, JSON.stringify(denied.json));
+  console.log("GET with no token");
+  const denied = await get(null);
+  check("returns 401", denied.status === 401, JSON.stringify(denied.json));
 
-  console.log("PUT for an email not in leaders");
-  // The leaders check must be the first database touch on this path, so
-  // this stranger PUT must be refused before any upsert happens - if the
-  // leaders check were ever dropped from PUT specifically (while GET kept
-  // it), all thirty prior assertions in this file would still pass while
-  // anyone on earth could write check-ins for any leader.
-  const deniedPut = await put({ ...validBody, email: STRANGER_EMAIL });
-  check("returns 403", deniedPut.status === 403, JSON.stringify(deniedPut.json));
+  console.log("PUT with no token");
+  // The session check must be the first gate on this path, so this PUT
+  // must be refused before any upsert happens - if it were ever dropped
+  // from PUT specifically (while GET kept it), every other assertion in
+  // this file would still pass while anyone on earth could write check-ins.
+  const deniedPut = await put({ ...validBody, email: STRANGER_EMAIL }, null);
+  check("returns 401", deniedPut.status === 401, JSON.stringify(deniedPut.json));
 
   console.log("PUT stores a check-in and GET reads it back identically");
   const putOk = await put({ ...validBody, reflection: "Steady week, low sleep." });
   check("PUT succeeds", putOk.status === 200, JSON.stringify(putOk.json));
   check("PUT response echoes weekStart", putOk.json?.checkin?.weekStart === WEEK, putOk.json?.checkin?.weekStart);
 
-  const afterPut = await get(`email=${encodeURIComponent(LEADER)}`);
+  const afterPut = await get();
   const row = (afterPut.json?.checkins ?? []).find((c) => c.weekStart === WEEK);
   check("the stored week is present in GET", !!row, JSON.stringify(afterPut.json));
   check("relational round-trips", row?.relational === 7, row?.relational);
@@ -185,7 +194,7 @@ try {
     rowCountAfterSecond
   );
 
-  const afterSecondPut = await get(`email=${encodeURIComponent(LEADER)}`);
+  const afterSecondPut = await get();
   const rowAfterSecond = (afterSecondPut.json?.checkins ?? []).find((c) => c.weekStart === WEEK);
   check(
     "the row reflects the second PUT's values, not the first's",
@@ -276,7 +285,7 @@ try {
   );
 
   console.log("none of the rejected PUTs left the stored row changed");
-  const afterRejections = await get(`email=${encodeURIComponent(LEADER)}`);
+  const afterRejections = await get();
   const rowAfterRejections = (afterRejections.json?.checkins ?? []).find((c) => c.weekStart === WEEK);
   check(
     "the row still holds the second PUT's values",
