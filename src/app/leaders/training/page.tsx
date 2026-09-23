@@ -20,6 +20,7 @@ import Phase4Growth, { CHECKIN_HISTORY_WEEKS } from "./Phase4Growth";
 import Phase5Multiply from "./Phase5Multiply";
 import PhaseModules from "./PhaseModules";
 import CallingCard from "./CallingCard";
+import LaunchCard from "./LaunchCard";
 import { useTrainingProgress } from "./useTrainingProgress";
 import { useCheckins } from "./useCheckins";
 import { useNetworkView } from "./useNetworkView";
@@ -474,6 +475,7 @@ export default function TrainingPage() {
             const isGrowthPhase = phase.id === "phase4";
             const isMultiplyPhase = phase.id === "phase5";
             const isCallingPhase = phase.id === "phase2";
+            const isLaunchPhase = phase.id === "phase3";
             // editingWeekStart, not a fresh mondayOf(new Date()) here: this
             // label is shown right next to the form that edits it, and
             // saveCheckin sends this exact same value, so the two can never
@@ -601,6 +603,10 @@ export default function TrainingPage() {
                 ) : isCallingPhase ? (
                   <div className="p-6 md:p-8">
                     <CallingCard completed={callingDone} loaded={calling.loaded} error={calling.error} />
+                  </div>
+                ) : isLaunchPhase ? (
+                  <div className="p-6 md:p-8">
+                    <LaunchCard completed={launchDone} loaded={launch.loaded} error={launch.error} />
                   </div>
                 ) : (
                   <PhaseModules

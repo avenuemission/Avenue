@@ -1,7 +1,8 @@
 // Launch (phase 3) maths for the rhythm tiles and the plan. Pure. Dates are
 // YYYY-MM-DD and compared as calendar days in UTC, so daylight saving never
 // shifts a count.
-import { isIsoDate, WEEKDAYS, type Weekday } from "@/lib/journey";
+import { filled, isIsoDate, WEEKDAYS, type LaunchData, type Weekday } from "@/lib/journey";
+import { GAP_TEXT, type GapId } from "@/lib/arena";
 
 const DAY_MS = 86_400_000;
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -39,4 +40,42 @@ export function formatIsoDate(iso: string): string {
   if (!isIsoDate(iso)) return iso;
   const [y, m, d] = iso.split("-").map(Number);
   return `${d} ${MONTHS[m - 1]} ${y}`;
+}
+
+export interface PlanAction {
+  id: string;
+  text: string;
+}
+
+const quote = (s: string) => `“${s.trim()}”`;
+
+// The Launch Plan's next actions: each quotes what the leader wrote.
+export function buildPlanActions(data: LaunchData): PlanAction[] {
+  const out: PlanAction[] = [];
+  const when = data.prayer?.when;
+  if (filled(when)) out.push({ id: "pray", text: `Pray and fast about the launch: ${quote(when as string)}` });
+  const teamPrayer = data.prayer?.teamPrayer;
+  if (filled(teamPrayer)) out.push({ id: "team-prayer", text: `Meet with your launch team to pray: ${quote(teamPrayer as string)}` });
+  const gather = data.mission?.gather;
+  if (filled(gather)) out.push({ id: "gather", text: `Go where your mission group already gathers: ${quote(gather as string)}` });
+  const place = data.space?.place;
+  if (filled(place)) out.push({ id: "place", text: `Confirm your place: ${quote(place as string)}` });
+  const rawCommitments = data.intentional?.commitments;
+  const commitments = Array.isArray(rawCommitments) ? rawCommitments : [];
+  commitments.forEach((c, i) => {
+    if (filled(c)) out.push({ id: `commit-${i}`, text: `Keep your commitment: ${quote(c)}` });
+  });
+  const need = data.intentional?.needPosition;
+  if (filled(need)) out.push({ id: "need", text: `Put yourself in a position of need: ${quote(need as string)}` });
+  const launchDate = data.rhythm?.launchDate;
+  if (isIsoDate(launchDate)) out.push({ id: "launch-date", text: `Tell friends and family your launch date: ${formatIsoDate(launchDate)}` });
+  const tracking = data.invite?.tracking;
+  if (filled(tracking)) out.push({ id: "tracking", text: `Set up your birthdays and needs tracker: ${quote(tracking as string)}` });
+  const shepherding = data.invite?.shepherding;
+  if (filled(shepherding)) out.push({ id: "shepherding", text: `Start your shepherding plan: ${quote(shepherding as string)}` });
+  return out;
+}
+
+export function gapActions(gaps: GapId[]): PlanAction[] {
+  return gaps.map((gap) => ({ id: `gap-${gap}`, text: GAP_TEXT[gap].action }));
 }
