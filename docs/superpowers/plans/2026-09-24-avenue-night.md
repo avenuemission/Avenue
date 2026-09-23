@@ -51,13 +51,35 @@
 | Arena counters | Warm numerals, no glow | Glow is reserved for the leader's own small actions (spec 3) |
 | Lamp labels | Short labels (`CALLING_LAMP_LABELS`, `LAUNCH_LAMP_LABELS`) taken from the mockup where it has them | Full step titles do not fit a 72 px lamp |
 
+## Pre-flight rulings (controller, 24 Sep; see `.superpowers/sdd/avenue-night/preflight.md`)
+
+Already folded into the task text below.
+
+- **F1 (Task 1):** CSS classes name `var(--font-newsreader), Georgia, serif` directly; `@theme` `--font-serif` only feeds the `font-serif` utility.
+- **F2 (Task 1):** Task 1 rewrites the four existing em dash comments (globals.css x3, layout.tsx x1) so the Task 13 check can pass.
+- **F3 (Task 6):** The hub waits for `journeyLoaded` (worksheets, check-ins, network) before drawing the status line and map, and before choosing the default phase.
+- **F4 (Task 6):** `CallingCard` and `LaunchCard` render `LampSteps` only once their worksheet has loaded without error, so no lamp glows on load.
+- **F5 (Task 8):** The launch-date moment needs a valid date whose year is this year or later.
+- **F6 (Task 1):** The lamp focus ring and the night `--muted` also apply inside `.av-moment`, which sits outside `.avenue-night` in the wizards.
+- **F7 (Tasks 1, 3):** Map stop buttons carry `av-map-hit`, whose focus outline sits inside the button (`outline-offset: -4px`).
+- **F8 (Task 7):** Foundations section headers are a plain `night-label`, with no lamp colour.
+- **F9 (Task 1):** `.avenue-night .eyebrow` is muted, not blue.
+- **F10 (Task 10):** Print keeps `space-y-4` (`print:space-y-4`), and checkboxes print in their default colour (`print:accent-auto`).
+- **F11 (Tasks 1, 9):** `.av-step h2` gets the full serif question style. `.av-step h3` gets family and weight only. The Arena h3s add `text-2xl`.
+- **F12 (Task 11):** Remove the unused `Image` import from the dashboard and record the lint count.
+- **F13 (Tasks 7, 8):** Line numbers corrected for Phase4Growth and the Calling page.
+- **F14 (Task 10):** Eleven sections, not twelve; Step 6 also greps for em dashes.
+- **F15 (Tasks 2, 6, 11):** New pure `apprenticesOnRung(people, viewerId)` in `avenue.ts` with tests, used by the hub and the dashboard. The other duplication is accepted as deliberate.
+- **F16 (Tasks 1, 3, 6):** Text colours come from tokens (`--ink`, `--dim`, `--muted`, `--accent`, `--lamp`, new `--ink-2`). The hub video close button is 44 px with a label.
+- **F17 (Tasks 7, 8, 11):** Accept that the next-step card waits on `/api/network`. Browser checks delete every fixture row by exact email, then `npm run guard` must print `clean`.
+
 ## File map
 
 | File | Status | Task | Responsibility |
 |---|---|---|---|
 | `src/app/globals.css` | Modify | 1 | Night tokens, `--font-serif`, `.avenue-night`, night card/section/heading/label classes, lamp steps, phase opening, moment, glow, reduced motion, print rules |
 | `src/app/layout.tsx` | Modify | 1 | Load Newsreader via `next/font/google` |
-| `src/lib/avenue.ts` | Create | 2 | `avenueStops`, `stopWalked`, `streetStatusLine`, `hereActionFor`, `greetingFor`, `melbourneHour`, `partOfDay`, lamp labels |
+| `src/lib/avenue.ts` | Create | 2 | `avenueStops`, `stopWalked`, `streetStatusLine`, `hereActionFor`, `greetingFor`, `melbourneHour`, `partOfDay`, `apprenticesOnRung`, lamp labels |
 | `src/lib/avenue.test.ts` | Create | 2 | Tests |
 | `src/components/avenue/AvenueStreet.tsx` | Create | 3 | Vertical phone street |
 | `src/components/avenue/AvenueMap.tsx` | Create | 3 | Map A SVG (md and up), AvenueStreet below md |
@@ -92,14 +114,15 @@
 ### Task 1: Night tokens, Newsreader and journey CSS
 
 **Files:**
-- Modify: `src/app/globals.css` (`:root` lines 3-19, `@theme inline` lines 21-26, new block inserted before the PRINT block at line 265, print block lines 268-299)
-- Modify: `src/app/layout.tsx:2-14` and `:118`
+- Modify: `src/app/globals.css` (`:root` lines 3-19, `@theme inline` lines 21-26, the three comment lines 193, 225 and 240, new block inserted before the PRINT block at line 265, print block lines 268-299)
+- Modify: `src/app/layout.tsx:2-14`, `:22` (comment) and `:118`
 
 **Interfaces:**
 - Consumes: nothing.
 - Produces (every later task relies on these exact names):
-  - CSS variables: `--night`, `--night-2`, `--line`, `--line-2`, `--ink`, `--dim`, `--lamp`, `--lamp-2`, `--lamp-soft`, `--accent-soft`, `--font-newsreader` (from layout), Tailwind `font-serif`.
-  - Classes: `.avenue-night`, `.night-card`, `.night-card-lit`, `.night-section`, `.night-h2`, `.night-label`, `.av-step`, `.av-lamps`, `.av-lamps-dense`, `.av-lamp`, `.is-lit`, `.is-current`, `.av-lamp-glass`, `.av-lamp-post`, `.av-lamp-label`, `.av-opening`, `.av-opening-small`, `.av-stop`, `.av-bulb`, `.av-phase-title`, `.av-verse`, `.av-verse-ref`, `.av-moment`, `.av-halo`, `.av-bulbfill`, `.av-glow-a`, `.av-glow-b`.
+  - CSS variables: `--night`, `--night-2`, `--line`, `--line-2`, `--ink`, `--ink-2`, `--dim`, `--lamp`, `--lamp-2`, `--lamp-soft`, `--accent-soft`, `--font-newsreader` (from layout), Tailwind `font-serif`.
+  - Classes: `.avenue-night`, `.night-card`, `.night-card-lit`, `.night-section`, `.night-h2`, `.night-label`, `.av-step`, `.av-map-hit`, `.av-lamps`, `.av-lamps-dense`, `.av-lamp`, `.is-lit`, `.is-current`, `.av-lamp-glass`, `.av-lamp-post`, `.av-lamp-label`, `.av-opening`, `.av-opening-small`, `.av-stop`, `.av-bulb`, `.av-phase-title`, `.av-verse`, `.av-verse-ref`, `.av-moment`, `.av-halo`, `.av-bulbfill`, `.av-glow-a`, `.av-glow-b`.
+  - CSS classes name the serif as `var(--font-newsreader), Georgia, serif` directly (F1); `--font-serif` exists only for Tailwind's `font-serif` utility.
 
 - [ ] **Step 1: Add the night tokens to `:root`**
 
@@ -113,6 +136,7 @@ In `src/app/globals.css`, directly after the line `  --accent: #4f7cff;        /
   --line: #1b2230;         /* hairline */
   --line-2: #263042;       /* stronger hairline */
   --ink: #eef1f7;          /* primary text on night */
+  --ink-2: #dfe4ee;        /* softer text: verses, the here-panel line */
   --dim: #566074;          /* things ahead */
   --lamp: #ffc56b;         /* walked, done, lit */
   --lamp-2: #ffdca0;
@@ -150,9 +174,20 @@ Insert this whole block immediately before the comment line `/* PRINT: Calling P
   color: var(--ink);
   min-height: 100vh;
 }
-.avenue-night :focus-visible {
+/* The moment card is fixed and, in the wizards, rendered outside
+   .avenue-night, so it carries the same focus ring and muted colour (F6). */
+.avenue-night :focus-visible,
+.av-moment :focus-visible {
   outline: 2px solid var(--lamp);
   outline-offset: 3px;
+}
+/* Map stop buttons fill the clipped map, so their ring sits inside (F7). */
+.av-map-hit:focus-visible {
+  outline-offset: -4px;
+}
+/* Eyebrows are quiet labels on the night ground; blue means "you are here" (F9). */
+.avenue-night .eyebrow {
+  color: var(--muted);
 }
 /* Existing panels inside a journey screen take the night surface. */
 .avenue-night .panel {
@@ -185,7 +220,7 @@ Insert this whole block immediately before the comment line `/* PRINT: Calling P
   }
 }
 .night-h2 {
-  font-family: var(--font-serif);
+  font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 400;
   font-size: 1.5rem;
   line-height: 1.15;
@@ -199,13 +234,17 @@ Insert this whole block immediately before the comment line `/* PRINT: Calling P
   text-transform: uppercase;
   color: var(--muted);
 }
-/* Wizard steps: every question heading is serif. */
-.av-step h2,
-.av-step h3 {
-  font-family: var(--font-serif);
+/* Wizard steps: every question (h2) is a serif question. Smaller h3s keep
+   their own size utilities and only take the serif face (F11). */
+.av-step h2 {
+  font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 400;
   font-size: 1.5rem;
   line-height: 1.2;
+}
+.av-step h3 {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-weight: 400;
 }
 
 /* Lamp steps (mockup section 2, .lamps) */
@@ -311,7 +350,7 @@ button.av-lamp {
   box-shadow: 0 0 0 4px var(--lamp-soft), 0 0 22px 4px rgba(255, 197, 107, 0.55);
 }
 .av-phase-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 400;
   font-size: clamp(44px, 11vw, 120px);
   line-height: 0.92;
@@ -325,12 +364,12 @@ button.av-lamp {
   margin: 12px 0 14px;
 }
 .av-verse {
-  font-family: var(--font-serif);
+  font-family: var(--font-newsreader), Georgia, serif;
   font-style: italic;
   font-size: clamp(19px, 2.6vw, 26px);
   line-height: 1.4;
   max-width: 30ch;
-  color: #dfe4ee;
+  color: var(--ink-2);
   margin: 0;
 }
 .av-opening-small .av-verse {
@@ -348,6 +387,7 @@ button.av-lamp {
 
 /* The moment (mockup section 2, .moment): a lamp that ignites. */
 .av-moment {
+  --muted: #8b94a7;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -479,6 +519,19 @@ Change the body `className` (line 118) to:
         className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} antialiased bg-black text-white`}
 ```
 
+- [ ] **Step 5b: Remove the four existing em dashes (F2)**
+
+Both files already contain an em dash in a comment, which would fail the Task 13 check. Rewrite only these comments. Below, `[dash]` stands for the U+2014 character on that line today; do not type one.
+
+| File:line | Today | Becomes |
+|---|---|---|
+| `src/app/globals.css:193` | `/* FACELIFT [dash] shared primitives ... */` | `/* FACELIFT: shared primitives                                 */` |
+| `src/app/globals.css:225` | `/* Solid panel [dash] replaces frosted glass (backdrop-blur bg-white/10) */` | `/* Solid panel: replaces frosted glass (backdrop-blur bg-white/10) */` |
+| `src/app/globals.css:240` | `/* Eyebrow label [dash] small accent kicker above section headings. */` | `/* Eyebrow label: small accent kicker above section headings. */` |
+| `src/app/layout.tsx:22` | `  // metadata.icons here [dash] it overrides those files.` | `  // metadata.icons here, because it overrides those files.` |
+
+Then run: `grep -c $'\xe2\x80\x94' src/app/globals.css src/app/layout.tsx`. Expected: `0` for both.
+
 - [ ] **Step 6: Run the gates**
 
 Run: `npx tsc --noEmit` (expect no output), `npm test` (expect 187 passed), `npm run lint` (expect 55 to 56 problems), then with the dev server stopped `npm run build` (expect success; the build downloads Newsreader). If the build rejects `axes` for Newsreader, report the exact error rather than guessing a fix.
@@ -494,7 +547,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 - [ ] **Step 8: Controller browser check**
 
-Nothing uses the classes yet. On any page at desktop, run in the console: `getComputedStyle(document.body).getPropertyValue('--font-newsreader')` (expect a non-empty family name) and `getComputedStyle(document.documentElement).getPropertyValue('--lamp')` (expect `#ffc56b`). Check the public home page and `/leaders` look unchanged.
+Nothing uses the classes yet. On any page at desktop, run in the console: `getComputedStyle(document.body).getPropertyValue('--font-newsreader')` (expect a non-empty family name), `getComputedStyle(document.documentElement).getPropertyValue('--lamp')` (expect `#ffc56b`), and `document.body.insertAdjacentHTML('beforeend','<h2 class="night-h2" id="t">x</h2>'); getComputedStyle(document.getElementById('t')).fontFamily` (expect it to start with the Newsreader family, not Geist; then remove `#t`). Check the public home page and `/leaders` look unchanged.
 
 ---
 
@@ -515,6 +568,7 @@ Nothing uses the classes yet. On any page at desktop, run in the console: `getCo
   - `streetStatusLine(stops: AvenueStop[]): string`
   - `interface HereAction { text: string; label: string; href: string }`, `hereActionFor(id: StopId, p: AvenueProgress): HereAction`
   - `melbourneHour(now: Date): number`, `partOfDay(hour: number): "morning" | "afternoon" | "evening"`, `greetingFor(now: Date, name: string | null | undefined): string`
+  - `interface RungPerson { sentOutBy: string | null; apprenticeStep?: number }`, `apprenticesOnRung(people: RungPerson[], viewerId: string | null): number` (F15: the one count of "people this leader sent out on rung 1 or above", used by the hub and the dashboard)
   - `CALLING_LAMP_LABELS: Record<CallingSectionId, string>`, `LAUNCH_LAMP_LABELS: Record<LaunchStepId | "arena" | "plan", string>`
 
 - [ ] **Step 1: Write the failing tests**
@@ -524,6 +578,7 @@ Nothing uses the classes yet. On any page at desktop, run in the console: `getCo
 ```ts
 import { describe, expect, it } from "vitest";
 import {
+  apprenticesOnRung,
   avenueStops,
   greetingFor,
   hereActionFor,
@@ -665,6 +720,24 @@ describe("greeting by Melbourne time", () => {
     expect(greetingFor(new Date("2026-09-24T09:00:00Z"), "  Sam Lee ")).toBe("Good evening, Sam.");
     expect(greetingFor(new Date("2026-09-24T09:00:00Z"), "")).toBe("Good evening.");
     expect(greetingFor(new Date("2026-09-24T09:00:00Z"), null)).toBe("Good evening.");
+  });
+});
+
+describe("apprenticesOnRung", () => {
+  const people = [
+    { sentOutBy: "me", apprenticeStep: 0 },
+    { sentOutBy: "me", apprenticeStep: 1 },
+    { sentOutBy: "me", apprenticeStep: 4 },
+    { sentOutBy: "me" },
+    { sentOutBy: "someone-else", apprenticeStep: 3 },
+    { sentOutBy: null, apprenticeStep: 2 },
+  ];
+  it("counts only people this leader sent out, on rung 1 or above", () => {
+    expect(apprenticesOnRung(people, "me")).toBe(2);
+  });
+  it("counts nobody before the viewer is known", () => {
+    expect(apprenticesOnRung(people, null)).toBe(0);
+    expect(apprenticesOnRung([], "me")).toBe(0);
   });
 });
 ```
@@ -828,6 +901,19 @@ export function greetingFor(now: Date, name: string | null | undefined): string 
   return first ? `Good ${part}, ${first}.` : `Good ${part}.`;
 }
 
+export interface RungPerson {
+  sentOutBy: string | null;
+  apprenticeStep?: number;
+}
+
+// People this leader sent out who are on the first apprenticeship rung or
+// above (spec 2.1, Multiply). One definition for the hub and the dashboard.
+// No viewer yet means nobody can be counted as theirs.
+export function apprenticesOnRung(people: RungPerson[], viewerId: string | null): number {
+  if (viewerId === null) return 0;
+  return people.filter((p) => p.sentOutBy === viewerId && (p.apprenticeStep ?? 0) >= 1).length;
+}
+
 // Short labels for the lamp steps (a lamp is 72 px wide).
 export const CALLING_LAMP_LABELS: Record<CallingSectionId, string> = {
   layers: "What is a calling",
@@ -854,11 +940,11 @@ export const LAUNCH_LAMP_LABELS: Record<LaunchStepId | "arena" | "plan", string>
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run src/lib/avenue.test.ts`
-Expected: PASS, 19 tests.
+Expected: PASS, 21 tests.
 
 - [ ] **Step 5: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` (187 + 19 = 206 passing), `npm run lint` 55 to 56, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` (187 + 21 = 208 passing), `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 6: Commit**
 
@@ -880,7 +966,7 @@ No browser check: pure logic.
 - Create: `src/components/avenue/AvenueMap.tsx`
 
 **Interfaces:**
-- Consumes: `STATUS_LABEL`, `type AvenueStop`, `type HereAction`, `type StopId` from `src/lib/avenue.ts` (Task 2); CSS tokens from Task 1.
+- Consumes: `STATUS_LABEL`, `type AvenueStop`, `type HereAction`, `type StopId` from `src/lib/avenue.ts` (Task 2); CSS tokens (`--ink`, `--ink-2`, `--dim`, `--lamp`, `--accent`) and `.av-map-hit` from Task 1.
 - Produces:
   - `AvenueStreet` default export, props `{ stops: AvenueStop[]; selectedId: StopId | null; onSelect: (id: StopId) => void; hereAction: HereAction | null; onAction?: () => void }`
   - `AvenueMap` default export, props `{ stops: AvenueStop[]; selectedId: StopId | null; onSelect: (id: StopId) => void; hereAction: HereAction | null; onAction?: () => void; compact?: boolean }`. Renders the SVG from `md` up and `AvenueStreet` below `md`.
@@ -954,7 +1040,7 @@ export default function AvenueStreet({ stops, selectedId, onSelect, hereAction, 
             </button>
             {here && hereAction ? (
               <div className="mt-3 rounded-[14px] border border-[var(--line-2)] p-4">
-                <p className="mb-3 text-[13.5px] text-[#cfd5e1]">{hereAction.text}</p>
+                <p className="mb-3 text-[13.5px] text-[var(--ink-2)]">{hereAction.text}</p>
                 <Link
                   href={hereAction.href}
                   onClick={onAction}
@@ -1005,13 +1091,16 @@ const STARS: [number, number, number][] = [
   [120, 120, 0.7],
   [540, 110, 0.8],
 ];
-const STATUS_FILL = { walked: "#ffc56b", here: "#4f7cff", ahead: "#566074" } as const;
+// Text colours come from the tokens (spec 2: text colours from tokens only).
+// SVG presentation attributes do not take var(), so text sets fill via style.
+const STATUS_FILL = { walked: "var(--lamp)", here: "var(--accent)", ahead: "var(--dim)" } as const;
 
 // Map A (spec 2): the avenue seen from the side, five lamp posts in a row.
 // Walked stops are lit (warm head, halo, cone of light), the current stop
 // has a blue outlined head and a blue "you are here" dot, stops ahead are
 // dim. The SVG is decoration; a transparent button over each lamp is the
-// real control. Below md the vertical AvenueStreet is shown instead.
+// real control (av-map-hit keeps its focus ring inside the clipped map).
+// Below md the vertical AvenueStreet is shown instead.
 export default function AvenueMap({ stops, selectedId, onSelect, hereAction, onAction, compact = false }: AvenueMapProps) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const glowId = `av-cone-${uid}`;
@@ -1073,14 +1162,14 @@ export default function AvenueMap({ stops, selectedId, onSelect, hereAction, onA
           })}
           <g style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }} fontSize={26} textAnchor="middle">
             {stops.map((stop, i) => (
-              <text key={stop.id} x={LAMP_X[i]} y={392} fill={stop.status === "ahead" ? "#566074" : "#eef1f7"}>
+              <text key={stop.id} x={LAMP_X[i]} y={392} style={{ fill: stop.status === "ahead" ? "var(--dim)" : "var(--ink)" }}>
                 {stop.name}
               </text>
             ))}
           </g>
           <g style={{ fontFamily: "var(--font-geist-mono), monospace" }} fontSize={11} letterSpacing={2} textAnchor="middle">
             {stops.map((stop, i) => (
-              <text key={stop.id} x={LAMP_X[i]} y={410} fill={STATUS_FILL[stop.status]}>
+              <text key={stop.id} x={LAMP_X[i]} y={410} style={{ fill: STATUS_FILL[stop.status] }}>
                 {STATUS_LABEL[stop.status].toUpperCase()}
               </text>
             ))}
@@ -1107,7 +1196,7 @@ export default function AvenueMap({ stops, selectedId, onSelect, hereAction, onA
             onClick={() => onSelect(stop.id)}
             aria-label={`${stop.name}: ${STATUS_LABEL[stop.status]}`}
             aria-current={selectedId === stop.id ? "true" : undefined}
-            className="absolute top-0 h-full rounded-xl"
+            className="av-map-hit absolute top-0 h-full rounded-xl"
             style={{ left: `${(LAMP_X[i] - 95) / 10}%`, width: "19%" }}
           />
         ))}
@@ -1128,7 +1217,7 @@ export default function AvenueMap({ stops, selectedId, onSelect, hereAction, onA
 
 - [ ] **Step 3: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 206 passing, `npm run lint` 55 to 56, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 208 passing, `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 4: Commit**
 
@@ -1494,7 +1583,7 @@ export default function Glow({ trigger, children, className = "inline-block roun
 
 - [ ] **Step 8: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` (206 + 15 = 221 passing), `npm run lint` 55 to 56 (if the React Compiler lint flags the render-phase `setState` in `useMoment` or `Glow`, stop and report the exact message instead of rewriting to an effect), `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` (208 + 15 = 223 passing), `npm run lint` 55 to 56 (if the React Compiler lint flags the render-phase `setState` in `useMoment` or `Glow`, stop and report the exact message instead of rewriting to an effect), `npm run build` passes.
 
 - [ ] **Step 9: Commit**
 
@@ -1788,7 +1877,7 @@ export default function JourneyFooter() {
 
 - [ ] **Step 8: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` (221 + 7 = 228 passing), `npm run lint` 55 to 56, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` (223 + 7 = 230 passing), `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 9: Commit**
 
@@ -1813,7 +1902,7 @@ Not wired until Task 6. Controller confirms the five verse texts in `verses.ts` 
 - Rewrite: `src/app/leaders/training/LaunchCard.tsx`
 
 **Interfaces:**
-- Consumes: `avenueStops`, `hereActionFor`, `streetStatusLine`, `greetingFor`, `stopWalked`, `STOP_IDS`, `CALLING_LAMP_LABELS`, `LAUNCH_LAMP_LABELS`, `type AvenueProgress`, `type StopId` (Task 2); `AvenueMap` (Task 3); `useMoment`, `Moment` (Task 4); `VERSES`, `PhaseOpening`, `LampSteps`, `JourneyFooter` (Task 5); from `src/lib/journey.ts`: `CALLING_SECTION_IDS`, `CALLING_TOTAL`, `LAUNCH_STEP_IDS`, `LAUNCH_TOTAL`, `callingSectionComplete`, `launchStepComplete`, `callingCompleteCount`, `launchCompleteCount`.
+- Consumes: `avenueStops`, `hereActionFor`, `streetStatusLine`, `greetingFor`, `stopWalked`, `apprenticesOnRung`, `STOP_IDS`, `CALLING_LAMP_LABELS`, `LAUNCH_LAMP_LABELS`, `type AvenueProgress`, `type StopId` (Task 2); `AvenueMap` (Task 3); `useMoment`, `Moment` (Task 4); `VERSES`, `PhaseOpening`, `LampSteps`, `JourneyFooter` (Task 5); from `src/lib/journey.ts`: `CALLING_SECTION_IDS`, `CALLING_TOTAL`, `LAUNCH_STEP_IDS`, `LAUNCH_TOTAL`, `callingSectionComplete`, `launchStepComplete`, `callingCompleteCount`, `launchCompleteCount`.
 - Produces:
   - `CallingCard` props change to `{ data: Partial<CallingData>; loaded: boolean; error: string | null }`.
   - `LaunchCard` props change to `{ data: Partial<LaunchData>; loaded: boolean; error: string | null }`.
@@ -1864,12 +1953,16 @@ export default function CallingCard({ data, loaded, error }: CallingCardProps) {
           {completed} of {CALLING_TOTAL} sections complete
         </p>
       )}
-      <LampSteps
-        steps={lamps}
-        currentIndex={ok && firstOpen >= 0 ? firstOpen : null}
-        onSelect={(i) => router.push(`/leaders/training/calling?step=${i + 1}`)}
-        label={`Calling: ${completed} of ${CALLING_TOTAL} sections complete`}
-      />
+      {/* Only once loaded (F4): the lamps' first render is already the real
+          state, so Glow never pulses on page load. */}
+      {ok ? (
+        <LampSteps
+          steps={lamps}
+          currentIndex={firstOpen >= 0 ? firstOpen : null}
+          onSelect={(i) => router.push(`/leaders/training/calling?step=${i + 1}`)}
+          label={`Calling: ${completed} of ${CALLING_TOTAL} sections complete`}
+        />
+      ) : null}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Link
           href="/leaders/training/calling"
@@ -1933,12 +2026,15 @@ export default function LaunchCard({ data, loaded, error }: LaunchCardProps) {
           {completed} of {LAUNCH_TOTAL} steps complete
         </p>
       )}
-      <LampSteps
-        steps={lamps}
-        currentIndex={ok && firstOpen >= 0 ? firstOpen : null}
-        onSelect={(i) => router.push(`/leaders/training/launch?step=${i + 1}`)}
-        label={`Launch: ${completed} of ${LAUNCH_TOTAL} steps complete`}
-      />
+      {/* Only once loaded (F4), so no lamp glows on page load. */}
+      {ok ? (
+        <LampSteps
+          steps={lamps}
+          currentIndex={firstOpen >= 0 ? firstOpen : null}
+          onSelect={(i) => router.push(`/leaders/training/launch?step=${i + 1}`)}
+          label={`Launch: ${completed} of ${LAUNCH_TOTAL} steps complete`}
+        />
+      ) : null}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Link
           href="/leaders/training/launch"
@@ -1986,6 +2082,7 @@ import { useWorksheet } from "@/lib/useWorksheet";
 import { leaderFetch } from "@/lib/leaderFetch";
 import { callingCompleteCount, launchCompleteCount, type CallingData, type LaunchData } from "@/lib/journey";
 import {
+  apprenticesOnRung,
   avenueStops,
   greetingFor,
   hereActionFor,
@@ -2017,6 +2114,8 @@ export default function TrainingPage() {
     const p = new URLSearchParams(window.location.search).get("phase");
     return isStopId(p) ? p : null;
   });
+  // The stop opened when none was chosen: the "here" stop, set once (F3).
+  const [defaultPhase, setDefaultPhase] = useState<StopId | null>(null);
   const [videoModal, setVideoModal] = useState<{ youtubeId: string; title: string } | null>(null);
   const [greetingTime] = useState(() => new Date());
 
@@ -2100,8 +2199,8 @@ export default function TrainingPage() {
     setVideoModal(null);
   };
 
-  // Used by the map and by phase 5's own content below, so both read the
-  // exact same computation rather than two that could drift.
+  // Phase 5's own content below. The map's Multiply count uses
+  // apprenticesOnRung (avenue.ts), the one definition shared with the dashboard.
   const sentByViewer = networkPeople.filter((p) => p.sentOutBy === networkViewerId);
 
   // The avenue (spec 2.1): which stops are walked, and where the leader is.
@@ -2112,12 +2211,23 @@ export default function TrainingPage() {
     callingDone,
     launchDone,
     checkinCount: checkins.length,
-    apprenticesOnRung: sentByViewer.filter((p) => p.apprenticeStep >= 1).length,
+    apprenticesOnRung: apprenticesOnRung(networkPeople, networkViewerId),
   };
+  // The map, the status line and the default stop wait for every read the
+  // stops depend on (F3). Without this they would first show Calling or
+  // Launch as unwalked, then jump once the worksheets arrived. A failed read
+  // still counts as loaded, so an error never leaves the page waiting.
+  const journeyLoaded = calling.loaded && launch.loaded && checkinsLoaded && networkLoaded;
   const stops = avenueStops(avenueProgress);
   const hereStop = stops.find((s) => s.status === "here") ?? null;
   const hereAction = hereStop ? hereActionFor(hereStop.id, avenueProgress) : null;
-  const openPhase: StopId = expandedPhase ?? hereStop?.id ?? "phase4";
+  // Latched the first time everything has loaded (adjusted during render,
+  // like useMoment). Latching keeps the open stop still when a later reload
+  // (check-in retry) flips a loaded flag, or when walking a stop moves "here"
+  // while its moment plays.
+  if (journeyLoaded && defaultPhase === null) setDefaultPhase(hereStop?.id ?? "phase4");
+  const journeyReady = defaultPhase !== null;
+  const openPhase: StopId | null = expandedPhase ?? defaultPhase;
 
   // Phase-walked moments that can happen on this page (spec 3): the last
   // Foundations module, the first check-in, the first apprentice on rung 1.
@@ -2165,7 +2275,12 @@ export default function TrainingPage() {
           <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-semibold text-lg">{videoModal.title}</h3>
-              <button onClick={closeVideo} className="text-gray-400 hover:text-white transition-colors">
+              <button
+                type="button"
+                onClick={closeVideo}
+                aria-label="Close video"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-[var(--muted)] hover:text-[var(--ink)]"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -2221,19 +2336,24 @@ export default function TrainingPage() {
           <h1 className="mt-2 font-serif text-[34px] leading-[1.05] text-[var(--ink)] md:text-[52px]">
             {greetingFor(greetingTime, user.name)}
           </h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">{streetStatusLine(stops)}</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            {journeyReady ? streetStatusLine(stops) : "Finding where you are on the street..."}
+          </p>
         </div>
 
-        {/* The avenue: map A from md, the vertical street on phones */}
-        <AvenueMap
-          stops={stops}
-          selectedId={openPhase}
-          onSelect={setExpandedPhase}
-          hereAction={hereAction}
-          onAction={() => {
-            if (hereStop) setExpandedPhase(hereStop.id);
-          }}
-        />
+        {/* The avenue: map A from md, the vertical street on phones. Drawn
+            only once every read has landed (F3), so no lamp flips on load. */}
+        {journeyReady ? (
+          <AvenueMap
+            stops={stops}
+            selectedId={openPhase}
+            onSelect={setExpandedPhase}
+            hereAction={hereAction}
+            onAction={() => {
+              if (hereStop) setExpandedPhase(hereStop.id);
+            }}
+          />
+        ) : null}
 
         {/* The open stop */}
         <div className="mt-12 space-y-10">
@@ -2362,10 +2482,12 @@ Notes for the implementer:
 - `recentMondays(..., new Date())` inside the map is unchanged from today; leave it.
 - `overallPercent`, `CALLING_TOTAL`, `LAUNCH_TOTAL`, `Phase`, `ChevronDown`, `Heart`, `Users`, `sidebarOpen`, `togglePhase`, `getPhaseProgress`, `getOverallProgress` are removed on purpose (only the rings used them). `overallPercent` stays exported and tested in `journey.ts`; do not touch that file.
 - If lint reports `react-hooks/purity` on `recentMondays(..., new Date())`, that line was already there; report the count, do not move it.
+- `defaultPhase` is set during render under a condition (the same pattern as `useMoment`). If lint objects, stop and report the exact message; do not move it into an effect.
+- The map and status line wait for `journeyReady` (F3); the video close button is now 44 px with `aria-label` (F16); the Multiply count uses `apprenticesOnRung` (F15).
 
 - [ ] **Step 4: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 228 passing, `npm run lint` 55 to 56 (record the number), `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 230 passing, `npm run lint` 55 to 56 (record the number), `npm run build` passes.
 
 - [ ] **Step 5: Commit**
 
@@ -2384,7 +2506,7 @@ Sign in a fixture leader (`@example.invalid`, see HANDOVER-v2 section 5). At des
 - 375 px: vertical street, no map; the here stop shows its panel and button; tapping a stop name opens that phase; no horizontal scroll.
 - Each phase opens with "Stop N of 5 · short ref", big serif name (Foundations fits at 375 px), italic verse then "(NLT)" and the reference in lamp colour; the NLT notice sits at the foot of the page.
 - Calling and Launch show lamp rows; tapping a lamp opens the wizard at that step.
-- `?phase=phase4` opens Growth; no param opens the here stop.
+- `?phase=phase4` opens Growth; no param opens the here stop. On a slow load (DevTools throttling "Slow 4G") the map and status line appear once, already right: no lamp flips and the open stop never jumps. Opening Calling or Launch: their lamps appear lit without a pulse.
 - Tick the last unticked Foundations module: the moment card appears at the bottom ("Foundations is walked."), the lamp ignites; "Carry on" closes it. Reload: no moment. Untick and retick to replay. With reduced motion on (DevTools Rendering panel), the card appears already lit.
 - Save indicators still show on a tick; the logout button works.
 
@@ -2394,7 +2516,7 @@ Sign in a fixture leader (`@example.invalid`, see HANDOVER-v2 section 5). At des
 
 **Files:**
 - Rewrite: `src/app/leaders/training/PhaseModules.tsx`
-- Modify: `src/app/leaders/training/Phase4Growth.tsx:1-4` (imports) and `:234-351` (the returned JSX)
+- Modify: `src/app/leaders/training/Phase4Growth.tsx:1-4` (imports) and `:133-251` (the returned JSX of the `Phase4Growth` function; the file is 251 lines)
 - Modify: `src/app/leaders/training/Phase5Multiply.tsx:5` (imports), `:206-344` (the returned JSX of `Phase5Multiply`)
 
 **Interfaces:**
@@ -2447,7 +2569,7 @@ export default function PhaseModules({
       <ul className="border-t border-[var(--line)]">
         {phase.modules.map((module) => (
           <li key={module.id} className="border-b border-[var(--line)] py-5">
-            {module.sectionHeader && <p className="night-label mb-3 text-[var(--lamp)]">{module.sectionHeader}</p>}
+            {module.sectionHeader && <p className="night-label mb-3">{module.sectionHeader}</p>}
             <div className="flex items-start gap-3">
               <button
                 type="button"
@@ -2504,7 +2626,7 @@ import Glow from "@/components/avenue/Glow";
 
 - [ ] **Step 3: Growth: replace the returned JSX**
 
-Replace everything from `  return (` (line 234) to the end of the `Phase4Growth` function (the `}` on line 351) with the block below. The check-in form's inner markup (score rows, textarea, save button, retry) is unchanged; only its wrapper and heading change. The metrics become three columns of names on the night ground with a warm count that glows when someone is named.
+Replace everything from the `  return (` inside `export default function Phase4Growth` (line 133) to the end of that function (its closing `}` on line 251, the last line of the file) with the block below. Do not touch `ScoreRow`, which has its own `  return (` at line 53. Anchor on the function, not only the line number. The check-in form's inner markup (score rows, textarea, save button, retry) is unchanged; only its wrapper and heading change. The metrics become three columns of names on the night ground with a warm count that glows when someone is named.
 
 ```tsx
   return (
@@ -2798,7 +2920,7 @@ import Glow from "@/components/avenue/Glow";
 
 - [ ] **Step 5: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 228 passing, `npm run lint` 55 to 56, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 230 passing, `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 6: Commit**
 
@@ -2814,7 +2936,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 With the fixture leader, at 375 px and desktop, reduced motion off then on:
 - Foundations: a hairline list, serif module titles, lamp ticks (warm when done, no green, no strike-through); tick one: its lamp glows once (no glow with reduced motion). Episode carousels still play and tick.
 - Growth: the check-in is the only raised card; save a first check-in: saves as before and the "Growth is walked." moment plays. Three metric columns (stacked at 375 px) with warm counts; name someone under Pathways: the count rises and glows once. History below.
-- Multiply: add a person through the form with an `@example.invalid` email (writes a `network_people` row sent by the fixture leader; delete it by that exact email afterwards and run `npm run guard`, which must print `clean`). Tap them, tick rung 1: the dots turn warm and glow once, the "Multiply is walked." moment plays. ICNU note still saves.
+- Multiply: add a person through the form with an `@example.invalid` email (writes a `network_people` row sent by the fixture leader). Tap them, tick rung 1: the dots turn warm and glow once, the "Multiply is walked." moment plays. ICNU note still saves.
+- Foundations section headers read as muted labels, not lamp-coloured (F8).
+- Cleanup (F17): this check writes training progress, a check-in, My People metric tags, an ICNU note and a `network_people` row for the fixture. Delete every fixture row by its exact `@example.invalid` email, then run `npm run guard`, which must print `clean`.
 
 ---
 
@@ -2822,7 +2946,7 @@ With the fixture leader, at 375 px and desktop, reduced motion off then on:
 
 **Files:**
 - Rewrite: `src/components/journey/WizardShell.tsx`
-- Modify: `src/app/leaders/training/calling/page.tsx` (imports lines 1-17; hook block after line 46; loading screen lines 237-243; the `return` at lines 305-324)
+- Modify: `src/app/leaders/training/calling/page.tsx` (import line 6; hook block after `goTo`, which ends at line 47; loading screen lines 66-72; error panels lines 49-64 and 74-89; the `return` at lines 134-153; the file is 154 lines)
 - Modify: `src/app/leaders/training/launch/page.tsx` (imports lines 1-29; hook block after line 104; loading screen lines 108-114; the `return` at lines 244-260)
 
 **Interfaces:**
@@ -2949,7 +3073,7 @@ export default function WizardShell(props: WizardShellProps) {
 
 - [ ] **Step 2: Calling page: imports**
 
-In `src/app/leaders/training/calling/page.tsx` replace line 7 (`import { callingSectionComplete, type CallingData, type CallingSectionId } from "@/lib/journey";`) with:
+In `src/app/leaders/training/calling/page.tsx` replace line 6 (`import { callingSectionComplete, type CallingData, type CallingSectionId } from "@/lib/journey";`) with:
 
 ```ts
 import {
@@ -2985,7 +3109,7 @@ Directly after the `goTo` function (after the line `  };` that closes `goTo`, be
 
 - [ ] **Step 4: Calling page: loading screen and return**
 
-Replace the loading screen (lines 237-243):
+Replace the loading screen (lines 66-72):
 
 ```tsx
   if (!ready || !loaded) {
@@ -2997,7 +3121,7 @@ Replace the loading screen (lines 237-243):
   }
 ```
 
-Replace the final `return ( <WizardShell ...> ... </WizardShell> );` (lines 305-324) with:
+Replace the final `return ( <WizardShell ...> ... </WizardShell> );` (lines 134-153) with:
 
 ```tsx
   return (
@@ -3063,15 +3187,20 @@ Directly after the `goTo` function (before `if (gateError) return <ErrorPanel me
 ```ts
   // Moments that happen in this wizard (spec 3): setting a launch date, and
   // Launch walked (all seven planning steps). Empty until loaded.
+  // RhythmStep saves on every change, and typing a year into a date input
+  // passes through values like "0002-10-03", which are valid ISO dates. Only
+  // a date in this year or later counts as set (F5), so the moment waits for
+  // the real year.
   const launchDate = data.rhythm?.launchDate;
+  const launchDateSet = isIsoDate(launchDate) && Number(launchDate.slice(0, 4)) >= new Date().getFullYear();
   const momentFlags: Record<string, boolean> =
     loaded && !launch.error
       ? {
-          launchDate: isIsoDate(launchDate),
+          launchDate: launchDateSet,
           "walked:phase3": launchCompleteCount(data) === LAUNCH_TOTAL,
         }
       : {};
-  const { moment, dismiss } = useMoment(momentFlags, isIsoDate(launchDate) ? launchDate : undefined);
+  const { moment, dismiss } = useMoment(momentFlags, launchDateSet ? launchDate : undefined);
 ```
 
 - [ ] **Step 7: Launch page: loading screen and return**
@@ -3119,7 +3248,7 @@ Run: `npx tsc --noEmit`. Expected: no output. Any remaining `eyebrow=` on `Wizar
 
 - [ ] **Step 9: Run the gates**
 
-`npm test` 228 passing (`wizard.test.ts` still passes: `progressLabel` and `timeLabel` are unchanged), `npm run lint` 55 to 56, `npm run build` passes.
+`npm test` 230 passing (`wizard.test.ts` still passes: `progressLabel` and `timeLabel` are unchanged), `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 10: Commit**
 
@@ -3136,8 +3265,11 @@ Fixture leader, 375 px and desktop, reduced motion off then on:
 - `/leaders/training/calling`: small phase opening (Stop 2 of 5 · Ephesians 4, serif "Calling", verse, "(NLT)", reference), "Discover your calling", a row of six lamps (wraps at 375 px, no horizontal scroll), blue ring on the current step, lit lamps for done steps; tapping a lamp jumps to that step. One quiet time line and the save state. Step questions are serif. NLT notice at the foot.
 - Section 3: tap "Save my yes": the wizard moves on and the moment card "You said yes." with today's date "· the Shared Call" ignites at the bottom (about 1.4 s); the Shared call lamp glows once. "Carry on" closes it. Reload: nothing replays. Reduced motion: the card appears already lit, no glow.
 - Section 6: tick "booked": "Conversation booked." moment. If that was the last section: "Calling is walked." instead.
-- `/leaders/training/launch`: nine lamps with short labels; step 6: pick a launch date: "Your launch date is set." with "Launching {date}". Completing the seventh planning step: "Launch is walked.".
+- `/leaders/training/launch`: nine lamps with short labels; step 6: pick a launch date: "Your launch date is set." with "Launching {date}". Also clear the date and type one with the keyboard: no moment while the year is part-typed (F5), one moment once the four-digit year is this year or later. Completing the seventh planning step: "Launch is walked.".
+- Tab to the moment card's "Carry on": lamp-coloured focus ring (F6).
+- Wizard headings: the step question is large serif; small h3s (ApestStep role names, SeasonalMap labels, "Your invite list") keep their own size in serif (F11).
 - Saving still works exactly as before (type, wait, reload, text is there).
+- Cleanup (F17): this check writes Calling and Launch worksheet answers for the fixture. Delete every fixture row by its exact `@example.invalid` email, then run `npm run guard`, which must print `clean`.
 
 ---
 
@@ -3152,7 +3284,7 @@ Fixture leader, 375 px and desktop, reduced motion off then on:
 
 - [ ] **Step 1: Rewrite ArenaStep**
 
-`src/app/leaders/training/launch/ArenaStep.tsx`. Every rule, save call and piece of copy is unchanged; what changes is how it is drawn: six month lamps across the top (dim to lit), the three counters as warm serif numerals, and the ending as a lit vertical street with each principle beneath its month's lamp. Headings inside get serif from `.av-step` (Task 8).
+`src/app/leaders/training/launch/ArenaStep.tsx`. Every rule, save call and piece of copy is unchanged; what changes is how it is drawn: six month lamps across the top (dim to lit), the three counters as warm serif numerals, and the ending as a lit vertical street with each principle beneath its month's lamp. Headings inside get the serif face from `.av-step h3` (Task 1), which sets only family and weight (F11), so each h3 carries its own `text-2xl leading-tight`.
 
 ```tsx
 "use client";
@@ -3255,7 +3387,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
       <div className="space-y-6">
         <div>
           <p className="eyebrow">The Arena</p>
-          <h3 className="mt-2 text-[var(--ink)]">Six months, before you commit</h3>
+          <h3 className="mt-2 text-2xl leading-tight text-[var(--ink)]">Six months, before you commit</h3>
           <p className="mt-2 text-sm leading-relaxed text-gray-300">
             Six months of rehearsal, played against your own plan. Each month brings a curveball and four choices. No
             grade at the end: just the principles you learned and where your plan is thinnest.
@@ -3306,7 +3438,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
         <MonthStreet state={state} />
         <CountersBar state={state} />
         <div>
-          <h3 className="text-[var(--ink)]">The principles you learned</h3>
+          <h3 className="text-2xl leading-tight text-[var(--ink)]">The principles you learned</h3>
           <ol className="mt-5">
             {state.earned.map((e, i) => (
               <li key={e.month} className="relative pb-6 pl-10">
@@ -3329,7 +3461,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
           </ol>
         </div>
         <div className="border-t border-[var(--line)] pt-6">
-          <h3 className="text-[var(--ink)]">Where your plan is thinnest</h3>
+          <h3 className="text-2xl leading-tight text-[var(--ink)]">Where your plan is thinnest</h3>
           {spots.length === 0 ? (
             <p className="mt-3 text-sm leading-relaxed text-gray-300">Nothing in your plan stood out as thin. Keep it that way.</p>
           ) : (
@@ -3371,7 +3503,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
         <p className="night-label">
           Month {state.month + 1} of {MONTHS}
         </p>
-        <h3 className="mt-2 text-[var(--ink)]">{curveball.title}</h3>
+        <h3 className="mt-2 text-2xl leading-tight text-[var(--ink)]">{curveball.title}</h3>
         <p className="mt-2 text-sm leading-relaxed text-gray-300">{curveball.situation}</p>
         {bites.length > 0 ? (
           <div className="mt-4 rounded-lg border border-[var(--accent)] p-3">
@@ -3409,7 +3541,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
 
 - [ ] **Step 2: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 228 passing (`arena.test.ts`, `arenaContent.test.ts` untouched), `npm run lint` 55 to 56, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 230 passing (`arena.test.ts`, `arenaContent.test.ts` untouched), `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 3: Commit**
 
@@ -3433,7 +3565,7 @@ Fixture leader, `/leaders/training/launch?step=8` (`ARENA_ENABLED` is true), 375
 
 **Files:**
 - Modify: `src/app/leaders/training/calling/profile/page.tsx` (imports lines 1-19; wrapper line 123; title block lines 131-136; the six `section` openings)
-- Modify: `src/app/leaders/training/launch/plan/page.tsx` (imports lines 1-13; wrapper line 146; title block lines 157-160; the twelve `section` openings; the checkboxes at lines 395-401 and 422-428)
+- Modify: `src/app/leaders/training/launch/plan/page.tsx` (imports lines 1-13; wrapper line 146; title block lines 157-160; the eleven `section` openings; the checkboxes at lines 395-401 and 422-428)
 
 **Interfaces:**
 - Consumes: `PhaseOpening`, `JourneyFooter`, `VERSES` (Task 5); CSS `.avenue-night`, `.night-section`, `.night-h2` and the print rules (Task 1).
@@ -3455,7 +3587,7 @@ Replace the opening wrapper line `    <div className="print-page max-w-3xl mx-au
 
 ```tsx
     <div className="avenue-night">
-    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-8">
+    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-8 print:space-y-4">
 ```
 
 and add one more `</div>` right after the page's final `</div>` (before `  );`), so the wrapper closes.
@@ -3529,7 +3661,7 @@ Replace `    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-4">`
 
 ```tsx
     <div className="avenue-night">
-    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-8">
+    <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-8 print:space-y-4">
 ```
 
 and add the matching extra `</div>` before `  );`. Replace the title block (lines 157-160):
@@ -3568,7 +3700,7 @@ Add `<JourneyFooter />` directly after the "Next actions" section, inside `print
 
 - [ ] **Step 5: Plan: sections as serif headings**
 
-Replace-all `<section className="panel p-5">` with `<section className="panel night-section p-5">` (twelve sections; the inner tiles are `panel p-4` and are not touched). Then:
+Replace-all `<section className="panel p-5">` with `<section className="panel night-section p-5">` (eleven sections; the inner tiles are `panel p-4` and are not touched). Then:
 
 | Old | New |
 |---|---|
@@ -3584,16 +3716,22 @@ Replace-all `<section className="panel p-5">` with `<section className="panel ni
 | `<p className="eyebrow">Where your plan is thin</p>` | `<h2 className="night-h2">Where your plan is thin</h2>` |
 | `<p className="eyebrow">Next actions</p>` | `<h2 className="night-h2">Next actions</h2>` |
 
-(The `Weeks until launch` and `Gatherings in the first six months` eyebrows inside the tiles stay.) Both checkbox inputs (`className="mt-1 h-4 w-4"`, two places) become `className="mt-1 h-4 w-4 accent-[var(--lamp)]"`: a done action is lit. Wrap the gate, loading and error returns in `avenue-night` as in Step 3.
+(The `Weeks until launch` and `Gatherings in the first six months` eyebrows inside the tiles stay.) Both checkbox inputs (`className="mt-1 h-4 w-4"`, two places) become `className="mt-1 h-4 w-4 accent-[var(--lamp)] print:accent-auto"`: a done action is lit on screen, and prints in the default colour as today (F10). Wrap the gate, loading and error returns in `avenue-night` as in Step 3.
 
 - [ ] **Step 6: Check no em dash and no stray eyebrow heading**
 
 Run: `grep -n 'className="eyebrow">\(My \|Why\|Mission\|Space\|Launch team\|Commitments\|Rhythm\|Invite\|Shepherding\|Principles\|Where\|Next\)' src/app/leaders/training/calling/profile/page.tsx src/app/leaders/training/launch/plan/page.tsx`
 Expected: no output.
 
+Run: `grep -c $'\xe2\x80\x94' src/app/leaders/training/calling/profile/page.tsx src/app/leaders/training/launch/plan/page.tsx`
+Expected: `0` for both (F14).
+
+Run: `grep -c 'panel night-section p-5' src/app/leaders/training/calling/profile/page.tsx src/app/leaders/training/launch/plan/page.tsx`
+Expected: `6` and `11`.
+
 - [ ] **Step 7: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 228 passing, `npm run lint` 55 to 56, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 230 passing, `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 8: Commit**
 
@@ -3608,7 +3746,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 Fixture leader with some Calling and Launch answers, 375 px and desktop:
 - Screen: small phase opening ("Stop 2 of 5", serif "My Calling Profile", verse, "(NLT)"), sections as serif headings over hairlines (no boxes), NLT notice at the foot. Same for the Launch Plan (Stop 3); checkboxes warm when ticked, still saving.
-- Print preview (Ctrl+P) of both, before and after this commit: white page, black text, one black-bordered box per section, headings small uppercase as before, the old title block ("My Calling Profile" / "My Launch Plan"), no phase opening, no footer, no buttons. Compare with a print preview from `main` if in doubt.
+- Print preview (Ctrl+P) of both, before and after this commit: white page, black text, one black-bordered box per section with the same gaps as before (F10), ticked checkboxes in the default colour, not amber (F10), headings small uppercase as before, the old title block ("My Calling Profile" / "My Launch Plan"), no phase opening, no footer, no buttons. Compare with a print preview from `main` if in doubt.
 
 ---
 
@@ -3619,7 +3757,7 @@ Fixture leader with some Calling and Launch answers, 375 px and desktop:
 - Rewrite: `src/app/leaders/page.tsx`
 
 **Interfaces:**
-- Consumes: `avenueStops`, `greetingFor`, `type AvenueProgress` (Task 2); `AvenueMap` (Task 3); `nextStep` (`src/lib/nextStep.ts`, unchanged); the same three reads NextStepCard already makes (`/api/leader-training`, `/api/leader-checkins`, the two worksheets) and the dashboard's existing `/api/network` read.
+- Consumes: `avenueStops`, `greetingFor`, `apprenticesOnRung`, `type AvenueProgress` (Task 2); `AvenueMap` (Task 3); `nextStep` (`src/lib/nextStep.ts`, unchanged); the same three reads NextStepCard already makes (`/api/leader-training`, `/api/leader-checkins`, the two worksheets) and the dashboard's existing `/api/network` read.
 - Produces: `NextStepCard` props become `{ enabled: boolean; apprenticesOnRung: number | null; networkFailed: boolean }`.
 
 - [ ] **Step 1: Rewrite NextStepCard**
@@ -3776,18 +3914,17 @@ export default function NextStepCard({ enabled, apprenticesOnRung, networkFailed
 
 - [ ] **Step 2: Rewrite the dashboard page**
 
-Replace the whole of `src/app/leaders/page.tsx` with the code below. What changes: `avenue-night` ground, serif greeting, order (greeting, pending-sender banner, map and next-step card, profile, tools), tools as one hairline list instead of two grids of boxes, no `Reveal` (pages are still), and the existing `/api/network` read now checks `res.ok` and also counts apprentices on rung 1 or above for the map. The access check, the pending-sender logic and `answerPending` are unchanged. The unused `Image` import is kept as it is today (removing it would move the lint count, which this task must not chase).
+Replace the whole of `src/app/leaders/page.tsx` with the code below. What changes: `avenue-night` ground, serif greeting, order (greeting, pending-sender banner, map and next-step card, profile, tools), tools as one hairline list instead of two grids of boxes, no `Reveal` (pages are still), and the existing `/api/network` read now checks `res.ok` and also counts apprentices on rung 1 or above for the map with `apprenticesOnRung` (F15). The access check, the pending-sender logic and `answerPending` are unchanged. The unused `Image` import is removed (F12); record the new lint count. The next-step card now waits for the network read to settle (success or failure) before it shows; that wait is accepted (F17).
 
 ```tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
 import { leaderFetch } from "@/lib/leaderFetch";
-import { greetingFor } from "@/lib/avenue";
+import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/avenue";
 import ProfileCard from "@/components/ui/ProfileCard";
 import NextStepCard from "@/components/journey/NextStepCard";
 import {
@@ -3862,9 +3999,7 @@ export default function LeadersPage() {
         })
         .then((data) => {
           const people: DashboardNetworkPerson[] = data.people ?? [];
-          setApprenticesOnRung(
-            people.filter((p) => p.sentOutBy === data.viewerId && (p.apprenticeStep ?? 0) >= 1).length
-          );
+          setApprenticesOnRung(countApprenticesOnRung(people, data.viewerId ?? null));
           const me = people.find((p) => p.id === data.viewerId);
           if (!me?.sentOutBy || me.linkStatus === "confirmed") return;
           const sender = people.find((p) => p.id === me.sentOutBy);
@@ -4072,7 +4207,7 @@ export default function LeadersPage() {
 
 - [ ] **Step 3: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 228 passing (`nextStep.test.ts` unchanged), `npm run lint` 55 to 56 (the `Reveal` import is gone, `Image` stays: record the number), `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 230 passing (`nextStep.test.ts` unchanged), `npm run lint` at most 56, expected 54 to 55 (the unused `Image` import is removed, F12; record the new number and use it as the ceiling for later tasks), `npm run build` passes.
 
 - [ ] **Step 4: Commit**
 
@@ -4288,7 +4423,7 @@ The block above ends with `NightStreet`'s closing `}`, which is the last line of
 
 - [ ] **Step 3: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 228 passing, `npm run lint` 55 to 56, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 230 passing, `npm run lint` 55 to 56, `npm run build` passes.
 
 - [ ] **Step 4: Commit**
 
@@ -4314,7 +4449,7 @@ Signed out, `/login` at 375 px and desktop:
 
 - [ ] **Step 1: Whole-branch gates**
 
-Run: `npx tsc --noEmit`, `npm test` (expect 228 passing), `npm run lint` (55 to 56), `node --env-file=.env.local scripts/check-auth.mjs` (all passed), `npm run guard` (`clean`), stop the dev server, `npm run build`, restart the dev server.
+Run: `npx tsc --noEmit`, `npm test` (expect 230 passing), `npm run lint` (55 to 56), `node --env-file=.env.local scripts/check-auth.mjs` (all passed), `npm run guard` (`clean`), stop the dev server, `npm run build`, restart the dev server.
 
 - [ ] **Step 2: No em dash on the branch**
 
