@@ -10,13 +10,14 @@ const COLUMNS = [
   ["leader_training_progress", "email"],
   ["leader_checkins", "email"],
   ["leader_people", "owner_email"],
+  ["leader_worksheets", "email"],
 ];
 
 const hits = [];
 for (const [table, column] of COLUMNS) {
   const { data, error } = await db.from(table).select(column).ilike(column, `%${FIXTURE_DOMAIN}`);
   if (error) {
-    if (table === "leader_people" && /does not exist|schema cache/i.test(error.message)) continue;
+    if ((table === "leader_people" || table === "leader_worksheets") && /does not exist|schema cache/i.test(error.message)) continue;
     console.error(`ERROR reading ${table}.${column}: ${error.message}`);
     process.exit(2);
   }

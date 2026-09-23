@@ -77,6 +77,8 @@ export async function cleanupFixtures(emails) {
     assertFixtureEmail(email);
     const { error: peopleErr } = await db.from("leader_people").delete().eq("owner_email", email);
     if (peopleErr && !/does not exist|schema cache/i.test(peopleErr.message)) problems.push(`leader_people ${email}: ${peopleErr.message}`);
+    const { error: worksheetErr } = await db.from("leader_worksheets").delete().eq("email", email);
+    if (worksheetErr && !/does not exist|schema cache/i.test(worksheetErr.message)) problems.push(`leader_worksheets ${email}: ${worksheetErr.message}`);
     for (const [table, column] of EMAIL_TABLES) {
       const { error } = await db.from(table).delete().eq(column, email);
       if (error) problems.push(`${table} ${email}: ${error.message}`);

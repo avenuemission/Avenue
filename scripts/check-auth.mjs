@@ -42,6 +42,8 @@ const GUARDED = [
   // the leader_people migration exists.
   ["PATCH", "/api/people"],
   ["DELETE", "/api/people?id=00000000-0000-0000-0000-000000000000"],
+  ["GET", "/api/worksheets?kind=calling"],
+  ["PATCH", "/api/worksheets"],
 ];
 
 // A Monday three weeks ago (UTC), same logic as check-checkins-api.mjs:
@@ -242,7 +244,46 @@ try {
     }
   }
 
-  // Task 8 appends: people.
+  console.log("worksheets are private to their owner");
+  {
+    const probe = await db.from("leader_worksheets").select("email").limit(1);
+    if (probe.error && /does not exist|schema cache/i.test(probe.error.message)) {
+      console.log("  SKIP worksheet checks: leader_worksheets table not created yet (run migration 008)");
+    } else if (probe.error) {
+      throw new Error(probe.error.message);
+    } else {
+      const patch = (token, body) => call("PATCH", "/api/worksheets", { token, body });
+
+      const a1 = await patch(tokenA, { kind: "calling", section: "layers", value: { placements: { s1: "shared" } }, email: B });
+      check("A saves a calling section", a1.status === 200 && a1.json?.data?.layers?.placements?.s1 === "shared", JSON.stringify(a1));
+      const { data: bRows, error: bErr } = await db.from("leader_worksheets").select("email").eq("email", B);
+      if (bErr) throw new Error(bErr.message);
+      check("body email is ignored: no worksheet row for B", bRows.length === 0, `got ${bRows.length}`);
+
+      const a2 = await patch(tokenA, { kind: "calling", section: "callable", value: { willing: "yes" } });
+      check(
+        "a second section merges and the first survives",
+        a2.status === 200 && a2.json?.data?.layers?.placements?.s1 === "shared" && a2.json?.data?.callable?.willing === "yes",
+        JSON.stringify(a2)
+      );
+
+      const b1 = await patch(tokenB, { kind: "calling", section: "layers", value: { placements: { s1: "seasonal" } } });
+      check("B saves their own calling section", b1.status === 200, JSON.stringify(b1));
+      const aRead = await call("GET", "/api/worksheets?kind=calling", { token: tokenA });
+      check("A cannot read B's worksheet", aRead.status === 200 && aRead.json?.data?.layers?.placements?.s1 === "shared", JSON.stringify(aRead));
+      const aLaunch = await call("GET", "/api/worksheets?kind=launch", { token: tokenA });
+      check("an unstarted worksheet reads as {}", aLaunch.status === 200 && JSON.stringify(aLaunch.json?.data) === "{}", JSON.stringify(aLaunch));
+
+      const badKind = await call("GET", "/api/worksheets?kind=profile", { token: tokenA });
+      check("invalid kind is 400", badKind.status === 400, `got ${badKind.status}`);
+      const badSection = await patch(tokenA, { kind: "calling", section: "arena", value: {} });
+      check("invalid section is 400", badSection.status === 400, `got ${badSection.status}`);
+      const big = await patch(tokenA, { kind: "launch", section: "invite", value: "x".repeat(20_001) });
+      check("oversized value is 400", big.status === 400, `got ${big.status}`);
+      const deep = await patch(tokenA, { kind: "launch", section: "invite", value: { a: { b: { c: { d: { e: { f: 1 } } } } } } });
+      check("over-deep value is 400", deep.status === 400, `got ${deep.status}`);
+    }
+  }
 } finally {
   await cleanupFixtures(ALL);
   console.log("fixtures cleaned");
