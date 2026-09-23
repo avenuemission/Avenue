@@ -57,6 +57,7 @@ interface Phase5MultiplyProps {
   peopleError: string | null;
   ensurePersonForNetwork: (networkPerson: NetworkPerson) => Promise<Person>;
   patchPerson: (id: string, fields: Record<string, unknown>) => Promise<Person>;
+  icnuDrafts: Map<string, string>;
 }
 
 // Phase 5 (Multiply) content, shown instead of the modules grid. State and
@@ -77,6 +78,7 @@ export default function Phase5Multiply({
   peopleError,
   ensurePersonForNetwork,
   patchPerson,
+  icnuDrafts,
 }: Phase5MultiplyProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -165,6 +167,7 @@ export default function Phase5Multiply({
                           linked={linked}
                           ensurePersonForNetwork={ensurePersonForNetwork}
                           patchPerson={patchPerson}
+                          icnuDrafts={icnuDrafts}
                         />
                       )}
                       <div>

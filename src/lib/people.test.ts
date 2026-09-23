@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { validatePersonInput } from "./people";
+import { icnuStartText, validatePersonInput } from "./people";
+
+describe("icnuStartText", () => {
+  it("prefers the page-lifetime draft over the linked note", () => {
+    expect(icnuStartText("newer", { icnu: "older" })).toBe("newer");
+  });
+  it("keeps an emptied draft rather than falling back to the old note", () => {
+    expect(icnuStartText("", { icnu: "older" })).toBe("");
+  });
+  it("falls back to the linked note, then to empty", () => {
+    expect(icnuStartText(undefined, { icnu: "saved" })).toBe("saved");
+    expect(icnuStartText(undefined, { icnu: null })).toBe("");
+    expect(icnuStartText(undefined, undefined)).toBe("");
+  });
+});
 
 describe("validatePersonInput", () => {
   it("accepts a minimal create", () => {

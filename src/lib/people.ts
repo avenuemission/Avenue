@@ -49,6 +49,14 @@ export function toPerson(row: PersonRow): Person {
   };
 }
 
+// Where an ICNU editor starts: the last text the leader typed for this
+// network person this page lifetime, if any, else the linked person's
+// saved note. A collapse and reopen before a save returns must not start
+// from the stale linked row (the next edit would overwrite newer text).
+export function icnuStartText(draft: string | undefined, linked: Pick<Person, "icnu"> | undefined): string {
+  return draft ?? linked?.icnu ?? "";
+}
+
 function tagList(value: unknown, field: string, allowed: readonly string[]): { list: string[] } | { error: string } {
   if (!Array.isArray(value)) return { error: `${field} must be an array` };
   const out: string[] = [];

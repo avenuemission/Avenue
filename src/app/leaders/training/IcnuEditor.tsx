@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Person } from "@/lib/people";
+import { icnuStartText, type Person } from "@/lib/people";
 import type { NetworkPerson } from "./Phase5Multiply";
 
 const SAVE_DELAY_MS = 800;
@@ -11,6 +11,9 @@ interface IcnuEditorProps {
   linked: Person | undefined;
   ensurePersonForNetwork: (networkPerson: NetworkPerson) => Promise<Person>;
   patchPerson: (id: string, fields: Record<string, unknown>) => Promise<Person>;
+  // Page-lifetime store of the last typed text per networkPersonId (from
+  // useMyPeople), so a collapse and reopen starts from the newest text.
+  icnuDrafts: Map<string, string>;
 }
 
 // Ferguson's ICNU tool ("I see in you...") as a private note against one
@@ -21,8 +24,16 @@ interface IcnuEditorProps {
 // instance, not here, so a collapse-then-reopen remount of this component
 // (its own linkedIdRef reset to null) shares the same in-flight create as
 // the unmounting instance's flush, instead of racing a second insert.
-export default function IcnuEditor({ networkPerson, linked, ensurePersonForNetwork, patchPerson }: IcnuEditorProps) {
-  const [text, setText] = useState(linked?.icnu ?? "");
+export default function IcnuEditor({
+  networkPerson,
+  linked,
+  ensurePersonForNetwork,
+  patchPerson,
+  icnuDrafts,
+}: IcnuEditorProps) {
+  // lastSavedRef stays the linked row's note, so a draft newer than it is
+  // saved again on the next blur or unmount if the earlier save failed.
+  const [text, setText] = useState(() => icnuStartText(icnuDrafts.get(networkPerson.id), linked));
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const linkedIdRef = useRef<string | null>(linked?.id ?? null);
@@ -50,6 +61,7 @@ export default function IcnuEditor({ networkPerson, linked, ensurePersonForNetwo
   const onChange = (value: string) => {
     setText(value);
     textRef.current = value;
+    icnuDrafts.set(networkPerson.id, value);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       void save(value);

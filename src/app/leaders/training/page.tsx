@@ -80,7 +80,8 @@ export default function TrainingPage() {
     setApprenticeStep,
   } = useNetworkView(user, accessChecked, hasAccess);
   const ready = accessChecked && hasAccess && !!user;
-  const { people, peopleLoaded, peopleError, upsertPerson, patchPerson, ensurePersonForNetwork } = useMyPeople(ready);
+  const { people, peopleLoaded, peopleError, upsertPerson, patchPerson, ensurePersonForNetwork, icnuDrafts } =
+    useMyPeople(ready);
   const calling = useWorksheet<CallingData>("calling", ready);
   const launch = useWorksheet<LaunchData>("launch", ready);
   const callingDone = callingCompleteCount(calling.data);
@@ -535,6 +536,7 @@ export default function TrainingPage() {
                     peopleError={peopleError}
                     ensurePersonForNetwork={ensurePersonForNetwork}
                     patchPerson={patchPerson}
+                    icnuDrafts={icnuDrafts}
                   />
                 ) : isCallingPhase ? (
                   <div className="p-6 md:p-8">

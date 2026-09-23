@@ -92,5 +92,12 @@ export function useMyPeople(enabled: boolean) {
     [people, createPerson]
   );
 
-  return { people, peopleLoaded, peopleError, upsertPerson, createPerson, patchPerson, ensurePersonForNetwork };
+  // The last ICNU text the leader typed, by networkPersonId, for this
+  // hook's lifetime (the page's). A remounted IcnuEditor starts from it
+  // (icnuStartText) instead of the linked person's icnu, which is stale
+  // until the unmounting editor's PATCH returns. A stable Map held in
+  // state, mutated in place: writing to it never needs a re-render.
+  const [icnuDrafts] = useState(() => new Map<string, string>());
+
+  return { people, peopleLoaded, peopleError, upsertPerson, createPerson, patchPerson, ensurePersonForNetwork, icnuDrafts };
 }
