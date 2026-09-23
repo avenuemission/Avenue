@@ -112,6 +112,37 @@ try {
     check("seed without admin key is 401", r.status === 401, `got ${r.status}`);
   }
 
+  console.log("people are private to their owner");
+  {
+    const probe = await db.from("leader_people").select("id").limit(1);
+    if (probe.error && /does not exist|schema cache/i.test(probe.error.message)) {
+      console.log("  SKIP people checks: leader_people table not created yet (run migration 007)");
+    } else if (probe.error) {
+      throw new Error(probe.error.message);
+    } else {
+      const none = await call("GET", "/api/people");
+      check("people without token is 401", none.status === 401);
+      const created = await call("POST", "/api/people", { token: tokenA, body: { firstName: "Fixture Friend", spaces: ["third"], owner_email: B } });
+      check("A creates a person", created.status === 201 && created.json?.person?.firstName === "Fixture Friend", JSON.stringify(created));
+      const id = created.json?.person?.id;
+      const { data: row, error } = await db.from("leader_people").select("owner_email").eq("id", id).single();
+      if (error) throw new Error(error.message);
+      check("owner is A even though the body said B", row.owner_email === A);
+      const bList = await call("GET", "/api/people", { token: tokenB });
+      check("B cannot see A's person", bList.status === 200 && !bList.json.people.some((p) => p.id === id));
+      const bPatch = await call("PATCH", "/api/people", { token: tokenB, body: { id, icnu: "hijack" } });
+      check("B cannot edit A's person (404)", bPatch.status === 404, `got ${bPatch.status}`);
+      const bDelete = await call("DELETE", `/api/people?id=${id}`, { token: tokenB });
+      check("B cannot delete A's person (404)", bDelete.status === 404, `got ${bDelete.status}`);
+      const aPatch = await call("PATCH", "/api/people", { token: tokenA, body: { id, metrics: ["pathways", "streetlights"], icnu: "I see a shepherd" } });
+      check("A edits their person", aPatch.status === 200 && aPatch.json?.person?.metrics?.length === 2, JSON.stringify(aPatch));
+      const badTag = await call("PATCH", "/api/people", { token: tokenA, body: { id, spaces: ["fourth"] } });
+      check("invalid space is 400", badTag.status === 400);
+      const aDelete = await call("DELETE", `/api/people?id=${id}`, { token: tokenA });
+      check("A deletes their person", aDelete.status === 200);
+    }
+  }
+
   // Task 8 appends: people.
 } finally {
   await cleanupFixtures(ALL);
