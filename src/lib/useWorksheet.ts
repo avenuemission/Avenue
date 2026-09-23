@@ -27,6 +27,10 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
   const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const inFlightRef = useRef(new Set<string>());
   const sendRef = useRef<(section: string) => Promise<void>>(async () => {});
+  // Set when the page unmounts, so a save that was already in flight (and
+  // so skipped by the unmount flush) and then fails is retried once rather
+  // than losing the typing silently.
+  const unmountedRef = useRef(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -75,20 +79,34 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
       const value = pendingRef.current.get(section);
       inFlightRef.current.add(section);
       setSavingSection(section);
-      try {
+      const patch = async (sent: unknown, keepalive: boolean) => {
         const res = await leaderFetch("/api/worksheets", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kind, section, value }),
+          body: JSON.stringify({ kind, section, value: sent }),
+          keepalive,
         });
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error || `Save failed (${res.status})`);
-        if (pendingRef.current.get(section) === value) pendingRef.current.delete(section);
-        const server = (body.data ?? {}) as Record<string, unknown>;
+        if (pendingRef.current.get(section) === sent) pendingRef.current.delete(section);
+        return (body.data ?? {}) as Record<string, unknown>;
+      };
+      try {
+        const server = await patch(value, false);
         setData({ ...server, ...Object.fromEntries(pendingRef.current) } as Partial<T>);
         setSaveError(null);
-      } catch {
+      } catch (firstError) {
         setSaveError(NOT_SAVED_MESSAGE);
+        if (unmountedRef.current && pendingRef.current.has(section)) {
+          // Nothing will call send again for this section once the page is
+          // gone: retry once now with the newest typed value. inFlight
+          // stays set until this finishes, so no second request races it.
+          try {
+            await patch(pendingRef.current.get(section), true);
+          } catch (retryError) {
+            console.error(`Worksheet save lost after leaving the page (${kind}.${section})`, firstError, retryError);
+          }
+        }
       } finally {
         inFlightRef.current.delete(section);
         setSavingSection((current) => (current === section ? null : current));
@@ -117,6 +135,9 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
   // Warn before leaving with unsaved typing, and send anything still
   // waiting when the page unmounts.
   useEffect(() => {
+    // Reset on mount: React's development double mount runs the cleanup
+    // below once before the real mount.
+    unmountedRef.current = false;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (pendingRef.current.size > 0) e.preventDefault();
     };
@@ -125,6 +146,7 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
     const pending = pendingRef.current;
     const inFlight = inFlightRef.current;
     return () => {
+      unmountedRef.current = true;
       window.removeEventListener("beforeunload", onBeforeUnload);
       for (const [section, t] of timers) {
         clearTimeout(t);
