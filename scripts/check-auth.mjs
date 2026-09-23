@@ -6,7 +6,10 @@ const BASE = "http://localhost:3000";
 const A = "auth-check-a@example.invalid"; // leader, full_access false
 const B = "auth-check-b@example.invalid"; // leader, full_access true
 const OUTSIDER = "auth-check-outsider@example.invalid"; // auth user, NOT in leaders
-const ALL = [A, B, OUTSIDER];
+const ADDED = "auth-check-added@example.invalid"; // network person A adds, never an auth user
+// ADDED goes first: its network row points at A's node, so it is removed before A's.
+const ADMIN_TARGET = "auth-check-admin@example.invalid"; // leader the admin route deletes
+const ALL = [ADDED, A, B, OUTSIDER, ADMIN_TARGET];
 
 let failures = 0;
 function check(name, condition, detail = "") {
@@ -31,7 +34,25 @@ const GUARDED = [
   ["GET", "/api/leader-checkins"],
   ["GET", "/api/leader-training"],
   ["GET", "/api/network"],
+  ["PUT", "/api/leader-checkins"],
+  ["PUT", "/api/leader-training"],
+  ["POST", "/api/leader-training"],
+  ["POST", "/api/network"],
+  // 401 and 403 come before any table access, so these run even before
+  // the leader_people migration exists.
+  ["PATCH", "/api/people"],
+  ["DELETE", "/api/people?id=00000000-0000-0000-0000-000000000000"],
 ];
+
+// A Monday three weeks ago (UTC), same logic as check-checkins-api.mjs:
+// a real past Monday, never near the route's future-date boundary.
+function mondayWeeksAgo(n) {
+  const now = new Date();
+  const daysSinceMonday = (now.getUTCDay() + 6) % 7;
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysSinceMonday - n * 7));
+  return monday.toISOString().slice(0, 10);
+}
+const WEEK = mondayWeeksAgo(3);
 
 try {
   await cleanupFixtures(ALL); // leftovers from an interrupted run
@@ -69,6 +90,27 @@ try {
     const { data: aRow, error: aErr } = await db.from("leader_profiles").select("about").eq("email", A).maybeSingle();
     if (aErr) throw new Error(aErr.message);
     check("A's own profile holds the write", aRow?.about === "written by A");
+
+    const ci = await call("PUT", "/api/leader-checkins", {
+      token: tokenA,
+      body: { email: B, weekStart: WEEK, relational: 7, physical: 6, mental: 8, spiritual: 9 },
+    });
+    check("check-in PUT succeeds for A", ci.status === 200, JSON.stringify(ci));
+    const { data: aCi, error: aCiErr } = await db.from("leader_checkins").select("email").eq("email", A).eq("week_start", WEEK);
+    if (aCiErr) throw new Error(aCiErr.message);
+    check("A's check-in row exists for that week", aCi.length === 1, `got ${aCi.length}`);
+    const { data: bCi, error: bCiErr } = await db.from("leader_checkins").select("email").eq("email", B).eq("week_start", WEEK);
+    if (bCiErr) throw new Error(bCiErr.message);
+    check("no check-in row for B from A's request", bCi.length === 0, `got ${bCi.length}`);
+
+    const add = await call("POST", "/api/network", {
+      token: tokenA,
+      body: { action: "add", actorEmail: B, firstName: "Fixture Added", email: ADDED },
+    });
+    check("network add succeeds for A", add.status === 200 && add.json?.ok === true, JSON.stringify(add));
+    const { data: added, error: addedErr } = await db.from("network_people").select("added_by_email").eq("email", ADDED);
+    if (addedErr) throw new Error(addedErr.message);
+    check("added person's added_by_email is A, not the body's actorEmail", added.length === 1 && added[0].added_by_email === A, JSON.stringify(added));
   }
 
   console.log("leader-access returns the caller's own row");
@@ -102,7 +144,7 @@ try {
     check("path traversal is refused", escape.status === 404, `got ${escape.status}`);
   }
 
-  console.log("workshop admin routes need a leader");
+  console.log("workshop admin routes need a full-access leader");
   for (const [method, path] of [
     ["GET", "/api/workshops/results?code=ALL"],
     ["GET", "/api/workshops/sessions"],
@@ -115,10 +157,52 @@ try {
     check(`${method} ${path} without token is 401`, r.status === 401, `got ${r.status}`);
   }
   {
-    const r = await call("GET", "/api/workshops/sessions", { token: tokenA });
-    check("a leader can list workshop sessions", r.status === 200, `got ${r.status}`);
+    const r = await call("GET", "/api/workshops/sessions", { token: tokenB });
+    check("a full-access leader can list workshop sessions", r.status === 200, `got ${r.status}`);
+    const denied = await call("GET", "/api/workshops/sessions", { token: tokenA });
+    check("a leader without full access is 403 on workshop sessions", denied.status === 403, `got ${denied.status}`);
     const v = await call("POST", "/api/workshops/validate-code", { body: { code: "ZZZZZZ" } });
     check("validate-code stays public (not 401)", v.status !== 401, `got ${v.status}`);
+  }
+
+  console.log("admin leader routes manage Supabase leaders (fixtures only)");
+  {
+    const key = process.env.ADMIN_API_KEY;
+    if (!key) {
+      console.log("  SKIP admin route checks: ADMIN_API_KEY not set");
+    } else {
+      const admin = async (method, path, body) => {
+        const res = await fetch(`${BASE}${path}`, {
+          method,
+          headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        let json = null;
+        try { json = await res.json(); } catch { /* empty */ }
+        return { status: res.status, json };
+      };
+      const noKey = await call("GET", "/api/leader-access/admin");
+      check("admin list without key is 401", noKey.status === 401, `got ${noKey.status}`);
+      const list = await admin("GET", "/api/leader-access/admin");
+      check("admin list includes fixture A from Supabase", list.status === 200 && list.json?.leaders?.some((l) => l.email === A), `got ${list.status}`);
+      const grant = await admin("PUT", "/api/leader-access/admin", { email: A, full_access: true });
+      check("admin grant for A is 200", grant.status === 200 && grant.json?.leader?.full_access === true, JSON.stringify(grant));
+      const { data: aLeader, error: aLeaderErr } = await db.from("leaders").select("full_access").eq("email", A).single();
+      if (aLeaderErr) throw new Error(aLeaderErr.message);
+      check("A's Supabase row now has full access", aLeader.full_access === true);
+      const revoke = await admin("PUT", "/api/leader-access/admin", { email: A, full_access: false });
+      check("admin revoke for A is 200", revoke.status === 200 && revoke.json?.leader?.full_access === false, JSON.stringify(revoke));
+      const missingPut = await admin("PUT", "/api/leader-access/admin", { email: "auth-check-nobody@example.invalid", full_access: true });
+      check("admin update of a missing leader is 404", missingPut.status === 404, `got ${missingPut.status}`);
+      const missingDel = await admin("DELETE", `/api/leader-access/admin?email=${encodeURIComponent("auth-check-nobody@example.invalid")}`);
+      check("admin delete of a missing leader is 404", missingDel.status === 404, `got ${missingDel.status}`);
+      await createFixtureLeader({ email: ADMIN_TARGET, name: "Auth Check Admin Target", fullAccess: false });
+      const del = await admin("DELETE", `/api/leader-access/admin?email=${encodeURIComponent(ADMIN_TARGET)}`);
+      check("admin delete of a fixture leader is 200", del.status === 200, JSON.stringify(del));
+      const { data: gone, error: goneErr } = await db.from("leaders").select("email").eq("email", ADMIN_TARGET);
+      if (goneErr) throw new Error(goneErr.message);
+      check("deleted fixture leader is gone from Supabase", gone.length === 0, `got ${gone.length}`);
+    }
   }
 
   console.log("seed route needs admin");
