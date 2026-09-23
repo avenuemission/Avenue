@@ -6,12 +6,16 @@ import WizardShell from "@/components/journey/WizardShell";
 import { callingSectionComplete, type CallingData, type CallingSectionId } from "@/lib/journey";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
+import { useMyPeople } from "@/lib/useMyPeople";
 import { firstIncompleteIndex, stepFromParam, type WizardStepMeta } from "@/lib/wizard";
 import { CALLING_SECTIONS } from "./content";
 import SectionVideo from "./SectionVideo";
 import LayersSort from "./LayersSort";
 import CallableJournal from "./CallableJournal";
 import SharedCall from "./SharedCall";
+import ApestStep from "./ApestStep";
+import SeasonalMap from "./SeasonalMap";
+import ConversationStep from "./ConversationStep";
 
 // Phase 2: the Calling wizard. Six sections, each a short video (or its
 // summary until recorded) and one activity, saved to the leader's private
@@ -23,6 +27,7 @@ export default function CallingPage() {
     "calling",
     ready
   );
+  const { people, peopleLoaded, peopleError, upsertPerson } = useMyPeople(ready);
 
   const steps: WizardStepMeta[] = CALLING_SECTIONS.map((s) => ({
     id: s.id,
@@ -103,9 +108,27 @@ export default function CallingPage() {
     case "shared":
       activity = <SharedCall value={data.shared} save={(v) => saveSection("shared", v)} finish={finish} />;
       break;
-    default:
-      // Task 7 builds the activities for sections 4 to 6.
-      activity = <p className="text-sm text-[var(--muted)]">This section&apos;s activity is being built.</p>;
+    case "apest":
+      activity = <ApestStep value={data.apest} save={(v) => saveSection("apest", v)} finish={finish} />;
+      break;
+    case "seasonal":
+      activity = (
+        <SeasonalMap
+          value={data.seasonal}
+          save={(v) => saveSection("seasonal", v)}
+          finish={finish}
+          people={people}
+          peopleLoaded={peopleLoaded}
+          peopleError={peopleError}
+          onPersonChange={upsertPerson}
+        />
+      );
+      break;
+    case "conversation":
+      activity = (
+        <ConversationStep value={data.conversation} save={(v) => saveSection("conversation", v)} finish={finish} />
+      );
+      break;
   }
 
   return (
