@@ -22,6 +22,7 @@ import PhaseModules from "./PhaseModules";
 import { useTrainingProgress } from "./useTrainingProgress";
 import { useCheckins } from "./useCheckins";
 import { useNetworkView } from "./useNetworkView";
+import { useMyPeople } from "@/lib/useMyPeople";
 import { leaderFetch } from "@/lib/leaderFetch";
 
 // No separate component needed - inline in the layout below
@@ -70,6 +71,11 @@ export default function TrainingPage() {
     stepError,
     setApprenticeStep,
   } = useNetworkView(user, accessChecked, hasAccess);
+  const { people, peopleLoaded, peopleError, upsertPerson, createPerson, patchPerson } = useMyPeople(
+    accessChecked && hasAccess && !!user
+  );
+  // upsertPerson is consumed by Task 4's My People UI, not by Multiply.
+  void upsertPerson;
 
   useEffect(() => {
     setMounted(true);
@@ -579,6 +585,11 @@ export default function TrainingPage() {
                     stepUpdatingId={stepUpdatingId}
                     stepError={stepError}
                     setApprenticeStep={setApprenticeStep}
+                    people={people}
+                    peopleLoaded={peopleLoaded}
+                    peopleError={peopleError}
+                    createPerson={createPerson}
+                    patchPerson={patchPerson}
                   />
                 ) : (
                   <PhaseModules
