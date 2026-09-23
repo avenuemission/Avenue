@@ -61,7 +61,9 @@ export const logout = (): void => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_STORAGE_KEY);
   localStorage.removeItem(LEGACY_USERS_KEY);
-  void supabase.auth.signOut();
+  // Local scope: signing out here never ends the leader's sessions on
+  // their other devices.
+  void supabase.auth.signOut({ scope: "local" });
 };
 
 export const getCurrentUser = (): User | null => {

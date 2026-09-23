@@ -16,6 +16,13 @@ export async function leaderFetch(input: string, init: RequestInit = {}): Promis
   const { data, error } = await supabase.auth.getSession();
   if (error) {
     console.error("leaderFetch: getSession failed", error);
+    // A network blip or auth outage (status 0, missing, or 5xx, e.g.
+    // AuthRetryableFetchError) must not sign the leader out: surface it
+    // through the page's normal error path instead.
+    const status = (error as { status?: number }).status;
+    if (status === undefined || status === 0 || status >= 500) {
+      throw new Error("Can't reach the sign-in service. Check your connection and try again.");
+    }
     toLogin();
     throw new Error(`Please sign in again: ${error.message}`);
   }
