@@ -10,6 +10,7 @@ import PersonPicker, { untagPatch, type PickerTag } from "./PersonPicker";
 function hasTag(p: Person, tag: PickerTag): boolean {
   if (tag.kind === "space") return p.spaces.includes(tag.value);
   if (tag.kind === "metric") return p.metrics.includes(tag.value);
+  if (tag.kind === "none") return false;
   return p.invitee;
 }
 

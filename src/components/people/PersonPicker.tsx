@@ -4,21 +4,30 @@ import { useMemo, useState } from "react";
 import { leaderFetch } from "@/lib/leaderFetch";
 import type { Metric, Person, Space } from "@/lib/people";
 
-export type PickerTag = { kind: "space"; value: Space } | { kind: "metric"; value: Metric } | { kind: "invitee" };
+// "none" picks or adds a person without tagging them (the launch team keeps
+// its own list of ids in the Launch worksheet).
+export type PickerTag =
+  | { kind: "space"; value: Space }
+  | { kind: "metric"; value: Metric }
+  | { kind: "invitee" }
+  | { kind: "none" };
 
 function hasTag(p: Person, tag: PickerTag): boolean {
   if (tag.kind === "space") return p.spaces.includes(tag.value);
   if (tag.kind === "metric") return p.metrics.includes(tag.value);
+  if (tag.kind === "none") return false;
   return p.invitee;
 }
 
 function tagPatch(p: Person, tag: PickerTag): Record<string, unknown> {
+  if (tag.kind === "none") return {};
   if (tag.kind === "space") return { spaces: [...p.spaces, tag.value] };
   if (tag.kind === "metric") return { metrics: [...p.metrics, tag.value] };
   return { invitee: true };
 }
 
 function tagCreate(tag: PickerTag): Record<string, unknown> {
+  if (tag.kind === "none") return {};
   if (tag.kind === "space") return { spaces: [tag.value] };
   if (tag.kind === "metric") return { metrics: [tag.value] };
   return { invitee: true };
@@ -26,6 +35,7 @@ function tagCreate(tag: PickerTag): Record<string, unknown> {
 
 // The PATCH body that removes this tag from a person, leaving their other tags.
 export function untagPatch(p: Person, tag: PickerTag): Record<string, unknown> {
+  if (tag.kind === "none") return {};
   if (tag.kind === "space") return { spaces: p.spaces.filter((s) => s !== tag.value) };
   if (tag.kind === "metric") return { metrics: p.metrics.filter((m) => m !== tag.value) };
   return { invitee: false };
@@ -37,10 +47,12 @@ export default function PersonPicker({
   tag,
   people,
   onChange,
+  exclude,
 }: {
   tag: PickerTag;
   people: Person[];
   onChange: (person: Person) => void;
+  exclude?: string[]; // ids never offered as matches
 }) {
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
@@ -52,10 +64,11 @@ export default function PersonPicker({
       q
         ? people
             .filter((p) => !hasTag(p, tag))
+            .filter((p) => !exclude?.includes(p.id))
             .filter((p) => `${p.firstName} ${p.lastName ?? ""}`.toLowerCase().includes(q))
             .slice(0, 6)
         : [],
-    [people, q, tag]
+    [people, q, tag, exclude]
   );
 
   const send = async (method: "POST" | "PATCH", body: Record<string, unknown>) => {
@@ -77,6 +90,18 @@ export default function PersonPicker({
     setBusy(false);
   };
 
+  // Picking someone already on My People: tag them, or with no tag just
+  // hand them back without any request.
+  const pick = (p: Person) => {
+    if (tag.kind === "none") {
+      setError(null);
+      onChange(p);
+      setQuery("");
+      return;
+    }
+    void send("PATCH", { id: p.id, ...tagPatch(p, tag) });
+  };
+
   const [first, ...rest] = query.trim().split(/\s+/);
 
   return (
@@ -96,7 +121,7 @@ export default function PersonPicker({
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => send("PATCH", { id: p.id, ...tagPatch(p, tag) })}
+                onClick={() => pick(p)}
                 className="w-full text-left px-3 py-2 text-gray-200 hover:text-white"
               >
                 {p.firstName} {p.lastName}
