@@ -1,4 +1,4 @@
-import "server-only";
+// Not guarded with server-only: the Netlify scheduled function imports this in plain Node. The ESLint boundary rule keeps it out of client code.
 // Wires the engine to the real world for the Netlify scheduled function:
 // a service-role Supabase client, Gmail through the shared sendEmail, a
 // real pause between sends. Dry run unless LEADER_EMAILS_DRY_RUN is exactly

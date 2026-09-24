@@ -1,4 +1,4 @@
-import "server-only";
+// Not guarded with server-only: the Netlify scheduled function imports this in plain Node. The ESLint boundary rule keeps it out of client code.
 // Reads everything one email run needs, once (spec 3.3). Nine whole-table
 // reads through readRows, which fails loud on any error or on the row cap.
 import type { SupabaseClient } from "@supabase/supabase-js";

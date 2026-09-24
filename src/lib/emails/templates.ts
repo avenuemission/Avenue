@@ -1,4 +1,4 @@
-import "server-only";
+// Not guarded with server-only: the Netlify scheduled function imports this in plain Node. The ESLint boundary rule keeps it out of client code.
 // The five leader emails (spec 3.2). Pure: each takes plain data and
 // returns { subject, html, text, headers } through renderEmail. compose.ts
 // decides who gets which email with which data.

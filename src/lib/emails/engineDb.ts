@@ -1,4 +1,4 @@
-import "server-only";
+// Not guarded with server-only: the Netlify scheduled function imports this in plain Node. The ESLint boundary rule keeps it out of client code.
 // The engine's database, on Supabase (service role). Every error names the
 // table and, while migration 009 is not applied, says so.
 import type { SupabaseClient } from "@supabase/supabase-js";

@@ -1,4 +1,4 @@
-import "server-only";
+// Not guarded with server-only: the Netlify scheduled function imports this in plain Node. The ESLint boundary rule keeps it out of client code.
 // Who gets which email with what data (spec 3.2). Pure: loadSnapshot.ts
 // reads the tables once per run, and composeFor turns one recipient and one
 // kind into zero or more ready-to-send emails. Every email it returns is

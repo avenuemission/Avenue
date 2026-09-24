@@ -1,4 +1,4 @@
-import "server-only";
+// Not guarded with server-only: the Netlify scheduled function imports this in plain Node. The ESLint boundary rule keeps it out of client code.
 // The hourly leader email run (spec 3.3). The database, the mailer, the
 // clock and the pause between sends are injected, so the whole flow is
 // unit tested without Supabase or Gmail.

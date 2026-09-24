@@ -10,6 +10,12 @@ const NO_SERVER_IN_CLIENT = {
   group: ["@/lib/server", "@/lib/server/*", "@/lib/emails/*", "!@/lib/emails/prefs", "!@/lib/emails/topic", "!@/lib/emails/schedule"],
   message: "Client code must not import server modules. Only lib/emails/{prefs,topic,schedule} are shared.",
 };
+// Server modules without the server-only guard (the Netlify scheduled
+// function imports them in plain Node, where server-only throws).
+const NO_UNGUARDED_SERVER = {
+  group: ["@/lib/server/mail/*", "@/lib/server/adminRead", "@/lib/emails/*", "!@/lib/emails/prefs", "!@/lib/emails/topic", "!@/lib/emails/schedule"],
+  message: "This server module has no server-only guard; import it only from route handlers or server code.",
+};
 const DOMAIN_BANS = [
   { group: ["react", "react/*", "react-dom", "react-dom/*"], message: "lib/domain is pure: no React." },
   { group: ["next", "next/*"], message: "lib/domain is pure: no Next.js." },
@@ -31,6 +37,13 @@ const eslintConfig = defineConfig([
   {
     files: ["src/components/**", "src/hooks/**"],
     rules: { "no-restricted-imports": ["error", { patterns: [NO_SERVER_IN_CLIENT] }] },
+  },
+  {
+    // Pages, layouts and colocated components may be client code. They may
+    // import guarded server modules (Next rejects those in client bundles),
+    // but not the modules left unguarded for the Netlify function.
+    files: ["src/app/**/*.tsx"],
+    rules: { "no-restricted-imports": ["error", { patterns: [NO_UNGUARDED_SERVER] }] },
   },
   {
     files: ["src/lib/client/**"],
