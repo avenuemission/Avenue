@@ -5,8 +5,11 @@ import { leaderFetch } from "@/lib/leaderFetch";
 import type { WorksheetKind } from "@/lib/worksheets";
 import {
   beginResetEpoch,
+  isResetting,
   RESET_WAIT_MS,
+  resetEnded,
   resetEpoch,
+  resetStarted,
   saveEnded,
   saveStarted,
   savesInFlight,
@@ -92,6 +95,13 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
     sendRef.current = async (section: string) => {
       if (resettingRef.current) return;
       if (!pendingRef.current.has(section)) return;
+      if (isResetting(kind)) {
+        // Another copy is resetting this worksheet: wait, do not send. If
+        // the reset succeeds the epoch check below drops this save; if it
+        // fails this save goes out as normal.
+        schedule(section, SAVE_DEBOUNCE_MS);
+        return;
+      }
       if (epochRef.current !== resetEpoch(kind)) {
         // This worksheet was reset after this copy loaded: an old answer
         // must not be written back (round 3 spec 2).
@@ -138,8 +148,8 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
         }
       } finally {
         inFlightRef.current.delete(section);
-        saveEnded(kind);
         setSavingSection((current) => (current === section ? null : current));
+        saveEnded(kind);
       }
     };
   });
@@ -163,8 +173,10 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
   }, []);
 
   // Reset Calling or Reset Launch (round 3 spec 2). Queued saves are
-  // stopped (their values stay queued, unsent) and the reset epoch moves,
-  // so any other copy of this worksheet on the page drops its later saves.
+  // stopped (their values stay queued, unsent) and the page-wide resetting
+  // flag makes any other copy of this worksheet hold its saves back. Only
+  // once the delete succeeded does the reset epoch move, so those copies
+  // then drop their old answers; on a failure they save as normal.
   // Every save of this kind already on the wire, from any copy, lands
   // before the delete, so it cannot write an old answer back. If one is
   // still running after RESET_WAIT_MS this throws and deletes nothing. A
@@ -175,13 +187,14 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
     resettingRef.current = true;
     for (const t of timersRef.current.values()) clearTimeout(t);
     timersRef.current.clear();
-    beginResetEpoch(kind);
+    resetStarted(kind);
     let wiped = false;
     try {
       await waitForIdle(() => savesInFlight(kind) > 0, RESET_WAIT_MS);
       const res = await leaderFetch(`/api/worksheets?kind=${kind}`, { method: "DELETE" });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || `Could not reset (${res.status})`);
+      beginResetEpoch(kind);
       wiped = true;
       pendingRef.current.clear();
       setData({});
@@ -192,6 +205,7 @@ export function useWorksheet<T extends object>(kind: WorksheetKind, enabled: boo
       epochRef.current = resetEpoch(kind);
       resettingRef.current = false;
       if (!wiped) for (const section of pendingRef.current.keys()) schedule(section, SAVE_DEBOUNCE_MS);
+      resetEnded(kind);
     }
   }, [kind, schedule]);
 

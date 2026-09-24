@@ -70,8 +70,12 @@ export async function waitForIdle(isBusy: () => boolean, timeoutMs: number, poll
 // sending its last save. reset() waits until no save of that kind is on the
 // wire, and a copy that loaded before the latest reset drops its later saves
 // (an APEST reflection can resolve seconds after the leader left the step).
+// While a reset of a kind runs, other copies hold their saves back (they
+// wait, not send). The epoch moves only once the delete succeeded, so a
+// failed or timed-out reset leaves every copy saving as before.
 const inFlight: Record<WorksheetKind, number> = { calling: 0, launch: 0 };
 const epoch: Record<WorksheetKind, number> = { calling: 0, launch: 0 };
+const resetting: Record<WorksheetKind, number> = { calling: 0, launch: 0 };
 
 export function saveStarted(kind: WorksheetKind): void {
   inFlight[kind] += 1;
@@ -93,4 +97,17 @@ export function resetEpoch(kind: WorksheetKind): number {
 export function beginResetEpoch(kind: WorksheetKind): number {
   epoch[kind] += 1;
   return epoch[kind];
+}
+
+export function resetStarted(kind: WorksheetKind): void {
+  resetting[kind] += 1;
+}
+
+export function resetEnded(kind: WorksheetKind): void {
+  if (resetting[kind] <= 0) throw new Error(`resetEnded(${kind}) without a matching resetStarted`);
+  resetting[kind] -= 1;
+}
+
+export function isResetting(kind: WorksheetKind): boolean {
+  return resetting[kind] > 0;
 }

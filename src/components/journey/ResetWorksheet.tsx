@@ -16,6 +16,7 @@ export interface ResetWorksheetProps {
 export default function ResetWorksheet({ kind, onReset, variant }: ResetWorksheetProps) {
   const copy = RESET_COPY[kind];
   const titleId = useId();
+  const bodyId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -70,6 +71,7 @@ export default function ResetWorksheet({ kind, onReset, variant }: ResetWorkshee
       <dialog
         ref={dialogRef}
         aria-labelledby={titleId}
+        aria-describedby={bodyId}
         className="av-dialog no-print"
         onClose={handleClose}
         onCancel={(e) => {
@@ -79,14 +81,16 @@ export default function ResetWorksheet({ kind, onReset, variant }: ResetWorkshee
         <h2 id={titleId} className="font-serif text-2xl text-[var(--ink)]">
           {copy.title}
         </h2>
-        <p className="mt-3 text-sm text-[var(--ink-2)]">{RESET_LEAD}</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--ink-2)]">
-          {copy.wiped.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-        <p className="mt-3 text-sm text-[var(--muted)]">{copy.kept}</p>
-        <p className="mt-3 text-sm font-semibold text-[var(--ink)]">{RESET_FINAL}</p>
+        <div id={bodyId}>
+          <p className="mt-3 text-sm text-[var(--ink-2)]">{RESET_LEAD}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--ink-2)]">
+            {copy.wiped.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm text-[var(--muted)]">{copy.kept}</p>
+          <p className="mt-3 text-sm font-semibold text-[var(--ink)]">{RESET_FINAL}</p>
+        </div>
         {error ? (
           <p role="alert" className="mt-3 text-sm text-amber-400">
             {error}

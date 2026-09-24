@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   beginResetEpoch,
+  isResetting,
   RESET_COPY,
   RESET_FINAL,
   RESET_LEAD,
+  resetEnded,
   resetEpoch,
+  resetStarted,
   saveEnded,
   saveStarted,
   savesInFlight,
@@ -93,5 +96,31 @@ describe("page-wide save bookkeeping", () => {
     expect(beginResetEpoch("calling")).toBe(calling + 1);
     expect(resetEpoch("calling")).toBe(calling + 1);
     expect(resetEpoch("launch")).toBe(launch);
+  });
+  it("flags a running reset per kind and fails loud on an unmatched end", () => {
+    expect(isResetting("calling")).toBe(false);
+    resetStarted("calling");
+    expect(isResetting("calling")).toBe(true);
+    expect(isResetting("launch")).toBe(false);
+    resetEnded("calling");
+    expect(isResetting("calling")).toBe(false);
+    expect(() => resetEnded("calling")).toThrow("resetEnded(calling) without a matching resetStarted");
+  });
+  it("a failed reset leaves the epoch where it was", () => {
+    const before = resetEpoch("launch");
+    resetStarted("launch");
+    // the wait timed out or the DELETE failed: no beginResetEpoch
+    resetEnded("launch");
+    expect(resetEpoch("launch")).toBe(before);
+    expect(isResetting("launch")).toBe(false);
+  });
+  it("a successful reset moves the epoch once, after the delete", () => {
+    const before = resetEpoch("launch");
+    resetStarted("launch");
+    expect(resetEpoch("launch")).toBe(before);
+    beginResetEpoch("launch");
+    resetEnded("launch");
+    expect(resetEpoch("launch")).toBe(before + 1);
+    expect(isResetting("launch")).toBe(false);
   });
 });
