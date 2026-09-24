@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import VideoModal from "@/components/site/VideoModal";
 import Portal from "@/components/ui/Portal";
 import { CREATIVE_INITIATIVES } from "@/content/site";
 
@@ -105,14 +104,6 @@ export default function HomeboundAlbum() {
           </div>
         </Portal>
       )}
-
-      {/* Keep VideoModal for potential future use */}
-      <VideoModal
-        isOpen={false}
-        onClose={() => {}}
-        youtubeUrl=""
-        title=""
-      />
     </>
   );
 }

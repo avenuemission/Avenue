@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { timeLeftUntil, type TimeLeft } from "@/lib/domain/dates/countdown";
 
-// One clock for every countdown on the page: a tick each second.
+// Each countdown subscribes its own one-second interval while it is mounted.
 function subscribe(onTick: () => void): () => void {
   const id = setInterval(onTick, 1000);
   return () => clearInterval(id);

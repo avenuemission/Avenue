@@ -52,6 +52,7 @@ describe("instants (shown in Melbourne time)", () => {
   it("reads the Melbourne calendar day and clock time", () => {
     expect(formatLong(instant)).toBe("30 September 2026");
     expect(formatTime(instant)).toBe("7:30 pm");
+    expect(formatTime(new Date("2026-09-30T09:30:05Z"), { seconds: true })).toBe("7:30:05 pm");
     expect(formatEventDay(instant)).toMatch(/^Wed,? 30 Sept? 2026$/);
   });
 

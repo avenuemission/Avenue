@@ -68,7 +68,7 @@ export function formatEventDay(input: DateInput): string {
   return format(input, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
-// "7:30 pm", Melbourne time.
-export function formatTime(instant: Date): string {
-  return format(instant, { hour: "numeric", minute: "2-digit", hour12: true });
+// "7:30 pm" (or "7:30:05 pm" with seconds), Melbourne time.
+export function formatTime(instant: Date, { seconds = false }: { seconds?: boolean } = {}): string {
+  return format(instant, { hour: "numeric", minute: "2-digit", ...(seconds ? { second: "2-digit" } : {}), hour12: true });
 }

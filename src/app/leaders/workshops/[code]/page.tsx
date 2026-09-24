@@ -12,6 +12,7 @@ import {
   type SurveyOption,
   type SurveyQuestion,
 } from "@/lib/domain/workshops/survey";
+import { formatTime } from "@/lib/domain/dates/format";
 
 // A survey_responses row: one text answer per column (see survey.ts).
 type SurveyRow = Record<string, string | null>;
@@ -324,7 +325,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
           <div className="flex items-center gap-3">
             {lastFetched && (
               <span className="text-gray-600 text-xs hidden sm:block">
-                Updated {lastFetched.toLocaleTimeString()}
+                Updated {formatTime(lastFetched, { seconds: true })}
               </span>
             )}
             <button

@@ -20,6 +20,7 @@ import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { SUPPORT_ZOOM } from "@/content/support";
 import { formatTime, formatWeekdayDayMonth } from "@/lib/domain/dates/format";
+import { upcomingCallSlots } from "@/lib/domain/supportCalls";
 
 // The server sends the confirmation to the signed-in leader's own address
 // and adds the Zoom details itself.
@@ -29,37 +30,6 @@ function postSupportForm(body: { name: string; company: string; data: Record<str
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-}
-
-// Generate next 3 weeks of Thursdays and Saturdays
-function getUpcomingCallDates(): { thursdays: Date[]; saturdays: Date[] } {
-  const thursdays: Date[] = [];
-  const saturdays: Date[] = [];
-  const today = new Date();
-  
-  for (let i = 0; i < 21; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    
-    if (date.getDay() === 4 && thursdays.length < 3) {
-      // Thursday
-      const thursday = new Date(date);
-      thursday.setHours(18, 0, 0, 0);
-      if (thursday > today) {
-        thursdays.push(thursday);
-      }
-    }
-    if (date.getDay() === 6 && saturdays.length < 3) {
-      // Saturday
-      const saturday = new Date(date);
-      saturday.setHours(14, 0, 0, 0);
-      if (saturday > today) {
-        saturdays.push(saturday);
-      }
-    }
-  }
-  
-  return { thursdays, saturdays };
 }
 
 export default function LeaderSupportPage() {
@@ -72,7 +42,7 @@ export default function LeaderSupportPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const { thursdays, saturdays } = getUpcomingCallDates();
+  const { thursdays, saturdays } = upcomingCallSlots(new Date());
 
   const handleLogout = () => {
     logout();

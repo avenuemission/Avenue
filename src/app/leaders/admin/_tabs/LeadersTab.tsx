@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { CheckCircle, Lock, Plus, Trash2 } from "lucide-react";
 import { adminFetch } from "@/lib/client/adminFetch";
+import { formatShortDate } from "@/lib/domain/dates/format";
 import { ErrorText, jsonInit, loadJson, useAdminSave, useLoaded, type AdminTabProps } from "./shared";
 
 interface LeaderRow {
@@ -81,7 +82,7 @@ export default function LeadersTab({ adminKey }: AdminTabProps) {
               <div>
                 <p className="font-medium text-white">{l.name}</p>
                 <p className="text-sm text-gray-400">{l.email}</p>
-                <p className="text-xs text-gray-500 mt-1">Created {new Date(l.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500 mt-1">Created {formatShortDate(new Date(l.created_at))}</p>
               </div>
               <div className="flex items-center gap-3">
                 <button
