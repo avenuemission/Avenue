@@ -5,6 +5,7 @@ import PrintButton from "@/components/journey/PrintButton";
 import PhaseOpening from "@/components/avenue/PhaseOpening";
 import JourneyFooter from "@/components/avenue/JourneyFooter";
 import HeaderAvatar from "@/components/avenue/HeaderAvatar";
+import ResetWorksheet from "@/components/journey/ResetWorksheet";
 import { VERSES } from "../../verses";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
@@ -47,7 +48,7 @@ function EmptyPanel({ step }: { step: number }) {
 // leader's sender or the admins. No readiness score anywhere (Ruling L2).
 export default function LaunchPlanPage() {
   const { user, ready, error: gateError } = useLeaderGate();
-  const { data, loaded, error, saveSection } = useWorksheet<LaunchData>("launch", ready);
+  const { data, loaded, error, saveSection, reset } = useWorksheet<LaunchData>("launch", ready);
   const { people, peopleLoaded, peopleError } = useMyPeople(ready);
   const network = useNetworkView(user, ready, ready);
   const apprenticeCount =
@@ -458,6 +459,10 @@ export default function LaunchPlanPage() {
           </div>
         )}
       </section>
+
+      <div className="no-print border-t border-[var(--line)] pt-6">
+        <ResetWorksheet kind="launch" onReset={reset} variant="button" />
+      </div>
 
       <JourneyFooter />
     </div>

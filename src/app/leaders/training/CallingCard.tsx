@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import LampSteps, { type LampStep } from "@/components/avenue/LampSteps";
+import ResetWorksheet from "@/components/journey/ResetWorksheet";
 import { CALLING_LAMP_LABELS } from "@/lib/avenue";
 import { CALLING_SECTION_IDS, CALLING_TOTAL, type CallingData } from "@/lib/journey";
 import { callingSectionStatus } from "@/lib/stepStatus";
@@ -11,12 +12,13 @@ export interface CallingCardProps {
   data: Partial<CallingData>;
   loaded: boolean;
   error: string | null;
+  onReset: () => Promise<void>; // useWorksheet("calling").reset
 }
 
 // Phase 2 on the hub (spec 4.1): one "continue" block on the night ground.
 // A lamp per section (tap one to open that section), the count, and the two
 // ways in: the wizard and the Calling Profile.
-export default function CallingCard({ data, loaded, error }: CallingCardProps) {
+export default function CallingCard({ data, loaded, error, onReset }: CallingCardProps) {
   const router = useRouter();
   const ok = loaded && !error;
   const lamps: LampStep[] = CALLING_SECTION_IDS.map((id) => ({
@@ -63,6 +65,7 @@ export default function CallingCard({ data, loaded, error }: CallingCardProps) {
           View my Calling Profile
         </Link>
       </div>
+      {ok ? <ResetWorksheet kind="calling" onReset={onReset} variant="quiet" /> : null}
     </div>
   );
 }

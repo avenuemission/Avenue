@@ -377,9 +377,9 @@ export default function TrainingPage() {
                       teaching={phase.description}
                     />
                   ) : isCallingPhase ? (
-                    <CallingCard data={calling.data} loaded={calling.loaded} error={calling.error} />
+                    <CallingCard data={calling.data} loaded={calling.loaded} error={calling.error} onReset={calling.reset} />
                   ) : isLaunchPhase ? (
-                    <LaunchCard data={launch.data} loaded={launch.loaded} error={launch.error} />
+                    <LaunchCard data={launch.data} loaded={launch.loaded} error={launch.error} onReset={launch.reset} />
                   ) : (
                     <PhaseModules
                       phase={phase}

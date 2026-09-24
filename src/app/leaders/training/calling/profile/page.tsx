@@ -6,6 +6,7 @@ import PrintButton from "@/components/journey/PrintButton";
 import PhaseOpening from "@/components/avenue/PhaseOpening";
 import JourneyFooter from "@/components/avenue/JourneyFooter";
 import HeaderAvatar from "@/components/avenue/HeaderAvatar";
+import ResetWorksheet from "@/components/journey/ResetWorksheet";
 import { VERSES } from "../../verses";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
@@ -56,7 +57,7 @@ function EmptyNext({ line, label, step }: { line: string; label: string; step: n
 // behind a toggle, and are never inside the printed output (Ruling C3).
 export default function CallingProfilePage() {
   const { user, ready, error: gateError } = useLeaderGate();
-  const { data, loaded, error } = useWorksheet<CallingData>("calling", ready);
+  const { data, loaded, error, reset } = useWorksheet<CallingData>("calling", ready);
   const { people, peopleLoaded, peopleError } = useMyPeople(ready);
   const [showJournal, setShowJournal] = useState(false);
 
@@ -325,6 +326,10 @@ export default function CallingProfilePage() {
           <EmptyNext line="Not booked yet." label="Book the conversation" step={STEP_NUMBER.conversation} />
         )}
       </section>
+
+      <div className="no-print border-t border-[var(--line)] pt-6">
+        <ResetWorksheet kind="calling" onReset={reset} variant="button" />
+      </div>
 
       <JourneyFooter />
     </div>

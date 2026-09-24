@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import LampSteps, { type LampStep } from "@/components/avenue/LampSteps";
+import ResetWorksheet from "@/components/journey/ResetWorksheet";
 import { LAUNCH_LAMP_LABELS } from "@/lib/avenue";
 import { LAUNCH_STEP_IDS, LAUNCH_TOTAL, type LaunchData } from "@/lib/journey";
 import { launchStepStatus } from "@/lib/stepStatus";
@@ -11,11 +12,12 @@ export interface LaunchCardProps {
   data: Partial<LaunchData>;
   loaded: boolean;
   error: string | null;
+  onReset: () => Promise<void>; // useWorksheet("launch").reset
 }
 
 // Phase 3 on the hub (spec 4.1): a lamp per planning step (tap one to open
 // that step), the count, and the two ways in: the wizard and the Launch Plan.
-export default function LaunchCard({ data, loaded, error }: LaunchCardProps) {
+export default function LaunchCard({ data, loaded, error, onReset }: LaunchCardProps) {
   const router = useRouter();
   const ok = loaded && !error;
   const lamps: LampStep[] = LAUNCH_STEP_IDS.map((id) => ({
@@ -61,6 +63,7 @@ export default function LaunchCard({ data, loaded, error }: LaunchCardProps) {
           View my Launch Plan
         </Link>
       </div>
+      {ok ? <ResetWorksheet kind="launch" onReset={onReset} variant="quiet" /> : null}
     </div>
   );
 }

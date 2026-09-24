@@ -297,7 +297,8 @@ html {
    .avenue-night, so it carries the same focus ring and muted colour (F6). */
 .avenue-night :focus-visible,
 .av-moment :focus-visible,
-.av-sheet :focus-visible {
+.av-sheet :focus-visible,
+.av-dialog :focus-visible {
   outline: 2px solid var(--lamp);
   outline-offset: 3px;
 }
@@ -759,6 +760,25 @@ button.av-lamp {
   .av-sheet-body {
     padding: 12px 24px 32px;
   }
+}
+
+/* The reset confirm (round 3 spec 2): a native <dialog>, centred, on the
+   night panel. It may render outside .avenue-night's colours, so it
+   carries the night muted colour itself; the lamp focus ring comes from
+   the rule above. */
+.av-dialog {
+  --muted: #8b94a7;
+  width: calc(100% - 32px);
+  max-width: 440px;
+  margin: auto;
+  padding: 24px;
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  background: var(--night-2);
+  color: var(--ink);
+}
+.av-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 /* ============================================================ */
