@@ -13,6 +13,9 @@ export default function ApestQuizPage() {
   const [emailSent, setEmailSent] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [personalizedResponse, setPersonalizedResponse] = useState<string | null>(null);
+  // The server's signature over the reflection, so the email can carry
+  // exactly the text shown here.
+  const [reflectionSignature, setReflectionSignature] = useState<string | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
 
   const handleAnswer = (value: number) => {
@@ -53,6 +56,7 @@ export default function ApestQuizPage() {
       if (response.ok) {
         const data = await response.json();
         setPersonalizedResponse(data.response);
+        setReflectionSignature(typeof data.signature === "string" ? data.signature : null);
       }
     } catch (error) {
       console.error("Error fetching personalized results:", error);
@@ -69,7 +73,13 @@ export default function ApestQuizPage() {
     e.preventDefault();
     if (emailForm.email && results) {
       try {
-        // The server writes the email from the results; nothing else is sent.
+        // The email carries the reflection shown on this page, checked by the
+        // server against its signature. With none (OpenAI failed), the server
+        // uses the strongest gift's text, which is what this page shows then.
+        const signed =
+          personalizedResponse && reflectionSignature
+            ? { reflection: personalizedResponse, signature: reflectionSignature }
+            : {};
         const res = await fetch("/api/apest-results", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -78,6 +88,7 @@ export default function ApestQuizPage() {
             name: emailForm.name,
             email: emailForm.email,
             company: emailForm.company,
+            ...signed,
           }),
         });
         if (!res.ok) throw new Error(`Sending results failed (${res.status})`);
@@ -376,6 +387,7 @@ export default function ApestQuizPage() {
                   setResults(null);
                   setEmailSent(false);
                   setPersonalizedResponse(null);
+                  setReflectionSignature(null);
                   setIsLoadingAI(false);
                 }}
                 className="text-blue-400 hover:text-blue-300 text-sm uppercase tracking-wider"

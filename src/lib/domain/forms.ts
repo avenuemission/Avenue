@@ -128,18 +128,22 @@ export function parseForm(type: string, body: unknown): FormParse {
 }
 
 // The APEST quiz is not a form_submissions form: its results go to
-// /api/apest-results, which writes a reflection and, when an email is
-// given, sends the results. Only these fields are accepted; the email body
-// is written on the server, never taken from the request.
+// /api/apest-results, which writes a signed reflection, and, when an email
+// is given, emails the results with that same reflection. The reflection
+// comes back from the browser only with the server's signature, which the
+// route verifies before using it.
 export interface ApestRequest {
   results: ApestResults;
   email: string | null;
   name: string;
+  signedReflection: { text: string; signature: string } | null;
 }
+
+export const REFLECTION_MAX = 5000;
 
 export type ApestParse = { ok: true; value: ApestRequest } | { ok: false; error: string };
 
-const APEST_KEYS = new Set(["results", "email", "name", "company"]);
+const APEST_KEYS = new Set(["results", "email", "name", "company", "reflection", "signature"]);
 
 export function parseApestRequest(body: unknown): ApestParse {
   if (!isPlainObject(body)) return { ok: false, error: "Invalid request" };
@@ -167,5 +171,15 @@ export function parseApestRequest(body: unknown): ApestParse {
   const name = (body.name ?? "").trim();
   if (name.length > NAME_MAX) return { ok: false, error: `Please keep the name to ${NAME_MAX} characters` };
 
-  return { ok: true, value: { results, email: email.email, name } };
+  const { reflection, signature } = body;
+  let signedReflection: ApestRequest["signedReflection"] = null;
+  if (reflection !== undefined || signature !== undefined) {
+    if (typeof reflection !== "string" || typeof signature !== "string" || !reflection.trim() || signature.length > 128) {
+      return { ok: false, error: "Invalid reflection" };
+    }
+    if (reflection.length > REFLECTION_MAX) return { ok: false, error: "Reflection is too long" };
+    signedReflection = { text: reflection, signature };
+  }
+
+  return { ok: true, value: { results, email: email.email, name, signedReflection } };
 }

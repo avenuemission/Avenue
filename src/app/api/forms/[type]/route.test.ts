@@ -46,7 +46,7 @@ let fake: ReturnType<typeof fakeSupabase>;
 
 beforeEach(() => {
   for (const f of Object.values(h)) f.mockReset();
-  fake = fakeSupabase();
+  fake = fakeSupabase({ "form_submissions.insert": { data: { id: 42 } } });
   h.getSupabaseAdmin.mockReturnValue(fake.db);
   h.allow.mockResolvedValue(true);
   h.sendEmail.mockResolvedValue(undefined);
@@ -60,7 +60,7 @@ describe("POST /api/forms/[type]", () => {
   it("saves the form, notifies the admin and confirms to the one parsed address", async () => {
     const res = await post("join-pathway", joinBody);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ success: true });
+    expect(await res.json()).toEqual({ ok: true, emailed: true });
     expect(fake.calls).toContainEqual([
       "form_submissions",
       "insert",
@@ -130,6 +130,22 @@ describe("POST /api/forms/[type]", () => {
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain("constraint");
     expect(h.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("mail failure after the save: still a success, logged with type and id only", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    h.sendEmail.mockRejectedValue(Object.assign(new Error("550 No such user ann@example.invalid"), { code: "EENVELOPE" }));
+    const res = await post("join-pathway", joinBody);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, emailed: false });
+    expect(fake.calls.some((c) => c[1] === "insert")).toBe(true);
+    // Both sends were tried, and each failure logged without the address.
+    expect(h.sendEmail).toHaveBeenCalledTimes(2);
+    const logged = JSON.stringify(errorLog.mock.calls);
+    expect(logged).toContain("forms/join-pathway");
+    expect(logged).toContain("42");
+    expect(logged).not.toContain("ann@example.invalid");
+    expect(logged).not.toContain("Ann");
   });
 
   it("no visitor email when none was given: admin only", async () => {

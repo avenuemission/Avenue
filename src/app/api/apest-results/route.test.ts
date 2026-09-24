@@ -9,11 +9,14 @@ vi.mock("@/lib/server/rateLimit", () => ({
   allow: h.allow,
   RATE: {
     openai: { name: "openai", windowSeconds: 3600, max: 10 },
+    form: { name: "form", windowSeconds: 600, max: 5 },
     formRecipient: { name: "form-to", windowSeconds: 3600, max: 3 },
   },
 }));
 
 import { POST } from "./route";
+import { signText } from "@/lib/server/signedText";
+import { APEST_ROLES } from "@/lib/domain/apest";
 
 const ADMIN = "henrymcmahon@avenuemission.com";
 const IP = "203.0.113.7";
@@ -41,6 +44,7 @@ beforeEach(() => {
   vi.stubGlobal("fetch", h.fetch);
   vi.stubEnv("OPENAI_API_KEY", "sk-test");
   vi.stubEnv("AVENUE_SITE_URL", "");
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
   h.allow.mockResolvedValue(true);
   h.sendEmail.mockResolvedValue(undefined);
   openAiReplies(REFLECTION);
@@ -52,20 +56,53 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("POST /api/apest-results", () => {
-  it("results only (quiz page and leader training): returns the reflection, sends no email", async () => {
+const signed = (text = REFLECTION) => ({ reflection: text, signature: signText(text, results) });
+
+describe("POST /api/apest-results: the reflection (no email)", () => {
+  it("returns the reflection and its signature, sends no email", async () => {
     const res = await post({ results });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ response: REFLECTION });
+    const json = await res.json();
+    expect(json.response).toBe(REFLECTION);
+    expect(json.signature).toBe(signText(REFLECTION, results));
     expect(h.sendEmail).not.toHaveBeenCalled();
     expect(h.allow).toHaveBeenCalledWith(expect.objectContaining({ name: "openai" }), IP);
     expect(h.fetch).toHaveBeenCalledTimes(1);
     expect(h.fetch.mock.calls[0][0]).toBe("https://api.openai.com/v1/chat/completions");
   });
 
-  it("with an email: sends the server-written results to that one address and tells the admin", async () => {
-    const res = await post({ results, email: "ann@example.invalid", name: "Ann", company: "" });
+  it("429 when the caller is over the OpenAI limit", async () => {
+    h.allow.mockResolvedValueOnce(false);
+    expect((await post({ results })).status).toBe(429);
+    expect(h.fetch).not.toHaveBeenCalled();
+  });
+
+  it("fails loud when the rate limiter is down", async () => {
+    h.allow.mockRejectedValue(new Error("rate_limit_hit: down"));
+    expect((await post({ results })).status).toBe(500);
+    expect(h.fetch).not.toHaveBeenCalled();
+  });
+
+  it("500 when OpenAI fails", async () => {
+    h.fetch.mockResolvedValue(new Response(JSON.stringify({ error: { message: "quota" } }), { status: 429 }));
+    expect((await post({ results })).status).toBe(500);
+  });
+
+  it("refuses bad results and an oversized body before calling OpenAI", async () => {
+    expect((await post({ results: { ...results, teacher: "10" } })).status).toBe(400);
+    expect((await post("{nope")).status).toBe(400);
+    expect((await post({ results, name: "a".repeat(30000) })).status).toBe(413);
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(h.allow).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/apest-results: emailing the results", () => {
+  it("emails exactly the reflection the page showed, with no second OpenAI call", async () => {
+    const res = await post({ results, email: "ann@example.invalid", name: "Ann", company: "", ...signed() });
     expect(res.status).toBe(200);
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(h.allow).toHaveBeenCalledWith(expect.objectContaining({ name: "form" }), IP);
     expect(h.sendEmail.mock.calls.map((c) => c[0])).toEqual(["ann@example.invalid", ADMIN]);
     expect(h.sendEmail.mock.calls.map((c) => c[1])).toEqual([
       "Your APEST Quiz Results - Discover Your Gifts",
@@ -73,13 +110,44 @@ describe("POST /api/apest-results", () => {
     ]);
     const visitor = h.sendEmail.mock.calls[0];
     expect(visitor[2]).toContain("You lead by sending.");
+    expect(visitor[2]).toContain("You also care for people.");
     expect(visitor[3]).toEqual({ text: expect.stringContaining("Apostle: 30%") });
     expect(h.sendEmail.mock.calls[1][3].text).toContain("Teacher: 10%");
   });
 
-  it("escapes the AI text and the name in the email", async () => {
-    openAiReplies(`<a href="https://evil.invalid">click</a>`);
-    await post({ results, email: "ann@example.invalid", name: `<b>Ann</b>` });
+  it("400 and nothing sent when the reflection was changed", async () => {
+    const res = await post({
+      results,
+      email: "ann@example.invalid",
+      reflection: `${REFLECTION} Click https://evil.invalid`,
+      signature: signText(REFLECTION, results),
+    });
+    expect(res.status).toBe(400);
+    expect(h.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("400 when the results were changed after signing", async () => {
+    const res = await post({ results: { ...results, teacher: 11 }, email: "ann@example.invalid", ...signed() });
+    expect(res.status).toBe(400);
+    expect(h.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("400 for a signature of the wrong length", async () => {
+    const res = await post({ results, email: "ann@example.invalid", reflection: REFLECTION, signature: "abc123" });
+    expect(res.status).toBe(400);
+    expect(h.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("with no AI reflection (OpenAI failed on the page): emails the strongest gift's text the page showed", async () => {
+    await post({ results, email: "ann@example.invalid" });
+    expect(h.fetch).not.toHaveBeenCalled();
+    // apostle is the top role in these results
+    expect(h.sendEmail.mock.calls[0][3].text).toContain(APEST_ROLES.apostle.leadershipBenefit);
+  });
+
+  it("escapes the reflection and the name in the email", async () => {
+    const evil = `<a href="https://evil.invalid">click</a>`;
+    await post({ results, email: "ann@example.invalid", name: "<b>Ann</b>", ...signed(evil) });
     const html = h.sendEmail.mock.calls[0][2] as string;
     expect(html).not.toContain(`<a href="https://evil.invalid">`);
     expect(html).not.toContain("<b>Ann</b>");
@@ -89,56 +157,32 @@ describe("POST /api/apest-results", () => {
   it("refuses the old client-written personalizedMessage", async () => {
     const res = await post({ results, email: "ann@example.invalid", personalizedMessage: "<script>x</script>" });
     expect(res.status).toBe(400);
-    expect(h.fetch).not.toHaveBeenCalled();
     expect(h.sendEmail).not.toHaveBeenCalled();
   });
 
   it("refuses a list of addresses", async () => {
-    const res = await post({ results, email: "a@x.invalid, b@y.invalid" });
-    expect(res.status).toBe(400);
+    expect((await post({ results, email: "a@x.invalid, b@y.invalid", ...signed() })).status).toBe(400);
     expect(h.sendEmail).not.toHaveBeenCalled();
   });
 
-  it("refuses bad results and an oversized body before calling OpenAI", async () => {
-    expect((await post({ results: { ...results, teacher: "10" } })).status).toBe(400);
-    expect((await post("{nope")).status).toBe(400);
-    expect((await post({ results, name: "a".repeat(5000) })).status).toBe(413);
-    expect(h.fetch).not.toHaveBeenCalled();
-    expect(h.allow).not.toHaveBeenCalled();
-  });
-
-  it("429 when the caller is over the OpenAI limit", async () => {
+  it("429 when the caller is over the form limit", async () => {
     h.allow.mockResolvedValueOnce(false);
-    const res = await post({ results });
-    expect(res.status).toBe(429);
-    expect(h.fetch).not.toHaveBeenCalled();
+    expect((await post({ results, email: "ann@example.invalid", ...signed() })).status).toBe(429);
+    expect(h.sendEmail).not.toHaveBeenCalled();
   });
 
-  it("fails loud when the rate limiter is down", async () => {
-    h.allow.mockRejectedValue(new Error("rate_limit_hit: down"));
-    const res = await post({ results });
-    expect(res.status).toBe(500);
-    expect(h.fetch).not.toHaveBeenCalled();
-  });
-
-  it("recipient over its limit: returns the reflection, skips the visitor email, still tells the admin", async () => {
+  it("recipient over its limit: skips the visitor email, still tells the admin", async () => {
     h.allow.mockImplementation(async (rule: { name: string }) => rule.name !== "form-to");
-    const res = await post({ results, email: "ann@example.invalid" });
+    const res = await post({ results, email: "ann@example.invalid", ...signed() });
     expect(res.status).toBe(200);
     expect(h.sendEmail.mock.calls.map((c) => c[0])).toEqual([ADMIN]);
   });
 
-  it("spam: answers success without calling OpenAI or sending", async () => {
-    const res = await post({ results, email: "ann@example.invalid", company: "Acme" });
+  it("spam: answers success, calls nothing and sends nothing", async () => {
+    const res = await post({ results, email: "ann@example.invalid", company: "Acme", ...signed() });
     expect(res.status).toBe(200);
     expect(h.fetch).not.toHaveBeenCalled();
-    expect(h.sendEmail).not.toHaveBeenCalled();
-  });
-
-  it("500 without sending when OpenAI fails", async () => {
-    h.fetch.mockResolvedValue(new Response(JSON.stringify({ error: { message: "quota" } }), { status: 429 }));
-    const res = await post({ results, email: "ann@example.invalid" });
-    expect(res.status).toBe(500);
+    expect(h.allow).not.toHaveBeenCalled();
     expect(h.sendEmail).not.toHaveBeenCalled();
   });
 });

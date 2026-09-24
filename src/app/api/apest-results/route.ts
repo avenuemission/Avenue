@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseApestRequest } from "@/lib/domain/forms";
-import type { ApestResults } from "@/lib/domain/apest";
+import { APEST_ROLES, topRole, type ApestResults } from "@/lib/domain/apest";
 import { apestResultsEmail } from "@/lib/emails/public/confirmations";
 import { adminNotificationEmail, sendAdminEmail } from "@/lib/emails/public/admin";
 import { sendEmail } from "@/lib/server/mail/transport";
 import { allow, RATE } from "@/lib/server/rateLimit";
 import { clientIp } from "@/lib/server/clientIp";
 import { jsonError, serverError, tooMany } from "@/lib/server/http";
+import { signText, verifyText } from "@/lib/server/signedText";
 
-// The results, an optional name and email, and nothing else: a few hundred
-// bytes. Anything bigger is refused before it is parsed.
-const MAX_BODY_BYTES = 4096;
+// The results, an optional name and email, and the signed reflection
+// (at most REFLECTION_MAX characters). Anything bigger is refused before it
+// is parsed.
+const MAX_BODY_BYTES = 24576;
 
 // One gpt-4o call: a personal reflection on these results, plain text.
 // Throws on any failure; the route answers 500 and sends nothing.
@@ -72,11 +74,15 @@ Keep the tone warm, encouraging, and focused on how they can use these gifts to 
 }
 
 // POST /api/apest-results
-//   { results }                       -> { response } (the quiz page and leader training)
-//   { results, email, name?, company } -> also emails the results to that one
-//                                         address and notifies the admin
-// The email is written here from the results and a fresh reflection; the
-// browser never supplies any of its text.
+//   { results }  -> { response, signature }: a fresh reflection, signed so
+//                   the page can send it back for the email (quiz page and
+//                   leader training).
+//   { results, email, name?, company, reflection?, signature? }
+//                -> emails the results with the reflection the page showed
+//                   (verified against its signature; no second OpenAI call)
+//                   to that one address, and notifies the admin. With no
+//                   reflection (OpenAI failed on the page) it uses the
+//                   strongest gift's text, which is what the page showed.
 export async function POST(request: NextRequest) {
   try {
     const raw = await request.text();
@@ -95,28 +101,35 @@ export async function POST(request: NextRequest) {
       if (parsed.error === "spam") return NextResponse.json({ success: true });
       return jsonError(400, parsed.error);
     }
-    const { results, email, name } = parsed.value;
+    const { results, email, name, signedReflection } = parsed.value;
+    const bound = { ...results };
 
     // allow() throws if the limiter is down; the catch turns that into a 500.
-    if (!(await allow(RATE.openai, clientIp(request)))) return tooMany();
-
-    const reflection = await writeReflection(results);
-
-    if (email) {
-      if (await allow(RATE.formRecipient, email.toLowerCase())) {
-        const visitor = apestResultsEmail(name, { ...results }, reflection);
-        await sendEmail(email, visitor.subject, visitor.html, { text: visitor.text });
-      }
-      await sendAdminEmail(
-        adminNotificationEmail("APEST Quiz Results", {
-          name: name || "Not provided",
-          email,
-          ...Object.fromEntries(Object.entries(results).map(([role, value]) => [role, `${value}%`])),
-        })
-      );
+    if (!email) {
+      if (!(await allow(RATE.openai, clientIp(request)))) return tooMany();
+      const reflection = await writeReflection(results);
+      return NextResponse.json({ response: reflection, signature: signText(reflection, bound) });
     }
 
-    return NextResponse.json({ response: reflection });
+    if (signedReflection && !verifyText(signedReflection.text, bound, signedReflection.signature)) {
+      return jsonError(400, "Invalid reflection");
+    }
+    if (!(await allow(RATE.form, clientIp(request)))) return tooMany();
+
+    const reflection = signedReflection ? signedReflection.text : APEST_ROLES[topRole(results)].leadershipBenefit;
+    if (await allow(RATE.formRecipient, email.toLowerCase())) {
+      const visitor = apestResultsEmail(name, bound, reflection);
+      await sendEmail(email, visitor.subject, visitor.html, { text: visitor.text });
+    }
+    await sendAdminEmail(
+      adminNotificationEmail("APEST Quiz Results", {
+        name: name || "Not provided",
+        email,
+        ...Object.fromEntries(Object.entries(results).map(([role, value]) => [role, `${value}%`])),
+      })
+    );
+
+    return NextResponse.json({ ok: true });
   } catch (error) {
     return serverError("apest-results POST", error);
   }

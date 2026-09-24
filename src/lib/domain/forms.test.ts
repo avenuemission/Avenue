@@ -211,14 +211,24 @@ describe("parseApestRequest", () => {
   const results = { apostle: 30, prophet: 20, evangelist: 15, shepherd: 25, teacher: 10 };
 
   it("accepts results alone (the reflection call, no email)", () => {
-    expect(parseApestRequest({ results })).toEqual({ ok: true, value: { results, email: null, name: "" } });
+    expect(parseApestRequest({ results })).toEqual({ ok: true, value: { results, email: null, name: "", signedReflection: null } });
   });
 
   it("accepts results with an email and an optional name", () => {
     expect(parseApestRequest({ results, email: " ann@example.invalid ", name: " Ann ", company: "" })).toEqual({
       ok: true,
-      value: { results, email: "ann@example.invalid", name: "Ann" },
+      value: { results, email: "ann@example.invalid", name: "Ann", signedReflection: null },
     });
+  });
+
+  it("carries the page's reflection with its signature, both or neither, length capped", () => {
+    const r = parseApestRequest({ results, email: "ann@example.invalid", reflection: "Text", signature: "ab" });
+    expect(r.ok && r.value.signedReflection).toEqual({ text: "Text", signature: "ab" });
+    expect(parseApestRequest({ results, reflection: "Text" }).ok).toBe(false);
+    expect(parseApestRequest({ results, signature: "ab" }).ok).toBe(false);
+    expect(parseApestRequest({ results, reflection: "", signature: "ab" }).ok).toBe(false);
+    expect(parseApestRequest({ results, reflection: "a".repeat(5001), signature: "ab" }).ok).toBe(false);
+    expect(parseApestRequest({ results, reflection: "a".repeat(5000), signature: "ab" }).ok).toBe(true);
   });
 
   it("needs exactly the five roles as numbers from 0 to 100", () => {

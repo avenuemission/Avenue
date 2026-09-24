@@ -9,6 +9,15 @@ import { allow, RATE } from "@/lib/server/rateLimit";
 import { clientIp } from "@/lib/server/clientIp";
 import { jsonError, serverError, tooMany } from "@/lib/server/http";
 
+// The error's kind only: a mailer message can quote the recipient address.
+function errorKind(error: unknown): string {
+  if (error instanceof Error) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === "string" ? `${error.name} ${code}` : error.name;
+  }
+  return typeof error;
+}
+
 // POST /api/forms/<type>: the one public form endpoint. The server picks
 // every recipient: the admin notification goes to the fixed admin address,
 // the confirmation only to the one validated address in the form (or, for
@@ -52,21 +61,33 @@ export async function POST(request: NextRequest, context: { params: Promise<{ ty
     if (!(await allow(RATE.form, clientIp(request)))) return tooMany();
     const confirmTo = form.email && (await allow(RATE.formRecipient, form.email.toLowerCase())) ? form.email : null;
 
-    const { error } = await getSupabaseAdmin().from("form_submissions").insert({
-      form_type: form.type,
-      name: form.name,
-      email: form.email,
-      data: form.data,
-    });
+    const { data: saved, error } = await getSupabaseAdmin()
+      .from("form_submissions")
+      .insert({ form_type: form.type, name: form.name, email: form.email, data: form.data })
+      .select("id")
+      .single();
     if (error) return serverError(`forms/${type} insert`, error);
 
+    // The row is saved, so the submission has succeeded. A mail failure from
+    // here on is logged (form type, row id, error kind: no personal data)
+    // and reported as emailed: false, not as an error.
     const emails = formEmails(form);
-    await sendAdminEmail(emails.admin);
-    if (confirmTo && emails.confirmation) {
-      await sendEmail(confirmTo, emails.confirmation.subject, emails.confirmation.html, { text: emails.confirmation.text });
+    const sends: [string, () => Promise<void>][] = [["admin", () => sendAdminEmail(emails.admin)]];
+    const confirmation = emails.confirmation;
+    if (confirmTo && confirmation) {
+      sends.push(["confirmation", () => sendEmail(confirmTo, confirmation.subject, confirmation.html, { text: confirmation.text })]);
+    }
+    let emailed = true;
+    for (const [which, send] of sends) {
+      try {
+        await send();
+      } catch (mailError) {
+        emailed = false;
+        console.error(`forms/${type}: ${which} email failed for submission ${(saved as { id?: unknown } | null)?.id ?? "unknown"}`, errorKind(mailError));
+      }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ ok: true, emailed });
   } catch (error) {
     return serverError(`forms/${type} POST`, error);
   }
