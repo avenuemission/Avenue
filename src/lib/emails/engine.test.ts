@@ -298,7 +298,7 @@ describe("runLeaderEmails", () => {
   });
 
   it("reports study guides whose date cannot be read", async () => {
-    const guides = [{ id: "g1", guide_date: "Week 3", series: null, topic: "Joy", scripture: null, pdf_url: null }];
+    const guides = [{ id: "g1", guide_on: "Week 3", series: null, topic: "Joy", scripture: null, pdf_url: null }];
     const { deps } = harness({ snapshot: snapshot({ guides }), deps: { dryRun: true } });
     const report = await runLeaderEmails(deps);
     expect(report.unparseableGuides).toEqual(['g1 ("Week 3")']);

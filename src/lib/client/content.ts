@@ -1,3 +1,4 @@
+import { dayMonthYearToGuideOn } from "@/lib/domain/studyGuides";
 import { PATHWAY_GROUPS as FALLBACK_PATHWAY_GROUPS, PATHWAY_STATS as FALLBACK_PATHWAY_STATS, INTERSECTION_EVENTS as FALLBACK_INTERSECTION_EVENTS } from "@/content/site";
 
 export interface PathwayGroup {
@@ -35,12 +36,12 @@ export interface IntersectionEventDate {
 
 export interface StudyGuide {
   id: string;
-  guide_date: string;
+  guide_on: string; // ISO date, YYYY-MM-DD
   series: string;
   topic: string;
   scripture: string;
   spotify_url: string;
-  pdf_url: string;
+  pdf_url: string | null;
   color: string;
   sort_order: number;
 }
@@ -161,7 +162,7 @@ export async function getStudyGuides(): Promise<StudyGuide[]> {
       const values = lines[i].split(",");
       guides.push({
         id: i.toString(),
-        guide_date: values[0]?.trim() || "",
+        guide_on: dayMonthYearToGuideOn(values[0]) ?? "",
         series: values[1]?.trim() || "",
         topic: values[2]?.trim() || "",
         scripture: values[3]?.trim() || "",

@@ -19,14 +19,13 @@ import Link from "next/link";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { initialsOf } from "@/lib/domain/profileAvatar";
 
-interface Profile {
+interface ProfileText {
   display_name: string;
   avatar_url: string;
   birthday: string;
   baptism_anniversary: string;
   favourite_verse: string;
   favourite_verse_ref: string;
-  pathway_group: string;
   role: string;
   apest: string;
   about: string;
@@ -34,20 +33,32 @@ interface Profile {
   coffee_order: string;
 }
 
-const EMPTY: Profile = {
+// The pathway group is a link: the id is saved, the name is shown.
+interface Profile extends ProfileText {
+  pathwayGroupId: number | null;
+  pathwayGroupName: string;
+}
+
+interface GroupOption {
+  id: number;
+  name: string;
+}
+
+const EMPTY_TEXT: ProfileText = {
   display_name: "",
   avatar_url: "",
   birthday: "",
   baptism_anniversary: "",
   favourite_verse: "",
   favourite_verse_ref: "",
-  pathway_group: "",
   role: "",
   apest: "",
   about: "",
   favourite_song: "",
   coffee_order: "",
 };
+
+const EMPTY: Profile = { ...EMPTY_TEXT, pathwayGroupId: null, pathwayGroupName: "" };
 
 const ROLES = ["Leader", "Apprentice", "Coordinator", "Member"];
 const APEST = ["Apostle", "Prophet", "Evangelist", "Shepherd", "Teacher"];
@@ -107,7 +118,7 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [groups, setGroups] = useState<string[]>([]);
+  const [groups, setGroups] = useState<GroupOption[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -116,9 +127,11 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
       const json = await res.json();
       const loaded: Profile = { ...EMPTY };
       if (json.profile) {
-        for (const key of Object.keys(EMPTY) as (keyof Profile)[]) {
+        for (const key of Object.keys(EMPTY_TEXT) as (keyof ProfileText)[]) {
           loaded[key] = json.profile[key] ?? "";
         }
+        loaded.pathwayGroupId = json.profile.pathwayGroupId ?? null;
+        loaded.pathwayGroupName = json.profile.pathwayGroupName ?? "";
       }
       if (!loaded.display_name) loaded.display_name = fallbackName;
       setProfile(loaded);
@@ -138,7 +151,7 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
   useEffect(() => {
     fetch("/api/content/pathway-groups")
       .then((r) => r.json())
-      .then((j) => setGroups((j.groups ?? []).map((g: { name: string }) => g.name)))
+      .then((j) => setGroups((j.groups ?? []).map((g: GroupOption) => ({ id: Number(g.id), name: String(g.name) }))))
       .catch(() => {});
   }, []);
 
@@ -301,13 +314,16 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
             <label className={labelClass}>Pathway group</label>
             <select
               className={inputClass}
-              value={draft.pathway_group}
-              onChange={(e) => setDraft({ ...draft, pathway_group: e.target.value })}
+              value={draft.pathwayGroupId === null ? "" : String(draft.pathwayGroupId)}
+              onChange={(e) => {
+                const picked = groups.find((g) => String(g.id) === e.target.value);
+                setDraft({ ...draft, pathwayGroupId: picked?.id ?? null, pathwayGroupName: picked?.name ?? "" });
+              }}
             >
               <option value="">Not set</option>
               {groups.map((g) => (
-                <option key={g} value={g}>
-                  {g}
+                <option key={g.id} value={String(g.id)}>
+                  {g.name}
                 </option>
               ))}
             </select>
@@ -435,9 +451,9 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
         {avatar(profile.avatar_url, "w-24 h-24", "text-2xl")}
         <div className="min-w-0">
           <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">{name}</h2>
-          {(profile.role || profile.pathway_group) && (
+          {(profile.role || profile.pathwayGroupName) && (
             <p className="mt-1 text-[var(--muted)]">
-              {[profile.role, profile.pathway_group].filter(Boolean).join(" · ")}
+              {[profile.role, profile.pathwayGroupName].filter(Boolean).join(" · ")}
             </p>
           )}
           {profile.apest && (

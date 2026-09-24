@@ -2,30 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { serverError } from "@/lib/server/http";
+import { PROFILE_COLUMNS, PROFILE_TEXT_FIELDS, pathwayGroupIdFrom, profileResponse } from "@/lib/domain/leaderProfile";
 
-// Columns a client is allowed to write. Anything else in the body is ignored,
-// so a caller can't set updated_at or invent columns.
-const WRITABLE = [
-  "display_name",
-  "avatar_url",
-  "birthday",
-  "baptism_anniversary",
-  "favourite_verse",
-  "favourite_verse_ref",
-  "pathway_group",
-  "role",
-  "apest",
-  "about",
-  "favourite_song",
-  "coffee_order",
-] as const;
+// Only PROFILE_TEXT_FIELDS and pathwayGroupId are written. Anything else in
+// the body is ignored, so a caller can't set updated_at or invent columns.
 
 // Avatars are stored as client-resized data URLs. Cap the size so a huge
 // image can't be pushed into the database.
 const MAX_AVATAR_CHARS = 400_000; // ~300KB of base64
 
 // Empty strings should clear a field, and date columns reject "" outright.
-function normalise(key: string, value: unknown): string | null {
+function normalise(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   const s = String(value).trim();
   return s === "" ? null : s;
@@ -41,15 +28,15 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await getSupabaseAdmin()
     .from("leader_profiles")
-    .select("*")
+    .select(PROFILE_COLUMNS)
     .eq("email", auth.leader.email)
     .maybeSingle();
 
   if (error) return serverError("leader-profile GET", error);
-  return NextResponse.json({ profile: data ?? null });
+  return NextResponse.json({ profile: profileResponse(data as unknown as Record<string, unknown> | null) });
 }
 
-// PUT /api/leader-profile — upsert the caller's own profile
+// PUT /api/leader-profile: upsert the caller's own profile
 export async function PUT(request: NextRequest) {
   const cfgErr = adminConfigError();
   if (cfgErr) return cfgErr;
@@ -67,20 +54,28 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const row: Record<string, string | null> = {
+  const row: Record<string, string | number | null> = {
     email: auth.leader.email,
     updated_at: new Date().toISOString(),
   };
-  for (const key of WRITABLE) {
-    if (key in body) row[key] = normalise(key, body[key]);
+  for (const key of PROFILE_TEXT_FIELDS) {
+    if (key in body) row[key] = normalise(body[key]);
+  }
+  if ("pathwayGroupId" in body) {
+    const group = pathwayGroupIdFrom(body.pathwayGroupId);
+    if ("error" in group) return NextResponse.json({ error: group.error }, { status: 400 });
+    row.pathway_group_id = group.id;
   }
 
   const { data, error } = await getSupabaseAdmin()
     .from("leader_profiles")
     .upsert(row, { onConflict: "email" })
-    .select()
+    .select(PROFILE_COLUMNS)
     .single();
 
+  if (error?.code === "23503" && error.message.includes("pathway_group_id")) {
+    return NextResponse.json({ error: "That pathway group no longer exists." }, { status: 400 });
+  }
   if (error) return serverError("leader-profile PUT", error);
-  return NextResponse.json({ profile: data });
+  return NextResponse.json({ profile: profileResponse(data as unknown as Record<string, unknown> | null) });
 }

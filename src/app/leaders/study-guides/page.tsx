@@ -7,6 +7,7 @@ import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/client/auth";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { getStudyGuides } from "@/lib/client/content";
+import { formatGuideOn } from "@/lib/domain/studyGuides";
 import {
   LogOut,
   ArrowLeft,
@@ -67,7 +68,7 @@ export default function StudyGuidesPage() {
     getStudyGuides()
       .then((loaded) => {
         const guides: StudyGuide[] = loaded.map((g) => ({
-          date: g.guide_date,
+          date: formatGuideOn(g.guide_on),
           series: g.series,
           topic: g.topic,
           text: g.scripture,

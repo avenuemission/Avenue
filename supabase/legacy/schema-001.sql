@@ -1,5 +1,14 @@
+-- ############################################################
+-- LEGACY. NEVER RUN THIS AGAINST AN EXISTING DATABASE.
+-- This was supabase/schema.sql, the first hand-written setup script. It
+-- DROPS the content tables and the leaders table and recreates them, so
+-- running it against the live database deletes real data.
+-- Its only use is step 1 on a brand-new, empty Supabase project, before
+-- supabase/migrations/ in order. See supabase/README.md.
+-- ############################################################
+
 -- ============================================================
--- Avenue Website — Supabase Schema
+-- Avenue Website: Supabase Schema
 -- Run this in the Supabase SQL Editor (Dashboard > SQL Editor)
 -- WARNING: This script DROPS existing tables and recreates them
 -- from scratch, so all data is reset. Use only for clean setup.
@@ -154,7 +163,7 @@ create policy "public read site_stats" on public.site_stats for select using (tr
 drop policy if exists "public insert submissions" on public.form_submissions;
 create policy "public insert submissions" on public.form_submissions for insert with check (true);
 
--- NOTE: no public policies on public.leaders — only the service role
+-- NOTE: no public policies on public.leaders. Only the service role
 -- (admin API routes) can read/write it.
 
 -- ============================================================

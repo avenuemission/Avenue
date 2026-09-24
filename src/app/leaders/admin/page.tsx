@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/client/auth";
+import { formatGuideOn } from "@/lib/domain/studyGuides";
 import {
   ArrowLeft,
   BarChart2,
@@ -804,7 +805,7 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
   };
 
   const blankGuide = {
-    guide_date: "",
+    guide_on: "",
     series: "",
     topic: "",
     scripture: "",
@@ -837,7 +838,7 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
                 <div>
                   <p className="font-medium text-white">{g.topic}</p>
                   <p className="text-sm text-gray-400">
-                    {g.series} · {g.guide_date}
+                    {g.series} · {formatGuideOn(g.guide_on)}
                   </p>
                 </div>
               </div>
@@ -858,21 +859,21 @@ function GuidesTab({ adminKey }: { adminKey: string }) {
         <Modal onClose={() => setEditing(null)} title={editing.id ? "Edit Guide" : "Add Guide"}>
           <div className="grid gap-3">
             {[
-              { key: "guide_date", label: "Date" },
-              { key: "series", label: "Series" },
-              { key: "topic", label: "Topic" },
-              { key: "scripture", label: "Scripture" },
-              { key: "spotify_url", label: "Spotify URL" },
-              { key: "pdf_url", label: "PDF URL" },
-              { key: "color", label: "Color" },
-            ].map(({ key, label }) => (
+              { key: "guide_on", label: "Date", type: "date" },
+              { key: "series", label: "Series", type: "text" },
+              { key: "topic", label: "Topic", type: "text" },
+              { key: "scripture", label: "Scripture", type: "text" },
+              { key: "spotify_url", label: "Spotify URL", type: "text" },
+              { key: "pdf_url", label: "PDF URL", type: "text" },
+              { key: "color", label: "Color", type: "text" },
+            ].map(({ key, label, type }) => (
               <div key={key}>
                 <label className="text-xs text-gray-400 uppercase">{label}</label>
                 <input
-                  type="text"
+                  type={type}
                   value={(editing as any)[key] ?? ""}
                   onChange={(e) => setEditing({ ...editing, [key]: e.target.value })}
-                  className="w-full bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white"
+                  className="w-full bg-black/30 border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white [color-scheme:dark]"
                 />
               </div>
             ))}

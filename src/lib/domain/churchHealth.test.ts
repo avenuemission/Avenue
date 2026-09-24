@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  HEALTH_PROFILE_COLUMNS,
   averageScores,
   buildChurchHealth,
   countMetrics,
@@ -27,8 +28,8 @@ const leaders: HealthLeaderRow[] = [
 ];
 
 const profiles: HealthProfileRow[] = [
-  { email: ANN, display_name: "Ann Lee", pathway_group: " North  Side " },
-  { email: BEN, display_name: null, pathway_group: "north side" },
+  { email: ANN, display_name: "Ann Lee", pathway_groups: { name: "North Side" } },
+  { email: BEN, display_name: null, pathway_groups: { name: "North Side" } },
 ];
 
 const people: HealthPersonRow[] = [
@@ -82,11 +83,23 @@ describe("buildChurchHealth", () => {
     expect(monthly[11].month).toBe("2026-10");
   });
 
-  it("groups pathway groups case-insensitively and puts No group set last", () => {
+  it("groups leaders by their linked pathway group and puts No group set last", () => {
     expect(build().groups).toEqual([
       { group: "North Side", leaders: 2, counts: { pathways: 2, intersections: 1, streetlights: 1 } },
       { group: NO_GROUP, leaders: 1, counts: { pathways: 0, intersections: 0, streetlights: 0 } },
     ]);
+  });
+
+  it("reads the group name through the pathway_group_id link, not the legacy text column", () => {
+    expect(HEALTH_PROFILE_COLUMNS).toBe("email, display_name, pathway_groups(name)");
+    const health = buildChurchHealth({
+      leaders: [{ email: ANN, name: "Ann", full_access: true }],
+      profiles: [{ email: ANN, display_name: null, pathway_groups: null }],
+      people: [],
+      checkins: [],
+      now: NOW,
+    });
+    expect(health.leaders[0].group).toBe(NO_GROUP);
   });
 
   it("gives one row per leader, sorted by name, with the names behind each count", () => {

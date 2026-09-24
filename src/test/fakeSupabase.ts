@@ -76,6 +76,11 @@ export function fakeSupabase(results: Record<string, FakeResult> = {}) {
         record("maybeSingle", []);
         return chain;
       },
+      single() {
+        single = true;
+        record("single", []);
+        return chain;
+      },
       then(onFulfilled: (value: FakeResponse) => unknown, onRejected?: (reason: unknown) => unknown) {
         const r = results[`${table}.${operation}`] ?? results[table] ?? {};
         const empty = operation === "select" && !single ? [] : null;

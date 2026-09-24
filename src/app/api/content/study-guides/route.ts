@@ -3,12 +3,13 @@ import { supabase } from "@/lib/client/supabaseBrowser";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireAdmin } from "@/lib/server/requireAdmin";
 import { serverError } from "@/lib/server/http";
+import { STUDY_GUIDE_COLUMNS, studyGuideWrite } from "@/lib/domain/studyGuides";
 
 // GET (public): list all study guides
 export async function GET() {
   const { data, error } = await supabase
     .from("study_guides")
-    .select("*")
+    .select(STUDY_GUIDE_COLUMNS)
     .order("sort_order", { ascending: true });
 
   if (error) return serverError("study-guides GET", error);
@@ -19,13 +20,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request);
   if ("response" in auth) return auth.response;
-  const body = await request.json();
-  const { guide_date, series, topic, scripture, spotify_url, pdf_url, color, sort_order } = body;
+  const write = studyGuideWrite(await request.json(), "create");
+  if ("error" in write) return NextResponse.json({ error: write.error }, { status: 400 });
 
   const { data, error } = await getSupabaseAdmin()
     .from("study_guides")
-    .insert({ guide_date, series, topic, scripture, spotify_url, pdf_url, color, sort_order: sort_order ?? 0 })
-    .select();
+    .insert(write.row)
+    .select(STUDY_GUIDE_COLUMNS);
 
   if (error) return serverError("study-guides POST", error);
   return NextResponse.json({ guide: data?.[0] ?? null });
@@ -36,14 +37,16 @@ export async function PUT(request: NextRequest) {
   const auth = await requireAdmin(request);
   if ("response" in auth) return auth.response;
   const body = await request.json();
-  const { id, ...fields } = body;
+  const id = body?.id;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const write = studyGuideWrite(body, "update");
+  if ("error" in write) return NextResponse.json({ error: write.error }, { status: 400 });
 
   const { data, error } = await getSupabaseAdmin()
     .from("study_guides")
-    .update(fields)
+    .update(write.row)
     .eq("id", id)
-    .select();
+    .select(STUDY_GUIDE_COLUMNS);
 
   if (error) return serverError("study-guides PUT", error);
   if (!data || data.length === 0) return NextResponse.json({ error: "No matching row found" }, { status: 404 });

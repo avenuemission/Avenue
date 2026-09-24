@@ -20,7 +20,7 @@ function snap(over: Partial<Snapshot> = {}): Snapshot {
       { email: OTHER, name: "Other", full_access: true },
     ],
     prefs: [],
-    profiles: [{ email: SAM, display_name: "Sam Stone", pathway_group: null }],
+    profiles: [{ email: SAM, display_name: "Sam Stone", pathway_groups: null }],
     checkins: [],
     people: [],
     network: [],
@@ -91,7 +91,7 @@ describe("composeFor rpms", () => {
 describe("composeFor digest", () => {
   it("uses this week's guide, keyed by the Monday, linking only to a web address", () => {
     const guides = [
-      { id: "g1", guide_date: "07/10/2026", series: "James", topic: "Joy in trials", scripture: "James 1", pdf_url: "https://example.invalid/j1.pdf" },
+      { id: "g1", guide_on: "2026-10-07", series: "James", topic: "Joy in trials", scripture: "James 1", pdf_url: "https://example.invalid/j1.pdf" },
     ];
     const [out] = composeFor("digest", recipient, snap({ guides }));
     expect(out.periodKey).toBe("2026-10-05");

@@ -5,6 +5,7 @@ import { readRows } from "@/lib/server/adminRead";
 import { serverError } from "@/lib/server/http";
 import {
   buildChurchHealth,
+  HEALTH_PROFILE_COLUMNS,
   type HealthCheckinRow,
   type HealthLeaderRow,
   type HealthPersonRow,
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const db = getSupabaseAdmin();
     const [leaders, profiles, people, checkins] = await Promise.all([
       readRows<HealthLeaderRow>(db, "leaders", "email, name, full_access"),
-      readRows<HealthProfileRow>(db, "leader_profiles", "email, display_name, pathway_group"),
+      readRows<HealthProfileRow>(db, "leader_profiles", HEALTH_PROFILE_COLUMNS),
       readRows<HealthPersonRow>(db, "leader_people", "owner_email, first_name, last_name, metrics, created_at"),
       readRows<HealthCheckinRow>(db, "leader_checkins", "email, week_start, relational, physical, mental, spiritual"),
     ]);

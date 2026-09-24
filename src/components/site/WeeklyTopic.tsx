@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getStudyGuides } from "@/lib/client/content";
+import { guideOnToLocalDate } from "@/lib/domain/studyGuides";
 import Reveal from "@/components/ui/Reveal";
 import { CalendarDays, ChevronDown } from "lucide-react";
 
@@ -27,20 +28,11 @@ interface UpcomingSeries {
   weeks: UpcomingWeek[];
 }
 
-// Study guide dates are stored as "DD/MM/YYYY".
-function parseGuideDate(value: string): Date | null {
-  const parts = (value || "").split("/");
-  if (parts.length !== 3) return null;
-  const [day, month, year] = parts.map((p) => parseInt(p, 10));
-  if (!day || !month || !year) return null;
-  return new Date(year, month - 1, day);
-}
-
 // "This week" = the most recent guide dated on or before today. If every guide
 // is still in the future, fall back to the soonest upcoming one.
 function pickCurrentGuide(guides: Array<Record<string, unknown>>): Record<string, unknown> | null {
   const dated = guides
-    .map((g) => ({ g, d: parseGuideDate(String(g.guide_date ?? "")) }))
+    .map((g) => ({ g, d: guideOnToLocalDate(g.guide_on) }))
     .filter((x): x is { g: Record<string, unknown>; d: Date } => x.d !== null);
 
   if (dated.length === 0) return guides[0] ?? null;
@@ -60,7 +52,7 @@ function groupUpcomingBySeries(guides: Array<Record<string, unknown>>): Upcoming
   now.setHours(23, 59, 59, 999); // today's topic is "current", not "upcoming"
 
   const future = guides
-    .map((g) => ({ g, d: parseGuideDate(String(g.guide_date ?? "")) }))
+    .map((g) => ({ g, d: guideOnToLocalDate(g.guide_on) }))
     .filter((x): x is { g: Record<string, unknown>; d: Date } => x.d !== null)
     .filter((x) => x.d.getTime() > now.getTime())
     .sort((a, b) => a.d.getTime() - b.d.getTime());

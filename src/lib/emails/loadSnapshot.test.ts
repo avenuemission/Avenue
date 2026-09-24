@@ -27,6 +27,14 @@ describe("loadSnapshot", () => {
     ]);
   });
 
+  it("reads the typed study guide date and the linked pathway group, not the legacy text columns", async () => {
+    const fake = fakeSupabase();
+    await loadSnapshot(asClient(fake.db), new Date("2026-10-04T20:00:00Z"));
+    const selected = (table: string) => fake.calls.find((c) => c[0] === table && c[1] === "select")?.[2];
+    expect(selected("study_guides")).toBe("id, guide_on, series, topic, scripture, pdf_url");
+    expect(selected("leader_profiles")).toBe("email, display_name, pathway_groups(name)");
+  });
+
   it("fails loud with the migration hint when the email tables are missing", async () => {
     const fake = fakeSupabase({
       leader_email_prefs: { error: { message: "Could not find the table 'public.leader_email_prefs' in the schema cache" } },

@@ -31,10 +31,13 @@
 
 ## 4. Run the database schema
 
+Only for a brand-new, empty Supabase project. Never run these steps against the live database.
+
 1. In the Supabase dashboard, open the **SQL Editor**.
 2. Click **New query**.
-3. Copy the entire contents of `supabase/schema.sql` from this project.
+3. Copy the entire contents of `supabase/legacy/schema-001.sql` from this project.
 4. Paste it into the SQL Editor and click **Run**.
+5. Run each file in `supabase/migrations/` the same way, in number order (see `supabase/README.md`).
 
 This creates all the tables, indexes, RLS policies, and seed data.
 

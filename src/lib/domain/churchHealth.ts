@@ -39,10 +39,14 @@ export interface HealthLeaderRow {
   full_access: boolean;
 }
 
+// leader_profiles with its pathway group embedded through pathway_group_id
+// (PostgREST returns the linked row, or null when no group is set).
+export const HEALTH_PROFILE_COLUMNS = "email, display_name, pathway_groups(name)";
+
 export interface HealthProfileRow {
   email: string;
   display_name: string | null;
-  pathway_group: string | null;
+  pathway_groups: { name: string } | null;
 }
 
 export interface HealthPersonRow {
@@ -111,10 +115,6 @@ export function countMetrics(rows: { metrics: string[] | null }[]): MetricCounts
   return counts;
 }
 
-function groupKey(raw: string | null | undefined): string {
-  return (raw ?? "").trim().replace(/\s+/g, " ").toLowerCase();
-}
-
 export function fullName(p: { first_name: string; last_name: string | null }): string {
   return [p.first_name.trim(), (p.last_name ?? "").trim()].filter(Boolean).join(" ");
 }
@@ -159,14 +159,7 @@ export function buildChurchHealth(input: ChurchHealthInput): ChurchHealth {
   const people = input.people.filter((p) => known.has(normEmail(p.owner_email)));
   const checkins = input.checkins.filter((c) => known.has(normEmail(c.email)));
 
-  // The first spelling met (leaders sorted by email) labels the group.
-  const labels = new Map<string, string>();
-  for (const l of leaders) {
-    const raw = profiles.get(l.email)?.pathway_group ?? "";
-    const key = groupKey(raw);
-    if (key && !labels.has(key)) labels.set(key, raw.trim().replace(/\s+/g, " "));
-  }
-  const groupOf = (email: string) => labels.get(groupKey(profiles.get(email)?.pathway_group)) ?? NO_GROUP;
+  const groupOf = (email: string) => profiles.get(email)?.pathway_groups?.name?.trim() || NO_GROUP;
   const nameOf = (email: string, fallback: string | null) =>
     profiles.get(email)?.display_name?.trim() || fallback?.trim() || email;
   const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
