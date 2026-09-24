@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/client/supabaseBrowser";
 
 // Levenshtein distance for typo detection
 function levenshtein(a: string, b: string): number {

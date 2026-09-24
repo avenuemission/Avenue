@@ -5,7 +5,7 @@ import { fakeSupabase } from "@/test/fakeSupabase";
 // No session is involved: the token is the only key. Only the database is
 // replaced.
 const h = vi.hoisted(() => ({ getSupabaseAdmin: vi.fn() }));
-vi.mock("@/lib/supabaseAdmin", () => ({ getSupabaseAdmin: h.getSupabaseAdmin }));
+vi.mock("@/lib/server/supabaseAdmin", () => ({ getSupabaseAdmin: h.getSupabaseAdmin }));
 
 import { GET, POST } from "./route";
 

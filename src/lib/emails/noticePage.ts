@@ -1,3 +1,4 @@
+import "server-only";
 // A small branded page for the unsubscribe link. It is a web page, not an
 // email, so it may use a <style> block (for the focus ring), but it shares
 // the emails' night palette and text wordmark.

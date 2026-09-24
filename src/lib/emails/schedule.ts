@@ -4,7 +4,7 @@
 // next one. The email log (unique email, kind, period_key) stops a second
 // send. Milestones are a morning check (spec: daily 07:00), with the 08:00
 // and 09:00 runs as retries, so nobody is congratulated late at night.
-import { melbourneParts, monthKeyOf } from "@/lib/melbourneDate";
+import { melbourneParts, monthKeyOf } from "@/lib/domain/dates/melbourne";
 import { EMAIL_KINDS, type EmailKind } from "./prefs";
 
 export const SEND_HOUR: Record<EmailKind, number> = {

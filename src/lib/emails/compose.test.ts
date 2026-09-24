@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { HealthCheckinRow, HealthPersonRow } from "@/lib/churchHealth";
+import type { HealthCheckinRow, HealthPersonRow } from "@/lib/domain/churchHealth";
 import type { Recipient } from "./prefs";
 import { composeFor, progressFor, type NetworkRow, type Snapshot } from "./compose";
 

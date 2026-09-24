@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 ### Updating Event Dates
 
-Edit `src/lib/data.ts` to update:
+Edit `src/content/site.ts` to update:
 
 - **Next Intersection Event** - `NEXT_INTERSECTION_EVENT.date`
 - **Pathway Statistics** - `PATHWAY_STATS`

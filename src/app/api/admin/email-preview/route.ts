@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminConfigError, getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
-import { normEmail } from "@/lib/churchHealth";
+import { adminConfigError, getSupabaseAdmin, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { normEmail } from "@/lib/domain/churchHealth";
 import { composeFor, firstNameOf } from "@/lib/emails/compose";
 import { loadSnapshot } from "@/lib/emails/loadSnapshot";
 import { isEmailKind, PREVIEW_TOKEN, type Recipient } from "@/lib/emails/prefs";

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
-import { requireLeader } from "@/lib/requireLeader";
-import { resolveResourcePath } from "@/lib/resourcePath";
+import { requireLeader } from "@/lib/server/requireLeader";
+import { resolveResourcePath } from "@/lib/server/resourcePath";
 
 // MIME types for common file extensions
 const MIME_TYPES: Record<string, string> = {

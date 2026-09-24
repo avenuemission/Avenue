@@ -1,8 +1,9 @@
+import "server-only";
 // Who gets which email with what data (spec 3.2). Pure: loadSnapshot.ts
 // reads the tables once per run, and composeFor turns one recipient and one
 // kind into zero or more ready-to-send emails. Every email it returns is
 // addressed to that recipient and nobody else.
-import { apprenticesOnRung, avenueStops, hereActionFor, stopWalked, type AvenueProgress } from "@/lib/avenue";
+import { apprenticesOnRung, avenueStops, hereActionFor, stopWalked, type AvenueProgress } from "@/lib/domain/avenue";
 import {
   callingCompleteCount,
   isIsoDate,
@@ -10,8 +11,8 @@ import {
   recordOf,
   type CallingData,
   type LaunchData,
-} from "@/lib/journey";
-import { METRICS, type Metric } from "@/lib/people";
+} from "@/lib/domain/journey";
+import { METRICS, type Metric } from "@/lib/domain/people";
 import {
   countMetrics,
   fullName,
@@ -19,7 +20,7 @@ import {
   type HealthCheckinRow,
   type HealthPersonRow,
   type HealthProfileRow,
-} from "@/lib/churchHealth";
+} from "@/lib/domain/churchHealth";
 import {
   addDaysISO,
   addMonthsKey,
@@ -29,7 +30,7 @@ import {
   mondayOfISO,
   monthKeyOf,
   monthLabel,
-} from "@/lib/melbourneDate";
+} from "@/lib/domain/dates/melbourne";
 import { absoluteUrl, isHttpUrl, type RenderedEmail } from "./layout";
 import { PREVIEW_TOKEN, type EmailKind, type LeaderRow, type PrefsRow, type Recipient } from "./prefs";
 import { periodKeyFor } from "./schedule";

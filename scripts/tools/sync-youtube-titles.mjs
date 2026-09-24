@@ -19,7 +19,7 @@ import { dirname, join } from "node:path";
 // Resolve against this file's own location, not the shell's working
 // directory, so the script runs the same from anywhere.
 const REPO = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const FILE = join(REPO, "src", "app", "leaders", "training", "page.tsx");
+const FILE = join(REPO, "src", "content", "training", "phases.ts");
 const checkOnly = process.argv.includes("--check");
 
 // Matches one episode literal and captures its parts.
@@ -40,7 +40,7 @@ async function fetchTitle(id) {
 const source = await readFile(FILE, "utf8");
 const episodes = [...source.matchAll(EPISODE)].map((m) => m.groups);
 if (episodes.length === 0) {
-  console.error("FAIL: no episodes matched in src/app/leaders/training/page.tsx. Has the data shape changed?");
+  console.error("FAIL: no episodes matched in src/content/training/phases.ts. Has the data shape changed?");
   process.exit(1);
 }
 

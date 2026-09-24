@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
-import { requireLeader } from "@/lib/requireLeader";
+import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 interface CheckinRow {
   email: string;

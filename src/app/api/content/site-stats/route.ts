@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
+import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/server/supabaseAdmin";
 
-// GET: public — all site stats
+// GET (public): all site stats
 export async function GET() {
   const { data, error } = await supabase.from("site_stats").select("*");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ stats: data ?? [] });
 }
 
-// PUT: admin — update a stat
+// PUT (admin): update a stat
 export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

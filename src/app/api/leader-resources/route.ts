@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readdir, stat } from "fs/promises";
 import path from "path";
-import { requireLeader } from "@/lib/requireLeader";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 interface ResourceFile {
   name: string;

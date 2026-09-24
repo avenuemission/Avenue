@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminConfigError, getSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { requireLeader } from "@/lib/requireLeader";
+import { adminConfigError, getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { requireLeader } from "@/lib/server/requireLeader";
 import { emailTablesError, PREFS_COLUMNS, prefsFromRow, validatePrefsPatch, type PrefsRow } from "@/lib/emails/prefs";
 
 // The signed-in leader's own email settings (spec 3.4). The email is only

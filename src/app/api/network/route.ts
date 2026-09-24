@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/supabaseAdmin";
-import { normaliseEmail, wouldCreateCycle } from "@/lib/network";
-import { requireLeader } from "@/lib/requireLeader";
+import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { normaliseEmail, wouldCreateCycle } from "@/lib/domain/network";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 interface Row {
   id: string;

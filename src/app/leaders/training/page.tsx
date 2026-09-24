@@ -3,23 +3,23 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/auth";
-import { recentMondays } from "@/lib/weeks";
+import { getCurrentUser, logout, User } from "@/lib/client/auth";
+import { recentMondays } from "@/lib/domain/dates/weeks";
 import { LogOut, ArrowLeft, X } from "lucide-react";
 
-import Phase4Growth, { CHECKIN_HISTORY_WEEKS } from "./Phase4Growth";
-import Phase5Multiply from "./Phase5Multiply";
-import PhaseModules from "./PhaseModules";
-import CallingCard from "./CallingCard";
-import LaunchCard from "./LaunchCard";
-import { VERSES } from "./verses";
-import { useTrainingProgress } from "./useTrainingProgress";
-import { useCheckins } from "./useCheckins";
-import { useNetworkView } from "./useNetworkView";
-import { useMyPeople } from "@/lib/useMyPeople";
-import { useWorksheet } from "@/lib/useWorksheet";
-import { leaderFetch } from "@/lib/leaderFetch";
-import { callingCompleteCount, launchCompleteCount, type CallingData, type LaunchData } from "@/lib/journey";
+import Phase4Growth, { CHECKIN_HISTORY_WEEKS } from "@/app/leaders/training/_components/Phase4Growth";
+import Phase5Multiply from "@/app/leaders/training/_components/Phase5Multiply";
+import PhaseModules from "@/app/leaders/training/_components/PhaseModules";
+import CallingCard from "@/app/leaders/training/_components/CallingCard";
+import LaunchCard from "@/app/leaders/training/_components/LaunchCard";
+import { VERSES } from "@/content/training/verses";
+import { useTrainingProgress } from "@/hooks/useTrainingProgress";
+import { useCheckins } from "@/hooks/useCheckins";
+import { useNetworkView } from "@/hooks/useNetworkView";
+import { useMyPeople } from "@/hooks/useMyPeople";
+import { useWorksheet } from "@/hooks/useWorksheet";
+import { leaderFetch } from "@/lib/client/leaderFetch";
+import { callingCompleteCount, launchCompleteCount, type CallingData, type LaunchData } from "@/lib/domain/journey";
 import {
   apprenticesOnRung,
   avenueStops,
@@ -30,14 +30,14 @@ import {
   STOP_IDS,
   type AvenueProgress,
   type StopId,
-} from "@/lib/avenue";
-import AvenueMap from "@/components/avenue/AvenueMap";
-import PhaseOpening from "@/components/avenue/PhaseOpening";
-import ClampedText from "@/components/avenue/ClampedText";
-import HeaderAvatar from "@/components/avenue/HeaderAvatar";
-import JourneyFooter from "@/components/avenue/JourneyFooter";
-import Moment from "@/components/avenue/Moment";
-import { useMoment } from "@/components/avenue/useMoment";
+} from "@/lib/domain/avenue";
+import AvenueMap from "@/components/leaders/avenue/AvenueMap";
+import PhaseOpening from "@/components/leaders/avenue/PhaseOpening";
+import ClampedText from "@/components/leaders/avenue/ClampedText";
+import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
+import JourneyFooter from "@/components/leaders/avenue/JourneyFooter";
+import Moment from "@/components/leaders/avenue/Moment";
+import { useMoment } from "@/hooks/useMoment";
 
 function isStopId(value: string | null): value is StopId {
   return value !== null && (STOP_IDS as readonly string[]).includes(value);

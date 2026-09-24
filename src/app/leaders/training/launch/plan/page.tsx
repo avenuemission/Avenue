@@ -1,21 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import PrintButton from "@/components/journey/PrintButton";
-import PhaseOpening from "@/components/avenue/PhaseOpening";
-import JourneyFooter from "@/components/avenue/JourneyFooter";
-import HeaderAvatar from "@/components/avenue/HeaderAvatar";
-import ResetWorksheet from "@/components/journey/ResetWorksheet";
-import { VERSES } from "../../verses";
-import { useLeaderGate } from "@/lib/useLeaderGate";
-import { useWorksheet } from "@/lib/useWorksheet";
-import { useMyPeople } from "@/lib/useMyPeople";
-import { arenaPlanFrom, detectGaps, playArena, thinSentence, thinSpots, GAP_TEXT, type EarnedPrinciple } from "@/lib/arena";
-import { buildPlanActions, formatIsoDate, gapActions, gatheringsInFirstSixMonths, weeksUntil } from "@/lib/launch";
-import { filled, isSpace, isWeekday, stringList, type LaunchData } from "@/lib/journey";
-import { SPACE_CONTENT } from "../../calling/content";
-import { ARENA_ENABLED, CURVEBALLS, DEFAULT_ORDER } from "../arenaContent";
-import { useNetworkView } from "../../useNetworkView";
+import PrintButton from "@/components/leaders/journey/PrintButton";
+import PhaseOpening from "@/components/leaders/avenue/PhaseOpening";
+import JourneyFooter from "@/components/leaders/avenue/JourneyFooter";
+import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
+import ResetWorksheet from "@/components/leaders/journey/ResetWorksheet";
+import { VERSES } from "@/content/training/verses";
+import { useLeaderGate } from "@/hooks/useLeaderGate";
+import { useWorksheet } from "@/hooks/useWorksheet";
+import { useMyPeople } from "@/hooks/useMyPeople";
+import { arenaPlanFrom, detectGaps, playArena, thinSentence, thinSpots, GAP_TEXT, type EarnedPrinciple } from "@/lib/domain/arena";
+import { buildPlanActions, formatIsoDate, gapActions, gatheringsInFirstSixMonths, weeksUntil } from "@/lib/domain/launch";
+import { filled, isSpace, isWeekday, stringList, type LaunchData } from "@/lib/domain/journey";
+import { SPACE_CONTENT } from "@/content/calling";
+import { ARENA_ENABLED, CURVEBALLS, DEFAULT_ORDER } from "@/content/arena";
+import { useNetworkView } from "@/hooks/useNetworkView";
 
 function capitalise(day: string): string {
   return day.charAt(0).toUpperCase() + day.slice(1);

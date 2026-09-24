@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
+import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/server/supabaseAdmin";
 
-// GET: public — list pathway groups
+// GET (public): list pathway groups
 export async function GET() {
   const { data, error } = await supabase
     .from("pathway_groups")
@@ -13,7 +13,7 @@ export async function GET() {
   return NextResponse.json({ groups: data ?? [] });
 }
 
-// POST: admin — create a pathway group
+// POST (admin): create a pathway group
 export async function POST(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ group: data?.[0] ?? null });
 }
 
-// PUT: admin — update a pathway group
+// PUT (admin): update a pathway group
 export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json({ group: data[0] });
 }
 
-// DELETE: admin — remove a pathway group (?id=)
+// DELETE (admin): remove a pathway group (?id=)
 export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

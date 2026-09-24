@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
-import { leaderFetch } from "@/lib/leaderFetch";
+import { getCurrentUser } from "@/lib/client/auth";
+import { leaderFetch } from "@/lib/client/leaderFetch";
 import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut, Trash2, Monitor } from "lucide-react";
-import { logout } from "@/lib/auth";
+import { logout } from "@/lib/client/auth";
 
 interface Session {
   code: string;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/client/auth";
 import { ArrowLeft, Monitor, QrCode } from "lucide-react";
 import QRCode from "qrcode";
 

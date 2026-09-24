@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminConfigError, getSupabaseAdmin, isAdminAuthorized } from "@/lib/supabaseAdmin";
-import { readRows } from "@/lib/adminRead";
+import { adminConfigError, getSupabaseAdmin, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { readRows } from "@/lib/server/adminRead";
 import {
   buildChurchHealth,
   type HealthCheckinRow,
   type HealthLeaderRow,
   type HealthPersonRow,
   type HealthProfileRow,
-} from "@/lib/churchHealth";
+} from "@/lib/domain/churchHealth";
 
 // GET /api/admin/church-health (admin Bearer key). Read only: loads four
 // tables and returns buildChurchHealth. Any read error is a 500 with the

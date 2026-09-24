@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import PrintButton from "@/components/journey/PrintButton";
-import PhaseOpening from "@/components/avenue/PhaseOpening";
-import JourneyFooter from "@/components/avenue/JourneyFooter";
-import HeaderAvatar from "@/components/avenue/HeaderAvatar";
-import ResetWorksheet from "@/components/journey/ResetWorksheet";
-import { VERSES } from "../../verses";
-import { useLeaderGate } from "@/lib/useLeaderGate";
-import { useWorksheet } from "@/lib/useWorksheet";
-import { useMyPeople } from "@/lib/useMyPeople";
-import { filled, isSpace, layersScore, recordOf, textOf, type CallingData } from "@/lib/journey";
-import { APEST_ORDER, topTwoRoles, type RoleKey } from "@/lib/apest";
+import PrintButton from "@/components/leaders/journey/PrintButton";
+import PhaseOpening from "@/components/leaders/avenue/PhaseOpening";
+import JourneyFooter from "@/components/leaders/avenue/JourneyFooter";
+import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
+import ResetWorksheet from "@/components/leaders/journey/ResetWorksheet";
+import { VERSES } from "@/content/training/verses";
+import { useLeaderGate } from "@/hooks/useLeaderGate";
+import { useWorksheet } from "@/hooks/useWorksheet";
+import { useMyPeople } from "@/hooks/useMyPeople";
+import { filled, isSpace, layersScore, recordOf, textOf, type CallingData } from "@/lib/domain/journey";
+import { APEST_ORDER, topTwoRoles, type RoleKey } from "@/lib/domain/apest";
 import {
   APEST_CALLING_TEXT,
   JOURNAL_PROMPTS,
@@ -21,7 +21,7 @@ import {
   RICE_FIELDS,
   SPACE_CONTENT,
   WILLING_OPTIONS,
-} from "../content";
+} from "@/content/calling";
 
 function isRole(value: unknown): value is RoleKey {
   return typeof value === "string" && (APEST_ORDER as string[]).includes(value);

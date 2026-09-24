@@ -8,8 +8,8 @@ const h = vi.hoisted(() => ({
   requireLeader: vi.fn(),
   getSupabaseAdmin: vi.fn(),
 }));
-vi.mock("@/lib/requireLeader", () => ({ requireLeader: h.requireLeader }));
-vi.mock("@/lib/supabaseAdmin", () => ({ adminConfigError: () => null, getSupabaseAdmin: h.getSupabaseAdmin }));
+vi.mock("@/lib/server/requireLeader", () => ({ requireLeader: h.requireLeader }));
+vi.mock("@/lib/server/supabaseAdmin", () => ({ adminConfigError: () => null, getSupabaseAdmin: h.getSupabaseAdmin }));
 
 import { DELETE } from "./route";
 

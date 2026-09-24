@@ -1,3 +1,4 @@
+import "server-only";
 // The branded frame every leader email shares (spec 3.2). Pure.
 // Mail clients handle <style> blocks and web fonts unevenly (Gmail strips
 // some, Outlook renders with Word), so this is nested tables with inline

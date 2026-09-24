@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 
 // POST /api/auth/request-code  { email }
 // Sends a numeric sign-in code, but only to an email already in `leaders`.

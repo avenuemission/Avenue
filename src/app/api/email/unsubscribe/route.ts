@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { absoluteUrl } from "@/lib/emails/layout";
 import { renderNoticePage, type NoticePage } from "@/lib/emails/noticePage";
 import { EMAIL_KIND_INFO, emailTablesError, parseUnsubscribe, unsubscribePatch, type EmailKind } from "@/lib/emails/prefs";

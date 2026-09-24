@@ -1,3 +1,4 @@
+import "server-only";
 // Wires the engine to the real world for the Netlify scheduled function:
 // a service-role Supabase client, Gmail through the shared sendEmail, a
 // real pause between sends. Dry run unless LEADER_EMAILS_DRY_RUN is exactly
@@ -5,7 +6,7 @@
 // It builds its own client rather than using getSupabaseAdmin, which pulls
 // next/server into the function bundle.
 import { createClient } from "@supabase/supabase-js";
-import { isEmailConfigured, sendEmail } from "@/lib/email";
+import { isEmailConfigured, sendEmail } from "@/lib/server/mail/transport";
 import { runLeaderEmails, SendOutcomeUnknownError, type RunReport } from "./engine";
 import { createEngineDb } from "./engineDb";
 import { loadSnapshot } from "./loadSnapshot";

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { sendLeaderSignupNotification } from "@/lib/email";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { requireLeader } from "@/lib/requireLeader";
+import { sendLeaderSignupNotification } from "@/lib/server/mail/transport";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 interface LeaderRecord {
   id: string;

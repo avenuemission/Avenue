@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useLeaderGate } from "@/lib/useLeaderGate";
-import EmailPrefsPanel from "@/components/ui/EmailPrefsPanel";
+import { useLeaderGate } from "@/hooks/useLeaderGate";
+import EmailPrefsPanel from "@/components/leaders/emails/EmailPrefsPanel";
 
 // Where "Manage emails" in every leader email lands (spec 3.2 footer).
 // The same panel as the profile sheet, behind the usual leader gate.

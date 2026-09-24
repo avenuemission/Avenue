@@ -1,13 +1,14 @@
+import "server-only";
 // The five leader emails (spec 3.2). Pure: each takes plain data and
 // returns { subject, html, text, headers } through renderEmail. compose.ts
 // decides who gets which email with which data.
 // Henry to check wording (every string in this file)
-import { STOP_NAMES } from "@/lib/avenue";
-import { APPRENTICE_HOW_TO, apprenticeStepLabel } from "@/lib/apprentice";
-import { METRICS, type Metric } from "@/lib/people";
-import { GAUGES, type GaugeScores } from "@/lib/rpms";
-import { METRIC_LABELS, type MetricCounts } from "@/lib/churchHealth";
-import { dayMonthLabel } from "@/lib/melbourneDate";
+import { STOP_NAMES } from "@/lib/domain/avenue";
+import { APPRENTICE_HOW_TO, apprenticeStepLabel } from "@/lib/domain/apprentice";
+import { METRICS, type Metric } from "@/lib/domain/people";
+import { GAUGES, type GaugeScores } from "@/lib/domain/rpms";
+import { METRIC_LABELS, type MetricCounts } from "@/lib/domain/churchHealth";
+import { dayMonthLabel } from "@/lib/domain/dates/melbourne";
 import { absoluteUrl, renderEmail, type Block, type RenderedEmail } from "./layout";
 
 export const LINKS = {

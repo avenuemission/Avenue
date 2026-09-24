@@ -5,8 +5,8 @@ import { fakeSupabase } from "@/test/fakeSupabase";
 // Only the database is replaced. isAdminAuthorized and adminConfigError are
 // the real ones, driven by the env values stubbed below.
 const h = vi.hoisted(() => ({ getSupabaseAdmin: vi.fn() }));
-vi.mock("@/lib/supabaseAdmin", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/supabaseAdmin")>()),
+vi.mock("@/lib/server/supabaseAdmin", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/server/supabaseAdmin")>()),
   getSupabaseAdmin: h.getSupabaseAdmin,
 }));
 

@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/auth";
-import { leaderFetch } from "@/lib/leaderFetch";
+import { getCurrentUser, logout, User } from "@/lib/client/auth";
+import { leaderFetch } from "@/lib/client/leaderFetch";
 import {
   LogOut,
   ArrowLeft,
@@ -16,7 +16,7 @@ import {
   FileDown,
   Download,
 } from "lucide-react";
-import HeaderAvatar from "@/components/avenue/HeaderAvatar";
+import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 
 const RESOURCES = {
   music: [

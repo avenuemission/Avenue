@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
+import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/server/supabaseAdmin";
 
-// GET: public — list all study guides
+// GET (public): list all study guides
 export async function GET() {
   const { data, error } = await supabase
     .from("study_guides")
@@ -13,7 +13,7 @@ export async function GET() {
   return NextResponse.json({ guides: data ?? [] });
 }
 
-// POST: admin — create a study guide
+// POST (admin): create a study guide
 export async function POST(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ guide: data?.[0] ?? null });
 }
 
-// PUT: admin — update a study guide
+// PUT (admin): update a study guide
 export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json({ guide: data[0] });
 }
 
-// DELETE: admin — remove a study guide
+// DELETE (admin): remove a study guide
 export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

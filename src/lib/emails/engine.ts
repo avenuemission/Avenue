@@ -1,3 +1,4 @@
+import "server-only";
 // The hourly leader email run (spec 3.3). The database, the mailer, the
 // clock and the pause between sends are injected, so the whole flow is
 // unit tested without Supabase or Gmail.
@@ -19,7 +20,7 @@
 // 5. One recipient failing never stops the others. Sends are sequential,
 //    paused before each claim after the first, capped per run, and stop
 //    once the time budget is spent (the rest wait for the next hour).
-import { melbourneParts, mondayOfISO } from "@/lib/melbourneDate";
+import { melbourneParts, mondayOfISO } from "@/lib/domain/dates/melbourne";
 import { composeFor, type Outgoing, type Snapshot } from "./compose";
 import type { RenderedEmail } from "./layout";
 import { recipientsFor, type EmailKind, type PrefsRow } from "./prefs";

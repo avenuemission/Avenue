@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
-import { requireLeader } from "@/lib/requireLeader";
+import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 // Columns a client is allowed to write. Anything else in the body is ignored,
 // so a caller can't set updated_at or invent columns.

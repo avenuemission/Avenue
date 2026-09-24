@@ -1,7 +1,7 @@
 // This week's Pathways topic for the Monday digest (spec 3.2). Pure.
 // study_guides.guide_date is free text written as DD/MM/YYYY. A row whose
 // date cannot be read is skipped and reported, never guessed at.
-import { addDaysISO } from "@/lib/melbourneDate";
+import { addDaysISO } from "@/lib/domain/dates/melbourne";
 
 export interface GuideRow {
   id: string;

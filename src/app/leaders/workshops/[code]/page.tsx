@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
-import { leaderFetch } from "@/lib/leaderFetch";
+import { getCurrentUser } from "@/lib/client/auth";
+import { leaderFetch } from "@/lib/client/leaderFetch";
 import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles, Volume2, Square, RotateCcw, Download, FileText } from "lucide-react";
 
 interface Response {

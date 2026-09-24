@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/auth";
-import { leaderFetch } from "@/lib/leaderFetch";
-import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/avenue";
-import HeaderAvatar from "@/components/avenue/HeaderAvatar";
-import NextStepCard from "@/components/journey/NextStepCard";
+import { getCurrentUser, logout, User } from "@/lib/client/auth";
+import { leaderFetch } from "@/lib/client/leaderFetch";
+import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/domain/avenue";
+import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
+import NextStepCard from "@/components/leaders/journey/NextStepCard";
 import {
   GraduationCap,
   BookOpen,

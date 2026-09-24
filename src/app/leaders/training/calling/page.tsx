@@ -2,30 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import WizardShell from "@/components/journey/WizardShell";
+import WizardShell from "@/components/leaders/journey/WizardShell";
 import {
   CALLING_TOTAL,
   callingCompleteCount,
   callingSectionComplete,
   type CallingData,
   type CallingSectionId,
-} from "@/lib/journey";
-import { CALLING_LAMP_LABELS } from "@/lib/avenue";
-import { callingSectionStatus } from "@/lib/stepStatus";
-import { useMoment } from "@/components/avenue/useMoment";
-import Moment from "@/components/avenue/Moment";
-import { useLeaderGate } from "@/lib/useLeaderGate";
-import { useWorksheet } from "@/lib/useWorksheet";
-import { useMyPeople } from "@/lib/useMyPeople";
-import { firstIncompleteIndex, stepFromParam, type WizardStepMeta } from "@/lib/wizard";
-import { CALLING_SECTIONS } from "./content";
-import SectionVideo from "./SectionVideo";
-import LayersSort from "./LayersSort";
-import CallableJournal from "./CallableJournal";
-import SharedCall from "./SharedCall";
-import ApestStep from "./ApestStep";
-import SeasonalMap from "./SeasonalMap";
-import ConversationStep from "./ConversationStep";
+} from "@/lib/domain/journey";
+import { CALLING_LAMP_LABELS } from "@/lib/domain/avenue";
+import { callingSectionStatus } from "@/lib/domain/stepStatus";
+import { useMoment } from "@/hooks/useMoment";
+import Moment from "@/components/leaders/avenue/Moment";
+import { useLeaderGate } from "@/hooks/useLeaderGate";
+import { useWorksheet } from "@/hooks/useWorksheet";
+import { useMyPeople } from "@/hooks/useMyPeople";
+import { firstIncompleteIndex, stepFromParam, type WizardStepMeta } from "@/lib/domain/wizard";
+import { CALLING_SECTIONS } from "@/content/calling";
+import SectionVideo from "@/app/leaders/training/calling/_steps/SectionVideo";
+import LayersSort from "@/app/leaders/training/calling/_steps/LayersSort";
+import CallableJournal from "@/app/leaders/training/calling/_steps/CallableJournal";
+import SharedCall from "@/app/leaders/training/calling/_steps/SharedCall";
+import ApestStep from "@/app/leaders/training/calling/_steps/ApestStep";
+import SeasonalMap from "@/app/leaders/training/calling/_steps/SeasonalMap";
+import ConversationStep from "@/app/leaders/training/calling/_steps/ConversationStep";
 
 // Phase 2: the Calling wizard. Six sections, each a short video (or its
 // summary until recorded) and one activity, saved to the leader's private

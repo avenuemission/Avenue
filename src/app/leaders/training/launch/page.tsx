@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import WizardShell, { OutcomeButton } from "@/components/journey/WizardShell";
+import WizardShell, { OutcomeButton } from "@/components/leaders/journey/WizardShell";
 import {
   filled,
   isIsoDate,
@@ -13,27 +13,27 @@ import {
   type CallingData,
   type LaunchData,
   type LaunchStepId,
-} from "@/lib/journey";
-import { LAUNCH_LAMP_LABELS } from "@/lib/avenue";
-import { launchWizardStepStatus } from "@/lib/stepStatus";
-import { useMoment } from "@/components/avenue/useMoment";
-import Moment from "@/components/avenue/Moment";
-import { SPACES, type Space } from "@/lib/people";
-import { useLeaderGate } from "@/lib/useLeaderGate";
-import { useWorksheet } from "@/lib/useWorksheet";
-import { useMyPeople } from "@/lib/useMyPeople";
-import { firstIncompleteIndex, stepFromParam, type WizardStepMeta } from "@/lib/wizard";
-import PrayerStep from "./PrayerStep";
-import MissionStep from "./MissionStep";
-import SpaceStep from "./SpaceStep";
-import TeamStep from "./TeamStep";
-import IntentionalStep from "./IntentionalStep";
-import RhythmStep from "./RhythmStep";
-import InviteStep from "./InviteStep";
-import ArenaStep from "./ArenaStep";
-import { ARENA_ENABLED } from "./arenaContent";
-import { arenaPlanFrom } from "@/lib/arena";
-import { useNetworkView } from "../useNetworkView";
+} from "@/lib/domain/journey";
+import { LAUNCH_LAMP_LABELS } from "@/lib/domain/avenue";
+import { launchWizardStepStatus } from "@/lib/domain/stepStatus";
+import { useMoment } from "@/hooks/useMoment";
+import Moment from "@/components/leaders/avenue/Moment";
+import { SPACES, type Space } from "@/lib/domain/people";
+import { useLeaderGate } from "@/hooks/useLeaderGate";
+import { useWorksheet } from "@/hooks/useWorksheet";
+import { useMyPeople } from "@/hooks/useMyPeople";
+import { firstIncompleteIndex, stepFromParam, type WizardStepMeta } from "@/lib/domain/wizard";
+import PrayerStep from "@/app/leaders/training/launch/_steps/PrayerStep";
+import MissionStep from "@/app/leaders/training/launch/_steps/MissionStep";
+import SpaceStep from "@/app/leaders/training/launch/_steps/SpaceStep";
+import TeamStep from "@/app/leaders/training/launch/_steps/TeamStep";
+import IntentionalStep from "@/app/leaders/training/launch/_steps/IntentionalStep";
+import RhythmStep from "@/app/leaders/training/launch/_steps/RhythmStep";
+import InviteStep from "@/app/leaders/training/launch/_steps/InviteStep";
+import ArenaStep from "@/app/leaders/training/launch/_steps/ArenaStep";
+import { ARENA_ENABLED } from "@/content/arena";
+import { arenaPlanFrom } from "@/lib/domain/arena";
+import { useNetworkView } from "@/hooks/useNetworkView";
 
 const LAUNCH_STEPS = [
   { id: "prayer", title: "Pray first", minutes: 4 },

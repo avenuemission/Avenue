@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
-import { requireLeader } from "@/lib/requireLeader";
-import { MAX_PEOPLE, PERSON_COLUMNS, toPerson, validatePersonInput, type PersonRow } from "@/lib/people";
+import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { requireLeader } from "@/lib/server/requireLeader";
+import { MAX_PEOPLE, PERSON_COLUMNS, toPerson, validatePersonInput, type PersonRow } from "@/lib/domain/people";
 
 // My People: a private list per leader. Every query is filtered by the
 // verified owner email, so another leader's row is simply not found

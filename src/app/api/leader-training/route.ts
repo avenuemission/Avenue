@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/supabaseAdmin";
-import { requireLeader } from "@/lib/requireLeader";
+import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 type CheckpointStatus = "none" | "requested" | "complete";
 
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
     // before adminConfigError, not after, so an unauthenticated caller
     // cannot use this endpoint to elicit the service-role-key diagnostic
     // (see the "call right after the isAdminAuthorized check" guidance at
-    // src/lib/supabaseAdmin.ts:69).
+    // src/lib/server/supabaseAdmin.ts).
     if (!isAdminAuthorized(request)) {
       return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
     }

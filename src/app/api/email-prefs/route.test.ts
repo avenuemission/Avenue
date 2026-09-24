@@ -7,8 +7,8 @@ import { DEFAULT_PREFS, MISSING_TABLES_MESSAGE, PREFS_COLUMNS } from "@/lib/emai
 // no Supabase and no session. requireLeader's own checks are covered by
 // leaderAuth.test.ts and scripts/check-auth.mjs.
 const h = vi.hoisted(() => ({ requireLeader: vi.fn(), getSupabaseAdmin: vi.fn() }));
-vi.mock("@/lib/requireLeader", () => ({ requireLeader: h.requireLeader }));
-vi.mock("@/lib/supabaseAdmin", () => ({ adminConfigError: () => null, getSupabaseAdmin: h.getSupabaseAdmin }));
+vi.mock("@/lib/server/requireLeader", () => ({ requireLeader: h.requireLeader }));
+vi.mock("@/lib/server/supabaseAdmin", () => ({ adminConfigError: () => null, getSupabaseAdmin: h.getSupabaseAdmin }));
 
 import { GET, PATCH } from "./route";
 

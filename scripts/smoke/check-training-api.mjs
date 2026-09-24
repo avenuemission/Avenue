@@ -321,7 +321,7 @@ try {
     currentRevision = concurrentWinner.json?.progress?.revision ?? concurrentRevision;
   }
 
-  // Mirrors mergeAgainstBase in src/app/leaders/training/page.tsx: the
+  // Mirrors mergeAgainstBase in src/lib/domain/trainingProgress.ts: the
   // client cannot be exercised directly from this script, so the same
   // three-way merge (base, mine, theirs) is reproduced here and driven
   // through the real API, to catch a regression in either side of the

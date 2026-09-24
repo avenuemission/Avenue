@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/supabaseAdmin";
+import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/server/supabaseAdmin";
 
-// GET: public — list all events with their upcoming dates
+// GET (public): list all events with their upcoming dates
 export async function GET() {
   const [{ data: events, error: eventsError }, { data: dates, error: datesError }] = await Promise.all([
     supabase.from("intersection_events").select("*").order("sort_order", { ascending: true }),
@@ -19,7 +19,7 @@ export async function GET() {
   });
 }
 
-// PUT: admin — update event info
+// PUT (admin): update event info
 export async function PUT(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -41,7 +41,7 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json({ event: data[0] });
 }
 
-// POST: admin — add a date to an event
+// POST (admin): add a date to an event
 export async function POST(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ date: data?.[0] ?? null });
 }
 
-// DELETE: admin — remove a date
+// DELETE (admin): remove a date
 export async function DELETE(request: NextRequest) {
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

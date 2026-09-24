@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError } from "@/lib/supabaseAdmin";
-import { requireLeader } from "@/lib/requireLeader";
-import { parseKind, validateWorksheetPatch } from "@/lib/worksheets";
+import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { requireLeader } from "@/lib/server/requireLeader";
+import { parseKind, validateWorksheetPatch } from "@/lib/domain/worksheets";
 
 // Worksheets: Calling and Launch answers, private to the signed-in leader.
 // The email is only ever auth.leader.email. A read filters by it; a write

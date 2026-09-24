@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/auth";
+import { getCurrentUser, logout, User } from "@/lib/client/auth";
 import {
   LogOut,
   ArrowLeft,
@@ -15,7 +15,7 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import HeaderAvatar from "@/components/avenue/HeaderAvatar";
+import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 
 // Generate next 3 weeks of Thursdays and Saturdays
 function getUpcomingCallDates(): { thursdays: Date[]; saturdays: Date[] } {

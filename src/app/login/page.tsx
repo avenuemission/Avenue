@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { requestCode, verifyCode, requestAccess } from "@/lib/auth";
+import { requestCode, verifyCode, requestAccess } from "@/lib/client/auth";
 import { Mail, User, KeyRound, ArrowRight } from "lucide-react";
 
 type Mode = "email" | "code" | "request";

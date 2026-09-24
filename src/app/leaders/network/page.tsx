@@ -4,12 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Plus, Users, X } from "lucide-react";
-import { getCurrentUser, type User } from "@/lib/auth";
-import { leaderFetch } from "@/lib/leaderFetch";
+import { getCurrentUser, type User } from "@/lib/client/auth";
+import { leaderFetch } from "@/lib/client/leaderFetch";
 import Reveal from "@/components/ui/Reveal";
-import NetworkGraph from "@/components/ui/NetworkGraph";
-import type { NetworkPerson } from "@/lib/networkLayout";
-import HeaderAvatar from "@/components/avenue/HeaderAvatar";
+import NetworkGraph from "@/components/leaders/network/NetworkGraph";
+import type { NetworkPerson } from "@/lib/domain/networkLayout";
+import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 
 export default function NetworkPage() {
   const router = useRouter();

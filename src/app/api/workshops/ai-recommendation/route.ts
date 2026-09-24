@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireLeader } from "@/lib/requireLeader";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 export const maxDuration = 60;
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 
 // Simple admin key check (set ADMIN_API_KEY in Netlify environment variables)
 function isAuthorized(request: NextRequest): boolean {

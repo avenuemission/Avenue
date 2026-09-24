@@ -6,8 +6,8 @@ import { PREVIEW_TOKEN } from "@/lib/emails/prefs";
 // The database and the snapshot loader are replaced; the admin key check is
 // the real one.
 const h = vi.hoisted(() => ({ getSupabaseAdmin: vi.fn(), loadSnapshot: vi.fn() }));
-vi.mock("@/lib/supabaseAdmin", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/supabaseAdmin")>()),
+vi.mock("@/lib/server/supabaseAdmin", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/server/supabaseAdmin")>()),
   getSupabaseAdmin: h.getSupabaseAdmin,
 }));
 vi.mock("@/lib/emails/loadSnapshot", () => ({ loadSnapshot: h.loadSnapshot }));

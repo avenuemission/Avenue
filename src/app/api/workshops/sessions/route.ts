@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { requireLeader } from "@/lib/requireLeader";
+import { supabase } from "@/lib/client/supabaseBrowser";
+import { requireLeader } from "@/lib/server/requireLeader";
 
 // GET all sessions
 export async function GET(request: NextRequest) {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/client/auth";
 import {
   ArrowLeft,
   BarChart2,
@@ -28,8 +28,8 @@ import {
   Search,
   HeartPulse,
 } from "lucide-react";
-import ChurchHealthTab from "@/components/admin/ChurchHealthTab";
-import EmailPreviewTab from "@/components/admin/EmailPreviewTab";
+import ChurchHealthTab from "@/components/leaders/admin/ChurchHealthTab";
+import EmailPreviewTab from "@/components/leaders/admin/EmailPreviewTab";
 
 const TABS = [
   { id: "submissions", label: "Form Submissions", icon: FileText },

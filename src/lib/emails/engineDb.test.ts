@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fakeSupabase, type FakeResult } from "@/test/fakeSupabase";
-import { ROW_CAP } from "@/lib/adminRead";
+import { ROW_CAP } from "@/lib/server/adminRead";
 import { MISSING_TABLES_MESSAGE, PREFS_COLUMNS } from "./prefs";
 import { createEngineDb } from "./engineDb";
 

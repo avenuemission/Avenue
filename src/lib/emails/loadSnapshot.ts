@@ -1,9 +1,10 @@
+import "server-only";
 // Reads everything one email run needs, once (spec 3.3). Nine whole-table
 // reads through readRows, which fails loud on any error or on the row cap.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { INITIAL_PHASES } from "@/app/leaders/training/phases";
-import { readRows } from "@/lib/adminRead";
-import type { HealthCheckinRow, HealthPersonRow, HealthProfileRow } from "@/lib/churchHealth";
+import { INITIAL_PHASES } from "@/content/training/phases";
+import { readRows } from "@/lib/server/adminRead";
+import type { HealthCheckinRow, HealthPersonRow, HealthProfileRow } from "@/lib/domain/churchHealth";
 import type { NetworkRow, Snapshot, TrainingRow, WorksheetRow } from "./compose";
 import { emailTablesError, PREFS_COLUMNS, type LeaderRow, type PrefsRow } from "./prefs";
 import type { GuideRow } from "./topic";
