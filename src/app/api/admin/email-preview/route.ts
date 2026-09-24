@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminConfigError, getSupabaseAdmin, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { requireAdmin } from "@/lib/server/requireAdmin";
+import { serverError } from "@/lib/server/http";
 import { normEmail } from "@/lib/domain/churchHealth";
 import { composeFor, firstNameOf } from "@/lib/emails/compose";
 import { loadSnapshot } from "@/lib/emails/loadSnapshot";
@@ -12,9 +14,8 @@ import { milestoneEmail } from "@/lib/emails/templates";
 // unsubscribe token: the admin passcode must not be a way to collect
 // tokens, and the sandboxed preview frame cannot follow links anyway.
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const url = new URL(request.url);
   const kind = url.searchParams.get("kind");
@@ -62,7 +63,6 @@ export async function GET(request: NextRequest) {
     notes.unshift("This leader has no apprentices, so this email would be skipped.");
     return NextResponse.json({ subject: null, html: null, text: null, periodKey: null, note: notes.join(" ") });
   } catch (e) {
-    console.error("email-preview:", e);
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("email-preview", e);
   }
 }

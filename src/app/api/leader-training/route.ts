@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { requireAdmin } from "@/lib/server/requireAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 
 type CheckpointStatus = "none" | "requested" | "complete";
 
@@ -128,17 +130,12 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
 
   if (url.searchParams.get("all") === "1") {
-    // Admin listing, authorised by Bearer token. isAdminAuthorized runs
-    // before adminConfigError, not after, so an unauthenticated caller
-    // cannot use this endpoint to elicit the service-role-key diagnostic
-    // (see the "call right after the isAdminAuthorized check" guidance at
-    // src/lib/server/supabaseAdmin.ts).
-    if (!isAdminAuthorized(request)) {
-      return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-    }
-
-    const cfgErr = adminConfigError();
-    if (cfgErr) return cfgErr;
+    // Admin listing, authorised by Bearer token. requireAdmin checks the key
+    // before it checks the service-role-key diagnostic, so an
+    // unauthenticated caller cannot use this endpoint to elicit that
+    // diagnostic.
+    const auth = await requireAdmin(request);
+    if ("response" in auth) return auth.response;
 
     try {
       const db = getSupabaseAdmin();
@@ -167,7 +164,7 @@ export async function GET(request: NextRequest) {
         })),
       });
     } catch (e) {
-      return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+      return serverError("leader-training GET all", e);
     }
   }
 
@@ -183,7 +180,7 @@ export async function GET(request: NextRequest) {
     if (!row) return NextResponse.json({ error: "Not a leader account" }, { status: 403 });
     return NextResponse.json({ progress: toProgress(row) });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("leader-training GET", e);
   }
 }
 
@@ -272,7 +269,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ ok: true, progress: toProgress(data as ProgressRow) });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("leader-training PUT", e);
   }
 }
 
@@ -292,9 +289,8 @@ export async function POST(request: NextRequest) {
   // proven on /api/network: an authorisation check that runs after a read
   // has already let the read happen for an unauthorised caller.
   if (isAdminAction) {
-    if (!isAdminAuthorized(request)) {
-      return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-    }
+    const auth = await requireAdmin(request);
+    if ("response" in auth) return auth.response;
   }
 
   // The admin names the target leader in body.email for its two checkpoint
@@ -407,6 +403,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("leader-training POST", e);
   }
 }

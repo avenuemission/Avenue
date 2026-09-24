@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminConfigError, getSupabaseAdmin, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { requireAdmin } from "@/lib/server/requireAdmin";
 import { readRows } from "@/lib/server/adminRead";
+import { serverError } from "@/lib/server/http";
 import {
   buildChurchHealth,
   type HealthCheckinRow,
@@ -10,12 +12,11 @@ import {
 } from "@/lib/domain/churchHealth";
 
 // GET /api/admin/church-health (admin Bearer key). Read only: loads four
-// tables and returns buildChurchHealth. Any read error is a 500 with the
-// database message, never a partial answer.
+// tables and returns buildChurchHealth. Any read error is a 500, never a
+// partial answer.
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   try {
     const db = getSupabaseAdmin();
@@ -27,7 +28,6 @@ export async function GET(request: NextRequest) {
     ]);
     return NextResponse.json(buildChurchHealth({ leaders, profiles, people, checkins, now: new Date() }));
   } catch (e) {
-    console.error("church-health:", e);
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("church-health", e);
   }
 }

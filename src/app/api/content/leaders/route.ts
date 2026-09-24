@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { requireAdmin } from "@/lib/server/requireAdmin";
+import { serverError } from "@/lib/server/http";
 
 interface LeaderRecord {
   id: string;
@@ -11,28 +13,22 @@ interface LeaderRecord {
 
 // GET: admin, list all leaders from Supabase (the only source requireLeader reads)
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const { data, error } = await getSupabaseAdmin()
     .from("leaders")
     .select("id, email, name, full_access, created_at")
     .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("content/leaders GET", error);
   return NextResponse.json({ leaders: (data ?? []) as LeaderRecord[] });
 }
 
 // PUT: admin, update a leader's access
 export async function PUT(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const { email, full_access } = await request.json();
   if (!email || typeof full_access !== "boolean") {
@@ -45,18 +41,15 @@ export async function PUT(request: NextRequest) {
     .eq("email", email.toLowerCase())
     .select();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("content/leaders PUT", error);
   if (!data || data.length === 0) return NextResponse.json({ error: "Leader not found" }, { status: 404 });
   return NextResponse.json({ leader: data[0] });
 }
 
 // DELETE: admin, remove a leader
 export async function DELETE(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email");
@@ -68,18 +61,15 @@ export async function DELETE(request: NextRequest) {
     .eq("email", email.toLowerCase())
     .select("email");
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("content/leaders DELETE", error);
   if (!data || data.length === 0) return NextResponse.json({ error: "Leader not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }
 
 // POST: admin, create a leader directly
 export async function POST(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const { id, email, name, full_access } = await request.json();
   if (!email || !name) {
@@ -100,7 +90,7 @@ export async function POST(request: NextRequest) {
     if (error.code === "23505") {
       return NextResponse.json({ error: "Leader already exists" }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError("content/leaders POST", error);
   }
   return NextResponse.json({ leader: data?.[0] ?? null });
 }

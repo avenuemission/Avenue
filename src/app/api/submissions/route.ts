@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { requireAdmin } from "@/lib/server/requireAdmin";
+import { serverError } from "@/lib/server/http";
 
 const VALID_TYPES = [
   "start-pathway",
@@ -10,7 +12,7 @@ const VALID_TYPES = [
   "event-updates",
 ];
 
-// POST: public — record a new form submission
+// POST: public, record a new form submission
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -27,25 +29,18 @@ export async function POST(request: NextRequest) {
       data: data ?? {},
     });
 
-    if (error) {
-      console.error("Submission insert error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) return serverError("submissions POST", error);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Submission POST error:", error);
-    return NextResponse.json({ error: "Failed to save submission" }, { status: 500 });
+    return serverError("submissions POST", error);
   }
 }
 
-// GET: admin — list submissions (optionally filter by ?type=)
+// GET: admin, list submissions (optionally filter by ?type=)
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
@@ -60,18 +55,15 @@ export async function GET(request: NextRequest) {
   }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("submissions GET", error);
 
   return NextResponse.json({ submissions: data ?? [] });
 }
 
-// PATCH: admin — archive / unarchive a submission
+// PATCH: admin, archive / unarchive a submission
 export async function PATCH(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const { id, archived } = await request.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
@@ -81,23 +73,20 @@ export async function PATCH(request: NextRequest) {
     .update({ archived: !!archived })
     .eq("id", id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("submissions PATCH", error);
   return NextResponse.json({ success: true });
 }
 
-// DELETE: admin — remove a submission (?id=)
+// DELETE: admin, remove a submission (?id=)
 export async function DELETE(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const { error } = await getSupabaseAdmin().from("form_submissions").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("submissions DELETE", error);
   return NextResponse.json({ success: true });
 }

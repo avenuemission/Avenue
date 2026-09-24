@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { fakeSupabase } from "@/test/fakeSupabase";
 
-// Only the database is replaced. isAdminAuthorized and adminConfigError are
-// the real ones, driven by the env values stubbed below.
+// Only the database is replaced. requireAdmin and adminConfigError are the
+// real ones, driven by the env values stubbed below.
 const h = vi.hoisted(() => ({ getSupabaseAdmin: vi.fn() }));
 vi.mock("@/lib/server/supabaseAdmin", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/server/supabaseAdmin")>()),
@@ -20,33 +20,56 @@ const get = (authorization?: string) =>
     })
   );
 
+let defaultFake: ReturnType<typeof fakeSupabase>;
+
 beforeEach(() => {
   h.getSupabaseAdmin.mockReset();
+  // A bare fake with no registered results: rate_limit_blocked and
+  // rate_limit_hit both resolve to their harmless defaults (see
+  // src/test/fakeSupabase.ts), so requireAdmin's lockout check never fires
+  // unless a test asks for it. requireAdmin still calls getSupabaseAdmin()
+  // for that check even on an unauthorized request; tests below assert that
+  // no data table (leaders, leader_profiles, ...) is ever read from it.
+  // Tests that exercise the successful path replace this with their own
+  // fakeSupabase(...).
+  defaultFake = fakeSupabase();
+  h.getSupabaseAdmin.mockReturnValue(defaultFake.db);
   vi.stubEnv("ADMIN_API_KEY", KEY);
   vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "sb_secret_test");
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
 });
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
 describe("GET /api/admin/church-health", () => {
-  it("is 401 without the admin key and never opens the database", async () => {
+  it("is 401 without the admin key and never reads a data table", async () => {
     const res = await get();
     expect(res.status).toBe(401);
-    expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
+    expect(defaultFake.tables()).toEqual([]);
   });
 
-  it("is 401 with the wrong key", async () => {
+  it("is 401 with the wrong key and never reads a data table", async () => {
     const res = await get("Bearer nope");
     expect(res.status).toBe(401);
-    expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
+    expect(defaultFake.tables()).toEqual([]);
   });
 
   it("is 401 when no admin key is configured on the server", async () => {
     vi.stubEnv("ADMIN_API_KEY", "");
     const res = await get("Bearer ");
     expect(res.status).toBe(401);
-    expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
+    expect(defaultFake.tables()).toEqual([]);
+  });
+
+  it("is 429 when the caller's IP is locked out, even with the right key", async () => {
+    const fake = fakeSupabase({ rate_limit_blocked: { data: true } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const res = await get(`Bearer ${KEY}`);
+    expect(res.status).toBe(429);
+    expect(fake.tables()).toEqual([]);
   });
 
   it("reads the four tables and returns the aggregation", async () => {
@@ -75,10 +98,12 @@ describe("GET /api/admin/church-health", () => {
     expect(fake.tables().sort()).toEqual(["leader_checkins", "leader_people", "leader_profiles", "leaders"]);
   });
 
-  it("fails loud with the database message", async () => {
+  it("fails loud but never leaks the database message to the caller", async () => {
     h.getSupabaseAdmin.mockReturnValue(fakeSupabase({ leader_people: { error: { message: "boom" } } }).db);
     const res = await get(`Bearer ${KEY}`);
     expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ error: "leader_people: boom" });
+    const body = await res.json();
+    expect(body).toEqual({ error: "Something went wrong. Please try again." });
+    expect(JSON.stringify(body)).not.toContain("boom");
   });
 });

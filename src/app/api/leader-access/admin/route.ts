@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
-
-// Simple admin key check (set ADMIN_API_KEY in Netlify environment variables)
-function isAuthorized(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const adminKey = process.env.ADMIN_API_KEY;
-
-  if (!adminKey) return false;
-  return authHeader === `Bearer ${adminKey}`;
-}
+import { requireAdmin } from "@/lib/server/requireAdmin";
+import { serverError } from "@/lib/server/http";
 
 // The Supabase `leaders` table is the only source of truth for leader
 // access: requireLeader reads it and nothing else.
@@ -17,9 +10,8 @@ const LEADER_COLUMNS = "id, email, name, full_access, created_at";
 
 // GET: List all leaders (requires admin auth)
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   try {
     const { data, error } = await getSupabaseAdmin()
@@ -27,26 +19,18 @@ export async function GET(request: NextRequest) {
       .select(LEADER_COLUMNS)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error listing leaders:", error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) return serverError("leader-access/admin GET", error);
 
     return NextResponse.json({ leaders: data ?? [] });
   } catch (error) {
-    console.error("Error listing leaders:", error);
-    return NextResponse.json(
-      { error: "Failed to list leaders" },
-      { status: 500 }
-    );
+    return serverError("leader-access/admin GET", error);
   }
 }
 
 // PUT: Update a leader's access (requires admin auth)
 export async function PUT(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   try {
     const body = await request.json();
@@ -65,10 +49,7 @@ export async function PUT(request: NextRequest) {
       .eq("email", email.toLowerCase())
       .select(LEADER_COLUMNS);
 
-    if (error) {
-      console.error("Error updating leader:", error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) return serverError("leader-access/admin PUT", error);
     if (!data || data.length === 0) {
       return NextResponse.json(
         { error: "Leader not found" },
@@ -81,19 +62,14 @@ export async function PUT(request: NextRequest) {
       leader: data[0],
     });
   } catch (error) {
-    console.error("Error updating leader:", error);
-    return NextResponse.json(
-      { error: "Failed to update leader" },
-      { status: 500 }
-    );
+    return serverError("leader-access/admin PUT", error);
   }
 }
 
 // DELETE: Remove a leader (requires admin auth)
 export async function DELETE(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -112,10 +88,7 @@ export async function DELETE(request: NextRequest) {
       .eq("email", email.toLowerCase())
       .select("email");
 
-    if (error) {
-      console.error("Error deleting leader:", error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) return serverError("leader-access/admin DELETE", error);
     if (!data || data.length === 0) {
       return NextResponse.json(
         { error: "Leader not found" },
@@ -128,10 +101,6 @@ export async function DELETE(request: NextRequest) {
       message: `Leader ${email} deleted`,
     });
   } catch (error) {
-    console.error("Error deleting leader:", error);
-    return NextResponse.json(
-      { error: "Failed to delete leader" },
-      { status: 500 }
-    );
+    return serverError("leader-access/admin DELETE", error);
   }
 }

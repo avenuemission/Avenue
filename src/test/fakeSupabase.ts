@@ -91,6 +91,15 @@ export function fakeSupabase(results: Record<string, FakeResult> = {}) {
       calls.push([table, "from"]);
       return chainFor(table);
     },
+    // Rate-limit RPCs (rate_limit_hit, rate_limit_blocked) go through here.
+    // Register a result under the RPC's own name, e.g. results.rate_limit_blocked.
+    // Defaults to { data: false, error: null } so a route under test is never
+    // blocked and never trips a rate limit unless a test asks for that.
+    rpc(name: string, params: unknown) {
+      calls.push([name, "rpc", params]);
+      const r = results[name] ?? {};
+      return Promise.resolve({ data: r.data === undefined ? false : r.data, error: r.error ?? null });
+    },
   };
 
   return { db, calls, tables: () => calls.filter((c) => c[1] === "from").map((c) => c[0]) };

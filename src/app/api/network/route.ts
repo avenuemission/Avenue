@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, adminConfigError, isAdminAuthorized } from "@/lib/server/supabaseAdmin";
+import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { normaliseEmail, wouldCreateCycle } from "@/lib/domain/network";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { requireAdmin } from "@/lib/server/requireAdmin";
+import { serverError } from "@/lib/server/http";
 
 interface Row {
   id: string;
@@ -189,7 +191,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("network GET", e);
   }
 }
 
@@ -215,9 +217,8 @@ export async function POST(request: NextRequest) {
   try {
     // Admin action, authorised by Bearer token rather than actor email.
     if (action === "reparent") {
-      if (!isAdminAuthorized(request)) {
-        return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-      }
+      const auth = await requireAdmin(request);
+      if ("response" in auth) return auth.response;
 
       const id = String(body.id ?? "");
       const newParentId = body.newParentId ? String(body.newParentId) : null;
@@ -400,6 +401,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("network POST", e);
   }
 }

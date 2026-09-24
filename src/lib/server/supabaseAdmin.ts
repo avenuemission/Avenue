@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 // ============================================================
 // SERVER-ONLY Supabase client using the SERVICE ROLE key.
@@ -62,18 +62,9 @@ export function serviceRoleKeyProblem(): string | null {
 }
 
 // Guard for admin write handlers: returns a ready-to-send error response when
-// the service-role key is misconfigured, otherwise null. Call right after the
-// isAdminAuthorized check so writes fail loudly with a clear message.
+// the service-role key is misconfigured, otherwise null. Call right after
+// requireAdmin's key check so writes fail loudly with a clear message.
 export function adminConfigError(): NextResponse | null {
   const problem = serviceRoleKeyProblem();
   return problem ? NextResponse.json({ error: problem }, { status: 500 }) : null;
-}
-
-// Verify the request carries the admin Bearer token.
-// Set ADMIN_API_KEY in your Netlify environment variables.
-export function isAdminAuthorized(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const adminKey = process.env.ADMIN_API_KEY;
-  if (!adminKey) return false;
-  return authHeader === `Bearer ${adminKey}`;
 }

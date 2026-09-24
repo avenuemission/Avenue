@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/client/supabaseBrowser";
-import { getSupabaseAdmin, isAdminAuthorized, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { requireAdmin } from "@/lib/server/requireAdmin";
+import { serverError } from "@/lib/server/http";
 
 // GET (public): list all study guides
 export async function GET() {
@@ -9,17 +11,14 @@ export async function GET() {
     .select("*")
     .order("sort_order", { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("study-guides GET", error);
   return NextResponse.json({ guides: data ?? [] });
 }
 
 // POST (admin): create a study guide
 export async function POST(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
   const body = await request.json();
   const { guide_date, series, topic, scripture, spotify_url, pdf_url, color, sort_order } = body;
 
@@ -28,17 +27,14 @@ export async function POST(request: NextRequest) {
     .insert({ guide_date, series, topic, scripture, spotify_url, pdf_url, color, sort_order: sort_order ?? 0 })
     .select();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("study-guides POST", error);
   return NextResponse.json({ guide: data?.[0] ?? null });
 }
 
 // PUT (admin): update a study guide
 export async function PUT(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
   const body = await request.json();
   const { id, ...fields } = body;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
@@ -49,23 +45,20 @@ export async function PUT(request: NextRequest) {
     .eq("id", id)
     .select();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("study-guides PUT", error);
   if (!data || data.length === 0) return NextResponse.json({ error: "No matching row found" }, { status: 404 });
   return NextResponse.json({ guide: data[0] });
 }
 
 // DELETE (admin): remove a study guide
 export async function DELETE(request: NextRequest) {
-  if (!isAdminAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const cfgErr = adminConfigError();
-  if (cfgErr) return cfgErr;
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const { error } = await getSupabaseAdmin().from("study_guides").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("study-guides DELETE", error);
   return NextResponse.json({ success: true });
 }

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import type { Snapshot } from "@/lib/emails/compose";
 import { PREVIEW_TOKEN } from "@/lib/emails/prefs";
+import { fakeSupabase } from "@/test/fakeSupabase";
 
 // The database and the snapshot loader are replaced; the admin key check is
 // the real one.
@@ -43,14 +44,21 @@ const get = (query: string, key: string | null = KEY) =>
   );
 
 beforeEach(() => {
-  h.getSupabaseAdmin.mockReset().mockReturnValue({});
+  // requireAdmin's rate-limit check now calls getSupabaseAdmin().rpc(...)
+  // before the key is even checked, so the fake needs a working rpc, not an
+  // empty object. fakeSupabase()'s default rpc result (not blocked) is
+  // harmless for every test here.
+  h.getSupabaseAdmin.mockReset().mockReturnValue(fakeSupabase().db);
   h.loadSnapshot.mockReset().mockResolvedValue(snapshot);
   vi.stubEnv("ADMIN_API_KEY", KEY);
   vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "sb_secret_test");
   vi.stubEnv("AVENUE_SITE_URL", "");
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
 });
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
 describe("GET /api/admin/email-preview", () => {
