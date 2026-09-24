@@ -17,19 +17,26 @@ export interface FakeResult {
 
 export type FakeCall = [string, string, ...unknown[]];
 
+// A result can also be worked out from the chain's own calls (without the
+// table name), e.g. to answer two maybeSingle() lookups on one table
+// differently by their .eq() filter.
+export type FakeResultFn = (chainCalls: [string, ...unknown[]][]) => FakeResult;
+
 interface FakeResponse {
   data: unknown;
   error: FakeError | null;
 }
 
-export function fakeSupabase(results: Record<string, FakeResult> = {}) {
+export function fakeSupabase(results: Record<string, FakeResult | FakeResultFn> = {}) {
   const calls: FakeCall[] = [];
 
   function chainFor(table: string) {
     let operation = "select";
     let single = false;
+    const chainCalls: [string, ...unknown[]][] = [];
     const record = (method: string, args: unknown[]) => {
       calls.push([table, method, ...args]);
+      chainCalls.push([method, ...args]);
     };
     const chain = {
       select(...args: unknown[]) {
@@ -83,11 +90,12 @@ export function fakeSupabase(results: Record<string, FakeResult> = {}) {
         return chain;
       },
       then(onFulfilled: (value: FakeResponse) => unknown, onRejected?: (reason: unknown) => unknown) {
-        const r =
+        const found =
           (single ? results[`${table}.${operation}.single`] : undefined) ??
           results[`${table}.${operation}`] ??
           results[table] ??
           {};
+        const r: FakeResult = typeof found === "function" ? found(chainCalls) : found;
         const empty = operation === "select" && !single ? [] : null;
         const response: FakeResponse = { data: r.data === undefined ? empty : r.data, error: r.error ?? null };
         return Promise.resolve(response).then(onFulfilled, onRejected);
@@ -107,7 +115,8 @@ export function fakeSupabase(results: Record<string, FakeResult> = {}) {
     // blocked and never trips a rate limit unless a test asks for that.
     rpc(name: string, params: unknown) {
       calls.push([name, "rpc", params]);
-      const r = results[name] ?? {};
+      const found = results[name] ?? {};
+      const r: FakeResult = typeof found === "function" ? found([["rpc", params]]) : found;
       return Promise.resolve({ data: r.data === undefined ? false : r.data, error: r.error ?? null });
     },
   };

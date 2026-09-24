@@ -1,21 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { scopeNetwork } from "./networkScope";
+import { scopeNetwork, type ScopedPerson } from "./networkScope";
+
+const p = (id: string, sentOutBy: string | null, linkStatus = "confirmed", joined = true): ScopedPerson => ({
+  id,
+  sentOutBy,
+  linkStatus,
+  joined,
+});
 
 // root -> sender -> viewer -> child -> grandchild; viewer also has child2.
 // sibling shares the viewer's sender; stranger is a separate tree.
 const people = [
-  { id: "root", sentOutBy: null },
-  { id: "sender", sentOutBy: "root" },
-  { id: "viewer", sentOutBy: "sender" },
-  { id: "sibling", sentOutBy: "sender" },
-  { id: "child", sentOutBy: "viewer" },
-  { id: "child2", sentOutBy: "viewer" },
-  { id: "grandchild", sentOutBy: "child" },
-  { id: "stranger", sentOutBy: null },
-  { id: "strangerKid", sentOutBy: "stranger" },
+  p("root", null),
+  p("sender", "root"),
+  p("viewer", "sender"),
+  p("sibling", "sender"),
+  p("child", "viewer"),
+  p("child2", "viewer"),
+  p("grandchild", "child"),
+  p("stranger", null),
+  p("strangerKid", "stranger"),
 ];
 
-const ids = (list: { id: string }[]) => list.map((p) => p.id).sort();
+const ids = (list: { id: string }[]) => list.map((x) => x.id).sort();
 
 describe("scopeNetwork", () => {
   it("returns everyone, unchanged and in order, for full access", () => {
@@ -31,7 +38,7 @@ describe("scopeNetwork", () => {
 
   it("keeps the original order and objects", () => {
     const out = scopeNetwork(people, "viewer", false);
-    expect(out.map((p) => p.id)).toEqual(["sender", "viewer", "child", "child2", "grandchild"]);
+    expect(out.map((x) => x.id)).toEqual(["sender", "viewer", "child", "child2", "grandchild"]);
     expect(out[1]).toBe(people[2]);
   });
 
@@ -48,21 +55,57 @@ describe("scopeNetwork", () => {
   });
 
   it("does not loop on a corrupted cycle", () => {
-    const loop = [
-      { id: "a", sentOutBy: "c" },
-      { id: "b", sentOutBy: "a" },
-      { id: "c", sentOutBy: "b" },
-      { id: "x", sentOutBy: null },
-    ];
+    const loop = [p("a", "c"), p("b", "a"), p("c", "b"), p("x", null)];
     expect(ids(scopeNetwork(loop, "a", false))).toEqual(["a", "b", "c"]);
   });
 
   it("does not loop on a self-parented row", () => {
-    const self = [{ id: "a", sentOutBy: "a" }];
-    expect(ids(scopeNetwork(self, "a", false))).toEqual(["a"]);
+    expect(ids(scopeNetwork([p("a", "a")], "a", false))).toEqual(["a"]);
   });
 
   it("still returns everyone for full access with no viewer", () => {
     expect(scopeNetwork(people, null, true)).toEqual(people);
+  });
+
+  describe("unconfirmed links", () => {
+    // viewer adopted "root" (a joined person, link not confirmed); root has
+    // its own confirmed tree. viewer also added "named" (not joined) and
+    // "named" was later given a confirmed child by an admin.
+    const graph = [
+      p("viewer", "boss", "pending"),
+      p("boss", null),
+      p("root", "viewer", "pending", true),
+      p("rootKid", "root"),
+      p("named", "viewer", "pending", false),
+      p("namedKid", "named"),
+      p("mine", "viewer"),
+      p("mineKidPending", "mine", "pending", false),
+    ];
+
+    it("does not follow an unconfirmed link to a joined person: the adopted subtree stays hidden", () => {
+      const out = ids(scopeNetwork(graph, "viewer", false));
+      expect(out).not.toContain("root");
+      expect(out).not.toContain("rootKid");
+    });
+
+    it("includes the viewer's own not-yet-joined people and the confirmed links below them", () => {
+      const out = ids(scopeNetwork(graph, "viewer", false));
+      expect(out).toContain("named");
+      expect(out).toContain("namedKid");
+    });
+
+    it("keeps the viewer's sender whatever its link status", () => {
+      expect(ids(scopeNetwork(graph, "viewer", false))).toContain("boss");
+    });
+
+    it("below the first level, follows confirmed links only", () => {
+      const out = ids(scopeNetwork(graph, "viewer", false));
+      expect(out).toContain("mine");
+      expect(out).not.toContain("mineKidPending");
+    });
+
+    it("full access still sees everything", () => {
+      expect(scopeNetwork(graph, "viewer", true)).toEqual(graph);
+    });
   });
 });

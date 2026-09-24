@@ -6,6 +6,7 @@
 // ============================================
 import { supabase } from "@/lib/client/supabaseBrowser";
 import { parseStoredUser } from "@/lib/client/authSession";
+import { clearLeaderCache } from "@/lib/client/dedupeFetch";
 
 export interface User {
   id: string;
@@ -64,6 +65,8 @@ export const logout = (): void => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_STORAGE_KEY);
   localStorage.removeItem(LEGACY_USERS_KEY);
+  // The shared leader reads belong to this leader: never hand them to the next.
+  clearLeaderCache();
   // Local scope: signing out here never ends the leader's sessions on
   // their other devices.
   void supabase.auth.signOut({ scope: "local" });

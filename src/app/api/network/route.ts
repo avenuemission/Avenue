@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
     // themselves, their sender and their descendants. Emails never leave
     // the server; no client reads them.
     const visible = scopeNetwork(
-      rows.map((r) => ({ ...r, sentOutBy: r.sent_out_by })),
+      rows.map((r) => ({ ...r, sentOutBy: r.sent_out_by, linkStatus: r.link_status })),
       viewer.id,
       auth.leader.fullAccess
     );
@@ -285,6 +285,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "You cannot send yourself out" }, { status: 400 });
           }
           if (row.sent_out_by) {
+            // A pending leader is not told who the sender is.
+            if (!auth.leader.fullAccess) {
+              return NextResponse.json({ error: "This person is already in the network." }, { status: 409 });
+            }
             const { data: sender } = await db
               .from("network_people")
               .select("first_name")
@@ -293,6 +297,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
               { error: `${sender?.first_name ?? "Someone"} has already added them.` },
               { status: 409 }
+            );
+          }
+
+          // Only approved leaders may adopt someone already in the network:
+          // for a pending leader it would pull that person's tree into view.
+          if (!auth.leader.fullAccess) {
+            return NextResponse.json(
+              { error: "Only approved leaders can add someone who is already in the network." },
+              { status: 403 }
             );
           }
 
