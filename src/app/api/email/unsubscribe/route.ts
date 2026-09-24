@@ -10,6 +10,8 @@ import { EMAIL_KIND_INFO, emailTablesError, parseUnsubscribe, unsubscribePatch, 
 // request. GET shows a confirm button and writes nothing, because mail
 // scanners open every GET link; POST (that button, or a mail client's
 // RFC 8058 one-click) turns the emails off. Repeating it is harmless.
+// A well-formed token that matches no row gets the same page and status
+// as one that does, so the route never reveals which tokens exist.
 
 function page(status: number, body: NoticePage): NextResponse {
   return new NextResponse(renderNoticePage(body), {
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
       message: "We could not update your emails just now. Please try the link again later.",
     });
   }
-  if (!Array.isArray(data) || data.length === 0) return page(404, invalid());
+  if (!Array.isArray(data) || data.length === 0) console.warn("unsubscribe: token matched no row");
   return page(200, {
     title: "You're unsubscribed",
     message: `You won't get ${which(parsed.kinds)} any more. You can turn them back on any time.`,

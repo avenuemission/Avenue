@@ -11,7 +11,11 @@
 // 4. What is already done comes from one log read per due kind. Live, the
 //    log row is claimed BEFORE sending. A duplicate claim means another run
 //    has it, so nothing is sent. A failed send releases the claim so a
-//    later run that day retries, and is reported loud.
+//    later run that day retries, and is reported loud. A send that timed
+//    out (SendOutcomeUnknownError) keeps its claim: Gmail may have taken
+//    it, and a retry could send it twice. It is reported loud instead.
+// 4b. A live send needs the recipient's real unsubscribe token (a UUID);
+//    without one it is refused, so no email goes out with a dead link.
 // 5. One recipient failing never stops the others. Sends are sequential,
 //    paused before each claim after the first, capped per run, and stop
 //    once the time budget is spent (the rest wait for the next hour).
@@ -64,6 +68,17 @@ export interface RunReport {
 }
 
 export const BASELINE_KEY = "baseline";
+
+// Thrown by a send that did not finish in time. Whether the mail server
+// accepted the email is unknown, so the engine keeps the claim.
+export class SendOutcomeUnknownError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SendOutcomeUnknownError";
+  }
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // One address and nothing else: no spaces, commas, semicolons, quotes or
 // angle brackets, any of which could turn one "to" into several.
@@ -165,6 +180,9 @@ export async function runLeaderEmails(deps: EngineDeps): Promise<RunReport> {
             report.deferred.push(label(out));
             continue;
           }
+          if (typeof recipient.token !== "string" || !UUID.test(recipient.token)) {
+            throw new Error(`refusing ${out.kind} to ${out.email}: no unsubscribe token`);
+          }
           // Pause BEFORE claiming: a run stopped mid-pause leaves no
           // claimed-but-unsent row that would drop this email for the period.
           if (sends > 0) await deps.sleep(deps.delayMs);
@@ -178,6 +196,11 @@ export async function runLeaderEmails(deps: EngineDeps): Promise<RunReport> {
             report.sent.push(label(out));
             deps.log(`sent ${label(out)}`);
           } catch (e) {
+            if (e instanceof SendOutcomeUnknownError) {
+              report.failed.push(`${label(out)}: ${e.message}: outcome unknown, not retried`);
+              console.error(`[leader-emails] SEND OUTCOME UNKNOWN ${label(out)}: claim kept, not retried`, e);
+              continue;
+            }
             report.failed.push(`${label(out)}: ${(e as Error).message}`);
             console.error(`[leader-emails] SEND FAILED ${label(out)}`, e);
             await deps.release(out.email, out.kind, out.periodKey);

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Snapshot } from "./compose";
 import { MISSING_TABLES_MESSAGE, type PrefsRow } from "./prefs";
 import { runLeaderEmails, type EngineDeps } from "./engine";
+import { SEND_TIMEOUT_MS, withTimeout } from "./runScheduled";
 
 const ANN = "ann@example.invalid";
 const DAN = "dan@example.invalid";
@@ -170,6 +171,58 @@ describe("runLeaderEmails", () => {
     expect(events).toContain(`release digest ${ANN} ${WEEK}`);
     expect(logged.has(`digest|${ANN}|${WEEK}`)).toBe(false);
     expect(report.sent).toEqual([`digest ${DAN} ${WEEK}`]);
+  });
+
+  it("a send that never finishes times out loud and keeps its claim, so it is never sent twice", async () => {
+    vi.useFakeTimers();
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { deps, events, logged } = harness({
+        deps: {
+          send: vi.fn((to: string) => {
+            // Ann's send hangs forever, as a stuck SMTP socket would.
+            const work = to === ANN ? new Promise<void>(() => {}) : Promise.resolve(void events.push(`send ${to}`));
+            return withTimeout(work, SEND_TIMEOUT_MS, `send to ${to}`);
+          }),
+        },
+      });
+      const running = runLeaderEmails(deps);
+      await vi.advanceTimersByTimeAsync(SEND_TIMEOUT_MS);
+      const report = await running;
+      expect(report.failed).toEqual([
+        `digest ${ANN} ${WEEK}: send to ${ANN} timed out after 8000 ms: outcome unknown, not retried`,
+      ]);
+      expect(deps.release).not.toHaveBeenCalled();
+      expect(logged.has(`digest|${ANN}|${WEEK}`)).toBe(true);
+      expect(report.sent).toEqual([`digest ${DAN} ${WEEK}`]);
+      expect(events).toContain(`send ${DAN}`);
+      expect(String(spy.mock.calls[0][0])).toContain("SEND OUTCOME UNKNOWN");
+    } finally {
+      spy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it("live: refuses a recipient with no real unsubscribe token, and claims and sends nothing for them", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const noToken = PREFS.map((p) => (p.email === ANN ? { ...p, unsubscribe_token: null as unknown as string } : p));
+    const badToken = PREFS.map((p) => (p.email === ANN ? { ...p, unsubscribe_token: "not-a-uuid" } : p));
+    for (const rows of [noToken, badToken]) {
+      const { deps } = harness({ deps: { ensurePrefs: vi.fn(async () => rows) } });
+      const report = await runLeaderEmails(deps);
+      expect(report.failed).toEqual([`digest ${ANN}: refusing digest to ${ANN}: no unsubscribe token`]);
+      expect(vi.mocked(deps.claim).mock.calls.map((c) => c[0])).toEqual([DAN]);
+      expect(vi.mocked(deps.send).mock.calls.map((c) => c[0])).toEqual([DAN]);
+    }
+    spy.mockRestore();
+  });
+
+  it("dry run does not need a token: it only reports", async () => {
+    const rows = PREFS.filter((p) => p.email !== ANN);
+    const { deps } = harness({ deps: { dryRun: true }, snapshot: snapshot({ prefs: rows }) });
+    const report = await runLeaderEmails(deps);
+    expect(report.wouldSend).toContain(`digest ${ANN} ${WEEK}`);
+    expect(report.failed).toEqual([]);
   });
 
   it("caps sends per run and leaves the rest for the next hour", async () => {

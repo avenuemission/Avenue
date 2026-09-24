@@ -80,12 +80,29 @@ describe("renderEmail", () => {
     expect(html).toContain("Georgia");
     expect(html).toContain("#4f7cff");
     expect(html).toContain("#ffc56b");
-    expect(html).toContain(">Avenue<");
+    expect(html).toContain(">AVENUE<");
+    expect(html).toContain("letter-spacing:6px");
+    expect(html).toContain("&rsaquo;");
+    expect(html).toContain("Helvetica");
+    expect(html).not.toContain(">Avenue<");
     expect(html).not.toContain("<img");
     expect(html).not.toContain("<style");
     expect(html).toContain("A short preview line.");
     expect(html).toContain("Good morning, Sam.");
     expect(html).toContain('href="https://www.avenuemission.com/leaders"');
+  });
+
+  it("hides the preheader in Outlook and pads the button cell so Outlook draws a full button", () => {
+    const { html } = renderEmail(content());
+    const preheader = html.slice(html.indexOf("<div"), html.indexOf("A short preview line."));
+    for (const rule of ["display:none", "mso-hide:all", "max-height:0", "overflow:hidden"]) {
+      expect(preheader).toContain(rule);
+    }
+    expect(html).toMatch(/<td bgcolor="#4f7cff" style="padding:14px 28px;[^"]*">/);
+    const button = html.slice(html.indexOf('<a href="https://www.avenuemission.com/leaders"'));
+    const linkStyle = button.slice(0, button.indexOf(">"));
+    expect(linkStyle).toContain("display:inline-block");
+    expect(linkStyle).not.toContain("padding");
   });
 
   it("escapes content in the HTML and keeps it plain in the text", () => {

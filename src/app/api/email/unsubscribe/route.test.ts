@@ -44,6 +44,21 @@ describe("GET /api/email/unsubscribe", () => {
     expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
   });
 
+  it("is 400 for markup in the kind or token, and never reflects it", async () => {
+    for (const query of [
+      `?token=${TOKEN}&kind=${encodeURIComponent("<script>alert(1)</script>")}`,
+      `?token=${encodeURIComponent('"><script>alert(1)</script>')}&kind=digest`,
+    ]) {
+      for (const res of [await get(query), await post(query)]) {
+        expect(res.status).toBe(400);
+        const html = await res.text();
+        expect(html).not.toContain("<script");
+        expect(html).not.toContain("alert(1)");
+      }
+    }
+    expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
+  });
+
   it("is 400 for a token that is not a UUID, and writes nothing", async () => {
     const res = await get("?token=abc&kind=digest");
     expect(res.status).toBe(400);
@@ -78,10 +93,42 @@ describe("POST /api/email/unsubscribe", () => {
     });
   });
 
-  it("is 404 for a token that matches nobody", async () => {
+  it("gives an unknown token the same page and status as a known one, so tokens cannot be probed", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     h.getSupabaseAdmin.mockReturnValue(fakeSupabase({ "leader_email_prefs.update": { data: [] } }).db);
-    const res = await post(`?token=${TOKEN}&kind=rpms`);
-    expect(res.status).toBe(404);
+    const unknown = await post(`?token=${TOKEN}&kind=rpms`);
+    h.getSupabaseAdmin.mockReturnValue(
+      fakeSupabase({ "leader_email_prefs.update": { data: [{ email: "a@example.invalid" }] } }).db
+    );
+    const known = await post(`?token=${TOKEN}&kind=rpms`);
+    expect(unknown.status).toBe(200);
+    expect(unknown.status).toBe(known.status);
+    expect(await unknown.text()).toBe(await known.text());
+    expect(warn).toHaveBeenCalledWith("unsubscribe: token matched no row");
+  });
+
+  it("never shows the leader's email on the success page", async () => {
+    const email = "private-leader@example.invalid";
+    h.getSupabaseAdmin.mockReturnValue(fakeSupabase({ "leader_email_prefs.update": { data: [{ email }] } }).db);
+    const res = await post(`?token=${TOKEN}&kind=digest`);
+    const html = await res.text();
+    expect(res.status).toBe(200);
+    expect(html).toContain("unsubscribed");
+    expect(html).toContain(">AVENUE<");
+    expect(html).not.toContain(email);
+    expect(html).not.toContain("private-leader");
+  });
+
+  it("is idempotent: posting twice is 200 both times with the same update", async () => {
+    const fake = fakeSupabase({ "leader_email_prefs.update": { data: [{ email: "a@example.invalid" }] } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const first = await post(`?token=${TOKEN}&kind=milestones`);
+    const second = await post(`?token=${TOKEN}&kind=milestones`);
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    const updates = fake.calls.filter((c) => c[1] === "update").map((c) => c[2]);
+    expect(updates).toHaveLength(2);
+    for (const u of updates) expect(u).toEqual({ milestones: false, updated_at: expect.any(String) });
   });
 
   it("is 400 for an unknown kind, and writes nothing", async () => {

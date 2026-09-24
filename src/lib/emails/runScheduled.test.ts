@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isDryRun, runScheduled } from "./runScheduled";
+import { SendOutcomeUnknownError } from "./engine";
+import { isDryRun, runScheduled, SEND_TIMEOUT_MS, withTimeout } from "./runScheduled";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -12,6 +13,20 @@ describe("runScheduled", () => {
     expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "0" })).toBe(true);
     expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "true" })).toBe(true);
     expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "false" })).toBe(false);
+  });
+
+  it("gives each send 8 s, then fails it as outcome unknown", async () => {
+    vi.useFakeTimers();
+    try {
+      expect(SEND_TIMEOUT_MS).toBe(8000);
+      const never = withTimeout(new Promise<void>(() => {}), SEND_TIMEOUT_MS, "send to x@example.invalid");
+      const settled = expect(never).rejects.toBeInstanceOf(SendOutcomeUnknownError);
+      await vi.advanceTimersByTimeAsync(SEND_TIMEOUT_MS);
+      await settled;
+      await expect(withTimeout(Promise.resolve("ok"), SEND_TIMEOUT_MS, "fast")).resolves.toBe("ok");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("fails loud without Supabase credentials", async () => {

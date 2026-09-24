@@ -109,6 +109,11 @@ function assertWebLinks(content: EmailContent): void {
   }
 }
 
+// The site logo as text: letter-spaced uppercase AVENUE in a plain sans,
+// then a thin chevron. No image, so it shows before images are allowed.
+export const WORDMARK_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+export const WORDMARK_HTML = `<span style="font-family:${WORDMARK_FONT};font-size:18px;line-height:1;font-weight:bold;letter-spacing:6px;text-transform:uppercase;color:${COLOURS.ink};">AVENUE</span><span style="font-family:${WORDMARK_FONT};font-size:22px;line-height:1;font-weight:300;color:${COLOURS.lamp};padding-left:4px;">&rsaquo;</span>`;
+
 const TEXT = `font-family:${SANS};font-size:16px;line-height:1.6;color:${COLOURS.ink};`;
 
 function blockHtml(block: Block): string {
@@ -154,7 +159,7 @@ function blockText(block: Block): string[] {
 // Henry to check wording
 function renderHtml(content: EmailContent, footer: FooterLinks): string {
   const cta = content.cta
-    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:12px 0 4px 0;"><tr><td bgcolor="${COLOURS.button}" style="border-radius:999px;background-color:${COLOURS.button};"><a href="${esc(content.cta.href)}" style="display:inline-block;padding:14px 28px;font-family:${SANS};font-size:16px;font-weight:bold;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(content.cta.label)}</a></td></tr></table>`
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:12px 0 4px 0;"><tr><td bgcolor="${COLOURS.button}" style="padding:14px 28px;border-radius:999px;background-color:${COLOURS.button};"><a href="${esc(content.cta.href)}" style="display:inline-block;font-family:${SANS};font-size:16px;font-weight:bold;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(content.cta.label)}</a></td></tr></table>`
     : "";
   const link = `color:${COLOURS.muted};text-decoration:underline;`;
   return `<!DOCTYPE html>
@@ -167,12 +172,12 @@ function renderHtml(content: EmailContent, footer: FooterLinks): string {
 <title>${esc(content.subject)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:${COLOURS.ground};">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${COLOURS.ground};">${esc(content.preheader)}</div>
+<div style="display:none;mso-hide:all;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:${COLOURS.ground};">${esc(content.preheader)}</div>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${COLOURS.ground}" style="background-color:${COLOURS.ground};">
 <tr><td align="center" style="padding:32px 16px;">
 <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;">
-<tr><td style="padding:0 0 24px 4px;font-family:${SERIF};font-size:30px;line-height:1;color:${COLOURS.ink};">Avenue<span style="color:${COLOURS.lamp};">.</span></td></tr>
+<tr><td style="padding:0 0 24px 4px;">${WORDMARK_HTML}</td></tr>
 <tr><td bgcolor="${COLOURS.card}" style="background-color:${COLOURS.card};border:1px solid ${COLOURS.line};border-radius:16px;padding:32px 28px;">
 <p style="margin:0 0 8px 0;font-family:${SANS};font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${COLOURS.lamp};">${esc(content.eyebrow)}</p>
 <h1 style="margin:0 0 20px 0;font-family:${SERIF};font-size:28px;line-height:1.25;font-weight:normal;color:${COLOURS.ink};">${esc(content.heading)}</h1>

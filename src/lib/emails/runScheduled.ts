@@ -6,7 +6,7 @@
 // next/server into the function bundle.
 import { createClient } from "@supabase/supabase-js";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
-import { runLeaderEmails, type RunReport } from "./engine";
+import { runLeaderEmails, SendOutcomeUnknownError, type RunReport } from "./engine";
 import { createEngineDb } from "./engineDb";
 import { loadSnapshot } from "./loadSnapshot";
 
@@ -16,6 +16,20 @@ export const SEND_DELAY_MS = 1000;
 // SMTP connection (the shared transporter is not pooled), so a run stops
 // claiming new work after 20 s and leaves the rest for the next hour.
 export const RUN_BUDGET_MS = 20_000;
+// Nodemailer's own timeouts are minutes long, so one hung send could run
+// past Netlify's 30 s stop with nothing logged. Each send gets 8 s.
+export const SEND_TIMEOUT_MS = 8_000;
+
+// Races a send against a timer. On timeout it throws
+// SendOutcomeUnknownError, which the engine reports loud without
+// releasing the claim (Gmail may still have accepted the email).
+export function withTimeout<T>(work: Promise<T>, ms: number, what: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new SendOutcomeUnknownError(`${what} timed out after ${ms} ms`)), ms);
+  });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
 
 type Env = Record<string, string | undefined>;
 
@@ -43,7 +57,12 @@ export async function runScheduled(now: Date = new Date(), env: Env = process.en
     clock: () => Date.now(),
     loadSnapshot: () => loadSnapshot(db, now),
     ...createEngineDb(db),
-    send: (to, message) => sendEmail(to, message.subject, message.html, { text: message.text, headers: message.headers }),
+    send: (to, message) =>
+      withTimeout(
+        sendEmail(to, message.subject, message.html, { text: message.text, headers: message.headers }),
+        SEND_TIMEOUT_MS,
+        `send to ${to}`
+      ),
     sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     log: (line) => console.log(`[leader-emails] ${line}`),
   });

@@ -65,6 +65,13 @@ describe("GET /api/email-prefs", () => {
 });
 
 describe("PATCH /api/email-prefs", () => {
+  it("passes requireLeader's 401 straight back, before reading the body or any table", async () => {
+    h.requireLeader.mockResolvedValue({ response: NextResponse.json({ error: "Sign in required" }, { status: 401 }) });
+    const res = await patch({ rpms: false });
+    expect(res.status).toBe(401);
+    expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
+  });
+
   it("is 400 for a body that is not a set of known true or false settings, and touches no table", async () => {
     for (const body of [null, {}, { digest: "no" }, { email: "someone-else@example.invalid", digest: false }]) {
       const res = await patch(body);
