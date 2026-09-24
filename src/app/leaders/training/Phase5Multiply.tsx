@@ -3,29 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Users, ChevronDown, CheckCircle2, Circle, UserPlus } from "lucide-react";
-import { rungAfterTap } from "@/lib/apprentice";
+import { APPRENTICE_STEPS, apprenticeStepLabel, rungAfterTap } from "@/lib/apprentice";
 import { multiplySummary } from "@/lib/phaseSummaries";
 import type { Person } from "@/lib/people";
 import IcnuEditor from "./IcnuEditor";
 import Glow from "@/components/avenue/Glow";
 import Expander from "@/components/avenue/Expander";
-
-// Hero Maker's five apprenticeship steps (Dave Ferguson). Index 0 is not one
-// of the book's five, it is "not started yet" so every person in the network
-// always has a valid label, including someone just added. The names are the
-// teaching, so the UI always shows the label, never the bare number.
-const APPRENTICE_STEPS: { value: number; label: string }[] = [
-  { value: 0, label: "Not started yet" },
-  { value: 1, label: "I do, you watch" },
-  { value: 2, label: "I do, you help" },
-  { value: 3, label: "You do, I help" },
-  { value: 4, label: "You do, I watch" },
-  { value: 5, label: "You do, someone else watches" },
-];
-
-function apprenticeStepLabel(step: number): string {
-  return APPRENTICE_STEPS[step]?.label ?? APPRENTICE_STEPS[0].label;
-}
 
 // A person from the discipleship network (/api/network), as seen from phase
 // 5. This is a separate shape from lib/networkLayout's NetworkPerson because

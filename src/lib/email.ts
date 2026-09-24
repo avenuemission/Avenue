@@ -82,9 +82,21 @@ export const emailWrapper = (content: string) => `
 </html>
 `;
 
+// Optional extras: a plain-text alternative and extra headers (the leader
+// emails send List-Unsubscribe). Existing callers pass neither and behave
+// exactly as before.
+export interface SendOptions {
+  text?: string;
+  headers?: Record<string, string>;
+}
+
+export function isEmailConfigured(): boolean {
+  return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+}
+
 // Send email helper
-export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+export async function sendEmail(to: string, subject: string, html: string, options: SendOptions = {}): Promise<void> {
+  if (!isEmailConfigured()) {
     console.error("Email service not configured - missing GMAIL_USER or GMAIL_APP_PASSWORD");
     return;
   }
@@ -94,6 +106,8 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     to,
     subject,
     html,
+    ...(options.text ? { text: options.text } : {}),
+    ...(options.headers ? { headers: options.headers } : {}),
   });
 }
 
