@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/app/**/{page,layout,route,not-found,error,loading}.tsx?",
+    "src/app/{robots,sitemap}.ts",
+    "netlify/functions/*.mts",
+    "scripts/**/*.mjs",
+    "next.config.ts",
+    "vitest.config.mts"
+  ],
+  "project": ["src/**/*.{ts,tsx}"]
+}
