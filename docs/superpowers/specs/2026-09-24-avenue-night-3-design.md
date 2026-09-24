@@ -50,6 +50,8 @@
 
 - Verify in the browser with a fixture leader: name someone under each metric, reload, sign in again in a fresh tab, and see them still listed. Also check the counts and closed summary survive.
 - If anything does not persist, fix it as a bug in its own task; otherwise record the verification.
+- **Verified 24 Sep (controller):** names added with the "Add ... to My People" button are in `leader_people`, survive a reload, and come back through a fresh, separate session via `GET /api/people`. Storage is fine.
+- **Found:** in `PersonPicker`, typing a name does nothing until the leader taps the "Add ... to My People" suggestion. Enter does not add, and leaving the field drops the typed name silently. This is the likely cause of "names not staying". Fix (own task): pressing Enter adds the exact typed name (same POST as the button; if an existing person matches exactly, tag them instead, as the existing suggestion does); when the field holds unsaved text and loses focus, show a quiet line under it: "Not saved yet. Press Enter or tap Add." Same API, no data change.
 
 ## 6. Out of scope
 
