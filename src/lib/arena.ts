@@ -7,6 +7,21 @@ import type { Space } from "@/lib/people";
 
 export const COUNTER_KEYS = ["pathways", "intersections", "streetlights"] as const;
 export type CounterKey = (typeof COUNTER_KEYS)[number];
+
+// The Arena's scoring in plain words (round 2 spec 4): one sentence before
+// Month 1, and a one-line meaning under each counter.
+// Henry to check wording
+export const ARENA_SCORE_INTRO =
+  "Every choice you make moves three counters, the same three things Avenue watches in real life.";
+
+export const COUNTER_MEANINGS: Record<CounterKey, string> = {
+  // Henry to check wording
+  pathways: "People who feel they belong and invite others",
+  // Henry to check wording
+  intersections: "People who come to faith and are apprenticed",
+  // Henry to check wording
+  streetlights: "Disciples who step out to lead or serve",
+};
 export type Counters = Record<CounterKey, number>;
 export type Capacity = "strained" | "restored" | "drained";
 

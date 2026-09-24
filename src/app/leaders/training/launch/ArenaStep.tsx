@@ -4,8 +4,10 @@ import { useState } from "react";
 import { OutcomeButton } from "@/components/journey/WizardShell";
 import LampSteps from "@/components/avenue/LampSteps";
 import {
+  ARENA_SCORE_INTRO,
   bitesFor,
   COUNTER_KEYS,
+  COUNTER_MEANINGS,
   detectGaps,
   GAP_TEXT,
   playArena,
@@ -64,10 +66,30 @@ function CountersBar({ state }: { state: ArenaState }) {
               {state.counters[k]}
             </p>
             <p className="night-label mt-1">{COUNTER_NAMES[k]}</p>
+            <p className="mt-1 text-xs leading-snug text-[var(--muted)]">{COUNTER_MEANINGS[k]}</p>
           </div>
         ))}
       </div>
       {state.capacity ? <p className="mt-2 text-sm text-gray-300">Leader capacity: {state.capacity}</p> : null}
+    </div>
+  );
+}
+
+// Before Month 1 (round 2 spec 4): what the three counters mean, in plain
+// words, so a leader knows what their choices move.
+function ScoreKey() {
+  return (
+    <div className="border-y border-[var(--line)] py-5">
+      <h4 className="font-serif text-xl text-[var(--ink)]">How the Arena keeps score</h4>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{ARENA_SCORE_INTRO}</p>
+      <dl className="mt-4 space-y-3">
+        {COUNTER_KEYS.map((k) => (
+          <div key={k}>
+            <dt className="text-sm font-semibold text-[var(--ink)]">{COUNTER_NAMES[k]}</dt>
+            <dd className="text-sm text-[var(--muted)]">{COUNTER_MEANINGS[k]}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
@@ -104,6 +126,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
             grade at the end: just the principles you learned and where your plan is thinnest.
           </p>
         </div>
+        <ScoreKey />
         <MonthStreet state={state} />
         <OutcomeButton label="Enter the Arena" onClick={() => setEntered(true)} />
       </div>

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  ARENA_SCORE_INTRO,
   arenaPlanFrom,
   bitesFor,
+  COUNTER_KEYS,
+  COUNTER_MEANINGS,
   detectGaps,
   parseCounters,
   playArena,
@@ -139,5 +142,20 @@ describe("bitesFor and thinSpots", () => {
     expect(thinSentence({ gap: "noApprentice", monthsHarder: 0 })).toBe("You have not named an apprentice.");
     expect(thinSentence({ gap: "noApprentice", monthsHarder: 1 })).toBe("You have not named an apprentice. It made one of your months harder.");
     expect(thinSentence({ gap: "noApprentice", monthsHarder: 3 })).toBe("You have not named an apprentice. It made 3 of your months harder.");
+  });
+});
+
+describe("how the Arena keeps score", () => {
+  it("gives each counter the spec's plain meaning, in counter order, with no em dash", () => {
+    expect(Object.keys(COUNTER_MEANINGS)).toEqual([...COUNTER_KEYS]);
+    expect(COUNTER_MEANINGS).toEqual({
+      pathways: "People who feel they belong and invite others",
+      intersections: "People who come to faith and are apprenticed",
+      streetlights: "Disciples who step out to lead or serve",
+    });
+    expect(ARENA_SCORE_INTRO).toBe(
+      "Every choice you make moves three counters, the same three things Avenue watches in real life."
+    );
+    expect(JSON.stringify(COUNTER_MEANINGS) + ARENA_SCORE_INTRO).not.toContain(String.fromCharCode(0x2014));
   });
 });
