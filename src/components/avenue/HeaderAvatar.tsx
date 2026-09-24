@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import ProfileCard from "@/components/ui/ProfileCard";
+import EmailPrefsPanel from "@/components/ui/EmailPrefsPanel";
 import { leaderFetch } from "@/lib/leaderFetch";
 import { avatarFromProfileResponse, initialsOf, type AvatarSummary } from "@/lib/profileAvatar";
 
@@ -143,8 +144,13 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
-          {/* Mounted only while open, so ProfileCard loads fresh each time. */}
-          {open ? <ProfileCard email={user.email} fallbackName={user.name} /> : null}
+          {/* Mounted only while open, so both load fresh each time. */}
+          {open ? (
+            <div className="space-y-6">
+              <ProfileCard email={user.email} fallbackName={user.name} />
+              <EmailPrefsPanel />
+            </div>
+          ) : null}
         </div>
       </dialog>
     </>

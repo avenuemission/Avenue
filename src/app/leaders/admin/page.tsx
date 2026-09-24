@@ -29,6 +29,7 @@ import {
   HeartPulse,
 } from "lucide-react";
 import ChurchHealthTab from "@/components/admin/ChurchHealthTab";
+import EmailPreviewTab from "@/components/admin/EmailPreviewTab";
 
 const TABS = [
   { id: "submissions", label: "Form Submissions", icon: FileText },
@@ -38,6 +39,7 @@ const TABS = [
   { id: "guides", label: "Study Guides", icon: BookOpen },
   { id: "stats", label: "Site Stats", icon: BarChart3 },
   { id: "health", label: "Church Health", icon: HeartPulse },
+  { id: "emails", label: "Email Previews", icon: Mail },
 ];
 
 const FORM_TYPES = [
@@ -215,6 +217,7 @@ export default function AdminPage() {
         {activeTab === "guides" && <GuidesTab adminKey={adminKey} />}
         {activeTab === "stats" && <StatsTab adminKey={adminKey} />}
         {activeTab === "health" && <ChurchHealthTab adminKey={adminKey} />}
+        {activeTab === "emails" && <EmailPreviewTab adminKey={adminKey} />}
       </div>
     </div>
   );
