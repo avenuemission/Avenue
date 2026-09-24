@@ -44,6 +44,7 @@ const GUARDED = [
   ["DELETE", "/api/people?id=00000000-0000-0000-0000-000000000000"],
   ["GET", "/api/worksheets?kind=calling"],
   ["PATCH", "/api/worksheets"],
+  ["DELETE", "/api/worksheets?kind=calling"],
 ];
 
 // A Monday three weeks ago (UTC), same logic as check-checkins-api.mjs:
@@ -282,6 +283,58 @@ try {
       check("oversized value is 400", big.status === 400, `got ${big.status}`);
       const deep = await patch(tokenA, { kind: "launch", section: "invite", value: { a: { b: { c: { d: { e: { f: 1 } } } } } } });
       check("over-deep value is 400", deep.status === 400, `got ${deep.status}`);
+
+      console.log("reset clears only the caller's own worksheet of that kind");
+      const aPrayer = await patch(tokenA, { kind: "launch", section: "prayer", value: { when: "Mornings" } });
+      check("A saves a launch section before the reset", aPrayer.status === 200, JSON.stringify(aPrayer));
+      const reset = await call("DELETE", `/api/worksheets?kind=calling&email=${encodeURIComponent(B)}`, { token: tokenA });
+      check("A resets Calling", reset.status === 200 && reset.json?.ok === true, JSON.stringify(reset));
+      const aCalling = await call("GET", "/api/worksheets?kind=calling", { token: tokenA });
+      check(
+        "A's Calling reads as {} after the reset",
+        aCalling.status === 200 && JSON.stringify(aCalling.json?.data) === "{}",
+        JSON.stringify(aCalling)
+      );
+      const aLaunchAfter = await call("GET", "/api/worksheets?kind=launch", { token: tokenA });
+      check(
+        "A's Launch is untouched by a Calling reset",
+        aLaunchAfter.status === 200 && aLaunchAfter.json?.data?.prayer?.when === "Mornings",
+        JSON.stringify(aLaunchAfter)
+      );
+      const { data: bCalling, error: bCallingErr } = await db
+        .from("leader_worksheets")
+        .select("data")
+        .eq("email", B)
+        .eq("kind", "calling");
+      if (bCallingErr) throw new Error(bCallingErr.message);
+      check(
+        "B's Calling row survives A's reset (the query's email is ignored)",
+        bCalling.length === 1 && bCalling[0].data?.layers?.placements?.s1 === "seasonal",
+        JSON.stringify(bCalling)
+      );
+      const { data: aProfile, error: aProfileErr } = await db
+        .from("leader_profiles")
+        .select("about")
+        .eq("email", A)
+        .maybeSingle();
+      if (aProfileErr) throw new Error(aProfileErr.message);
+      check(
+        "A's profile is untouched by the reset (no other table)",
+        aProfile?.about === "written by A",
+        JSON.stringify(aProfile)
+      );
+      const again = await call("DELETE", "/api/worksheets?kind=calling", { token: tokenA });
+      check("a second reset is still ok", again.status === 200 && again.json?.ok === true, JSON.stringify(again));
+      const badReset = await call("DELETE", "/api/worksheets?kind=profile", { token: tokenA });
+      check("reset with an invalid kind is 400", badReset.status === 400, `got ${badReset.status}`);
+      const noAuthReset = await call("DELETE", "/api/worksheets?kind=launch");
+      check("reset without a token is 401", noAuthReset.status === 401, `got ${noAuthReset.status}`);
+      const aLaunchFinal = await call("GET", "/api/worksheets?kind=launch", { token: tokenA });
+      check(
+        "A's Launch still holds its answer after the refused reset",
+        aLaunchFinal.json?.data?.prayer?.when === "Mornings",
+        JSON.stringify(aLaunchFinal)
+      );
     }
   }
 } finally {
