@@ -83,6 +83,13 @@ The three metric columns as today (definitions verbatim from Henry), inside the 
 
 Order: phase opening, then the person list ("Who you're sending out") and the add form, then a one-line summary ("1 person multiplying through 1 generation below you" or "Nobody sent out yet"), then a "See the family tree" link, then a "Why multiply?" expander holding the Paul and Timothy teaching and the Hero Maker five practices. The "SENDING NOBODY YET" label and the family tree card are removed (their information survives in the summary line and the link).
 
+## 5b. Leader Support and Workshop Hub move to Admin (Henry, 24 Sep)
+
+- Remove "Leader Support" and "Workshop Hub" from the dashboard Tools list (`src/app/leaders/page.tsx`).
+- Remove every other leader-facing link to them: the pending-access line keeps its sentence ("Your access opens after your first call with a pastor.") with no link, and Calling section 6 (`ConversationStep.tsx`) drops the "Book it through Leader Support" link (and the unused `supportLink` string in `calling/content.ts`).
+- On the Admin page (`src/app/leaders/admin/page.tsx`), add a small link row at the top: "Leader Support" (`/leaders/support`) and "Workshop Hub" (`/leaders/workshops`), 44 px targets.
+- The two pages themselves and their access rules are unchanged (no auth change).
+
 ## 6. Out of scope
 
 - Any change to saving, auth, API calls, data shape, completion rules or the protected hooks (same list as the first spec's plan).
