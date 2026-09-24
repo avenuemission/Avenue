@@ -34,7 +34,7 @@ export default function Expander({ id, title, intro, summary, open, onToggle, ch
           type="button"
           id={buttonId}
           aria-expanded={open}
-          aria-controls={panelId}
+          aria-controls={open ? panelId : undefined}
           aria-describedby={describedBy}
           onClick={onToggle}
           className="flex min-h-[44px] w-full items-center gap-4 pt-5 pb-1 text-left"

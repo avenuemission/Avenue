@@ -17,6 +17,11 @@ export interface HeaderAvatarProps {
 export default function HeaderAvatar({ user }: HeaderAvatarProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // Whether the press that started this click sequence landed outside the
+  // sheet's box. A text selection dragged from an input out past the
+  // backdrop fires mousedown inside and click (on mouseup) outside, so the
+  // backdrop close only fires when both ends were outside.
+  const downOutside = useRef(false);
   const [open, setOpen] = useState(false);
   const [summary, setSummary] = useState<AvatarSummary | null>(null);
   // Bumped each time the panel closes, so a photo saved inside it shows here.
@@ -98,18 +103,33 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
         aria-label="My profile"
         className="av-sheet no-print"
         onClose={handleClose}
+        onPointerDown={(e) => {
+          // Records whether this press started outside the sheet's box, so
+          // a drag that starts inside (a text selection) and releases
+          // outside is not treated as a backdrop click.
+          if (e.target !== e.currentTarget) {
+            downOutside.current = false;
+            return;
+          }
+          const box = e.currentTarget.getBoundingClientRect();
+          const inside =
+            e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom;
+          downOutside.current = !inside;
+        }}
         onClick={(e) => {
           // A click on the ::backdrop reports the dialog as its target, but
           // so does a click on empty space inside the sheet (on desktop the
           // sheet is full height and the card is shorter). Only a click
-          // outside the sheet's box closes it, so an unsaved edit is never
-          // dropped by a stray click inside (pre-flight F3). Keyboard
-          // activation reports 0,0 and never targets the dialog itself.
+          // outside the sheet's box closes it, and only when the press that
+          // started it was also outside, so an unsaved edit is never
+          // dropped by a stray click inside or a selection dragged out of
+          // an input (pre-flight F3). Keyboard activation reports 0,0 and
+          // never targets the dialog itself.
           if (e.target !== e.currentTarget) return;
           const box = e.currentTarget.getBoundingClientRect();
           const inside =
             e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom;
-          if (!inside) setOpen(false);
+          if (!inside && downOutside.current) setOpen(false);
         }}
       >
         <div className="av-sheet-body">
