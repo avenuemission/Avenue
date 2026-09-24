@@ -143,10 +143,8 @@ export default function EpisodeCarousel({
                   className="block w-full overflow-hidden rounded-lg border border-[var(--border)] hover:border-[var(--border-strong)] transition-all"
                 >
                   <EpisodeThumb key={ep.youtubeId} youtubeId={ep.youtubeId} dimmed={ep.watched} />
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="w-11 h-11 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                      <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                    </span>
+                  <span className="absolute left-2 bottom-2 w-7 h-7 rounded-full bg-black/70 flex items-center justify-center">
+                    <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
                   </span>
                 </button>
 
