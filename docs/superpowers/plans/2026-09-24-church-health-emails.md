@@ -17,8 +17,8 @@
 - **Never `git add`** `HANDOVER.md`, `HANDOVER-v2.md`, `HANDOVER_PROMPT*.md` (any `HANDOVER*.md`), `.mcp.json`, `scripts/demo-network.mjs`. Always `git add` exact paths, never `git add -A` or `git add .`.
 - **No email is sent by any implementer, test or dev run.** Tests mock the mailer. The scheduled function is in dry run unless the env var `LEADER_EMAILS_DRY_RUN` is exactly `false`; nobody sets that during this plan. The only real send is Task 11 Step 7: one test email to `henrymcmahon@avenuemission.com`, run by the controller, only after Henry says yes in chat.
 - **The migration is not applied by implementers.** `supabase/migrations/009_leader_emails.sql` is written in Task 4. Applying it is Task 11 Step 3, run by the controller only after Henry's explicit go. Until then every code path that needs `leader_email_prefs` or `leader_email_log` fails loud with: `Leader email tables are missing. Apply supabase/migrations/009_leader_emails.sql first.` (from `emailTablesError`, Task 4).
-- **Existing auth, saving and hooks are unchanged.** Do not edit `src/lib/auth.ts`, `src/lib/requireLeader.ts`, `src/lib/leaderAuth.ts`, `src/lib/leaderFetch.ts`, `src/lib/supabaseAdmin.ts`, `src/lib/journey.ts`, `src/lib/avenue.ts`, `src/lib/worksheets.ts`, `src/lib/useWorksheet.ts`, `src/lib/useMyPeople.ts`, `src/app/leaders/training/useTrainingProgress.ts`, `progressMerge.ts`, `useCheckins.ts`, `useNetworkView.ts`, `src/components/ui/ProfileCard.tsx`, or any existing `src/app/api/**` file. Reading and importing them is fine. The only existing files this plan edits are: the six header files (Task 1), `src/app/leaders/admin/page.tsx` (two tab entries, Tasks 3 and 10), `src/lib/email.ts` (additive `SendOptions` and `isEmailConfigured`, Task 6), `src/lib/apprentice.ts` and `src/app/leaders/training/Phase5Multiply.tsx` (rung labels move to the lib, Task 6), `src/components/avenue/HeaderAvatar.tsx` (the Emails panel under the profile card, Task 10), `scripts/guard-test-rows.mjs` (two new tables, Task 4), `package.json` / `package-lock.json` and `netlify.toml` (Task 8).
-- **New routes and their guards.** `GET /api/admin/church-health` and `GET /api/admin/email-preview`: `isAdminAuthorized(request)` is the first line, 401 before any database call. `GET/PATCH /api/email-prefs`: `requireLeader(request)` first; the email is only ever `auth.leader.email`. `GET/POST /api/email/unsubscribe`: no auth; the token must be a UUID; the only write is setting preference columns to `false` on the row whose `unsubscribe_token` matches; it never reads an email from the request.
+- **Existing auth, saving and hooks are unchanged.** Do not edit `src/lib/auth.ts`, `src/lib/requireLeader.ts`, `src/lib/leaderAuth.ts`, `src/lib/leaderFetch.ts`, `src/lib/supabaseAdmin.ts`, `src/lib/journey.ts`, `src/lib/avenue.ts`, `src/lib/worksheets.ts`, `src/lib/useWorksheet.ts`, `src/lib/useMyPeople.ts`, `src/app/leaders/training/useTrainingProgress.ts`, `progressMerge.ts`, `useCheckins.ts`, `useNetworkView.ts`, `src/components/ui/ProfileCard.tsx`, or any existing `src/app/api/**` file. Reading and importing them is fine. The only existing files this plan edits are: the six header files (Task 1), `src/app/leaders/admin/page.tsx` (two tab entries, Tasks 3 and 10), `src/lib/email.ts` (additive `SendOptions` and `isEmailConfigured`, Task 6), `src/lib/apprentice.ts` and `src/app/leaders/training/Phase5Multiply.tsx` (rung labels move to the lib, Task 6), `src/components/avenue/HeaderAvatar.tsx` (the Emails panel under the profile card, Task 10), `scripts/guard-test-rows.mjs` (two new tables, Task 4), `package.json` / `package-lock.json` (Task 8). `netlify.toml` is not changed.
+- **New routes and their guards.** `GET /api/admin/church-health` and `GET /api/admin/email-preview`: `isAdminAuthorized(request)` is the first line, 401 before any database call. `GET/PATCH /api/email-prefs`: `adminConfigError()` then `requireLeader(request)` (the house pattern of every existing leader route; the config check needs no session and reveals no data), before any other query; the email is only ever `auth.leader.email`. `GET/POST /api/email/unsubscribe`: no auth; the token must be a UUID; the only write is setting preference columns to `false` on the row whose `unsubscribe_token` matches; it never reads an email from the request.
 - **Who can ever get an email:** a `leaders` row with `full_access = true`, minus anyone whose preference for that kind is `false`. `recipientsFor` (Task 4) is the one place this is decided, and the engine refuses to send to any address not in that set (Task 8).
 - **Never use an em dash (U+2014)** anywhere: code, comments, email copy, UI copy, commit messages, this plan. Use a colon, a comma, or a new sentence. En dashes (U+2013) only in number ranges. In tests build an em dash with `String.fromCharCode(0x2014)`; never type one (the Write tool turns a backslash-u 2014 escape into the real character).
 - **Copy.** Email and UI copy the plan writes carries `// Henry to check wording` on the line above it (or once above a block of copy). Henry reviews every email in the previews (Task 11) before any send.
@@ -48,7 +48,7 @@
 | Spec 2, month line | Last 12 Melbourne months ending this month. A month's count is every current person first recorded in or before that month | Spec: "a person counts from the month they were first recorded" |
 | Spec 2, leader health | "Last four weeks" = check-ins with `week_start` from this Monday minus 21 days to this Monday. The 3+ weeks flag is on when there is no check-in or the latest `week_start` is 21 or more days before this Monday. Averages round to one decimal. Church-wide average = the mean over every check-in in that window | One definition used by the tab |
 | Spec 2, row cap | Every admin read goes through `readRows`, which throws if a table returns 1000 rows (Supabase's default cap) rather than silently undercounting | Fail loud |
-| Spec 3.2, timing | A kind is due from its Melbourne send hour until 23:59 that Melbourne day, not only in the exact hour. Each run sends at most 20 emails, 1 s apart; the log makes later runs skip what is done and pick up the rest | Netlify scheduled functions stop at 30 s, and a missed hourly run must not lose a week's email |
+| Spec 3.2, timing | A kind is due from its Melbourne send hour until 23:59 that Melbourne day, not only in the exact hour, except milestones: due 07:00 to 09:59 only (the 08:00 and 09:00 runs are retries). Each run reads the log once per due kind, sends at most 20 emails, pauses 1 s before each claim after the first, and stops claiming 20 s after it starts; the log makes later runs skip what is done and pick up the rest | Netlify scheduled functions stop at 30 s, a missed hourly run must not lose a week's email, and spec says milestones are "checked daily 07:00" (no evening celebrations) |
 | Spec 3.2, failed send | The log row is inserted first. If the send then throws, the row is deleted so a later run that day retries, and the failure is logged loud | A rejected SMTP send has not reached anyone; a stuck row would drop the email for good |
 | Spec 3.2, milestones "since the last run" | Stateless via the log. The first live run for a leader writes `status = 'baseline'` rows for milestones they already had (plus a `baseline` marker) and sends nothing for them. Launch countdowns are never baselined. The log table gains `status text default 'sent'` (`sent` or `baseline`) | Without a baseline every existing leader would get "You walked Foundations" on day one |
 | Spec 3.2, launch countdown key | `launch-<launchDate>-<30|7|1>d`, sent only on the exact Melbourne day | Changing the launch date gets a fresh countdown |
@@ -62,12 +62,31 @@
 | Spec 3.2, footer | Two unsubscribe links: "Unsubscribe from these" (`kind=<this kind>`) and "Unsubscribe from all" (`kind=all`). The header carries the per-kind one | Spec allows both |
 | Spec 3.2, sending | `sendEmail` gains an optional fourth argument `{ text, headers }`; existing callers are untouched. The engine refuses to start a live run when `GMAIL_USER` or `GMAIL_APP_PASSWORD` is missing, instead of `sendEmail`'s silent return | Fail loud without changing old behaviour |
 | Spec 3.3, dry run flag | Env var `LEADER_EMAILS_DRY_RUN`; live only when exactly `false` | A generic `DRY_RUN` could collide with other tooling |
-| Spec 3.3, function bundling | `netlify/functions/leader-emails.mts` imports `src/lib` by relative path; those modules use the `@/` alias, which Netlify's esbuild bundler resolves from `tsconfig.json` `paths`. `netlify.toml` pins `node_bundler = "esbuild"`. Task 11 proves it with a local esbuild bundle | No surprise at deploy |
+| Spec 3.3, function bundling | `netlify/functions/leader-emails.mts` imports `src/lib` by relative path; those modules use the `@/` alias, which esbuild resolves from `tsconfig.json` `paths`. Netlify always bundles TypeScript (`.mts`) functions with esbuild, so `netlify.toml` is not touched. Task 11 proves the bundle locally and that no `next` or `react` import is in it | No surprise at deploy, no change to the live site's deploy config |
 | Spec 3.3, function Supabase client | The function builds its own service-role client with `createClient` (same env vars, fail loud) rather than `getSupabaseAdmin`, which imports `next/server` | Keeps Next out of the function bundle |
-| Spec 3.3, preview | `GET /api/admin/email-preview` returns JSON `{ subject, html, text, periodKey, note }`. A new "Email previews" admin tab shows it in a sandboxed iframe. If a leader has no milestone due, it previews a sample (Foundations walked) with a note; if they have no apprentices it says the email would be skipped | A Bearer-guarded route cannot be opened as a bare URL |
+| Spec 3.3, preview | `GET /api/admin/email-preview` returns JSON `{ subject, html, text, periodKey, note }`. A new "Email previews" admin tab shows it in a sandboxed iframe. Previews always carry `PREVIEW_TOKEN`, never the leader's real unsubscribe token. If a leader has no milestone due, it previews a sample (Foundations walked) with a note; if they have no apprentices it says the email would be skipped | A Bearer-guarded route cannot be opened as a bare URL |
 | Spec 3.4, where the toggles live | A new `EmailPrefsPanel` component, shown under the profile card in the header avatar's sheet and on `/leaders/emails`. `ProfileCard.tsx` is not edited | ProfileCard is protected by earlier rounds |
 | Spec 3.1, extra constraints | `unsubscribe_token` is also `unique`; the boolean columns are `not null default true`; `kind` has a check constraint | Stronger than the spec's minimum, same meaning |
 | Spec 4, guard | `scripts/guard-test-rows.mjs` also checks `leader_email_prefs.email` and `leader_email_log.email`, skipping them while the tables do not exist | Fixture rows must never survive in production |
+
+## Pre-flight rulings
+
+From the pre-flight scan (`.superpowers/sdd/church-health-emails/preflight.md`), already folded into the tasks below. Verified on a scratch copy: 453 tests, tsc clean apart from `@netlify/functions`, lint clean on new files, the function bundle imports only `@supabase/supabase-js` and `nodemailer`.
+
+| # | Ruling | Where |
+|---|---|---|
+| F1 | Engine time budget (`RUN_BUDGET_MS = 20_000`, injected `clock`): nothing new is claimed or baselined once spent. The pause between sends comes before the claim | Task 8 engine, runScheduled |
+| F2 | `hasLog` replaced by `loggedKeys(kind, periodKey)`: one log read per due kind; only unlogged items are claimed; fails loud at the row cap | Task 8 engine, engineDb |
+| F3 | Milestones due 07:00 to 09:59 Melbourne only (`LAST_HOUR`), matching spec "checked daily 07:00" | Task 5 schedule |
+| F4 | The engine sends only to one plain address in the full-access set; anything else is refused before compose | Task 8 engine |
+| F5 | `isHttpUrl`: a non-web guide link falls back to the guides page; `renderEmail` throws on any non-http(s) link or button | Tasks 6, 7 |
+| F6 | Admin previews always use `PREVIEW_TOKEN`, never a leader's real token | Task 10 |
+| F7 | `netlify.toml` is not edited (Netlify always bundles `.mts` with esbuild) | Task 8, constraints |
+| F8 | Bundle check also greps for `next` / `react` imports (expected 0) | Task 11 Step 8 |
+| F9 | Lamp focus ring on the network and workshops back links | Task 1 |
+| F10 | File map lists `runScheduled.ts`, its test and `noticePage.ts` | File map |
+| F11 | email-prefs guard order stated as the house pattern: `adminConfigError()` then `requireLeader` | Global Constraints |
+| F12 | Not applied (spec wording): GET unsubscribe confirm page kept; Henry to confirm | Controller |
 
 ## File map
 
@@ -94,7 +113,7 @@
 | `src/lib/emails/prefs.ts` | Create | 4 | Kinds, prefs, recipients, patch and unsubscribe parsing, missing-table message |
 | `src/lib/emails/prefs.test.ts` | Create | 4 | Tests |
 | `scripts/guard-test-rows.mjs` | Modify | 4 | Two new tables |
-| `src/lib/emails/schedule.ts` | Create | 5 | `dueKinds`, `periodKeyFor`, `SEND_HOUR` |
+| `src/lib/emails/schedule.ts` | Create | 5 | `dueKinds`, `periodKeyFor`, `SEND_HOUR`, `LAST_HOUR` |
 | `src/lib/emails/schedule.test.ts` | Create | 5 | Tests incl. daylight saving boundaries |
 | `src/lib/emails/topic.ts` | Create | 5 | `parseGuideDate`, `topicForWeek` |
 | `src/lib/emails/topic.test.ts` | Create | 5 | Tests |
@@ -102,7 +121,7 @@
 | `src/lib/apprentice.ts` | Modify | 6 | `APPRENTICE_STEPS`, `apprenticeStepLabel`, `APPRENTICE_HOW_TO` |
 | `src/lib/apprentice.test.ts` | Modify | 6 | One new test |
 | `src/app/leaders/training/Phase5Multiply.tsx` | Modify | 6 | Import the rung labels instead of declaring them |
-| `src/lib/emails/layout.ts` | Create | 6 | Links, headers, escaping, blocks, HTML layout, plain text |
+| `src/lib/emails/layout.ts` | Create | 6 | Links, headers, escaping, web-link check, blocks, HTML layout, plain text |
 | `src/lib/emails/layout.test.ts` | Create | 6 | Tests |
 | `src/lib/emails/templates.ts` | Create | 6 | Five templates and the `Milestone` type |
 | `src/lib/emails/templates.test.ts` | Create | 6 | Tests |
@@ -110,16 +129,17 @@
 | `src/lib/emails/compose.test.ts` | Create | 7 | Tests |
 | `src/lib/emails/engine.ts` | Create | 8 | `runLeaderEmails` |
 | `src/lib/emails/engine.test.ts` | Create | 8 | Tests |
-| `src/lib/emails/engineDb.ts` | Create | 8 | Supabase adapter: `ensurePrefs`, `hasLog`, `claim`, `release` |
+| `src/lib/emails/engineDb.ts` | Create | 8 | Supabase adapter: `ensurePrefs`, `loggedKeys`, `claim`, `release` |
 | `src/lib/emails/engineDb.test.ts` | Create | 8 | Tests |
 | `src/lib/emails/loadSnapshot.ts` | Create | 8 | Reads the nine tables into a `Snapshot` |
 | `src/lib/emails/loadSnapshot.test.ts` | Create | 8 | Tests |
-| `netlify/functions/leader-emails.mts` | Create | 8 | Hourly scheduled function |
-| `src/lib/emails/scheduledFunction.test.ts` | Create | 8 | Tests the function's config and loud failures |
-| `netlify.toml` | Modify | 8 | `[functions] node_bundler = "esbuild"` |
+| `src/lib/emails/runScheduled.ts` | Create | 8 | Wires the engine to Supabase, Gmail and the clock; dry-run flag; loud config failures |
+| `src/lib/emails/runScheduled.test.ts` | Create | 8 | Tests the dry-run flag and loud failures |
+| `netlify/functions/leader-emails.mts` | Create | 8 | Hourly scheduled function (calls `runScheduled`) |
 | `package.json`, `package-lock.json` | Modify | 8 | `@netlify/functions` dev dependency |
 | `src/app/api/email-prefs/route.ts` | Create | 9 | Leader's own preferences |
 | `src/app/api/email-prefs/route.test.ts` | Create | 9 | Tests |
+| `src/lib/emails/noticePage.ts` | Create | 9 | Branded HTML page for the unsubscribe route |
 | `src/app/api/email/unsubscribe/route.ts` | Create | 9 | Token unsubscribe |
 | `src/app/api/email/unsubscribe/route.test.ts` | Create | 9 | Tests |
 | `src/app/api/admin/email-preview/route.ts` | Create | 10 | Admin-key preview |
@@ -138,12 +158,12 @@
 | 3 | Church health route and admin tab | 346 |
 | 4 | Migration 009 (unapplied) and email preference rules (TDD) | 359 |
 | 5 | Schedule and this week's topic (pure, TDD) | 378 |
-| 6 | Branded layout and the five templates (TDD) | 396 |
-| 7 | Compose: who gets what from a snapshot (TDD) | 408 |
-| 8 | Engine, adapters and the scheduled function (TDD) | 429 |
-| 9 | Preference and unsubscribe routes (TDD) | 443 |
-| 10 | Email previews tab, Emails panel and `/leaders/emails` | 449 |
-| 11 | Final pass (controller-run, gated steps) | 449 |
+| 6 | Branded layout and the five templates (TDD) | 397 |
+| 7 | Compose: who gets what from a snapshot (TDD) | 409 |
+| 8 | Engine, adapters and the scheduled function (TDD) | 433 |
+| 9 | Preference and unsubscribe routes (TDD) | 447 |
+| 10 | Email previews tab, Emails panel and `/leaders/emails` | 453 |
+| 11 | Final pass (controller-run, gated steps) | 453 |
 
 ---
 
@@ -201,12 +221,14 @@ with:
 ```tsx
           <Link
             href="/leaders"
-            className="flex min-h-[44px] items-center gap-2 text-sm text-[var(--muted)] transition-colors hover:text-white"
+            className="flex min-h-[44px] items-center gap-2 text-sm text-[var(--muted)] transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lamp)]"
           >
             <ArrowLeft className="h-4 w-4" />
             Dashboard
           </Link>
 ```
+
+(The network page is not inside `.avenue-night`, so the lamp focus ring is set on the link itself.)
 
 - [ ] **Step 3: The three header labels become links**
 
@@ -246,7 +268,7 @@ with:
 ```tsx
             <button
               onClick={() => router.push("/leaders")}
-              className="inline-flex min-h-[44px] items-center text-gray-400 hover:text-white transition-colors text-sm"
+              className="inline-flex min-h-[44px] items-center text-gray-400 hover:text-white transition-colors text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lamp)]"
             >
               ← Dashboard
             </button>
@@ -275,9 +297,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 At 375 px and desktop, signed in as a fixture leader:
 - `/leaders`: the header shows only Logout and the avatar, at the right; no "Leaders Hub" anywhere; nothing overflows.
-- `/leaders/network`: top-left link reads "Dashboard" and goes to `/leaders`.
+- `/leaders/network`: top-left link reads "Dashboard", goes to `/leaders`, is at least 44 px tall, and Tab reaches it with a lamp-colour focus ring.
 - `/leaders/resources`, `/leaders/study-guides`, `/leaders/support`: the header's left item reads "Dashboard", is a link to `/leaders`, is at least 44 px tall, and Tab reaches it with a lamp-colour focus ring.
-- `/leaders/workshops` (admin): the back button reads "← Dashboard".
+- `/leaders/workshops` (admin): the back button reads "← Dashboard", is at least 44 px tall, and shows the lamp-colour focus ring.
 
 ---
 
@@ -2072,7 +2094,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Interfaces:**
 - Consumes: `melbourneParts`, `monthKeyOf`, `addDaysISO` (Task 2); `EMAIL_KINDS`, `EmailKind` (Task 4).
 - Produces:
-  - `SEND_HOUR: Record<EmailKind, number>`
+  - `SEND_HOUR: Record<EmailKind, number>`, `LAST_HOUR: Record<EmailKind, number>` (last Melbourne hour still due, inclusive: 23, or 9 for milestones)
   - `dueKinds(now: Date): EmailKind[]` (in `EMAIL_KINDS` order)
   - `type PeriodicKind = Exclude<EmailKind, "milestones">`
   - `periodKeyFor(kind: PeriodicKind, now: Date): string` (`YYYY-MM-DD` for `rpms` and `digest`, `YYYY-MM` for `church_health` and `apprentice`)
@@ -2094,22 +2116,22 @@ const at = (iso: string) => dueKinds(new Date(iso));
 // Melbourne is UTC+11 (AEDT) until 3:00 am on Sunday 5 April 2026, UTC+10
 // (AEST) until 2:00 am on Sunday 4 October 2026, then UTC+11 again.
 describe("dueKinds", () => {
-  it("has nothing but milestones before 6 pm on a Sunday (AEST)", () => {
-    expect(at("2026-09-27T07:59:00Z")).toEqual(["milestones"]);
+  it("has nothing due at 5:59 pm on a Sunday (AEST)", () => {
+    expect(at("2026-09-27T07:59:00Z")).toEqual([]);
   });
 
   it("makes the RPMS reminder due at 6 pm Sunday (AEST)", () => {
-    expect(at("2026-09-27T08:00:00Z")).toEqual(["rpms", "milestones"]);
+    expect(at("2026-09-27T08:00:00Z")).toEqual(["rpms"]);
   });
 
   it("keeps RPMS due until 23:59 Sunday and drops everything at midnight", () => {
-    expect(at("2026-09-27T13:59:00Z")).toEqual(["rpms", "milestones"]);
+    expect(at("2026-09-27T13:59:00Z")).toEqual(["rpms"]);
     expect(at("2026-09-27T14:00:00Z")).toEqual([]);
   });
 
   it("uses 6 pm AEDT on the Sunday daylight saving starts", () => {
-    expect(at("2026-10-04T06:59:00Z")).toEqual(["milestones"]);
-    expect(at("2026-10-04T07:00:00Z")).toEqual(["rpms", "milestones"]);
+    expect(at("2026-10-04T06:59:00Z")).toEqual([]);
+    expect(at("2026-10-04T07:00:00Z")).toEqual(["rpms"]);
   });
 
   it("makes the Monday digest due at 7 am AEDT", () => {
@@ -2118,8 +2140,8 @@ describe("dueKinds", () => {
   });
 
   it("uses 6 pm AEST on the Sunday daylight saving ends", () => {
-    expect(at("2026-04-05T07:59:00Z")).toEqual(["milestones"]);
-    expect(at("2026-04-05T08:00:00Z")).toEqual(["rpms", "milestones"]);
+    expect(at("2026-04-05T07:59:00Z")).toEqual([]);
+    expect(at("2026-04-05T08:00:00Z")).toEqual(["rpms"]);
   });
 
   it("uses 7 am AEST on the Monday after daylight saving ends", () => {
@@ -2141,8 +2163,13 @@ describe("dueKinds", () => {
     expect(at("2027-01-31T20:00:00Z")).toEqual(["digest", "church_health", "milestones"]);
   });
 
-  it("has only milestones on an ordinary weekday afternoon", () => {
-    expect(at("2026-09-24T03:00:00Z")).toEqual(["milestones"]);
+  it("checks milestones from 7 am to 9:59 am only, never in the afternoon or evening", () => {
+    // Thursday 24 September 2026 (AEST).
+    expect(at("2026-09-23T20:59:00Z")).toEqual([]);
+    expect(at("2026-09-23T21:00:00Z")).toEqual(["milestones"]);
+    expect(at("2026-09-23T23:59:00Z")).toEqual(["milestones"]);
+    expect(at("2026-09-24T00:00:00Z")).toEqual([]);
+    expect(at("2026-09-24T03:00:00Z")).toEqual([]);
   });
 });
 
@@ -2165,9 +2192,11 @@ Expected: FAIL, "Failed to resolve import ./schedule".
 
 ```ts
 // Which leader emails are due at a moment (spec 3.2 timing). Pure.
-// A kind is due from its Melbourne send hour until 23:59 that Melbourne
-// day, so a missed or overloaded hourly run is picked up by the next one.
-// The email log (unique email, kind, period_key) stops a second send.
+// A kind is due from its Melbourne send hour to its last hour that
+// Melbourne day, so a missed or overloaded hourly run is picked up by the
+// next one. The email log (unique email, kind, period_key) stops a second
+// send. Milestones are a morning check (spec: daily 07:00), with the 08:00
+// and 09:00 runs as retries, so nobody is congratulated late at night.
 import { melbourneParts, monthKeyOf } from "@/lib/melbourneDate";
 import { EMAIL_KINDS, type EmailKind } from "./prefs";
 
@@ -2179,10 +2208,19 @@ export const SEND_HOUR: Record<EmailKind, number> = {
   milestones: 7, // every day
 };
 
+// The last Melbourne hour a kind is still due, inclusive.
+export const LAST_HOUR: Record<EmailKind, number> = {
+  rpms: 23,
+  digest: 23,
+  church_health: 23,
+  apprentice: 23,
+  milestones: 9,
+};
+
 export function dueKinds(now: Date): EmailKind[] {
   const t = melbourneParts(now);
   return EMAIL_KINDS.filter((kind) => {
-    if (t.hour < SEND_HOUR[kind]) return false;
+    if (t.hour < SEND_HOUR[kind] || t.hour > LAST_HOUR[kind]) return false;
     switch (kind) {
       case "rpms":
         return t.weekday === 0;
@@ -2381,7 +2419,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `interface RenderedEmail { subject: string; html: string; text: string; headers: Record<string, string> }`
   - `type Block = { type: "p"; text } | { type: "h"; text } | { type: "list"; items: string[] } | { type: "stats"; rows: { label; value }[] } | { type: "link"; label; href }`
   - `interface EmailContent { kind: EmailKind; token: string; subject; preheader; eyebrow; heading: string; blocks: Block[]; cta?: { label: string; href: string } }`
-  - `COLOURS`, `siteUrl(): string`, `absoluteUrl(path: string): string`, `unsubscribeUrl(token: string, kind: EmailKind | "all"): string`, `footerLinks(token, kind): FooterLinks`, `listUnsubscribeHeaders(token, kind): Record<string, string>`, `esc(value: string): string`, `renderEmail(content: EmailContent): RenderedEmail`
+  - `COLOURS`, `siteUrl(): string`, `absoluteUrl(path: string): string`, `unsubscribeUrl(token: string, kind: EmailKind | "all"): string`, `footerLinks(token, kind): FooterLinks`, `listUnsubscribeHeaders(token, kind): Record<string, string>`, `esc(value: string): string`, `isHttpUrl(value: string | null | undefined): value is string`, `renderEmail(content: EmailContent): RenderedEmail` (throws on any link or button whose href is not `http:` or `https:`)
 - Produces (`src/lib/emails/templates.ts`):
   - `LINKS` (app paths), `type Milestone`, `interface DigestTopic { title; series: string | null; passage: string | null; href }`
   - `rpmsEmail(input: { firstName; token; lastWeek: GaugeScores | null }): RenderedEmail`
@@ -2640,6 +2678,13 @@ describe("renderEmail", () => {
     expect(email.text).toContain("Hi <b>Sam</b> & co");
   });
 
+  it("refuses a link or button that is not http or https", () => {
+    expect(() =>
+      renderEmail(content({ blocks: [{ type: "link", label: "Guide", href: "javascript:alert(1)" }] }))
+    ).toThrow("not http or https");
+    expect(() => renderEmail(content({ cta: { label: "Go", href: "/leaders" } }))).toThrow("not http or https");
+  });
+
   it("gives a plain-text version, both unsubscribe links, the manage link and the headers", () => {
     vi.stubEnv("AVENUE_SITE_URL", "");
     const email = renderEmail(content());
@@ -2757,6 +2802,27 @@ export function esc(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// Only web links belong in an email. esc keeps an href inside its quotes,
+// but a "javascript:" or "data:" link would survive it, so renderEmail
+// refuses anything that is not an absolute http or https URL.
+export function isHttpUrl(value: string | null | undefined): value is string {
+  if (typeof value !== "string" || value.length === 0) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+function assertWebLinks(content: EmailContent): void {
+  const hrefs = content.blocks.flatMap((b) => (b.type === "link" ? [b.href] : []));
+  if (content.cta) hrefs.push(content.cta.href);
+  for (const href of hrefs) {
+    if (!isHttpUrl(href)) throw new Error(`renderEmail: refusing a link that is not http or https: ${href}`);
+  }
+}
+
 const TEXT = `font-family:${SANS};font-size:16px;line-height:1.6;color:${COLOURS.ink};`;
 
 function blockHtml(block: Block): string {
@@ -2852,6 +2918,7 @@ function renderText(content: EmailContent, footer: FooterLinks): string {
 }
 
 export function renderEmail(content: EmailContent): RenderedEmail {
+  assertWebLinks(content);
   const footer = footerLinks(content.token, content.kind);
   return {
     subject: content.subject,
@@ -2867,7 +2934,7 @@ export function renderEmail(content: EmailContent): RenderedEmail {
 - [ ] **Step 7: Run it to see it pass**
 
 Run: `npx vitest run src/lib/emails/layout.test.ts`
-Expected: PASS, 7 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 8: Write the failing template tests**
 
@@ -3358,7 +3425,7 @@ Expected: PASS, 10 tests.
 - [ ] **Step 12: Gates**
 
 Run: `npx tsc --noEmit`, `npm test`, `npm run lint`, `npm run build`.
-Expected: tsc prints nothing; 396 tests pass (378 + 1 + 7 + 10); lint at most 54; build passes.
+Expected: tsc prints nothing; 397 tests pass (378 + 1 + 8 + 10); lint at most 54; build passes.
 
 - [ ] **Step 13: Commit**
 
@@ -3378,7 +3445,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Test: `src/lib/emails/compose.test.ts`
 
 **Interfaces:**
-- Consumes: `apprenticesOnRung`, `avenueStops`, `hereActionFor`, `stopWalked`, `AvenueProgress` from `src/lib/avenue.ts`; `callingCompleteCount`, `launchCompleteCount`, `isIsoDate`, `recordOf` from `src/lib/journey.ts`; `countMetrics`, `fullName`, `normEmail` and row types (Task 2); Melbourne helpers (Task 2); `PREVIEW_TOKEN`, `EmailKind`, `LeaderRow`, `PrefsRow`, `Recipient` (Task 4); `periodKeyFor` (Task 5); `topicForWeek`, `GuideRow` (Task 5); templates, `LINKS`, `Milestone`, `absoluteUrl`, `RenderedEmail` (Task 6).
+- Consumes: `apprenticesOnRung`, `avenueStops`, `hereActionFor`, `stopWalked`, `AvenueProgress` from `src/lib/avenue.ts`; `callingCompleteCount`, `launchCompleteCount`, `isIsoDate`, `recordOf` from `src/lib/journey.ts`; `countMetrics`, `fullName`, `normEmail` and row types (Task 2); Melbourne helpers (Task 2); `PREVIEW_TOKEN`, `EmailKind`, `LeaderRow`, `PrefsRow`, `Recipient` (Task 4); `periodKeyFor` (Task 5); `topicForWeek`, `GuideRow` (Task 5); templates, `LINKS`, `Milestone`, `absoluteUrl`, `isHttpUrl`, `RenderedEmail` (Task 6).
 - Produces:
   - `interface NetworkRow { id: string; email: string | null; first_name: string; last_name: string | null; sent_out_by: string | null; apprentice_step: number | null }`
   - `interface TrainingRow { email: string; completed_modules: string[] | null }`
@@ -3487,7 +3554,7 @@ describe("composeFor rpms", () => {
 });
 
 describe("composeFor digest", () => {
-  it("uses this week's guide, keyed by the Monday", () => {
+  it("uses this week's guide, keyed by the Monday, linking only to a web address", () => {
     const guides = [
       { id: "g1", guide_date: "07/10/2026", series: "James", topic: "Joy in trials", scripture: "James 1", pdf_url: "https://example.invalid/j1.pdf" },
     ];
@@ -3499,6 +3566,11 @@ describe("composeFor digest", () => {
     const noPdf = [{ ...guides[0], pdf_url: null }];
     const [fallback] = composeFor("digest", recipient, snap({ guides: noPdf }));
     expect(fallback.message.text).toContain(`Open the guide: ${SITE}/leaders/study-guides`);
+
+    const unsafe = [{ ...guides[0], pdf_url: "javascript:alert(1)" }];
+    const [safe] = composeFor("digest", recipient, snap({ guides: unsafe }));
+    expect(safe.message.text).toContain(`Open the guide: ${SITE}/leaders/study-guides`);
+    expect(safe.message.html).not.toContain("javascript:");
   });
 
   it("names at most three of their own people from the last 30 days, newest first", () => {
@@ -3645,7 +3717,7 @@ import {
   monthKeyOf,
   monthLabel,
 } from "@/lib/melbourneDate";
-import { absoluteUrl, type RenderedEmail } from "./layout";
+import { absoluteUrl, isHttpUrl, type RenderedEmail } from "./layout";
 import { PREVIEW_TOKEN, type EmailKind, type LeaderRow, type PrefsRow, type Recipient } from "./prefs";
 import { periodKeyFor } from "./schedule";
 import {
@@ -3773,12 +3845,14 @@ function digestTopic(guides: GuideRow[], monday: string): DigestTopic | null {
   if (!found) return null;
   const topic = found.guide.topic?.trim() || "";
   const series = found.guide.series?.trim() || "";
+  const pdf = found.guide.pdf_url?.trim();
   return {
     // Henry to check wording
     title: topic || series || "This week's guide",
     series: topic && series ? series : null,
     passage: found.guide.scripture?.trim() || null,
-    href: found.guide.pdf_url?.trim() || absoluteUrl(LINKS.studyGuides),
+    // A guide link that is not a web address falls back to the guides page.
+    href: isHttpUrl(pdf) ? pdf : absoluteUrl(LINKS.studyGuides),
   };
 }
 
@@ -3881,7 +3955,7 @@ Expected: PASS, 12 tests.
 - [ ] **Step 5: Gates**
 
 Run: `npx tsc --noEmit`, `npm test`, `npm run lint`, `npm run build`.
-Expected: tsc prints nothing; 408 tests pass (396 + 12); lint at most 54; build passes.
+Expected: tsc prints nothing; 409 tests pass (397 + 12); lint at most 54; build passes.
 
 - [ ] **Step 6: Commit**
 
@@ -3906,20 +3980,19 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Create: `src/lib/emails/runScheduled.ts`
 - Test: `src/lib/emails/runScheduled.test.ts`
 - Create: `netlify/functions/leader-emails.mts`
-- Modify: `netlify.toml`
 - Modify: `package.json`, `package-lock.json` (via npm)
 
 **Interfaces:**
-- Consumes: `composeFor`, `Snapshot`, `Outgoing`, row types (Task 7); `recipientsFor`, `PrefsRow`, `EmailKind`, `PREFS_COLUMNS`, `emailTablesError` (Task 4); `dueKinds` (Task 5); `topicForWeek` (Task 5); `RenderedEmail` (Task 6); `sendEmail`, `isEmailConfigured` (Task 6); `readRows` (Task 3); `fakeSupabase` (Task 3); `INITIAL_PHASES` from `src/app/leaders/training/phases.ts`.
+- Consumes: `composeFor`, `Snapshot`, `Outgoing`, row types (Task 7); `recipientsFor`, `PrefsRow`, `EmailKind`, `PREFS_COLUMNS`, `emailTablesError` (Task 4); `dueKinds`, `periodKeyFor` (Task 5); `topicForWeek` (Task 5); `RenderedEmail` (Task 6); `sendEmail`, `isEmailConfigured` (Task 6); `readRows`, `ROW_CAP` (Task 3); `fakeSupabase` (Task 3); `INITIAL_PHASES` from `src/app/leaders/training/phases.ts`.
 - Produces:
   - `type LogStatus = "sent" | "baseline"`
-  - `interface EngineDb { ensurePrefs(emails: string[]): Promise<PrefsRow[]>; hasLog(email, kind, periodKey): Promise<boolean>; claim(email, kind, periodKey, status: LogStatus): Promise<boolean>; release(email, kind, periodKey): Promise<void> }`
-  - `interface EngineDeps extends EngineDb { now: Date; dryRun: boolean; maxSends: number; delayMs: number; loadSnapshot(): Promise<Snapshot>; send(to: string, message: RenderedEmail): Promise<void>; sleep(ms: number): Promise<void>; log(line: string): void }`
+  - `interface EngineDb { ensurePrefs(emails: string[]): Promise<PrefsRow[]>; loggedKeys(kind: EmailKind, periodKey: string | null): Promise<Set<string>>; claim(email, kind, periodKey, status: LogStatus): Promise<boolean>; release(email, kind, periodKey): Promise<void> }` (`loggedKeys` returns `"<email>|<period_key>"` strings: this period's rows for a periodic kind, every row for milestones when `periodKey` is null)
+  - `interface EngineDeps extends EngineDb { now: Date; dryRun: boolean; maxSends: number; delayMs: number; budgetMs: number; clock(): number; loadSnapshot(): Promise<Snapshot>; send(to: string, message: RenderedEmail): Promise<void>; sleep(ms: number): Promise<void>; log(line: string): void }`
   - `interface RunReport { dryRun; due: EmailKind[]; wouldSend; sent; skipped; baselined; failed; deferred; unparseableGuides: string[] }` (each entry `"<kind> <email> <periodKey>"`, failures with `": <message>"`)
   - `BASELINE_KEY = "baseline"`, `runLeaderEmails(deps: EngineDeps): Promise<RunReport>`
   - `createEngineDb(db: SupabaseClient): EngineDb`
   - `foundationsModuleIds(): string[]`, `loadSnapshot(db: SupabaseClient, now: Date): Promise<Snapshot>` (Task 10 uses it)
-  - `MAX_SENDS_PER_RUN = 20`, `SEND_DELAY_MS = 1000`, `isDryRun(env): boolean`, `runScheduled(now?: Date, env?): Promise<RunReport>`
+  - `MAX_SENDS_PER_RUN = 20`, `SEND_DELAY_MS = 1000`, `RUN_BUDGET_MS = 20_000`, `isDryRun(env): boolean`, `runScheduled(now?: Date, env?): Promise<RunReport>`
   - The Netlify scheduled function `leader-emails`, schedule `@hourly`.
 
 - [ ] **Step 1: Write the failing engine tests**
@@ -3994,12 +4067,20 @@ function harness(opts: { snapshot?: Snapshot; logged?: string[]; deps?: Partial<
     dryRun: false,
     maxSends: 20,
     delayMs: 1000,
+    budgetMs: 20_000,
+    clock: () => 0,
     loadSnapshot: vi.fn(async () => opts.snapshot ?? snapshot()),
     ensurePrefs: vi.fn(async (emails: string[]) => {
       events.push(`ensurePrefs ${emails.join(",")}`);
       return PREFS;
     }),
-    hasLog: vi.fn(async (email: string, kind: string, key: string) => logged.has(`${kind}|${email}|${key}`)),
+    // "<email>|<period_key>" for one kind (one period, or all when null).
+    loggedKeys: vi.fn(async (kind: string, key: string | null) => {
+      const keys = [...logged]
+        .filter((id) => id.startsWith(`${kind}|`) && (key === null || id.endsWith(`|${key}`)))
+        .map((id) => id.slice(kind.length + 1));
+      return new Set(keys);
+    }),
     claim: vi.fn(async (email: string, kind: string, key: string, status: string) => {
       events.push(`claim ${status} ${kind} ${email} ${key}`);
       const id = `${kind}|${email}|${key}`;
@@ -4048,12 +4129,14 @@ describe("runLeaderEmails", () => {
   it("live: claims before sending, to full-access leaders who did not opt out, pausing between sends", async () => {
     const { deps, events } = harness();
     const report = await runLeaderEmails(deps);
+    // The pause comes before the claim, so a run stopped mid-pause leaves
+    // no claimed-but-unsent row behind.
     expect(events).toEqual([
       `ensurePrefs ${ANN},${BOB},${DAN}`,
       `claim sent digest ${ANN} ${WEEK}`,
       `send ${ANN} Your week ahead`,
-      `claim sent digest ${DAN} ${WEEK}`,
       "sleep 1000",
+      `claim sent digest ${DAN} ${WEEK}`,
       `send ${DAN} Your week ahead`,
     ]);
     expect(report.sent).toEqual([`digest ${ANN} ${WEEK}`, `digest ${DAN} ${WEEK}`]);
@@ -4063,11 +4146,16 @@ describe("runLeaderEmails", () => {
     expect(sentTo).not.toContain(STRANGER);
   });
 
-  it("skips anything another run already claimed", async () => {
+  it("skips anything another run already claimed, from one log read per kind", async () => {
     const { deps } = harness({ logged: [...BASELINES, `digest|${ANN}|${WEEK}`] });
     const report = await runLeaderEmails(deps);
     expect(report.skipped).toEqual([`digest ${ANN} ${WEEK}`]);
     expect(report.sent).toEqual([`digest ${DAN} ${WEEK}`]);
+    expect(vi.mocked(deps.loggedKeys).mock.calls).toEqual([
+      ["digest", WEEK],
+      ["milestones", null],
+    ]);
+    expect(vi.mocked(deps.claim).mock.calls.map((c) => c[0])).toEqual([DAN]);
   });
 
   it("releases and reports a failed send, and carries on with the next leader", async () => {
@@ -4092,6 +4180,36 @@ describe("runLeaderEmails", () => {
     expect(report.sent).toEqual([`digest ${ANN} ${WEEK}`]);
     expect(report.deferred).toEqual([`digest ${DAN} ${WEEK}`]);
     expect(deps.claim).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops claiming once the time budget is spent, leaving the rest for the next hour", async () => {
+    let t = 0;
+    const { deps } = harness({
+      deps: {
+        clock: () => t,
+        send: vi.fn(async () => {
+          t += 25_000;
+        }),
+      },
+    });
+    const report = await runLeaderEmails(deps);
+    expect(report.sent).toEqual([`digest ${ANN} ${WEEK}`]);
+    expect(report.deferred).toEqual([`digest ${DAN} ${WEEK}`]);
+    expect(deps.claim).toHaveBeenCalledTimes(1);
+    expect(deps.sleep).not.toHaveBeenCalled();
+  });
+
+  it("refuses an address that could reach more than one inbox, and writes nothing for it", async () => {
+    const TWO = "ann@example.invalid,eve@example.invalid";
+    const { deps } = harness({ snapshot: snapshot({ leaders: [{ email: TWO, name: "Two", full_access: true }] }) });
+    const report = await runLeaderEmails(deps);
+    expect(report.failed).toEqual([
+      `digest ${TWO}: refusing digest to ${TWO}: not one plain full-access address`,
+      `milestones ${TWO}: refusing milestones to ${TWO}: not one plain full-access address`,
+    ]);
+    expect(deps.send).not.toHaveBeenCalled();
+    expect(deps.claim).not.toHaveBeenCalled();
+    expect(deps.ensurePrefs).toHaveBeenCalledWith([]);
   });
 
   it("on a leader's first live run, baselines milestones they already had and sends none of them", async () => {
@@ -4152,18 +4270,21 @@ Expected: FAIL, "Failed to resolve import ./engine".
 // Safety, in order:
 // 1. Nothing is loaded unless a kind is due this hour (Melbourne time).
 // 2. Recipients come only from recipientsFor: full-access leaders who have
-//    not turned the kind off. An email for any other address is refused.
+//    not turned the kind off. An email for any other address, or for an
+//    address that is not one plain address, is refused.
 // 3. Dry run (the default) renders and reports; it never sends or writes.
-// 4. Live, the log row is claimed BEFORE sending. A duplicate claim means
-//    another run has it, so nothing is sent. A failed send releases the
-//    claim so a later run that day retries, and is reported loud.
+// 4. What is already done comes from one log read per due kind. Live, the
+//    log row is claimed BEFORE sending. A duplicate claim means another run
+//    has it, so nothing is sent. A failed send releases the claim so a
+//    later run that day retries, and is reported loud.
 // 5. One recipient failing never stops the others. Sends are sequential,
-//    paused between, and capped per run (the rest wait for the next hour).
+//    paused before each claim after the first, capped per run, and stop
+//    once the time budget is spent (the rest wait for the next hour).
 import { melbourneParts, mondayOfISO } from "@/lib/melbourneDate";
 import { composeFor, type Outgoing, type Snapshot } from "./compose";
 import type { RenderedEmail } from "./layout";
 import { recipientsFor, type EmailKind, type PrefsRow } from "./prefs";
-import { dueKinds } from "./schedule";
+import { dueKinds, periodKeyFor } from "./schedule";
 import { topicForWeek } from "./topic";
 
 export type LogStatus = "sent" | "baseline";
@@ -4171,7 +4292,9 @@ export type LogStatus = "sent" | "baseline";
 export interface EngineDb {
   // Makes sure every email has a preferences row (and so a token); returns all rows.
   ensurePrefs(emails: string[]): Promise<PrefsRow[]>;
-  hasLog(email: string, kind: EmailKind, periodKey: string): Promise<boolean>;
+  // Every "<email>|<period_key>" already logged for one kind, in one read:
+  // this period's rows for a periodic kind, every row for milestones (null).
+  loggedKeys(kind: EmailKind, periodKey: string | null): Promise<Set<string>>;
   // Inserts the log row. False when it already exists (unique constraint).
   claim(email: string, kind: EmailKind, periodKey: string, status: LogStatus): Promise<boolean>;
   // Deletes a "sent" claim after a failed send.
@@ -4183,6 +4306,10 @@ export interface EngineDeps extends EngineDb {
   dryRun: boolean;
   maxSends: number;
   delayMs: number;
+  // A live run claims nothing new once this many ms have passed since it
+  // started (Netlify stops a scheduled function at 30 s).
+  budgetMs: number;
+  clock(): number;
   loadSnapshot(): Promise<Snapshot>;
   send(to: string, message: RenderedEmail): Promise<void>;
   sleep(ms: number): Promise<void>;
@@ -4203,13 +4330,16 @@ export interface RunReport {
 
 export const BASELINE_KEY = "baseline";
 
+// One address and nothing else: no spaces, commas, semicolons, quotes or
+// angle brackets, any of which could turn one "to" into several.
+const PLAIN_ADDRESS = /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/;
+
 const label = (o: { kind: EmailKind; email: string; periodKey: string }) => `${o.kind} ${o.email} ${o.periodKey}`;
 
-// A leader's first live milestones run records what they already have
-// without sending it. Launch countdowns are dated, so they are never
-// baselined. Returns what is left to send.
+// A leader's first milestones run (no baseline marker in the log) records
+// what they already have without sending it. Launch countdowns are dated,
+// so they are never baselined. Returns what is left to send.
 async function baselineFirst(deps: EngineDeps, email: string, outgoing: Outgoing[], report: RunReport): Promise<Outgoing[]> {
-  if (await deps.hasLog(email, "milestones", BASELINE_KEY)) return outgoing;
   const already = outgoing.filter((o) => o.baselineable);
   for (const o of already) {
     if (!deps.dryRun) await deps.claim(email, "milestones", o.periodKey, "baseline");
@@ -4221,6 +4351,8 @@ async function baselineFirst(deps: EngineDeps, email: string, outgoing: Outgoing
 }
 
 export async function runLeaderEmails(deps: EngineDeps): Promise<RunReport> {
+  const started = deps.clock();
+  const outOfTime = () => deps.clock() - started >= deps.budgetMs;
   const report: RunReport = {
     dryRun: deps.dryRun,
     due: dueKinds(deps.now),
@@ -4244,9 +4376,19 @@ export async function runLeaderEmails(deps: EngineDeps): Promise<RunReport> {
     snap.leaders
       .filter((l) => l.full_access === true)
       .map((l) => l.email.trim().toLowerCase())
-      .filter(Boolean)
+      .filter((email) => PLAIN_ADDRESS.test(email))
   );
   if (!deps.dryRun) snap = { ...snap, prefs: await deps.ensurePrefs([...fullAccess].sort()) };
+
+  // What is already done: one read per due kind, so a run spends its time
+  // on new work rather than re-checking old sends one by one. The claim
+  // below stays the guarantee (another run may claim in between).
+  const logged = new Map<EmailKind, Set<string>>();
+  for (const kind of report.due) {
+    logged.set(kind, await deps.loggedKeys(kind, kind === "milestones" ? null : periodKeyFor(kind, deps.now)));
+  }
+  const isLogged = (kind: EmailKind, email: string, periodKey: string) =>
+    logged.get(kind)?.has(`${email}|${periodKey}`) ?? false;
 
   if (report.due.includes("digest")) {
     report.unparseableGuides = topicForWeek(snap.guides, mondayOfISO(melbourneParts(deps.now).date)).unparseable;
@@ -4257,35 +4399,46 @@ export async function runLeaderEmails(deps: EngineDeps): Promise<RunReport> {
   for (const kind of report.due) {
     for (const recipient of recipientsFor(kind, snap.leaders, snap.prefs)) {
       try {
+        if (!fullAccess.has(recipient.email)) {
+          throw new Error(`refusing ${kind} to ${recipient.email}: not one plain full-access address`);
+        }
         let outgoing = composeFor(kind, recipient, snap);
         for (const out of outgoing) {
-          if (out.email !== recipient.email || !fullAccess.has(out.email)) {
-            throw new Error(`refusing to send ${out.kind} to ${out.email}: not this full-access recipient`);
+          if (out.email !== recipient.email) {
+            throw new Error(`refusing to send ${out.kind} to ${out.email}: not this recipient`);
           }
         }
-        if (kind === "milestones") outgoing = await baselineFirst(deps, recipient.email, outgoing, report);
-
-        for (const out of outgoing) {
-          if (deps.dryRun) {
-            if (await deps.hasLog(out.email, out.kind, out.periodKey)) {
-              report.skipped.push(label(out));
-            } else {
-              report.wouldSend.push(label(out));
-              deps.log(`would send ${label(out)}: ${out.message.subject}`);
-            }
+        if (kind === "milestones" && !isLogged("milestones", recipient.email, BASELINE_KEY)) {
+          if (!deps.dryRun && outOfTime()) {
+            for (const out of outgoing) report.deferred.push(label(out));
             continue;
           }
-          if (sends >= deps.maxSends) {
+          outgoing = await baselineFirst(deps, recipient.email, outgoing, report);
+        }
+
+        for (const out of outgoing) {
+          if (isLogged(out.kind, out.email, out.periodKey)) {
+            report.skipped.push(label(out));
+            continue;
+          }
+          if (deps.dryRun) {
+            report.wouldSend.push(label(out));
+            deps.log(`would send ${label(out)}: ${out.message.subject}`);
+            continue;
+          }
+          if (sends >= deps.maxSends || outOfTime()) {
             report.deferred.push(label(out));
             continue;
           }
+          // Pause BEFORE claiming: a run stopped mid-pause leaves no
+          // claimed-but-unsent row that would drop this email for the period.
+          if (sends > 0) await deps.sleep(deps.delayMs);
           if (!(await deps.claim(out.email, out.kind, out.periodKey, "sent"))) {
             report.skipped.push(label(out));
             continue;
           }
+          sends += 1;
           try {
-            if (sends > 0) await deps.sleep(deps.delayMs);
-            sends += 1;
             await deps.send(out.email, out.message);
             report.sent.push(label(out));
             deps.log(`sent ${label(out)}`);
@@ -4313,7 +4466,7 @@ export async function runLeaderEmails(deps: EngineDeps): Promise<RunReport> {
 - [ ] **Step 4: Run it to see it pass**
 
 Run: `npx vitest run src/lib/emails/engine.test.ts`
-Expected: PASS, 10 tests.
+Expected: PASS, 12 tests.
 
 - [ ] **Step 5: Write the failing adapter tests**
 
@@ -4323,6 +4476,7 @@ Create `src/lib/emails/engineDb.test.ts`:
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fakeSupabase, type FakeResult } from "@/test/fakeSupabase";
+import { ROW_CAP } from "@/lib/adminRead";
 import { MISSING_TABLES_MESSAGE, PREFS_COLUMNS } from "./prefs";
 import { createEngineDb } from "./engineDb";
 
@@ -4357,13 +4511,26 @@ describe("createEngineDb", () => {
     await expect(engineDb.claim(A, "digest", "2026-10-05", "sent")).rejects.toThrow(MISSING_TABLES_MESSAGE);
   });
 
-  it("hasLog looks up one row by email, kind and period", async () => {
-    const found = setup({ leader_email_log: { data: [{ id: 1 }] } });
-    expect(await found.engineDb.hasLog(A, "milestones", "baseline")).toBe(true);
-    expect(found.fake.calls).toContainEqual(["leader_email_log", "eq", "period_key", "baseline"]);
-    expect(found.fake.calls).toContainEqual(["leader_email_log", "limit", 1]);
-    const none = setup({ leader_email_log: { data: [] } });
-    expect(await none.engineDb.hasLog(A, "milestones", "baseline")).toBe(false);
+  it("loggedKeys reads one kind's rows for one period in a single query", async () => {
+    const { fake, engineDb } = setup({ leader_email_log: { data: [{ email: A, period_key: "2026-10-05" }] } });
+    expect(await engineDb.loggedKeys("digest", "2026-10-05")).toEqual(new Set([`${A}|2026-10-05`]));
+    expect(fake.calls).toEqual([
+      ["leader_email_log", "from"],
+      ["leader_email_log", "select", "email, period_key"],
+      ["leader_email_log", "eq", "kind", "digest"],
+      ["leader_email_log", "eq", "period_key", "2026-10-05"],
+    ]);
+  });
+
+  it("loggedKeys reads every milestones row, and fails loud at the row cap", async () => {
+    const some = setup({
+      leader_email_log: { data: [{ email: A, period_key: "baseline" }, { email: B, period_key: "phase1-walked" }] },
+    });
+    expect(await some.engineDb.loggedKeys("milestones", null)).toEqual(new Set([`${A}|baseline`, `${B}|phase1-walked`]));
+    expect(some.fake.calls.filter((c) => c[1] === "eq")).toEqual([["leader_email_log", "eq", "kind", "milestones"]]);
+    const data = Array.from({ length: ROW_CAP }, (_, i) => ({ email: `l${i}@example.invalid`, period_key: "baseline" }));
+    const full = setup({ leader_email_log: { data } });
+    await expect(full.engineDb.loggedKeys("milestones", null)).rejects.toThrow("row read cap");
   });
 
   it("ensurePrefs adds missing rows without touching existing ones, then returns every row", async () => {
@@ -4405,7 +4572,7 @@ Expected: FAIL, "Failed to resolve import ./engineDb".
 // The engine's database, on Supabase (service role). Every error names the
 // table and, while migration 009 is not applied, says so.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { readRows } from "@/lib/adminRead";
+import { readRows, ROW_CAP } from "@/lib/adminRead";
 import type { EngineDb } from "./engine";
 import { emailTablesError, PREFS_COLUMNS, type PrefsRow } from "./prefs";
 
@@ -4430,16 +4597,18 @@ export function createEngineDb(db: SupabaseClient): EngineDb {
         throw new Error(emailTablesError((e as Error).message));
       }
     },
-    async hasLog(email, kind, periodKey) {
-      const { data, error } = await db
-        .from("leader_email_log")
-        .select("id")
-        .eq("email", email)
-        .eq("kind", kind)
-        .eq("period_key", periodKey)
-        .limit(1);
+    async loggedKeys(kind, periodKey) {
+      let query = db.from("leader_email_log").select("email, period_key").eq("kind", kind);
+      if (periodKey !== null) query = query.eq("period_key", periodKey);
+      const { data, error } = await query;
       if (error) throw fail("leader_email_log", error.message);
-      return Array.isArray(data) && data.length > 0;
+      const rows = (data ?? []) as { email: string; period_key: string }[];
+      if (rows.length >= ROW_CAP) {
+        throw new Error(
+          `leader_email_log: ${rows.length} ${kind} rows reached the ${ROW_CAP} row read cap. Paginate this read before sending.`
+        );
+      }
+      return new Set(rows.map((r) => `${r.email}|${r.period_key}`));
     },
     async claim(email, kind, periodKey, status) {
       const { error } = await db.from("leader_email_log").insert({ email, kind, period_key: periodKey, status });
@@ -4464,7 +4633,7 @@ export function createEngineDb(db: SupabaseClient): EngineDb {
 - [ ] **Step 8: Run it to see it pass**
 
 Run: `npx vitest run src/lib/emails/engineDb.test.ts`
-Expected: PASS, 6 tests.
+Expected: PASS, 7 tests.
 
 - [ ] **Step 9: Write the failing snapshot loader tests**
 
@@ -4632,6 +4801,10 @@ import { loadSnapshot } from "./loadSnapshot";
 
 export const MAX_SENDS_PER_RUN = 20;
 export const SEND_DELAY_MS = 1000;
+// Netlify stops a scheduled function at 30 s. Each send opens a fresh Gmail
+// SMTP connection (the shared transporter is not pooled), so a run stops
+// claiming new work after 20 s and leaves the rest for the next hour.
+export const RUN_BUDGET_MS = 20_000;
 
 type Env = Record<string, string | undefined>;
 
@@ -4655,6 +4828,8 @@ export async function runScheduled(now: Date = new Date(), env: Env = process.en
     dryRun,
     maxSends: MAX_SENDS_PER_RUN,
     delayMs: SEND_DELAY_MS,
+    budgetMs: RUN_BUDGET_MS,
+    clock: () => Date.now(),
     loadSnapshot: () => loadSnapshot(db, now),
     ...createEngineDb(db),
     send: (to, message) => sendEmail(to, message.subject, message.html, { text: message.text, headers: message.headers }),
@@ -4687,7 +4862,8 @@ Create `netlify/functions/leader-emails.mts`:
 // Netlify runs this at minute 0 of every UTC hour; runScheduled works out
 // what is due in Melbourne. Dry run unless LEADER_EMAILS_DRY_RUN is exactly
 // "false". Scheduled functions run only on the published deploy and stop
-// after 30 seconds, which is why each run sends at most 20 emails.
+// after 30 seconds, which is why each run sends at most 20 emails and
+// claims nothing new after 20 seconds.
 import type { Config } from "@netlify/functions";
 import { runScheduled } from "../../src/lib/emails/runScheduled";
 
@@ -4701,24 +4877,17 @@ export const config: Config = {
 };
 ```
 
-In `netlify.toml`, add at the end:
-
-```toml
-[functions]
-  # TypeScript functions are bundled by esbuild, which resolves the "@/"
-  # alias from tsconfig.json paths (netlify/functions/leader-emails.mts).
-  node_bundler = "esbuild"
-```
+Do not edit `netlify.toml`. Netlify always bundles TypeScript (`.mts`) functions with esbuild, which resolves the `@/` alias from `tsconfig.json` `paths`; Task 11 Step 8 proves the bundle locally.
 
 - [ ] **Step 19: Gates**
 
 Run: `npx tsc --noEmit`, `npm test`, `npm run lint`, `npm run build`.
-Expected: tsc prints nothing (it checks `netlify/functions/*.mts` through `tsconfig.json` `include`); 429 tests pass (408 + 10 + 6 + 2 + 3); lint at most 54; build passes.
+Expected: tsc prints nothing (it checks `netlify/functions/*.mts` through `tsconfig.json` `include`); 433 tests pass (409 + 12 + 7 + 2 + 3); lint at most 54; build passes.
 
 - [ ] **Step 20: Commit**
 
 ```bash
-git add src/lib/emails/engine.ts src/lib/emails/engine.test.ts src/lib/emails/engineDb.ts src/lib/emails/engineDb.test.ts src/lib/emails/loadSnapshot.ts src/lib/emails/loadSnapshot.test.ts src/lib/emails/runScheduled.ts src/lib/emails/runScheduled.test.ts netlify/functions/leader-emails.mts netlify.toml package.json package-lock.json
+git add src/lib/emails/engine.ts src/lib/emails/engine.test.ts src/lib/emails/engineDb.ts src/lib/emails/engineDb.test.ts src/lib/emails/loadSnapshot.ts src/lib/emails/loadSnapshot.test.ts src/lib/emails/runScheduled.ts src/lib/emails/runScheduled.test.ts netlify/functions/leader-emails.mts package.json package-lock.json
 git commit -m "Leader emails: claim-then-send engine and hourly scheduled function (dry run by default)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
@@ -5159,7 +5328,7 @@ Expected: PASS, 7 tests.
 - [ ] **Step 10: Gates**
 
 Run: `npx tsc --noEmit`, `npm test`, `npm run lint`, `npm run build`.
-Expected: tsc prints nothing; 443 tests pass (429 + 7 + 7); lint at most 54; build passes.
+Expected: tsc prints nothing; 447 tests pass (433 + 7 + 7); lint at most 54; build passes.
 
 - [ ] **Step 11: Commit**
 
@@ -5198,6 +5367,7 @@ Create `src/app/api/admin/email-preview/route.test.ts`:
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import type { Snapshot } from "@/lib/emails/compose";
+import { PREVIEW_TOKEN } from "@/lib/emails/prefs";
 
 // The database and the snapshot loader are replaced; the admin key check is
 // the real one.
@@ -5267,14 +5437,15 @@ describe("GET /api/admin/email-preview", () => {
     expect(res.status).toBe(404);
   });
 
-  it("renders the leader's email as the engine would, with their own token", async () => {
+  it("renders the leader's email as the engine would, with a preview token instead of theirs", async () => {
     const res = await get(`?kind=digest&email=${encodeURIComponent(ANN.toUpperCase())}`);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.subject).toBe("Your week ahead");
     expect(body.periodKey).toBe("2026-10-05");
     expect(body.html).toContain("<!DOCTYPE html>");
-    expect(body.html).toContain(`token=${TOKEN}`);
+    expect(body.html).toContain(`token=${PREVIEW_TOKEN}`);
+    expect(body.html + body.text).not.toContain(TOKEN);
     expect(body.text).toContain("Good morning, Ann.");
     expect(body.note).toBeNull();
   });
@@ -5312,9 +5483,10 @@ import { isEmailKind, PREVIEW_TOKEN, type Recipient } from "@/lib/emails/prefs";
 import { milestoneEmail } from "@/lib/emails/templates";
 
 // GET /api/admin/email-preview?kind=<kind>&email=<leader email> (admin key).
-// Renders one leader's email exactly as the engine would right now, with
-// their real unsubscribe token when they have one. Sends nothing and
-// writes nothing.
+// Renders one leader's email as the engine would right now. Sends nothing
+// and writes nothing. It always uses PREVIEW_TOKEN, never the leader's real
+// unsubscribe token: the admin passcode must not be a way to collect
+// tokens, and the sandboxed preview frame cannot follow links anyway.
 export async function GET(request: NextRequest) {
   if (!isAdminAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const cfgErr = adminConfigError();
@@ -5339,7 +5511,7 @@ export async function GET(request: NextRequest) {
     const recipient: Recipient = {
       email,
       name: leader.name?.trim() || email.split("@")[0],
-      token: row?.unsubscribe_token ?? null,
+      token: PREVIEW_TOKEN,
     };
 
     // Henry to check wording (the notes below)
@@ -5357,7 +5529,7 @@ export async function GET(request: NextRequest) {
     if (kind === "milestones") {
       const sample = milestoneEmail({
         firstName: firstNameOf(recipient, snap),
-        token: recipient.token ?? PREVIEW_TOKEN,
+        token: PREVIEW_TOKEN,
         milestone: { type: "walked", stop: "phase1" },
       });
       notes.unshift("Nothing is due for this leader today. This is a sample (Foundations walked).");
@@ -5753,7 +5925,7 @@ export default function LeaderEmailsPage() {
 - [ ] **Step 10: Gates**
 
 Run: `npx tsc --noEmit`, `npm test`, `npm run lint`, `npm run build`.
-Expected: tsc prints nothing; 449 tests pass (443 + 6); lint at most 54; build passes.
+Expected: tsc prints nothing; 453 tests pass (447 + 6); lint at most 54; build passes.
 
 - [ ] **Step 11: Commit**
 
@@ -5792,7 +5964,7 @@ npm run build
 npm run guard
 ```
 
-Expected: tsc prints nothing; 449 tests pass; lint at most 54 problems; build passes; guard prints `clean`.
+Expected: tsc prints nothing; 453 tests pass; lint at most 54 problems; build passes; guard prints `clean`.
 
 - [ ] **Step 2: Protected files untouched, scope as planned**
 
@@ -5895,12 +6067,13 @@ Expected: `Sent one <kind> test email to henrymcmahon@avenuemission.com.` Tell H
 
 ```bash
 npx --yes esbuild@0.25 netlify/functions/leader-emails.mts --bundle --platform=node --format=esm --packages=external --outfile=$SCRATCH/leader-emails.mjs
+grep -cE 'from "(next|react|react-dom)(/[^"]*)?"' $SCRATCH/leader-emails.mjs
 grep -n 'schedule: "@hourly"' netlify/functions/leader-emails.mts
 git diff main...HEAD | grep "^+" | python -c "import sys; print(sys.stdin.read().count(chr(0x2014)))"
 python -c "print(open('docs/superpowers/plans/2026-09-24-church-health-emails.md', encoding='utf-8').read().count(chr(0x2014)))"
 ```
 
-Expected: esbuild writes the bundle with no "Could not resolve" error (the `@/` imports resolved from `tsconfig.json`); the grep prints the schedule line; both counts print `0`.
+Expected: esbuild writes the bundle with no "Could not resolve" error (the `@/` imports resolved from `tsconfig.json`); the first grep prints `0` (no `next`, `react` or `react-dom` import reached the function bundle); the second grep prints the schedule line; both em dash counts print `0`.
 
 - [ ] **Step 9: Push-time notes and the ledger**
 
