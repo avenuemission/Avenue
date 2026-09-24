@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminConfigError } from "@/lib/server/supabaseAdmin";
 import { allow, isBlocked, RATE, supabaseRateDeps, type RateDeps } from "@/lib/server/rateLimit";
 import { clientIp } from "@/lib/server/clientIp";
-import { jsonError, tooMany } from "@/lib/server/http";
+import { jsonError, serverError, tooMany } from "@/lib/server/http";
 
 function sha256(value: string): Buffer {
   return crypto.createHash("sha256").update(value, "utf8").digest();
@@ -32,37 +32,51 @@ export function adminKeyMatches(header: string | null, adminKey: string | undefi
 //   if ("response" in auth) return auth.response;
 //
 // Order of checks:
-//  1. If this IP is already locked out (too many recent failures), 429
+//  1. The service-role-key sanity check (adminConfigError) runs before
+//     anything else, including before a RateDeps is even built. If it did
+//     not, a misconfigured/missing SUPABASE_SERVICE_ROLE_KEY would make the
+//     default supabaseRateDeps() call getSupabaseAdmin(), which throws
+//     synchronously for exactly that misconfiguration, well before the
+//     caller reaches the friendlier, more specific adminConfigError()
+//     message below it, turning a diagnosable problem into a bare 500.
+//  2. If this IP is already locked out (too many recent failures), 429
 //     without even looking at the key.
-//  2. If the key does not match, count the failure against the lockout and
+//  3. If the key does not match, count the failure against the lockout and
 //     401.
-//  3. If the key matches, run the service-role-key sanity check
-//     (adminConfigError) and return its response if the server itself is
-//     misconfigured; otherwise the caller is authorised.
+//  4. Otherwise the caller is authorised.
+//
+// Failures from the rate-limit RPCs themselves (a real database error, not
+// a misconfigured key) are caught and turned into a generic serverError,
+// never left to surface as an unhandled rejection in the route handler.
 export async function requireAdmin(
   request: NextRequest,
-  deps: RateDeps = supabaseRateDeps()
+  deps?: RateDeps
 ): Promise<{ ok: true } | { response: NextResponse }> {
-  const ip = clientIp(request);
-  const path = new URL(request.url).pathname;
-
-  if (await isBlocked(RATE.adminFail, ip, deps)) {
-    return { response: tooMany() };
-  }
-
-  const header = request.headers.get("authorization");
-  const adminKey = process.env.ADMIN_API_KEY;
-
-  if (!adminKeyMatches(header, adminKey)) {
-    await allow(RATE.adminFail, ip, deps);
-    console.error(`admin auth failed ip=${ip} path=${path}`);
-    return { response: jsonError(401, "Unauthorized") };
-  }
-
-  console.log(`admin auth ok path=${path}`);
-
   const cfgErr = adminConfigError();
   if (cfgErr) return { response: cfgErr };
 
-  return { ok: true };
+  const ip = clientIp(request);
+  const path = new URL(request.url).pathname;
+
+  try {
+    const rateDeps = deps ?? supabaseRateDeps();
+
+    if (await isBlocked(RATE.adminFail, ip, rateDeps)) {
+      return { response: tooMany() };
+    }
+
+    const header = request.headers.get("authorization");
+    const adminKey = process.env.ADMIN_API_KEY;
+
+    if (!adminKeyMatches(header, adminKey)) {
+      await allow(RATE.adminFail, ip, rateDeps);
+      console.error(`admin auth failed ip=${ip} path=${path}`);
+      return { response: jsonError(401, "Unauthorized") };
+    }
+
+    console.log(`admin auth ok path=${path}`);
+    return { ok: true };
+  } catch (e) {
+    return { response: serverError("requireAdmin rate check", e) };
+  }
 }

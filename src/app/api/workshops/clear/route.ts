@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/client/supabaseBrowser";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 
 export async function DELETE(request: NextRequest) {
   const auth = await requireLeader(request);
@@ -20,7 +21,7 @@ export async function DELETE(request: NextRequest) {
     .eq("session_code", code.toUpperCase());
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError("workshops/clear DELETE", error);
   }
 
   return NextResponse.json({ success: true });

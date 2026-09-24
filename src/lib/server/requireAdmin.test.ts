@@ -74,11 +74,11 @@ describe("requireAdmin", () => {
     expect(deps.hit).toHaveBeenCalledWith("admin-fail:1.2.3.4", 900, 5);
   });
 
-  it("does not count a hit when there is no key at all", async () => {
+  it("counts a missing key as a failure", async () => {
     const deps = fakeDeps();
     const result = await requireAdmin(request({ ip: "1.2.3.4" }), deps);
     expect("response" in result && result.response.status).toBe(401);
-    expect(deps.hit).toHaveBeenCalledTimes(1);
+    expect(deps.hit).toHaveBeenCalledWith("admin-fail:1.2.3.4", 900, 5);
   });
 
   it("succeeds with the right key and a healthy service-role key, without counting a failure", async () => {
@@ -89,10 +89,33 @@ describe("requireAdmin", () => {
     expect(deps.blocked).toHaveBeenCalledWith("admin-fail:1.2.3.4", 900, 5);
   });
 
-  it("surfaces the service-role-key diagnostic only after the key check passes", async () => {
+  it("surfaces the service-role-key diagnostic before any rate-limit or key check", async () => {
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
     const deps = fakeDeps();
     const result = await requireAdmin(request({ authorization: `Bearer ${KEY}`, ip: "1.2.3.4" }), deps);
     expect("response" in result && result.response.status).toBe(500);
+    expect(deps.hit).not.toHaveBeenCalled();
+    expect(deps.blocked).not.toHaveBeenCalled();
+  });
+
+  it("returns the misconfig message with no injected deps at all, since it never reaches the rate-limit RPCs", async () => {
+    // No deps argument: if adminConfigError() did not run first, this would
+    // fall through to the real supabaseRateDeps(), which calls
+    // getSupabaseAdmin() and throws for exactly this same misconfiguration,
+    // turning a diagnosable message into a bare 500 (or an unhandled
+    // rejection, since callers don't wrap requireAdmin in try/catch).
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    const result = await requireAdmin(request({ authorization: `Bearer ${KEY}`, ip: "1.2.3.4" }));
+    expect("response" in result && result.response.status).toBe(500);
+    const body = "response" in result ? await result.response.json() : null;
+    expect(body?.error).toContain("SUPABASE_SERVICE_ROLE_KEY");
+  });
+
+  it("wraps a rate-limit RPC failure in a generic serverError instead of throwing", async () => {
+    const deps = fakeDeps({ blocked: vi.fn(async () => { throw new Error("db unreachable"); }) });
+    const result = await requireAdmin(request({ authorization: `Bearer ${KEY}`, ip: "1.2.3.4" }), deps);
+    expect("response" in result && result.response.status).toBe(500);
+    const body = "response" in result ? await result.response.json() : null;
+    expect(body).toEqual({ error: "Something went wrong. Please try again." });
   });
 });

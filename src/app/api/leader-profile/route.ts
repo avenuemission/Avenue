@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 
 // Columns a client is allowed to write. Anything else in the body is ignored,
 // so a caller can't set updated_at or invent columns.
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
     .eq("email", auth.leader.email)
     .maybeSingle();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("leader-profile GET", error);
   return NextResponse.json({ profile: data ?? null });
 }
 
@@ -80,6 +81,6 @@ export async function PUT(request: NextRequest) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("leader-profile PUT", error);
   return NextResponse.json({ profile: data });
 }

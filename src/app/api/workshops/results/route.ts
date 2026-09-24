@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/client/supabaseBrowser";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 
 export async function GET(request: NextRequest) {
   const auth = await requireLeader(request);
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("workshops/results GET", error);
 
   return NextResponse.json(data ?? []);
 }

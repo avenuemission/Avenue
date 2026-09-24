@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/client/supabaseBrowser";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 
 // GET all sessions
 export async function GET(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError("workshops/sessions GET", error);
   }
   return NextResponse.json(data);
 }
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     if (error.code === "23505") {
       return NextResponse.json({ error: "Session code already exists" }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError("workshops/sessions POST", error);
   }
 
   return NextResponse.json(data);

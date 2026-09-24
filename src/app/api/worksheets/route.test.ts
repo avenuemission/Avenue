@@ -92,10 +92,13 @@ describe("DELETE /api/worksheets (reset)", () => {
     expect(h.requireLeader.mock.invocationCallOrder[0]).toBeLessThan(h.getSupabaseAdmin.mock.invocationCallOrder[0]);
   });
 
-  it("fails loud with the database message", async () => {
+  it("fails loud but never leaks the database message to the caller", async () => {
     h.getSupabaseAdmin.mockReturnValue(fakeDb({ error: { message: "permission denied" } }).db);
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = await del("?kind=calling");
     expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ error: "permission denied" });
+    const body = await res.json();
+    expect(body).toEqual({ error: "Something went wrong. Please try again." });
+    spy.mockRestore();
   });
 });

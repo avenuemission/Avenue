@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 import { parseKind, validateWorksheetPatch } from "@/lib/domain/worksheets";
 
 // Worksheets: Calling and Launch answers, private to the signed-in leader.
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     .eq("email", auth.leader.email)
     .eq("kind", kind)
     .maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("worksheets GET", error);
   return NextResponse.json({ data: data?.data ?? {}, updatedAt: data?.updated_at ?? null });
 }
 
@@ -45,7 +46,7 @@ export async function PATCH(request: NextRequest) {
     p_section: parsed.section,
     p_value: parsed.value,
   });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("worksheets PATCH", error);
   return NextResponse.json({ data: data ?? {} });
 }
 
@@ -69,6 +70,6 @@ export async function DELETE(request: NextRequest) {
     .delete()
     .eq("email", auth.leader.email)
     .eq("kind", kind);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("worksheets DELETE", error);
   return NextResponse.json({ ok: true });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/client/supabaseBrowser";
+import { serverError } from "@/lib/server/http";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError("workshops/submit", error);
   }
 
   return NextResponse.json({ success: true });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 
 interface CheckinRow {
   email: string;
@@ -188,7 +189,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ checkins: ((data ?? []) as unknown as CheckinRow[]).map(toCheckin) });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("leader-checkins GET", e);
   }
 }
 
@@ -266,6 +267,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ ok: true, checkin: toCheckin(data as unknown as CheckinRow) });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    return serverError("leader-checkins PUT", e);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { serverError } from "@/lib/server/http";
 import { MAX_PEOPLE, PERSON_COLUMNS, toPerson, validatePersonInput, type PersonRow } from "@/lib/domain/people";
 
 // My People: a private list per leader. Every query is filtered by the
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     .eq("owner_email", auth.leader.email)
     .order("first_name", { ascending: true })
     .limit(MAX_PEOPLE);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("people GET", error);
   return NextResponse.json({ people: ((data ?? []) as PersonRow[]).map(toPerson) });
 }
 
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     .from("leader_people")
     .select("id", { count: "exact", head: true })
     .eq("owner_email", auth.leader.email);
-  if (countErr) return NextResponse.json({ error: countErr.message }, { status: 500 });
+  if (countErr) return serverError("people POST count", countErr);
   if ((count ?? 0) >= MAX_PEOPLE) {
     return NextResponse.json({ error: `You can keep up to ${MAX_PEOPLE} people` }, { status: 400 });
   }
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     .insert({ ...parsed.values, owner_email: auth.leader.email })
     .select(PERSON_COLUMNS)
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("people POST", error);
   return NextResponse.json({ person: toPerson(data as PersonRow) }, { status: 201 });
 }
 
@@ -72,7 +73,7 @@ export async function PATCH(request: NextRequest) {
     .eq("owner_email", auth.leader.email)
     .select(PERSON_COLUMNS)
     .maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("people PATCH", error);
   if (!data) return NextResponse.json({ error: "Person not found" }, { status: 404 });
   return NextResponse.json({ person: toPerson(data as PersonRow) });
 }
@@ -92,7 +93,7 @@ export async function DELETE(request: NextRequest) {
     .eq("id", id)
     .eq("owner_email", auth.leader.email)
     .select("id");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return serverError("people DELETE", error);
   if (!data || data.length === 0) return NextResponse.json({ error: "Person not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
