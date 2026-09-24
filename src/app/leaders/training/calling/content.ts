@@ -307,5 +307,4 @@ export const CONVERSATION_CONTENT = {
   body: "Conversations with board or pastors about core theology and character.",
   checkbox: "I've booked my conversation",
   dateLabel: "When is it? (optional)",
-  supportLink: "Book it through Leader Support",
 };

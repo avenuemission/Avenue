@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import {
   ArrowLeft,
+  BarChart2,
+  HeadphonesIcon,
   Lock,
   Users,
   CheckCircle,
@@ -146,6 +149,23 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {/* Round 2 spec 5b: the two tools that left the leader dashboard. */}
+        <nav aria-label="Admin tools" className="mb-6 flex flex-wrap gap-3">
+          <Link
+            href="/leaders/support"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm text-[var(--muted)] hover:text-white"
+          >
+            <HeadphonesIcon className="h-4 w-4" aria-hidden="true" />
+            Leader Support
+          </Link>
+          <Link
+            href="/leaders/workshops"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm text-[var(--muted)] hover:text-white"
+          >
+            <BarChart2 className="h-4 w-4" aria-hidden="true" />
+            Workshop Hub
+          </Link>
+        </nav>
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <button onClick={() => router.push("/leaders")} className="text-gray-400 hover:text-white flex items-center gap-1 text-sm">

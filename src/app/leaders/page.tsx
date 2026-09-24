@@ -11,13 +11,11 @@ import NextStepCard from "@/components/journey/NextStepCard";
 import {
   GraduationCap,
   BookOpen,
-  HeadphonesIcon,
   FolderOpen,
   LogOut,
   ExternalLink,
   Calendar,
   Globe,
-  BarChart2,
   Lock,
   ChevronDown,
   ChevronRight,
@@ -139,9 +137,7 @@ export default function LeadersPage() {
     { id: "training", title: "Leader Training", icon: GraduationCap, href: "/leaders/training" },
     { id: "network", title: "Discipleship Network", icon: Network, href: "/leaders/network" },
     { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
-    { id: "support", title: "Leader Support", icon: HeadphonesIcon, href: "/leaders/support" },
     { id: "resources", title: "Resources", icon: FolderOpen, href: "/leaders/resources" },
-    { id: "workshops", title: "Workshop Hub", icon: BarChart2, href: "/leaders/workshops" },
     { id: "admin", title: "Admin", icon: Lock, href: "/leaders/admin" },
   ];
 
@@ -240,12 +236,7 @@ export default function LeadersPage() {
 
         {/* Pending Access Message */}
         {accessChecked && !hasFullAccess && (
-          <p className="mt-6 text-sm italic text-[var(--muted)]">
-            Your access opens after your first call with a pastor.{" "}
-            <Link href="/leaders/support" className="inline-flex min-h-[44px] items-center not-italic text-[var(--accent)]">
-              Book it through Leader Support
-            </Link>
-          </p>
+          <p className="mt-6 text-sm italic text-[var(--muted)]">Your access opens after your first call with a pastor.</p>
         )}
 
         {/* Quick Links: folded away so the page leads with the tools */}

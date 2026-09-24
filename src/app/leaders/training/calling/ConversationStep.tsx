@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { StepProps } from "@/components/journey/WizardShell";
 import { OutcomeButton } from "@/components/journey/WizardShell";
 import { isIsoDate, type CallingData } from "@/lib/journey";
@@ -31,12 +30,6 @@ export default function ConversationStep({ value, save, finish }: StepProps<Conv
       <div>
         <h2 className="text-lg font-semibold text-white">{CONVERSATION_CONTENT.title}</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{CONVERSATION_CONTENT.body}</p>
-        <Link
-          href="/leaders/support"
-          className="mt-2 inline-flex min-h-[44px] items-center text-sm font-semibold text-[var(--accent)] underline underline-offset-4"
-        >
-          {CONVERSATION_CONTENT.supportLink}
-        </Link>
       </div>
 
       <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border border-[var(--border)] px-4 py-2">
