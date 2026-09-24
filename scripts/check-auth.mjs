@@ -208,12 +208,6 @@ try {
     }
   }
 
-  console.log("seed route needs admin");
-  {
-    const r = await call("POST", "/api/leader-access/seed");
-    check("seed without admin key is 401", r.status === 401, `got ${r.status}`);
-  }
-
   console.log("people are private to their owner");
   {
     const probe = await db.from("leader_people").select("id").limit(1);

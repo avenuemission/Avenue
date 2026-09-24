@@ -154,16 +154,3 @@ export function launchStepComplete(id: LaunchStepId, data: LaunchData): boolean 
 export function launchCompleteCount(data: LaunchData): number {
   return LAUNCH_STEP_IDS.filter((id) => launchStepComplete(id, data)).length;
 }
-
-// The hub's headline ring (Ruling C4): Foundations modules, plus Calling
-// sections in place of phase 2 modules, plus Launch steps in place of
-// phase 3 modules.
-export function overallPercent(input: {
-  foundationsDone: number;
-  foundationsTotal: number;
-  callingDone: number;
-  launchDone: number;
-}): number {
-  const total = input.foundationsTotal + CALLING_TOTAL + LAUNCH_TOTAL;
-  return Math.round((100 * (input.foundationsDone + input.callingDone + input.launchDone)) / total);
-}

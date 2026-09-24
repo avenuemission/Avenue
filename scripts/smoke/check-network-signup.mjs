@@ -1,7 +1,7 @@
 // Signs up a throwaway leader, checks a network node appeared, cleans up.
 // Run: node --env-file=.env.local scripts/check-network-signup.mjs
 import { createClient } from "@supabase/supabase-js";
-import { tokenFor, cleanupFixtures } from "./lib/fixtures.mjs";
+import { tokenFor, cleanupFixtures } from "../lib/fixtures.mjs";
 
 const BASE = "http://localhost:3000";
 const EMAIL = "signup-check-temp@example.invalid";

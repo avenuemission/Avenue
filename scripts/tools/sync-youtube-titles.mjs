@@ -18,7 +18,7 @@ import { dirname, join } from "node:path";
 
 // Resolve against this file's own location, not the shell's working
 // directory, so the script runs the same from anywhere.
-const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
+const REPO = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const FILE = join(REPO, "src", "app", "leaders", "training", "page.tsx");
 const checkOnly = process.argv.includes("--check");
 

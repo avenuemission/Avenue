@@ -11,7 +11,6 @@ import {
   launchCompleteCount,
   launchStepComplete,
   layersScore,
-  overallPercent,
   recordOf,
   stringList,
   textOf,
@@ -138,14 +137,6 @@ describe("launchStepComplete", () => {
   it("counts completed steps", () => {
     expect(launchCompleteCount({})).toBe(0);
     expect(launchCompleteCount(fullLaunch)).toBe(7);
-  });
-});
-
-describe("overallPercent", () => {
-  it("counts Foundations modules, Calling sections and Launch steps together", () => {
-    expect(overallPercent({ foundationsDone: 2, foundationsTotal: 4, callingDone: 3, launchDone: 0 })).toBe(29);
-    expect(overallPercent({ foundationsDone: 4, foundationsTotal: 4, callingDone: 6, launchDone: 7 })).toBe(100);
-    expect(overallPercent({ foundationsDone: 0, foundationsTotal: 4, callingDone: 0, launchDone: 0 })).toBe(0);
   });
 });
 

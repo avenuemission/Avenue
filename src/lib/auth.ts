@@ -80,5 +80,3 @@ export const getCurrentUser = (): User | null => {
   }
   return user;
 };
-
-export const isAuthenticated = (): boolean => getCurrentUser() !== null;

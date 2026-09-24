@@ -22,10 +22,6 @@ export function getSupabaseAdmin(): SupabaseClient {
   return _supabaseAdmin;
 }
 
-export function hasSupabaseAdminConfig(): boolean {
-  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-}
-
 // ============================================================
 // Service-role key sanity check.
 //

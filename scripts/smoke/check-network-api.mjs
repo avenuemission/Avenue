@@ -1,7 +1,7 @@
 // Exercises /api/network against the local dev server, then cleans up.
 // Run: node --env-file=.env.local scripts/check-network-api.mjs
 import { createClient } from "@supabase/supabase-js";
-import { tokenFor } from "./lib/fixtures.mjs";
+import { tokenFor } from "../lib/fixtures.mjs";
 
 const BASE = "http://localhost:3000";
 const LEADER = "info@avenuemission.com";
