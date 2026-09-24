@@ -28,10 +28,12 @@ const STARS: [number, number, number][] = [
 ];
 // Text colours come from the tokens (spec 2: text colours from tokens only).
 // SVG presentation attributes do not take var(), so text sets fill via style.
-const STATUS_FILL = { walked: "var(--lamp)", here: "var(--accent)", ahead: "var(--dim)" } as const;
+const STATUS_FILL = { walked: "var(--lamp)", ongoing: "var(--lamp)", here: "var(--accent)", ahead: "var(--dim)" } as const;
 
 // Map A (spec 2): the avenue seen from the side, five lamp posts in a row.
-// Walked stops are lit (warm head, halo, cone of light), the current stop
+// Walked stops are lit (warm head, halo, cone of light); ongoing stops
+// (Growth, Multiply once started) are lit the same and their cone and halo
+// breathe slowly (round 3 spec 3). The current stop
 // has a blue outlined head and a blue "you are here" dot, stops ahead are
 // dim. The SVG is decoration; a transparent button over each lamp is the
 // real control (av-map-hit keeps its focus ring inside the clipped map).
@@ -68,11 +70,22 @@ export default function AvenueMap({ stops, selectedId, onSelect, hereAction, onA
           <line x1="0" y1="350" x2="1000" y2="350" stroke="#2b3446" strokeDasharray="18 16" />
           {stops.map((stop, i) => {
             const x = LAMP_X[i];
-            if (stop.status === "walked") {
+            if (stop.status === "walked" || stop.status === "ongoing") {
+              const ongoing = stop.status === "ongoing";
               return (
                 <g key={stop.id}>
-                  <polygon points={`${x},120 ${x - 60},300 ${x + 60},300`} fill={`url(#${glowId})`} />
-                  <circle cx={x} cy={112} r={34} fill={`url(#${haloId})`} />
+                  <polygon
+                    points={`${x},120 ${x - 60},300 ${x + 60},300`}
+                    fill={`url(#${glowId})`}
+                    className={ongoing ? "av-breathe-light" : undefined}
+                  />
+                  <circle
+                    cx={x}
+                    cy={112}
+                    r={34}
+                    fill={`url(#${haloId})`}
+                    className={ongoing ? "av-breathe-halo" : undefined}
+                  />
                   <rect x={x - 2} y={112} width={4} height={188} fill="#3a4458" />
                   <rect x={x - 16} y={104} width={32} height={10} rx={3} fill="#ffc56b" />
                 </g>

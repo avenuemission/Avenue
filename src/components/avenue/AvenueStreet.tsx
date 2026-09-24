@@ -20,7 +20,8 @@ export default function AvenueStreet({ stops, selectedId, onSelect, hereAction, 
     <ol className="relative mt-2" aria-label="Your journey">
       {stops.map((stop, i) => {
         const last = i === stops.length - 1;
-        const walked = stop.status === "walked";
+        const ongoing = stop.status === "ongoing";
+        const walked = stop.status === "walked" || ongoing; // lit either way
         const here = stop.status === "here";
         const selected = selectedId === stop.id;
         return (
@@ -35,7 +36,7 @@ export default function AvenueStreet({ stops, selectedId, onSelect, hereAction, 
             ) : null}
             <span
               aria-hidden="true"
-              className={`absolute left-[5px] top-[6px] h-[14px] w-[14px] rounded-full ${
+              className={`absolute left-[5px] top-[6px] h-[14px] w-[14px] rounded-full ${ongoing ? "av-breathe-light" : ""} ${
                 walked
                   ? "bg-[var(--lamp)] shadow-[0_0_16px_4px_rgba(255,197,107,0.5)]"
                   : here

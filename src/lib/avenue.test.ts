@@ -6,6 +6,7 @@ import {
   hereActionFor,
   melbourneHour,
   partOfDay,
+  STATUS_LABEL,
   STOP_IDS,
   streetStatusLine,
   type AvenueProgress,
@@ -34,23 +35,35 @@ describe("avenueStops", () => {
       "ahead",
     ]);
   });
-  it("keeps a later stop walked when an earlier one is not", () => {
+  it("keeps a later stop lit when an earlier one is not", () => {
     expect(statuses({ ...fresh, foundationsDone: 4, callingDone: 6, launchDone: 2, checkinCount: 3 })).toEqual([
       "walked",
       "walked",
       "here",
-      "walked",
+      "ongoing",
       "ahead",
     ]);
   });
-  it("walks Growth on the first check-in and Multiply on the first apprentice on rung 1", () => {
+  it("makes Growth ongoing on the first check-in and Multiply ongoing on the first apprentice on rung 1", () => {
     expect(statuses({ ...fresh, foundationsDone: 4, callingDone: 6, launchDone: 7, checkinCount: 1, apprenticesOnRung: 1 })).toEqual([
       "walked",
       "walked",
       "walked",
-      "walked",
-      "walked",
+      "ongoing",
+      "ongoing",
     ]);
+  });
+  it("puts here on the first stop that is neither walked nor ongoing", () => {
+    expect(statuses({ ...fresh, foundationsDone: 4, callingDone: 6, launchDone: 7, checkinCount: 1 })).toEqual([
+      "walked",
+      "walked",
+      "walked",
+      "ongoing",
+      "here",
+    ]);
+  });
+  it("labels the four states", () => {
+    expect(STATUS_LABEL).toEqual({ walked: "Walked", ongoing: "Ongoing", here: "You are here", ahead: "Ahead" });
   });
   it("never walks Foundations with zero modules", () => {
     expect(statuses({ ...fresh, foundationsTotal: 0 })[0]).toBe("here");
@@ -77,6 +90,11 @@ describe("streetStatusLine", () => {
   it("matches the mockup line", () => {
     expect(streetStatusLine(avenueStops({ ...fresh, foundationsDone: 4, callingDone: 6 }))).toBe(
       "Two streetlights on. Launch is next."
+    );
+  });
+  it("counts ongoing stops as lit", () => {
+    expect(streetStatusLine(avenueStops({ ...fresh, foundationsDone: 4, callingDone: 6, checkinCount: 1 }))).toBe(
+      "Three streetlights on. Launch is next."
     );
   });
   it("says so when the whole street is lit", () => {

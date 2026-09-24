@@ -5,7 +5,7 @@ import { CALLING_TOTAL, LAUNCH_TOTAL, type CallingSectionId, type LaunchStepId }
 
 export const STOP_IDS = ["phase1", "phase2", "phase3", "phase4", "phase5"] as const;
 export type StopId = (typeof STOP_IDS)[number];
-export type StopStatus = "walked" | "here" | "ahead";
+export type StopStatus = "walked" | "ongoing" | "here" | "ahead";
 
 export const STOP_NAMES: Record<StopId, string> = {
   phase1: "Foundations",
@@ -17,9 +17,14 @@ export const STOP_NAMES: Record<StopId, string> = {
 
 export const STATUS_LABEL: Record<StopStatus, string> = {
   walked: "Walked",
+  ongoing: "Ongoing",
   here: "You are here",
   ahead: "Ahead",
 };
+
+// Growth and Multiply are rhythms: once started they are never finished,
+// so they read "Ongoing" rather than "Walked" (round 3 spec 3).
+const RHYTHM_STOPS: ReadonlySet<StopId> = new Set<StopId>(["phase4", "phase5"]);
 
 export interface AvenueStop {
   id: StopId;
@@ -54,12 +59,13 @@ export function stopWalked(id: StopId, p: AvenueProgress): boolean {
   }
 }
 
-// The first stop not walked is "here"; every other stop not walked is
+// A walked Growth or Multiply stop is "ongoing"; other walked stops are
+// "walked". The first stop that is neither is "here"; every other one is
 // "ahead". Nothing is locked: this only decides how each lamp is drawn.
 export function avenueStops(p: AvenueProgress): AvenueStop[] {
   let hereTaken = false;
   return STOP_IDS.map((id, i) => {
-    let status: StopStatus = "walked";
+    let status: StopStatus = RHYTHM_STOPS.has(id) ? "ongoing" : "walked";
     if (!stopWalked(id, p)) {
       status = hereTaken ? "ahead" : "here";
       hereTaken = true;
@@ -74,7 +80,7 @@ const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five"];
 export function streetStatusLine(stops: AvenueStop[]): string {
   const here = stops.find((s) => s.status === "here");
   if (!here) return "All five streetlights on.";
-  const lit = stops.filter((s) => s.status === "walked").length;
+  const lit = stops.filter((s) => s.status === "walked" || s.status === "ongoing").length;
   const lights =
     lit === 0 ? "No streetlights on yet." : `${COUNT_WORDS[lit]} ${lit === 1 ? "streetlight" : "streetlights"} on.`;
   return `${lights} ${here.name} is next.`;

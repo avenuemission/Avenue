@@ -598,6 +598,35 @@ button.av-lamp {
   }
 }
 
+/* Living lamps (round 3 spec 3): an ongoing lamp (Growth or Multiply once
+   started) is lit like a walked one and its light breathes slowly, about
+   4 s a cycle. Opacity and halo scale only. Under reduced motion it is a
+   steady, slightly softer glow. */
+.av-breathe-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: av-breathe-halo 4s ease-in-out infinite;
+}
+.av-breathe-light {
+  animation: av-breathe-light 4s ease-in-out infinite;
+}
+@keyframes av-breathe-halo {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+@keyframes av-breathe-light {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .av-breathe-halo,
+  .av-breathe-light {
+    animation: none;
+    opacity: 0.85;
+    transform: none;
+  }
+}
+
 /* RPMS slider (round 2 spec 3.1): a native range input, 44 px tall to
    touch, over a drawn track. The filled part is the gauge colour (--g),
    the rest --line-2. --p is the filled share, 0 to 100; the fill ends at
