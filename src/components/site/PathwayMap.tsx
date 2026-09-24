@@ -35,6 +35,9 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<SelectedGroup | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  // Google Maps (about 1.7 MB on mobile) loads only when the map is within
+  // 400px of the viewport, or when the visitor presses "Show map".
+  const [showMap, setShowMap] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", group: "", company: "" });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -118,6 +121,21 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
   }, [pathwayGroups]);
 
   useEffect(() => {
+    const el = mapRef.current;
+    if (showMap || !el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) setShowMap(true);
+      },
+      { rootMargin: "400px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [showMap]);
+
+  useEffect(() => {
+    if (!showMap) return;
+
     // Check if Google Maps is already loaded
     if (window.google && window.google.maps) {
       initMap();
@@ -150,7 +168,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
       markersRef.current = [];
       polylinesRef.current = [];
     };
-  }, [initMap]);
+  }, [initMap, showMap]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,7 +204,31 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
           style={{ minHeight: "400px" }}
         />
 
-        {!mapLoaded && (
+        {!showMap && (
+          <div className="absolute inset-0 flex flex-col bg-gray-900 p-6">
+            <p className="text-gray-400 text-xs md:text-sm uppercase tracking-wider mb-4">
+              Pathway groups
+            </p>
+            <ul className="flex-1 space-y-3 overflow-y-auto">
+              {pathwayGroups.map((group) => (
+                <li key={group.id} className="text-sm">
+                  <span className="text-white font-medium">{group.name}</span>
+                  {!group.running && <span className="text-purple-400 font-semibold"> (coming soon)</span>}
+                  <span className="block text-gray-400">{group.time}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={() => setShowMap(true)}
+              className="mt-4 self-start bg-blue-700 text-white px-8 py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm"
+            >
+              Show map
+            </button>
+          </div>
+        )}
+
+        {showMap && !mapLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="text-white">Loading map...</div>
           </div>

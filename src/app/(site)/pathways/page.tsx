@@ -104,6 +104,7 @@ export default async function PathwaysPage() {
             src="/images/monash_bbq.png"
             alt="Monash BBQ"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/75" />

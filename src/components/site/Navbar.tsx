@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import CountdownTimer from "./CountdownTimer";
 import { LogIn, LayoutDashboard, ChevronDown, Heart } from "lucide-react";
-import { getCurrentUser } from "@/lib/client/auth";
+import { getCurrentUser } from "@/lib/client/authSession";
 
 function subscribeToAuth(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -30,7 +30,6 @@ const navLinks = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [streetlightsOpen, setStreetlightsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -59,7 +58,6 @@ export default function Navbar() {
               width={140}
               height={40}
               className="h-8 w-auto"
-              priority
             />
           </Link>
 

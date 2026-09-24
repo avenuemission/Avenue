@@ -95,6 +95,7 @@ export default async function VisionPage() {
                 src="/images/vision_avenue_orbit.png"
                 alt="Avenue Decentralised Structure Diagram"
                 fill
+                sizes="(min-width: 1024px) 1000px, 100vw"
                 className="object-left object-contain scale-[0.85] translate-y-4 md:scale-[1.1] md:translate-x-4 md:translate-y-10 lg:scale-[1.5] lg:-translate-x-40 lg:translate-y-20"
               />
             </div>
@@ -188,7 +189,7 @@ export default async function VisionPage() {
       {/* ===================== */}
       <section className="relative w-full">
         <div className="absolute inset-0">
-          <Image src="/images/alan_baptism.png" alt="Baptism" fill className="object-cover" />
+          <Image src="/images/alan_baptism.png" alt="Baptism" fill sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-black/70" />
         </div>
 

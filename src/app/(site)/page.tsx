@@ -14,16 +14,8 @@ export default function Home() {
         <div className="relative z-10 w-full h-full flex flex-col md:flex-row items-center justify-center md:justify-start">
           {/* Mobile Layout - Stacked */}
           <div className="md:hidden flex flex-col items-center justify-start h-full px-6 text-center pt-16">
-            {/* Earth Image - Top */}
-            <div className="relative w-[280px] h-[280px] mb-4">
-              <Image
-                src="/images/home_page_earth.jpg"
-                alt="Earth from space"
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
+            {/* Space for the earth, which is drawn once below for both layouts */}
+            <div aria-hidden="true" className="w-[280px] h-[280px] mb-4" />
             
             {/* Text Content - Below Earth */}
             <div className="max-w-xs pb-20">
@@ -71,18 +63,21 @@ export default function Home() {
                 EXPLORE
               </Link>
             </div>
+          </div>
 
-            {/* Right Content - Much Larger Earth Image */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[15%] md:translate-x-[10%] lg:translate-x-[5%]">
-              <div className="relative w-[800px] h-[800px] md:w-[1200px] md:h-[1200px] lg:w-[1500px] lg:h-[1500px] xl:w-[1800px] xl:h-[1800px]">
-                <Image
-                  src="/images/home_page_earth.jpg"
-                  alt="Earth from space"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
+          {/* The earth, one image for both layouts. Mobile: 280px, centred at
+              the top of the stacked column (over the spacer above). Desktop:
+              much larger, on the right. It is the LCP image, so it is preloaded. */}
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:top-1/2 md:-translate-y-1/2 md:translate-x-[10%] lg:translate-x-[5%]">
+            <div className="relative w-[280px] h-[280px] md:w-[1200px] md:h-[1200px] lg:w-[1500px] lg:h-[1500px] xl:w-[1800px] xl:h-[1800px]">
+              <Image
+                src="/images/home_page_earth.jpg"
+                alt="Earth from space"
+                fill
+                sizes="(min-width: 1280px) 1800px, (min-width: 1024px) 1500px, (min-width: 768px) 1200px, 280px"
+                className="object-contain"
+                preload
+              />
             </div>
           </div>
         </div>

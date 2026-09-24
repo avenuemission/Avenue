@@ -45,6 +45,7 @@ export default async function IntersectionPage() {
                   src="/images/intersection_diagram.png"
                   alt="Intersection Diagram"
                   fill
+                  sizes="(min-width: 1024px) 1000px, 100vw"
                   className="
                     object-contain
                     scale-[1.0] md:scale-[1.15] lg:scale-[1.25]      /* ⭐ Less aggressive scaling */
@@ -81,6 +82,7 @@ export default async function IntersectionPage() {
             src="/images/prayer_and_praise.png"
             alt="Prayer and Praise"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/75" />
@@ -131,6 +133,7 @@ export default async function IntersectionPage() {
             src="/images/lookout.png"
             alt="Lookout"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/75" />

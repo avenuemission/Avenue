@@ -20,3 +20,22 @@ export function parseStoredUser(raw: string): CachedUser | null {
   if (typeof v.id !== "string" || typeof v.email !== "string" || typeof v.name !== "string") return null;
   return { id: v.id, email: v.email, name: v.name };
 }
+
+// The localStorage key for the cached user. Kept here (not in auth.ts) so
+// the public Navbar can read it without pulling supabase-js into every page.
+export const AUTH_STORAGE_KEY = "avenue_auth_session";
+
+// The cached user, or null when signed out or on the server. A corrupt
+// value is removed and reads as signed out; supabase-js still holds the
+// real session.
+export function getCurrentUser(): CachedUser | null {
+  if (typeof window === "undefined") return null;
+  const session = localStorage.getItem(AUTH_STORAGE_KEY);
+  if (!session) return null;
+  const user = parseStoredUser(session);
+  if (!user) {
+    console.error("getCurrentUser: removing a corrupt avenue_auth_session value");
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+  return user;
+}

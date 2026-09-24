@@ -558,8 +558,9 @@ export default function StewardshipSurvey() {
           src="/images/streetlights_stary_sky.png"
           alt="Starry sky"
           fill
+          sizes="100vw"
           className="object-cover opacity-60"
-          priority
+          preload
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-black/70 to-black" />
         <div className="absolute inset-0 flex items-center justify-center">

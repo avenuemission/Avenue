@@ -5,7 +5,7 @@
 // pages render a name without waiting: the server never trusts it.
 // ============================================
 import { supabase } from "@/lib/client/supabaseBrowser";
-import { parseStoredUser } from "@/lib/client/authSession";
+import { AUTH_STORAGE_KEY, getCurrentUser } from "@/lib/client/authSession";
 import { clearLeaderCache } from "@/lib/client/dedupeFetch";
 
 export interface User {
@@ -14,7 +14,6 @@ export interface User {
   name: string;
 }
 
-const AUTH_STORAGE_KEY = "avenue_auth_session";
 const LEGACY_USERS_KEY = "avenue_users";
 
 async function postJson(url: string, body: unknown): Promise<Response> {
@@ -72,16 +71,6 @@ export const logout = (): void => {
   void supabase.auth.signOut({ scope: "local" });
 };
 
-export const getCurrentUser = (): User | null => {
-  if (typeof window === "undefined") return null;
-  const session = localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!session) return null;
-  const user = parseStoredUser(session);
-  if (!user) {
-    // A corrupt cache must not crash every page that shows the nav: drop
-    // it and read as signed out. supabase-js still holds the real session.
-    console.error("getCurrentUser: removing a corrupt avenue_auth_session value");
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-  return user;
-};
+// Re-exported so existing leader-page imports keep working.
+export { getCurrentUser };
+

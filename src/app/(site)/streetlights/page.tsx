@@ -56,6 +56,7 @@ export default async function StreetlightsPage() {
             src="/images/beach.png"
             alt="Beach"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/75" />
@@ -81,6 +82,7 @@ export default async function StreetlightsPage() {
             src="/images/ocean_grove_night.png"
             alt="Ocean Grove at Night"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/75" />

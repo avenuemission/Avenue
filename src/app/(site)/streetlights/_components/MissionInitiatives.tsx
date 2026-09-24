@@ -134,6 +134,7 @@ export default function MissionInitiatives() {
                       src={selectedMission.image}
                       alt={selectedMission.title}
                       fill
+                      sizes="(min-width: 768px) 672px, 100vw"
                       className="object-cover"
                     />
                   </div>
