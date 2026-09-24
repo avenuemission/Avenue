@@ -7,7 +7,7 @@ import { leaderFetch } from "@/lib/client/leaderFetch";
 import { useWorksheet } from "@/hooks/useWorksheet";
 import { callingCompleteCount, launchCompleteCount, type CallingData, type LaunchData } from "@/lib/domain/journey";
 import { reconcilePhases } from "@/lib/domain/trainingProgress";
-import { mondayOf } from "@/lib/domain/dates/weeks";
+import { mondayOf } from "@/lib/domain/dates/melbourne";
 import type { CheckinEntry } from "@/lib/domain/checkins/types";
 import { nextStep } from "@/lib/domain/nextStep";
 import { avenueStops, type AvenueProgress } from "@/lib/domain/avenue";

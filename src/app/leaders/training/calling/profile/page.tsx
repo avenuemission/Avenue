@@ -22,6 +22,7 @@ import {
   SPACE_CONTENT,
   WILLING_OPTIONS,
 } from "@/content/calling";
+import { formatLong } from "@/lib/domain/dates/format";
 
 function isRole(value: unknown): value is RoleKey {
   return typeof value === "string" && (APEST_ORDER as string[]).includes(value);
@@ -29,9 +30,11 @@ function isRole(value: unknown): value is RoleKey {
 
 function dateAU(iso: string | undefined): string | null {
   if (!iso) return null;
-  const d = new Date(`${iso}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
+  try {
+    return formatLong(iso);
+  } catch {
+    return null;
+  }
 }
 
 // The step numbers in the Calling wizard, matched to each profile section's

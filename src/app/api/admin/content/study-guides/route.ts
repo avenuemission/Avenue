@@ -6,11 +6,25 @@ import { jsonError, serverError } from "@/lib/server/http";
 import { STUDY_GUIDE_COLUMNS, studyGuideWrite } from "@/lib/domain/studyGuides";
 import { isUuid } from "@/lib/domain/adminContent";
 
-// Admin writes for study guides. The public list is GET /api/content/study-guides.
-// Guides show on /pathways (this week's topic) and /leaders/study-guides.
+// Admin reads and writes for study guides. Guides show on /pathways (this
+// week's topic, read on the server) and on /leaders/study-guides, which
+// reads GET /api/content/study-guides in the browser, so only /pathways
+// has a cached page to refresh.
 function refresh(): void {
   revalidatePath("/pathways");
-  revalidatePath("/leaders/study-guides");
+}
+
+// GET: every guide, for the admin editor.
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("study_guides")
+    .select(STUDY_GUIDE_COLUMNS)
+    .order("sort_order", { ascending: true });
+  if (error) return serverError("admin/content/study-guides GET", error);
+  return NextResponse.json({ guides: data ?? [] });
 }
 
 // POST: create a study guide

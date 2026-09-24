@@ -9,7 +9,7 @@ vi.mock("@/lib/server/supabaseAdmin", async (importOriginal) => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 
-import { PUT } from "./route";
+import { GET, PUT } from "./route";
 
 const PATH = "/api/admin/content/site-stats";
 let fake: ReturnType<typeof fakeSupabase>;
@@ -48,5 +48,27 @@ describe("PUT /api/admin/content/site-stats", () => {
       { onConflict: "key" },
     ]);
     expect(h.revalidatePath).toHaveBeenCalledWith("/pathways");
+  });
+});
+
+describe("GET /api/admin/content/site-stats", () => {
+  it("is 401 without the admin key and reads nothing", async () => {
+    const res = await GET(adminRequest(PATH, { key: null }));
+    expect(res.status).toBe(401);
+    expect(fake.tables()).toEqual([]);
+  });
+
+  it("reads every counter with the service role", async () => {
+    const stats = [{ key: "communities", value: 6, label: "C" }];
+    fake = fakeSupabase({ site_stats: { data: stats } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const res = await GET(adminRequest(PATH));
+    expect(await res.json()).toEqual({ stats });
+    expect(fake.calls).toContainEqual(["site_stats", "select", "key, value, label"]);
+  });
+
+  it("is a 500 on a read error", async () => {
+    h.getSupabaseAdmin.mockReturnValue(fakeSupabase({ site_stats: { error: { message: "boom" } } }).db);
+    expect((await GET(adminRequest(PATH))).status).toBe(500);
   });
 });

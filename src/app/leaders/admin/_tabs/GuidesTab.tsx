@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { formatGuideOn } from "@/lib/domain/studyGuides";
+import { adminFetch } from "@/lib/client/adminFetch";
 import { ErrorText, jsonInit, loadJson, Modal, useAdminSave, useLoaded, type AdminTabProps } from "./shared";
 
 // A study_guides row as the public list sends it, and as the editor holds
@@ -43,14 +44,13 @@ const blankGuide: GuideRow = {
   sort_order: 0,
 };
 
-// Reads come from the public list; writes go to the admin API.
-async function loadGuides(): Promise<GuideRow[]> {
-  return (await loadJson<{ guides: GuideRow[] }>(await fetch("/api/content/study-guides"), "study guides")).guides;
-}
-
 export default function GuidesTab({ adminKey }: AdminTabProps) {
   const [editing, setEditing] = useState<GuideRow | null>(null);
   const save = useAdminSave(adminKey);
+  const loadGuides = useCallback(
+    async () => (await loadJson<{ guides: GuideRow[] }>(await adminFetch(PATH, adminKey), "study guides")).guides,
+    [adminKey]
+  );
   const { data, error, loading, reload } = useLoaded(loadGuides);
   const guides = data ?? [];
 

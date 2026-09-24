@@ -6,6 +6,7 @@ import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut, Trash2, Monitor } from "lucide-react";
 import { logout } from "@/lib/client/auth";
+import { formatShortDate } from "@/lib/domain/dates/format";
 
 interface Session {
   code: string;
@@ -208,9 +209,7 @@ export default function WorkshopsPage() {
           <div className="space-y-3">
             {sessions.map(session => {
               const count = session.survey_responses?.[0]?.count ?? 0;
-              const date = new Date(session.created_at).toLocaleDateString("en-AU", {
-                day: "numeric", month: "short", year: "numeric",
-              });
+              const date = formatShortDate(new Date(session.created_at));
               return (
                 <div key={session.code} className="bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded-xl transition-all">
                   {confirmClear === session.code ? (

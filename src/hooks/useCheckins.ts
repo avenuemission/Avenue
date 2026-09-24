@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { User } from "@/lib/client/auth";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import type { CheckinEntry } from "@/lib/domain/checkins/types";
-import { mondayOf } from "@/lib/domain/dates/weeks";
+import { mondayOf } from "@/lib/domain/dates/melbourne";
 
 // Phase 4's weekly RPMS check-ins for the leader training page: state, the
 // load effect, and the one-shot save. Moved out of page.tsx verbatim; the

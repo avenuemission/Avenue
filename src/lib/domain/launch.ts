@@ -3,9 +3,9 @@
 // shifts a count.
 import { filled, isIsoDate, WEEKDAYS, type LaunchData, type Weekday } from "@/lib/domain/journey";
 import { GAP_TEXT, type GapId } from "@/lib/domain/arena";
+import { formatLong } from "@/lib/domain/dates/format";
 
 const DAY_MS = 86_400_000;
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 function utcDay(iso: string): number {
   const [y, m, d] = iso.split("-").map(Number);
@@ -37,9 +37,7 @@ export function gatheringsInFirstSixMonths(launchDate: string, weeklyDay: Weekda
 }
 
 export function formatIsoDate(iso: string): string {
-  if (!isIsoDate(iso)) return iso;
-  const [y, m, d] = iso.split("-").map(Number);
-  return `${d} ${MONTHS[m - 1]} ${y}`;
+  return isIsoDate(iso) ? formatLong(iso) : iso;
 }
 
 export interface PlanAction {

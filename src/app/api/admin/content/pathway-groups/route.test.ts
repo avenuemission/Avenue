@@ -9,7 +9,7 @@ vi.mock("@/lib/server/supabaseAdmin", async (importOriginal) => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 
-import { DELETE, POST, PUT } from "./route";
+import { DELETE, GET, POST, PUT } from "./route";
 
 const PATH = "/api/admin/content/pathway-groups";
 const group = { name: "North", latitude: -37.8, longitude: 144.9, running: true };
@@ -62,5 +62,27 @@ describe("admin pathway group writes", () => {
     expect((await DELETE(adminRequest(`${PATH}?id=abc`, { method: "DELETE" }))).status).toBe(400);
     expect((await DELETE(adminRequest(`${PATH}?id=3`, { method: "DELETE" }))).status).toBe(200);
     expect(fake.calls).toContainEqual(["pathway_groups", "eq", "id", 3]);
+  });
+});
+
+describe("GET /api/admin/content/pathway-groups", () => {
+  it("is 401 without the admin key and reads nothing", async () => {
+    const res = await GET(adminRequest(PATH, { key: null }));
+    expect(res.status).toBe(401);
+    expect(fake.tables()).toEqual([]);
+  });
+
+  it("reads every editable column, phone included, in sort order", async () => {
+    const group = { id: 1, name: "Donvale", phone: "0400000000" };
+    fake = fakeSupabase({ pathway_groups: { data: [group] } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const res = await GET(adminRequest(PATH));
+    expect(await res.json()).toEqual({ groups: [group] });
+    expect(fake.calls).toContainEqual([
+      "pathway_groups",
+      "select",
+      "id, name, latitude, longitude, time, coordinator, phone, running, description, sort_order",
+    ]);
+    expect(fake.calls).toContainEqual(["pathway_groups", "order", "sort_order", { ascending: true }]);
   });
 });

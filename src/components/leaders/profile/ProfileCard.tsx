@@ -20,6 +20,7 @@ import { leaderFetch } from "@/lib/client/leaderFetch";
 import { clearLeaderCache } from "@/lib/client/dedupeFetch";
 import { initialsOf } from "@/lib/domain/profileAvatar";
 import { PROFILE_APEST, PROFILE_ROLES } from "@/lib/domain/leaderProfile";
+import { formatDayMonth, formatLong } from "@/lib/domain/dates/format";
 
 interface ProfileText {
   display_name: string;
@@ -97,13 +98,11 @@ function resizeToSquareDataUrl(file: File): Promise<string> {
 // Birthdays read better without a year; anniversaries keep theirs.
 function formatDate(value: string, withYear: boolean) {
   if (!value) return "";
-  const d = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString("en-AU", {
-    day: "numeric",
-    month: "long",
-    ...(withYear ? { year: "numeric" } : {}),
-  });
+  try {
+    return withYear ? formatLong(value) : formatDayMonth(value, "long");
+  } catch {
+    return value;
+  }
 }
 
 interface ProfileCardProps {
@@ -149,10 +148,13 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
   }, [load, email]);
 
   useEffect(() => {
-    fetch("/api/content/pathway-groups")
-      .then((r) => r.json())
+    leaderFetch("/api/content/pathway-groups")
+      .then((r) => {
+        if (!r.ok) throw new Error(`Could not load pathway groups (${r.status})`);
+        return r.json();
+      })
       .then((j) => setGroups((j.groups ?? []).map((g: GroupOption) => ({ id: Number(g.id), name: String(g.name) }))))
-      .catch(() => {});
+      .catch((e) => console.error("ProfileCard: could not load pathway groups", e));
   }, []);
 
   const startEdit = () => {

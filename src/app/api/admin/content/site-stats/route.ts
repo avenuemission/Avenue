@@ -5,8 +5,18 @@ import { requireAdmin } from "@/lib/server/requireAdmin";
 import { jsonError, serverError } from "@/lib/server/http";
 import { siteStatWrite } from "@/lib/domain/adminContent";
 
-// Admin writes for the site stats. The public list is GET
-// /api/content/site-stats. The counters show on /pathways.
+// Admin reads and writes for the site stats. The counters show on
+// /pathways, which reads them on the server.
+
+// GET: every counter, for the admin editor.
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
+
+  const { data, error } = await getSupabaseAdmin().from("site_stats").select("key, value, label").order("key");
+  if (error) return serverError("admin/content/site-stats GET", error);
+  return NextResponse.json({ stats: data ?? [] });
+}
 
 // PUT: set a stat's value (and label)
 export async function PUT(request: NextRequest) {

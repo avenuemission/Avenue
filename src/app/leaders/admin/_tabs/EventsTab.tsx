@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Plus, Save, X } from "lucide-react";
+import { adminFetch } from "@/lib/client/adminFetch";
 import { ErrorText, jsonInit, loadJson, Modal, useAdminSave, useLoaded, type AdminTabProps } from "./shared";
 
 interface EventRow {
@@ -32,18 +33,14 @@ const FIELDS: EditableField[] = ["title", "description", "location", "time"];
 const PATH = "/api/admin/content/intersection-events";
 const blankDate: NewDate = { event_key: "", event_date: "", event_time: "19:00" };
 
-// Reads come from the public list; writes go to the admin API.
-async function loadEvents(): Promise<{ events: EventRow[]; dates: EventDateRow[] }> {
-  return loadJson<{ events: EventRow[]; dates: EventDateRow[] }>(
-    await fetch("/api/content/intersection-events"),
-    "events"
-  );
-}
-
 export default function EventsTab({ adminKey }: AdminTabProps) {
   const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
   const [newDate, setNewDate] = useState<NewDate>(blankDate);
   const save = useAdminSave(adminKey);
+  const loadEvents = useCallback(
+    async () => loadJson<{ events: EventRow[]; dates: EventDateRow[] }>(await adminFetch(PATH, adminKey), "events"),
+    [adminKey]
+  );
   const { data, error, reload } = useLoaded(loadEvents);
   const events = data?.events ?? [];
   const dates = data?.dates ?? [];

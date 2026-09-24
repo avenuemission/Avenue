@@ -1,12 +1,11 @@
-"use client";
-
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ImageCarousel from "@/components/site/ImageCarousel";
+import DisclosureGroup from "./_components/DisclosureGroup";
+import { getCarouselImages } from "@/lib/server/content";
+import { shuffled } from "@/lib/domain/shuffle";
 import PageTitle from "@/components/ui/PageTitle";
 import Section from "@/components/ui/Section";
-import Disclosure from "@/components/ui/Disclosure";
 import Reveal from "@/components/ui/Reveal";
 
 const valuesData = [
@@ -36,7 +35,7 @@ const beliefsData = [
   {
     question: "What do we believe about God?",
     answer:
-      "We believe in one God—Father, Son, and Holy Spirit—who is love and the Creator of all things. Jesus Christ is our Savior, fully God and fully human, who lived, died, and rose again for our salvation. The Holy Spirit works in us to guide, comfort, and transform us. The Spirit's inspired scriptures are the way we know the heart of God",
+      "We believe in one God\u2014Father, Son, and Holy Spirit\u2014who is love and the Creator of all things. Jesus Christ is our Savior, fully God and fully human, who lived, died, and rose again for our salvation. The Holy Spirit works in us to guide, comfort, and transform us. The Spirit's inspired scriptures are the way we know the heart of God",
   },
   {
     question: "What do we believe about humanity?",
@@ -65,9 +64,13 @@ const beliefsData = [
   },
 ];
 
-export default function VisionPage() {
-  const [expandedMVV, setExpandedMVV] = useState<string | null>(null);
-  const [expandedBelief, setExpandedBelief] = useState<string | null>(null);
+export const revalidate = 300;
+
+export default async function VisionPage() {
+  // Pooled from all three areas and shuffled as one set.
+  const carousel = (
+    await Promise.all(["pathways_carousel", "intersection_carousel", "streetlights_carousel"].map(getCarouselImages))
+  ).flat();
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
@@ -79,7 +82,7 @@ export default function VisionPage() {
       </PageTitle>
 
       {/* Pooled carousel from all three areas, shuffled */}
-      <ImageCarousel folder="pathways_carousel,intersection_carousel,streetlights_carousel" />
+      <ImageCarousel images={shuffled(carousel)} />
 
       {/* ===================== */}
       {/* THE MODEL */}
@@ -142,47 +145,33 @@ export default function VisionPage() {
       {/* ===================== */}
       <Section eyebrow="Direction" title="Our Vision" lead="Where we are headed and what drives us." centered>
         <div className="space-y-4 mb-10">
-          <Reveal>
-            <Disclosure
-              question="MISSION"
-              isExpanded={expandedMVV === "mission"}
-              onToggle={() => setExpandedMVV(expandedMVV === "mission" ? null : "mission")}
-            >
-              To unleash God-given potential.
-            </Disclosure>
-          </Reveal>
-          <Reveal delay={60}>
-            <Disclosure
-              question="VISION"
-              isExpanded={expandedMVV === "vision"}
-              onToggle={() => setExpandedMVV(expandedMVV === "vision" ? null : "vision")}
-            >
-              To be an expanding network of missional microchurches.
-            </Disclosure>
-          </Reveal>
-          <Reveal delay={120}>
-            <Disclosure
-              question="VALUES"
-              isExpanded={expandedMVV === "values"}
-              onToggle={() => setExpandedMVV(expandedMVV === "values" ? null : "values")}
-            >
-              <div className="space-y-4">
-                {valuesData.map((value) => (
-                  <div key={value.title} className="border-l-2 border-[var(--accent)]/50 pl-4">
-                    <h4 className="text-white text-base md:text-lg font-semibold mb-1">
-                      {value.title}
-                    </h4>
-                    <p className="text-[var(--muted)] text-sm md:text-base leading-relaxed">
-                      {value.content}
-                    </p>
+          <DisclosureGroup
+            items={[
+              { question: "MISSION", answer: "To unleash God-given potential.", delay: 0 },
+              { question: "VISION", answer: "To be an expanding network of missional microchurches.", delay: 60 },
+              {
+                question: "VALUES",
+                delay: 120,
+                answer: (
+                  <div className="space-y-4">
+                    {valuesData.map((value) => (
+                      <div key={value.title} className="border-l-2 border-[var(--accent)]/50 pl-4">
+                        <h4 className="text-white text-base md:text-lg font-semibold mb-1">
+                          {value.title}
+                        </h4>
+                        <p className="text-[var(--muted)] text-sm md:text-base leading-relaxed">
+                          {value.content}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </Disclosure>
-          </Reveal>
+                ),
+              },
+            ]}
+          />
         </div>
 
-        {/* 2027 Goal — bordered panel, accent eyebrow (replaces blue-glow) */}
+        {/* 2027 Goal: bordered panel, accent eyebrow */}
         <Reveal>
           <div className="panel p-8 md:p-10 text-center">
             <span className="eyebrow mb-3">Vision for End of 2027</span>
@@ -195,7 +184,7 @@ export default function VisionPage() {
       </Section>
 
       {/* ===================== */}
-      {/* BELIEFS — the one photo moment */}
+      {/* BELIEFS: the one photo moment */}
       {/* ===================== */}
       <section className="relative w-full">
         <div className="absolute inset-0">
@@ -217,21 +206,13 @@ export default function VisionPage() {
             </Reveal>
 
             <div className="space-y-4">
-              {beliefsData.map((belief, index) => (
-                <Reveal key={belief.question} delay={index * 50}>
-                  <Disclosure
-                    question={belief.question}
-                    isExpanded={expandedBelief === belief.question}
-                    onToggle={() =>
-                      setExpandedBelief(
-                        expandedBelief === belief.question ? null : belief.question
-                      )
-                    }
-                  >
-                    {belief.answer}
-                  </Disclosure>
-                </Reveal>
-              ))}
+              <DisclosureGroup
+                items={beliefsData.map((belief, index) => ({
+                  question: belief.question,
+                  answer: belief.answer,
+                  delay: index * 50,
+                }))}
+              />
             </div>
           </div>
         </div>

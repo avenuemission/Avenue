@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayMonthYearToGuideOn, formatGuideOn, guideOnToLocalDate, parseGuideOn, studyGuideWrite } from "./studyGuides";
+import { formatGuideOn, parseGuideOn, studyGuideWrite, weeklyTopic, type StudyGuide } from "./studyGuides";
 
 describe("parseGuideOn", () => {
   it("reads the ISO date Postgres sends for study_guides.guide_on", () => {
@@ -35,38 +35,55 @@ describe("formatGuideOn", () => {
   });
 });
 
-describe("guideOnToLocalDate", () => {
-  it("is local midnight on that day", () => {
-    const d = guideOnToLocalDate("2026-10-07");
-    expect(d).not.toBeNull();
-    expect([d!.getFullYear(), d!.getMonth(), d!.getDate(), d!.getHours(), d!.getMinutes()]).toEqual([2026, 9, 7, 0, 0]);
+describe("weeklyTopic", () => {
+  const guide = (id: string, guide_on: string, series = "James", topic = `Topic ${id}`): StudyGuide => ({
+    id,
+    guide_on,
+    series,
+    topic,
+    scripture: `James ${id}`,
+    spotify_url: "",
+    pdf_url: null,
+    color: "#3b82f6",
+    sort_order: Number(id),
   });
 
-  it("is null for a value that is not a date", () => {
-    expect(guideOnToLocalDate("31/02/2026")).toBeNull();
-    expect(guideOnToLocalDate(undefined)).toBeNull();
-  });
-});
-
-describe("dayMonthYearToGuideOn", () => {
-  it("turns the legacy D/M/YYYY text into an ISO date, with or without leading zeros", () => {
-    expect(dayMonthYearToGuideOn("27/12/2025")).toBe("2025-12-27");
-    expect(dayMonthYearToGuideOn("1/2/2026")).toBe("2026-02-01");
-    expect(dayMonthYearToGuideOn(" 05/10/2026 ")).toBe("2026-10-05");
-  });
-
-  it("rejects impossible dates and other formats", () => {
-    expect(dayMonthYearToGuideOn("31/02/2026")).toBeNull();
-    expect(dayMonthYearToGuideOn("2026-10-05")).toBeNull();
-    expect(dayMonthYearToGuideOn("Week 3")).toBeNull();
-    expect(dayMonthYearToGuideOn("")).toBeNull();
-    expect(dayMonthYearToGuideOn(null)).toBeNull();
+  it("is the latest guide dated on or before today, with every later guide grouped by series in date order", () => {
+    const guides = [
+      guide("1", "2026-09-10"),
+      guide("2", "2026-09-17"),
+      guide("3", "2026-10-01", "Ruth"),
+      guide("4", "2026-09-24"),
+      guide("5", "2026-10-08", "Ruth"),
+    ];
+    const week = weeklyTopic(guides, "2026-09-24");
+    expect(week.current).toEqual({ topic: "Topic 4", series: "James", scripture: "James 4" });
+    expect(week.upcoming).toEqual([
+      { series: "Ruth", weeks: [
+        { date: "1 Oct", topic: "Topic 3", scripture: "James 3" },
+        { date: "8 Oct", topic: "Topic 5", scripture: "James 5" },
+      ] },
+    ]);
   });
 
-  it("round trips with formatGuideOn", () => {
-    for (const text of ["7/10/2026", "27/12/2025", "1/2/2026"]) {
-      expect(formatGuideOn(dayMonthYearToGuideOn(text))).toBe(text);
-    }
+  it("falls back to the soonest guide when every guide is still ahead", () => {
+    const week = weeklyTopic([guide("2", "2026-10-15"), guide("1", "2026-10-08")], "2026-09-24");
+    expect(week.current?.topic).toBe("Topic 1");
+    expect(week.upcoming[0].weeks.map((w) => w.date)).toEqual(["8 Oct", "15 Oct"]);
+  });
+
+  it("skips a guide whose date cannot be read, and is empty with no guides", () => {
+    const week = weeklyTopic([guide("1", "someday"), guide("2", "2026-09-17")], "2026-09-24");
+    expect(week.current?.topic).toBe("Topic 2");
+    expect(weeklyTopic([], "2026-09-24")).toEqual({ current: null, upcoming: [] });
+  });
+
+  it("keeps a series that comes back after another as its own group, in first-seen order", () => {
+    const week = weeklyTopic(
+      [guide("1", "2026-10-01", "A"), guide("2", "2026-10-08", "B"), guide("3", "2026-10-15", "A")],
+      "2026-09-24"
+    );
+    expect(week.upcoming.map((g) => [g.series, g.weeks.length])).toEqual([["A", 2], ["B", 1]]);
   });
 });
 

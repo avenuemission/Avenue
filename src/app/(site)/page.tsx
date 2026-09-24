@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+export const revalidate = 300;
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-black overflow-hidden">

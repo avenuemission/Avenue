@@ -1,6 +1,3 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PathwayMap from "@/components/site/PathwayMap";
@@ -8,54 +5,23 @@ import ImageCarousel from "@/components/site/ImageCarousel";
 import WeeklyTopic from "@/components/site/WeeklyTopic";
 import PageTitle from "@/components/ui/PageTitle";
 import Reveal from "@/components/ui/Reveal";
-import { getPathwayStats } from "@/lib/client/content";
+import CountUp from "./_components/CountUp";
+import { getCarouselImages, getPathwayGroups, getSiteStats, getStudyGuides } from "@/lib/server/content";
+import { statValue } from "@/lib/domain/content";
+import { weeklyTopic } from "@/lib/domain/studyGuides";
+import { melbourneDateOf } from "@/lib/domain/dates/melbourne";
+import { shuffled } from "@/lib/domain/shuffle";
 
+export const revalidate = 300;
 
-// Counter animation hook
-function useCountUp(end: number, duration: number = 2000) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    let startTime: number;
-    let animationFrame: number;
-
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
-      const progress = Math.min((currentTime - startTime) / duration, 1);
-
-      setCount(Math.floor(progress * end));
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration]);
-
-  return count;
-}
-
-export default function PathwaysPage() {
-  const [stats, setStats] = useState({ communities: 6, countries: 1, languages: 5, newGroupsStartingSoon: 3 });
-
-  useEffect(() => {
-    getPathwayStats().then((loaded) => {
-      setStats({
-        communities: loaded.communities ?? 6,
-        countries: loaded.countries ?? 1,
-        languages: loaded.languages ?? 5,
-        newGroupsStartingSoon: loaded.new_groups ?? 3,
-      });
-    });
-  }, []);
-
-  // Animated counters
-  const communitiesCount = useCountUp(stats.communities);
-  const countriesCount = useCountUp(stats.countries);
-  const languagesCount = useCountUp(stats.languages);
-  const newGroupsCount = useCountUp(stats.newGroupsStartingSoon);
+export default async function PathwaysPage() {
+  const [stats, groups, guides, carousel] = await Promise.all([
+    getSiteStats(),
+    getPathwayGroups(),
+    getStudyGuides(),
+    getCarouselImages("pathways_carousel"),
+  ]);
+  const week = weeklyTopic(guides, melbourneDateOf(new Date()));
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
@@ -66,7 +32,7 @@ export default function PathwaysPage() {
       </PageTitle>
 
       {/* Image Carousel - Scroll-linked */}
-      <ImageCarousel folder="pathways_carousel" />
+      <ImageCarousel images={shuffled(carousel)} />
 
       {/* Statistics Section */}
       <section className="bg-black py-16 md:py-20">
@@ -74,7 +40,7 @@ export default function PathwaysPage() {
           <Reveal className="grid grid-cols-3 gap-8 md:gap-16 text-center">
             <div>
               <div className="text-5xl md:text-8xl font-bold text-white">
-                {communitiesCount}
+                <CountUp end={statValue(stats, "communities")} />
               </div>
               <div className="text-xs md:text-sm text-[var(--muted)] uppercase tracking-wider mt-2">
                 Pathway Communities
@@ -82,7 +48,7 @@ export default function PathwaysPage() {
             </div>
             <div>
               <div className="text-5xl md:text-8xl font-bold text-white">
-                {countriesCount}
+                <CountUp end={statValue(stats, "countries")} />
               </div>
               <div className="text-xs md:text-sm text-[var(--muted)] uppercase tracking-wider mt-2">
                 Countries
@@ -90,7 +56,7 @@ export default function PathwaysPage() {
             </div>
             <div>
               <div className="text-5xl md:text-8xl font-bold text-white">
-                {languagesCount}
+                <CountUp end={statValue(stats, "languages")} />
               </div>
               <div className="text-xs md:text-sm text-[var(--muted)] uppercase tracking-wider mt-2">
                 Languages
@@ -121,14 +87,14 @@ export default function PathwaysPage() {
 
             {/* Right Content - Map and Form */}
             <Reveal delay={100} className="relative w-full">
-              <PathwayMap />
+              <PathwayMap groups={groups} />
             </Reveal>
           </div>
         </div>
       </section>
 
       {/* This Week's Topic + Pathways Podcast */}
-      <WeeklyTopic />
+      <WeeklyTopic current={week.current} upcoming={week.upcoming} />
 
       {/* Start Your Own Pathway Section */}
       <section className="relative py-20 overflow-hidden">
@@ -185,7 +151,7 @@ export default function PathwaysPage() {
               <div className="w-full max-w-full flex flex-col items-end justify-start pt-8 px-2">
                 <div className="text-right">
                   <div className="text-7xl sm:text-8xl md:text-9xl font-bold text-white mb-4">
-                    {newGroupsCount}
+                    <CountUp end={statValue(stats, "new_groups")} />
                   </div>
                   <div className="text-sm md:text-base text-gray-400 uppercase tracking-wider leading-relaxed">
                     New Pathway

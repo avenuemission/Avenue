@@ -9,7 +9,7 @@ vi.mock("@/lib/server/supabaseAdmin", async (importOriginal) => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 
-import { DELETE, POST, PUT } from "./route";
+import { DELETE, GET, POST, PUT } from "./route";
 
 const PATH = "/api/admin/content/study-guides";
 const ID = "0b8f7a52-2c1e-4d3a-9a57-6c7f0e1d2b3c";
@@ -60,7 +60,7 @@ describe("admin study guide writes", () => {
     expect(res.status).toBe(200);
     const insert = fake.calls.find((c) => c[1] === "insert");
     expect(insert?.[2]).toEqual({ ...guide, sort_order: 0 });
-    expect(h.revalidatePath.mock.calls.map((c) => c[0]).sort()).toEqual(["/leaders/study-guides", "/pathways"]);
+    expect(h.revalidatePath.mock.calls.map((c) => c[0])).toEqual(["/pathways"]);
   });
 
   it("PUT needs a uuid id and updates that row", async () => {
@@ -80,5 +80,21 @@ describe("admin study guide writes", () => {
 
   it("is 400 for a body that is not JSON", async () => {
     expect((await POST(adminRequest(PATH, { method: "POST", body: "{nope" }))).status).toBe(400);
+  });
+});
+
+describe("GET /api/admin/content/study-guides", () => {
+  it("is 401 without the admin key and reads nothing", async () => {
+    const res = await GET(adminRequest(PATH, { key: null }));
+    expect(res.status).toBe(401);
+    expect(fake.tables()).toEqual([]);
+  });
+
+  it("reads every guide in sort order", async () => {
+    fake = fakeSupabase({ study_guides: { data: [{ id: ID, ...guide }] } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const res = await GET(adminRequest(PATH));
+    expect(await res.json()).toEqual({ guides: [{ id: ID, ...guide }] });
+    expect(fake.calls).toContainEqual(["study_guides", "order", "sort_order", { ascending: true }]);
   });
 });

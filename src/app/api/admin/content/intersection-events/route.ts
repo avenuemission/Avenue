@@ -5,10 +5,24 @@ import { requireAdmin } from "@/lib/server/requireAdmin";
 import { jsonError, serverError } from "@/lib/server/http";
 import { intersectionDateWrite, intersectionEventWrite, isUuid } from "@/lib/domain/adminContent";
 
-// Admin writes for Intersection events and their dates. The public list is
-// GET /api/content/intersection-events. Both show on /intersection.
+// Admin reads and writes for Intersection events and their dates. Both
+// show on /intersection, which reads them on the server.
 function refresh(): void {
   revalidatePath("/intersection");
+}
+
+// GET: the events and all their dates, for the admin editor.
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
+
+  const db = getSupabaseAdmin();
+  const [events, dates] = await Promise.all([
+    db.from("intersection_events").select("key, title, description, location, time, sort_order").order("sort_order", { ascending: true }),
+    db.from("intersection_event_dates").select("id, event_key, event_date, event_time").order("event_date", { ascending: true }),
+  ]);
+  if (events.error || dates.error) return serverError("admin/content/intersection-events GET", events.error ?? dates.error);
+  return NextResponse.json({ events: events.data ?? [], dates: dates.data ?? [] });
 }
 
 // PUT: update an event's text by key

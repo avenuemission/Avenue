@@ -4,166 +4,123 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
 interface ImageCarouselProps {
-  folder?: string;
+  /** Public image paths, read on the server (getCarouselImages). */
+  images: string[];
 }
 
-export default function ImageCarousel({ folder = "pathways_carousel" }: ImageCarouselProps) {
-  const [images, setImages] = useState<string[]>([]);
+const DESKTOP_MIN_WIDTH = 768; // Tailwind md
+
+// Mobile: an endless auto-scroll. Desktop: scroll-linked, with drag. Both
+// tracks are in the server HTML and CSS shows one, so the section has its
+// full height from the first paint (no layout shift when it hydrates).
+export default function ImageCarousel({ images }: ImageCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [manualOffset, setManualOffset] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Check if mobile on mount and resize
+  // Desktop only: move the track with the element's position in the viewport.
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // Fetch images on mount
-  useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const response = await fetch(`/api/carousel-images?folder=${folder}`);
-        const data = await response.json();
-        setImages(data.images || []);
-      } catch (error) {
-        console.error("Error fetching carousel images:", error);
-      }
-    };
-    fetchImages();
-  }, [folder]);
-
-  // Calculate scroll progress based on element position in viewport (desktop only)
-  useEffect(() => {
-    if (isMobile) return;
-
     const handleScroll = () => {
-      if (!containerRef.current || isDragging) return;
+      if (!containerRef.current || isDragging || window.innerWidth < DESKTOP_MIN_WIDTH) return;
 
       const rect = containerRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
-      
-      const elementTop = rect.top;
-      const elementHeight = rect.height;
-      
+
       const startPoint = windowHeight;
-      const endPoint = -elementHeight;
+      const endPoint = -rect.height;
       const totalDistance = startPoint - endPoint;
-      const currentPosition = startPoint - elementTop;
-      
+      const currentPosition = startPoint - rect.top;
       const progress = Math.max(0, Math.min(1, currentPosition / totalDistance));
-      setScrollProgress(progress);
+
+      const imageWidth = 300;
+      const gap = 16;
+      const totalWidth = images.length * (imageWidth + gap);
+      const maxScroll = Math.max(0, totalWidth - window.innerWidth);
+      setScrollOffset(progress * maxScroll);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-    
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isDragging, isMobile]);
 
-  // Manual drag handlers (desktop only)
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isDragging, images.length]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isMobile) return;
     setIsDragging(true);
     setStartX(e.clientX);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isMobile || !isDragging) return;
+    if (!isDragging) return;
     const diff = e.clientX - startX;
     setManualOffset((prev) => prev + diff);
     setStartX(e.clientX);
   };
 
-  const handleMouseUp = () => {
-    if (isMobile) return;
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
-  if (images.length === 0) {
-    return null;
-  }
-
-  // Desktop: Calculate scroll-based offset
-  const imageWidth = 300;
-  const gap = 16;
-  const totalWidth = images.length * (imageWidth + gap);
-  const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
-  const maxScroll = Math.max(0, totalWidth - viewportWidth);
-  const scrollBasedOffset = scrollProgress * maxScroll;
-  const totalOffset = -scrollBasedOffset + manualOffset;
-
-  // Mobile: Duplicate images for seamless infinite scroll
-  const mobileImages = isMobile ? [...images, ...images] : images;
+  // Mobile: images twice over for a seamless loop.
+  const mobileImages = [...images, ...images];
 
   return (
     <section className="bg-black py-12 overflow-hidden" ref={containerRef}>
-      {isMobile ? (
-        // Mobile: Infinite auto-scroll
-        <div className="relative">
-          <div
-            className="flex gap-4 animate-scroll-infinite"
-            style={{
-              width: `${mobileImages.length * (240 + 16)}px`,
-              // Duration scales with image count so scroll SPEED (px/s) is
-              // identical on every page, regardless of how many images.
-              animationDuration: `${images.length * 3.5}s`,
-            }}
-          >
-            {mobileImages.map((src, index) => (
-              <div
-                key={index}
-                className="flex-shrink-0 w-[240px] h-[180px] relative rounded-xl overflow-hidden"
-              >
-                <Image
-                  src={src}
-                  alt={`Community ${(index % images.length) + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="240px"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        // Desktop: Scroll-linked with manual drag
+      {/* Mobile: infinite auto-scroll */}
+      <div className="relative md:hidden">
         <div
-          ref={trackRef}
-          className={`flex gap-4 ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+          className="flex gap-4 animate-scroll-infinite min-h-[180px]"
           style={{
-            transform: `translateX(${totalOffset}px)`,
-            transition: isDragging ? "none" : "transform 0.1s ease-out",
+            width: `${mobileImages.length * (240 + 16)}px`,
+            // Duration scales with image count so scroll SPEED (px/s) is
+            // identical on every page, regardless of how many images.
+            animationDuration: `${images.length * 3.5}s`,
           }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
         >
-          {images.map((src, index) => (
+          {mobileImages.map((src, index) => (
             <div
               key={index}
-              className="flex-shrink-0 w-[300px] h-[220px] relative rounded-xl overflow-hidden"
+              className="flex-shrink-0 w-[240px] h-[180px] relative rounded-xl overflow-hidden"
             >
               <Image
                 src={src}
-                alt={`Community ${index + 1}`}
+                alt={`Community ${(index % images.length) + 1}`}
                 fill
-                className="object-cover pointer-events-none"
-                sizes="300px"
+                className="object-cover"
+                sizes="240px"
               />
             </div>
           ))}
         </div>
-      )}
+      </div>
+
+      {/* Desktop: scroll-linked with manual drag */}
+      <div
+        className={`hidden md:flex gap-4 min-h-[220px] ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+        style={{
+          transform: `translateX(${-scrollOffset + manualOffset}px)`,
+          transition: isDragging ? "none" : "transform 0.1s ease-out",
+        }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        {images.map((src, index) => (
+          <div
+            key={index}
+            className="flex-shrink-0 w-[300px] h-[220px] relative rounded-xl overflow-hidden"
+          >
+            <Image
+              src={src}
+              alt={`Community ${index + 1}`}
+              fill
+              className="object-cover pointer-events-none"
+              sizes="300px"
+            />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

@@ -1,103 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getStudyGuides } from "@/lib/client/content";
-import { guideOnToLocalDate } from "@/lib/domain/studyGuides";
+import { useState } from "react";
 import Reveal from "@/components/ui/Reveal";
 import { CalendarDays, ChevronDown } from "lucide-react";
+import type { UpcomingSeries, WeeklyGuide } from "@/lib/domain/studyGuides";
 
 // Avenue's Pathways Podcast. The Spotify show player always lists the newest
 // episodes first, so this stays current without any API calls.
 const SPOTIFY_SHOW_ID = "127V2svOSv6x4Xh6Uu6ZaH";
 const SPOTIFY_SHOW_URL = `https://open.spotify.com/show/${SPOTIFY_SHOW_ID}`;
 
-interface Weekly {
-  topic: string;
-  series: string;
-  scripture: string;
+interface WeeklyTopicProps {
+  /** This week's guide (studyGuides.weeklyTopic), worked out on the server. */
+  current: WeeklyGuide | null;
+  upcoming: UpcomingSeries[];
 }
 
-interface UpcomingWeek {
-  date: string; // pre-formatted, e.g. "15 Aug"
-  topic: string;
-  scripture: string;
-}
-
-interface UpcomingSeries {
-  series: string;
-  weeks: UpcomingWeek[];
-}
-
-// "This week" = the most recent guide dated on or before today. If every guide
-// is still in the future, fall back to the soonest upcoming one.
-function pickCurrentGuide(guides: Array<Record<string, unknown>>): Record<string, unknown> | null {
-  const dated = guides
-    .map((g) => ({ g, d: guideOnToLocalDate(g.guide_on) }))
-    .filter((x): x is { g: Record<string, unknown>; d: Date } => x.d !== null);
-
-  if (dated.length === 0) return guides[0] ?? null;
-
-  const now = Date.now();
-  const past = dated.filter((x) => x.d.getTime() <= now);
-  if (past.length > 0) {
-    return past.reduce((a, b) => (b.d.getTime() > a.d.getTime() ? b : a)).g;
-  }
-  return dated.reduce((a, b) => (b.d.getTime() < a.d.getTime() ? b : a)).g;
-}
-
-// Everything dated after today, in date order, grouped under its series so the
-// schedule reads as terms rather than one long list.
-function groupUpcomingBySeries(guides: Array<Record<string, unknown>>): UpcomingSeries[] {
-  const now = new Date();
-  now.setHours(23, 59, 59, 999); // today's topic is "current", not "upcoming"
-
-  const future = guides
-    .map((g) => ({ g, d: guideOnToLocalDate(g.guide_on) }))
-    .filter((x): x is { g: Record<string, unknown>; d: Date } => x.d !== null)
-    .filter((x) => x.d.getTime() > now.getTime())
-    .sort((a, b) => a.d.getTime() - b.d.getTime());
-
-  const groups: UpcomingSeries[] = [];
-  for (const { g, d } of future) {
-    const series = String(g.series ?? "Upcoming");
-    let group = groups.find((x) => x.series === series);
-    if (!group) {
-      group = { series, weeks: [] };
-      groups.push(group);
-    }
-    group.weeks.push({
-      date: d.toLocaleDateString("en-AU", { day: "numeric", month: "short" }),
-      topic: String(g.topic ?? ""),
-      scripture: String(g.scripture ?? ""),
-    });
-  }
-  return groups;
-}
-
-export default function WeeklyTopic() {
-  const [weekly, setWeekly] = useState<Weekly | null>(null);
-  const [upcoming, setUpcoming] = useState<UpcomingSeries[]>([]);
+export default function WeeklyTopic({ current: weekly, upcoming }: WeeklyTopicProps) {
   const [showUpcoming, setShowUpcoming] = useState(false);
-
-  useEffect(() => {
-    getStudyGuides()
-      .then((guides) => {
-        const all = guides as unknown as Array<Record<string, unknown>>;
-
-        const current = pickCurrentGuide(all);
-        if (current) {
-          setWeekly({
-            topic: String(current.topic ?? ""),
-            series: String(current.series ?? ""),
-            scripture: String(current.scripture ?? ""),
-          });
-        }
-
-        setUpcoming(groupUpcomingBySeries(all));
-      })
-      .catch(() => {});
-  }, []);
-
   const upcomingCount = upcoming.reduce((n, s) => n + s.weeks.length, 0);
 
   return (

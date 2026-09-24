@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
+import { adminFetch } from "@/lib/client/adminFetch";
 import { ErrorText, jsonInit, loadJson, Modal, useAdminSave, useLoaded, type AdminTabProps } from "./shared";
 
-// A pathway_groups row as the public list sends it, and as the editor holds
+// A pathway_groups row as the admin GET sends it, and as the editor holds
 // it (a new group has no id yet).
 interface GroupRow {
   id?: number;
@@ -37,14 +38,13 @@ const blankGroup: GroupRow = {
   sort_order: 0,
 };
 
-// Reads come from the public list; writes go to the admin API.
-async function loadGroups(): Promise<GroupRow[]> {
-  return (await loadJson<{ groups: GroupRow[] }>(await fetch("/api/content/pathway-groups"), "pathway groups")).groups;
-}
-
 export default function PathwaysTab({ adminKey }: AdminTabProps) {
   const [editing, setEditing] = useState<GroupRow | null>(null);
   const save = useAdminSave(adminKey);
+  const loadGroups = useCallback(
+    async () => (await loadJson<{ groups: GroupRow[] }>(await adminFetch(PATH, adminKey), "pathway groups")).groups,
+    [adminKey]
+  );
   const { data, error, loading, reload } = useLoaded(loadGroups);
   const groups = data ?? [];
 

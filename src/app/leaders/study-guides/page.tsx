@@ -6,8 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/lib/client/auth";
 import { useLeaderSession } from "@/hooks/useLeaderSession";
-import { getStudyGuides } from "@/lib/client/content";
-import { formatGuideOn } from "@/lib/domain/studyGuides";
+import { leaderFetch } from "@/lib/client/leaderFetch";
+import { formatGuideOn, type StudyGuide as StudyGuideRow } from "@/lib/domain/studyGuides";
 import {
   LogOut,
   ArrowLeft,
@@ -39,6 +39,7 @@ export default function StudyGuidesPage() {
   const [studyGuides, setStudyGuides] = useState<StudyGuide[]>([]);
   const [expandedGuide, setExpandedGuide] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (accessChecked && !hasAccess) router.push("/leaders");
@@ -46,8 +47,11 @@ export default function StudyGuidesPage() {
 
   useEffect(() => {
     if (!user) return;
-    // Load study guides from Supabase
-    getStudyGuides()
+    leaderFetch("/api/content/study-guides")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Could not load study guides (${res.status})`);
+        return ((await res.json()) as { guides: StudyGuideRow[] }).guides;
+      })
       .then((loaded) => {
         const guides: StudyGuide[] = loaded.map((g) => ({
           date: formatGuideOn(g.guide_on),
@@ -63,6 +67,7 @@ export default function StudyGuidesPage() {
       })
       .catch((err) => {
         console.error("Error loading study guides:", err);
+        setLoadError("Could not load the study guides. Please refresh to try again.");
         setLoading(false);
       });
   }, [user]);
@@ -148,6 +153,10 @@ export default function StudyGuidesPage() {
         {loading ? (
           <div className="text-center py-12">
             <div className="text-gray-400">Loading study guides...</div>
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-12">
+            <p role="alert" className="text-red-400">{loadError}</p>
           </div>
         ) : (
           <div className="space-y-8">

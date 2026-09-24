@@ -1,9 +1,10 @@
-import { mondayOf, recentMondays } from "@/lib/domain/dates/weeks";
+import { mondayOfISO, recentMondays } from "@/lib/domain/dates/melbourne";
+import { formatDayMonth, formatMonthYear } from "@/lib/domain/dates/format";
 
 // The Recent weeks calendar (round 2 spec 3.2): a month grid, Monday first,
-// one row per week, with each week's check-in attached. Everything is built
-// from local-time Date parts, the same way weeks.ts does, so a week never
-// drifts by a day in a zone behind UTC.
+// one row per week, with each week's check-in attached. The grid is built
+// from local-time Date parts of a month, so a week never drifts by a day in
+// a zone behind UTC; "this week" comes from Melbourne time (melbourne.ts).
 
 export interface MonthRef {
   year: number;
@@ -71,7 +72,7 @@ export function monthWeeks<T extends { weekStart: string }>(
 ): CalendarWeek<T>[] {
   const byWeek = new Map(checkins.map((c) => [c.weekStart, c]));
   const lastDay = new Date(view.year, view.month + 1, 0);
-  let start = parseIso(mondayOf(new Date(view.year, view.month, 1)));
+  let start = parseIso(mondayOfISO(isoOf(new Date(view.year, view.month, 1))));
   const weeks: CalendarWeek<T>[] = [];
   while (start.getTime() <= lastDay.getTime()) {
     const days: CalendarDay[] = [];
@@ -101,12 +102,12 @@ export function monthBounds(checkinWeeks: string[], today: Date, historyCount = 
   return { min: monthOf(oldest), max: monthOfDate(today) };
 }
 
-// "14 Sep" (short) or "14 September" (long).
+// "14 Sept" (short) or "14 September" (long).
 export function formatWeekLabel(weekStart: string, month: "short" | "long" = "short"): string {
-  return parseIso(weekStart).toLocaleDateString("en-AU", { day: "numeric", month });
+  return formatDayMonth(weekStart, month);
 }
 
-// "September 2026".
-export function monthLabel(view: MonthRef): string {
-  return new Date(view.year, view.month, 1).toLocaleDateString("en-AU", { month: "long", year: "numeric" });
+// "September 2026". (melbourne.ts monthLabel does the same for a "YYYY-MM" key.)
+export function calendarMonthLabel(view: MonthRef): string {
+  return formatMonthYear(isoOf(new Date(view.year, view.month, 1)));
 }

@@ -4,9 +4,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { CheckinEntry } from "@/lib/domain/checkins/types";
 import { GAUGES } from "@/lib/domain/rpms";
 import {
+  calendarMonthLabel,
   canShift,
   formatWeekLabel,
-  monthLabel,
   monthWeeks,
   shiftMonth,
   type CalendarWeek,
@@ -62,7 +62,7 @@ export default function CheckinCalendar({
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>
         <p className="font-serif text-xl text-[var(--ink)]" aria-live="polite">
-          {monthLabel(view)}
+          {calendarMonthLabel(view)}
         </p>
         <button
           type="button"

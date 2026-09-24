@@ -1,11 +1,11 @@
 import { isSafeHttpsUrl } from "@/lib/domain/urls";
+import { formatDayMonth } from "@/lib/domain/dates/format";
 
 // Study guide dates. study_guides.guide_on is a Postgres date, which the API
 // sends as an ISO "YYYY-MM-DD" string. This is the one place that reads it.
 // Pure: no fetches, no clock.
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
-const DAY_MONTH_YEAR = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
 
 function isoFromParts(year: number, month: number, day: number): string | null {
   const date = new Date(Date.UTC(year, month - 1, day));
@@ -30,21 +30,56 @@ export function formatGuideOn(raw: unknown): string {
   return `${day}/${month}/${year}`;
 }
 
-// Local midnight on the guide's day, for comparing with the viewer's clock.
-export function guideOnToLocalDate(raw: unknown): Date | null {
-  const iso = parseGuideOn(raw);
-  if (!iso) return null;
-  const [year, month, day] = iso.split("-").map(Number);
-  return new Date(year, month - 1, day);
+export interface StudyGuide {
+  id: string;
+  guide_on: string; // ISO date, YYYY-MM-DD
+  series: string;
+  topic: string;
+  scripture: string;
+  spotify_url: string;
+  pdf_url: string | null;
+  color: string;
+  sort_order: number;
 }
 
-// The legacy DD/MM/YYYY text (the old guide_date column and
-// public/data/study_guides.csv) as an ISO date, else null.
-export function dayMonthYearToGuideOn(raw: unknown): string | null {
-  if (typeof raw !== "string") return null;
-  const m = DAY_MONTH_YEAR.exec(raw.trim());
-  if (!m) return null;
-  return isoFromParts(Number(m[3]), Number(m[2]), Number(m[1]));
+export interface WeeklyGuide {
+  topic: string;
+  series: string;
+  scripture: string;
+}
+
+export interface UpcomingSeries {
+  series: string;
+  weeks: { date: string; topic: string; scripture: string }[]; // date as "15 Aug"
+}
+
+// The public Pathways "This Week's Topic": the latest guide dated on or
+// before today (else the soonest one ahead), and every guide after today
+// grouped under its series, in date order. A guide whose date cannot be
+// read is left out.
+export function weeklyTopic(
+  guides: StudyGuide[],
+  todayISO: string
+): { current: WeeklyGuide | null; upcoming: UpcomingSeries[] } {
+  const dated = guides
+    .map((g) => ({ g, on: parseGuideOn(g.guide_on) }))
+    .filter((x): x is { g: StudyGuide; on: string } => x.on !== null)
+    .sort((a, b) => a.on.localeCompare(b.on));
+  const past = dated.filter((x) => x.on <= todayISO);
+  const pick = past.length > 0 ? past[past.length - 1] : dated[0];
+  const current = pick ? { topic: pick.g.topic ?? "", series: pick.g.series ?? "", scripture: pick.g.scripture ?? "" } : null;
+
+  const upcoming: UpcomingSeries[] = [];
+  for (const { g, on } of dated.filter((x) => x.on > todayISO)) {
+    const series = g.series ?? "Upcoming";
+    let group = upcoming.find((x) => x.series === series);
+    if (!group) {
+      group = { series, weeks: [] };
+      upcoming.push(group);
+    }
+    group.weeks.push({ date: formatDayMonth(on), topic: g.topic ?? "", scripture: g.scripture ?? "" });
+  }
+  return { current, upcoming };
 }
 
 // The columns the site reads, and the ones the admin editor may write.

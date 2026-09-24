@@ -5,10 +5,25 @@ import { requireAdmin } from "@/lib/server/requireAdmin";
 import { jsonError, serverError } from "@/lib/server/http";
 import { pathwayGroupWrite, positiveIntId } from "@/lib/domain/adminContent";
 
-// Admin writes for pathway groups. The public list is GET
-// /api/content/pathway-groups. Groups show on the /pathways map.
+// Admin reads and writes for pathway groups. Groups show on the /pathways
+// map, which reads them on the server.
+const ADMIN_COLUMNS = "id, name, latitude, longitude, time, coordinator, phone, running, description, sort_order";
+
 function refresh(): void {
   revalidatePath("/pathways");
+}
+
+// GET: every group with all its editable columns, for the admin editor.
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if ("response" in auth) return auth.response;
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("pathway_groups")
+    .select(ADMIN_COLUMNS)
+    .order("sort_order", { ascending: true });
+  if (error) return serverError("admin/content/pathway-groups GET", error);
+  return NextResponse.json({ groups: data ?? [] });
 }
 
 // POST: create a pathway group

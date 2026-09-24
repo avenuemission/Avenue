@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Calendar, MapPin, Clock } from "lucide-react";
 import { SOCIAL_LINKS } from "@/content/site";
+import { formatEventDay, formatTime as formatClock } from "@/lib/domain/dates/format";
 
 interface CalendarEvent {
   id: string;
@@ -49,27 +50,11 @@ export default function CalendarPopup({ isOpen, onClose }: CalendarPopupProps) {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-AU", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    if (dateString.length === 10) {
-      return "All day";
-    }
-    return date.toLocaleTimeString("en-AU", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  // An all-day event's start is a bare YYYY-MM-DD date; a timed one is an
+  // instant, shown in Melbourne time.
+  const isAllDay = (dateString: string) => dateString.length === 10;
+  const formatDate = (dateString: string) => formatEventDay(isAllDay(dateString) ? dateString : new Date(dateString));
+  const formatTime = (dateString: string) => (isAllDay(dateString) ? "All day" : formatClock(new Date(dateString)));
 
   if (!isOpen) return null;
 

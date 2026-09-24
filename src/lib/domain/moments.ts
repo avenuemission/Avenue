@@ -3,6 +3,7 @@
 // then true while the page is open, so a reload never replays one.
 import { STOP_NAMES, type StopId } from "@/lib/domain/avenue";
 import { formatIsoDate } from "@/lib/domain/launch";
+import { formatLong } from "@/lib/domain/dates/format";
 
 export type Flags = Record<string, boolean>;
 
@@ -49,7 +50,7 @@ export interface MomentCopy {
 export function momentCopy(key: MomentKey, ctx: { today: Date; launchDate?: string }): MomentCopy {
   switch (key) {
     case "sharedYes": {
-      const day = ctx.today.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
+      const day = formatLong(ctx.today);
       return { title: "You said yes.", caption: `${day} · the Shared Call` };
     }
     case "conversationBooked":

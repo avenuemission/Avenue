@@ -9,7 +9,7 @@ vi.mock("@/lib/server/supabaseAdmin", async (importOriginal) => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 
-import { DELETE, POST, PUT } from "./route";
+import { DELETE, GET, POST, PUT } from "./route";
 
 const PATH = "/api/admin/content/intersection-events";
 const ID = "0b8f7a52-2c1e-4d3a-9a57-6c7f0e1d2b3c";
@@ -62,5 +62,27 @@ describe("admin intersection event writes", () => {
     expect((await DELETE(adminRequest(`${PATH}?id=1`, { method: "DELETE" }))).status).toBe(400);
     expect((await DELETE(adminRequest(`${PATH}?id=${ID}`, { method: "DELETE" }))).status).toBe(200);
     expect(fake.calls).toContainEqual(["intersection_event_dates", "eq", "id", ID]);
+  });
+});
+
+describe("GET /api/admin/content/intersection-events", () => {
+  it("is 401 without the admin key and reads nothing", async () => {
+    const res = await GET(adminRequest(PATH, { key: null }));
+    expect(res.status).toBe(401);
+    expect(fake.tables()).toEqual([]);
+  });
+
+  it("reads the events and their dates", async () => {
+    const events = [{ key: "prayerAndPraise", title: "P" }];
+    const dates = [{ id: ID, event_key: "prayerAndPraise", event_date: "2026-10-07", event_time: "19:00" }];
+    fake = fakeSupabase({ intersection_events: { data: events }, intersection_event_dates: { data: dates } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const res = await GET(adminRequest(PATH));
+    expect(await res.json()).toEqual({ events, dates });
+  });
+
+  it("is a 500 when either read fails", async () => {
+    h.getSupabaseAdmin.mockReturnValue(fakeSupabase({ intersection_event_dates: { error: { message: "boom" } } }).db);
+    expect((await GET(adminRequest(PATH))).status).toBe(500);
   });
 });

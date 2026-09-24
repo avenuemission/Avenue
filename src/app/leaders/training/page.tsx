@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { logout } from "@/lib/client/auth";
 import { useLeaderSession } from "@/hooks/useLeaderSession";
-import { recentMondays } from "@/lib/domain/dates/weeks";
+import { recentMondays } from "@/lib/domain/dates/melbourne";
+import { formatDayMonth } from "@/lib/domain/dates/format";
 import { LogOut, ArrowLeft, X } from "lucide-react";
 
 import Phase4Growth, { CHECKIN_HISTORY_WEEKS } from "@/app/leaders/training/_components/Phase4Growth";
@@ -294,10 +295,7 @@ export default function TrainingPage() {
             // label is shown next to the form that edits it, and saveCheckin
             // sends this exact same value.
             const currentWeekStart = editingWeekStart;
-            const currentWeekLabel = new Date(`${currentWeekStart}T00:00:00`).toLocaleDateString("en-AU", {
-              day: "numeric",
-              month: "long",
-            });
+            const currentWeekLabel = formatDayMonth(currentWeekStart, "long");
             const historyWeeks = recentMondays(CHECKIN_HISTORY_WEEKS, new Date()).slice().reverse();
             const verse = VERSES[phase.id as StopId];
 

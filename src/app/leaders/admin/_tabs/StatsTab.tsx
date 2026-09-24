@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Save } from "lucide-react";
+import { adminFetch } from "@/lib/client/adminFetch";
 import { ErrorText, jsonInit, loadJson, useAdminSave, useLoaded, type AdminTabProps } from "./shared";
 
 interface StatRow {
@@ -12,15 +13,14 @@ interface StatRow {
 
 const PATH = "/api/admin/content/site-stats";
 
-// Reads come from the public list; writes go to the admin API.
-async function loadStats(): Promise<StatRow[]> {
-  return (await loadJson<{ stats: StatRow[] }>(await fetch("/api/content/site-stats"), "site stats")).stats;
-}
-
 export default function StatsTab({ adminKey }: AdminTabProps) {
   // Typed values not yet saved, by stat key.
   const [drafts, setDrafts] = useState<Record<string, number>>({});
   const save = useAdminSave(adminKey);
+  const loadStats = useCallback(
+    async () => (await loadJson<{ stats: StatRow[] }>(await adminFetch(PATH, adminKey), "site stats")).stats,
+    [adminKey]
+  );
   const { data, error, loading, reload } = useLoaded(loadStats);
   const stats = data ?? [];
 

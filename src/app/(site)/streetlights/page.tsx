@@ -1,105 +1,17 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import ImageCarousel from "@/components/site/ImageCarousel";
-import VideoModal from "@/components/site/VideoModal";
 import PageTitle from "@/components/ui/PageTitle";
 import Reveal from "@/components/ui/Reveal";
-import {
-  CREATIVE_INITIATIVES,
-  MISSION_INITIATIVES,
-} from "@/content/site";
-import { X, Calendar, Heart, Clock } from "lucide-react";
-import Link from "next/link";
+import HomeboundAlbum from "./_components/HomeboundAlbum";
+import MissionInitiatives from "./_components/MissionInitiatives";
+import { getCarouselImages } from "@/lib/server/content";
+import { shuffled } from "@/lib/domain/shuffle";
+import { CREATIVE_INITIATIVES } from "@/content/site";
 
-interface Song {
-  title: string;
-  youtubeUrl: string;
-  spotifyUrl: string;
-}
+export const revalidate = 300;
 
-interface MissionInitiative {
-  id: string;
-  title: string;
-  shortDescription: string;
-  fullDescription: string;
-  hasContact?: boolean;
-  date?: string;
-  image?: string;
-  isFeatured?: boolean;
-}
-
-export default function StreetlightsPage() {
-  const [showAlbumModal, setShowAlbumModal] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-  const [selectedMission, setSelectedMission] = useState<MissionInitiative | null>(null);
-  const [missionCountdown, setMissionCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [supportForm, setSupportForm] = useState({
-    name: "",
-    email: "",
-    supportType: "",
-    message: "",
-    company: "",
-  });
-  const [supportSubmitted, setSupportSubmitted] = useState(false);
-
-  // Countdown for Philippines mission trip
-  useEffect(() => {
-    const missionDate = new Date("2026-12-01T00:00:00");
-    
-    const updateCountdown = () => {
-      const now = new Date();
-      const diff = missionDate.getTime() - now.getTime();
-      
-      if (diff > 0) {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setMissionCountdown({ days, hours, minutes, seconds });
-      }
-    };
-    
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSupportSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (supportForm.name && supportForm.email && supportForm.supportType) {
-      try {
-        const res = await fetch("/api/forms/mission-support", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: supportForm.name,
-            email: supportForm.email,
-            company: supportForm.company,
-            data: { supportType: supportForm.supportType, message: supportForm.message },
-          }),
-        });
-        if (!res.ok) throw new Error(`Form failed (${res.status})`);
-        setSupportSubmitted(true);
-        setSupportForm({ name: "", email: "", supportType: "", message: "", company: "" });
-        setTimeout(() => setSupportSubmitted(false), 3000);
-      } catch (error) {
-        console.error("Form submission error:", error);
-      }
-    }
-  };
-
-  const handleAlbumClick = () => {
-    // Open first available song
-    const firstSong = CREATIVE_INITIATIVES.homeboundAlbum.songs.find(
-      (s) => s.youtubeUrl
-    );
-    if (firstSong) {
-      setSelectedSong(firstSong);
-      setShowAlbumModal(true);
-    }
-  };
+export default async function StreetlightsPage() {
+  const carousel = await getCarouselImages("streetlights_carousel");
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
@@ -110,7 +22,7 @@ export default function StreetlightsPage() {
       </PageTitle>
 
       {/* Image Carousel - Scroll-linked */}
-      <ImageCarousel folder="streetlights_carousel" />
+      <ImageCarousel images={shuffled(carousel)} />
 
       {/* Streetlights Description Section */}
       <section className="bg-black py-16 md:py-24">
@@ -157,23 +69,7 @@ export default function StreetlightsPage() {
             </h2>
           </Reveal>
 
-          <div className="flex flex-wrap justify-center gap-6">
-            {MISSION_INITIATIVES.map((initiative, index) => (
-              <Reveal key={initiative.id} delay={index * 80}>
-              <button
-                onClick={() => setSelectedMission(initiative as MissionInitiative)}
-                className="bg-[var(--accent)] hover:brightness-110 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px] flex flex-col items-center justify-center"
-              >
-                <span className="block text-xl uppercase tracking-wider text-center">
-                  {initiative.title.split(" ").slice(0, -1).join(" ")}
-                </span>
-                <span className="block text-sm uppercase tracking-wider mt-1">
-                  {initiative.title.split(" ").slice(-1)[0]}
-                </span>
-              </button>
-              </Reveal>
-            ))}
-          </div>
+          <MissionInitiatives />
         </div>
       </section>
 
@@ -200,19 +96,7 @@ export default function StreetlightsPage() {
 
           <div className="flex flex-wrap justify-center gap-6 mb-12">
             <Reveal delay={0}>
-            {/* Homebound Album Button */}
-            <button
-              onClick={handleAlbumClick}
-              className="bg-[var(--accent)] hover:brightness-110 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px]"
-            >
-              <span className="block text-xl uppercase tracking-wider">
-                Homebound
-              </span>
-              <span className="block text-sm uppercase tracking-wider mt-1">
-                Album
-              </span>
-            </button>
-
+            <HomeboundAlbum />
             </Reveal>
             <Reveal delay={80}>
             {/* Pathways Podcast Button */}
@@ -319,270 +203,6 @@ export default function StreetlightsPage() {
         </div>
       </section>
 
-      {/* Album Modal with Song Selection */}
-      {showAlbumModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setShowAlbumModal(false)}
-          />
-          <div className="relative z-10 w-full max-w-4xl mx-4 bg-gray-900 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h3 className="text-xl font-semibold text-white">
-                Homebound Album
-              </h3>
-              <button
-                onClick={() => setShowAlbumModal(false)}
-                className="p-2 text-gray-400 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Video Player */}
-            <div className="aspect-video">
-              {selectedSong?.youtubeUrl ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${selectedSong.youtubeUrl.split("v=")[1]}?autoplay=1`}
-                  title={selectedSong.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                  <p className="text-gray-400">Coming soon...</p>
-                </div>
-              )}
-            </div>
-
-            {/* Song List */}
-            <div className="p-4 border-t border-gray-800">
-              <h4 className="text-sm text-gray-400 mb-3">Select a song:</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {CREATIVE_INITIATIVES.homeboundAlbum.songs.map((song, index) => (
-                  <button
-                    key={index}
-                    onClick={() => song.youtubeUrl && setSelectedSong(song)}
-                    disabled={!song.youtubeUrl}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                      selectedSong?.title === song.title
-                        ? "bg-[var(--accent)] text-white"
-                        : song.youtubeUrl
-                        ? "bg-gray-800 text-white hover:bg-gray-700"
-                        : "bg-gray-800/50 text-gray-500 cursor-not-allowed"
-                    }`}
-                  >
-                    {song.title}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Keep VideoModal for potential future use */}
-      <VideoModal
-        isOpen={false}
-        onClose={() => {}}
-        youtubeUrl=""
-        title=""
-      />
-
-      {/* Mission Initiative Modal */}
-      {selectedMission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setSelectedMission(null)}
-          />
-          <div className="relative z-10 w-full max-w-2xl mx-4 bg-gray-900 rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h3 className="text-xl font-semibold text-white">
-                {selectedMission.title}
-              </h3>
-              <button
-                onClick={() => setSelectedMission(null)}
-                className="p-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              {/* Image for Philippines Mission */}
-              {selectedMission.image && (
-                <div className="relative w-full h-48 md:h-64 rounded-xl overflow-hidden mb-6">
-                  <Image
-                    src={selectedMission.image}
-                    alt={selectedMission.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
-
-              {/* Countdown for Philippines Mission */}
-              {selectedMission.isFeatured && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 text-[var(--accent)] mb-3">
-                    <Calendar size={20} />
-                    <span className="text-sm uppercase tracking-wider">December 2026</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-3 text-center">
-                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3">
-                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.days}</div>
-                      <div className="text-xs text-gray-400 uppercase">Days</div>
-                    </div>
-                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3">
-                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.hours}</div>
-                      <div className="text-xs text-gray-400 uppercase">Hours</div>
-                    </div>
-                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3">
-                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.minutes}</div>
-                      <div className="text-xs text-gray-400 uppercase">Mins</div>
-                    </div>
-                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3">
-                      <div className="text-2xl md:text-3xl font-bold text-white">{missionCountdown.seconds}</div>
-                      <div className="text-xs text-gray-400 uppercase">Secs</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Description */}
-              <p className="text-gray-300 text-base leading-relaxed mb-6">
-                {selectedMission.fullDescription}
-              </p>
-
-              {/* Technological Stewardship Link */}
-              {selectedMission.id === "technological-stewardship" && (
-                <Link
-                  href="/technological-stewardship"
-                  className="inline-flex items-center gap-2 bg-[var(--accent)] hover:brightness-110 text-white px-6 py-3 rounded-full text-sm font-medium transition-all mb-6"
-                >
-                  Take the Survey
-                </Link>
-              )}
-
-
-              {/* Support Form for Philippines Mission */}
-              {selectedMission.isFeatured && (
-                <div className="border-t border-gray-800 pt-6">
-                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Heart size={20} className="text-[var(--accent)]" />
-                    Get Involved
-                  </h4>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Support this mission with your time or resources. Fill out the form below and we&apos;ll be in touch.
-                  </p>
-
-                  <form onSubmit={handleSupportSubmit} className="space-y-4">
-                    {/* Honeypot */}
-                    <input
-                      type="text"
-                      name="company"
-                      value={supportForm.company}
-                      onChange={(e) => setSupportForm({ ...supportForm, company: e.target.value })}
-                      style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
-                      tabIndex={-1}
-                      autoComplete="off"
-                    />
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
-                          Name *
-                        </label>
-                        <input
-                          type="text"
-                          value={supportForm.name}
-                          onChange={(e) => setSupportForm({ ...supportForm, name: e.target.value })}
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
-                          Email *
-                        </label>
-                        <input
-                          type="email"
-                          value={supportForm.email}
-                          onChange={(e) => setSupportForm({ ...supportForm, email: e.target.value })}
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
-                        How would you like to support? *
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setSupportForm({ ...supportForm, supportType: "time" })}
-                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border transition-colors ${
-                            supportForm.supportType === "time"
-                              ? "bg-[var(--accent)] border-[var(--accent)] text-white"
-                              : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"
-                          }`}
-                        >
-                          <Clock size={18} />
-                          My Time
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSupportForm({ ...supportForm, supportType: "resources" })}
-                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border transition-colors ${
-                            supportForm.supportType === "resources"
-                              ? "bg-[var(--accent)] border-[var(--accent)] text-white"
-                              : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"
-                          }`}
-                        >
-                          <Heart size={18} />
-                          Resources
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wider">
-                        Message (Optional)
-                      </label>
-                      <textarea
-                        value={supportForm.message}
-                        onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
-                        rows={3}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[var(--accent)] transition-colors resize-none"
-                        placeholder="Tell us more about how you'd like to help..."
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-[var(--accent)] text-white py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
-                    >
-                      Submit
-                    </button>
-
-                    {supportSubmitted && (
-                      <p className="text-green-400 text-sm text-center">
-                        Thank you! We&apos;ll be in touch soon.
-                      </p>
-                    )}
-                  </form>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

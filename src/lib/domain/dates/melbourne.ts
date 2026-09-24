@@ -92,6 +92,40 @@ export function mondayOfISO(iso: string): string {
   return addDaysISO(iso, dow === 0 ? -6 : 1 - dow);
 }
 
+// The Monday of the Melbourne week that `now` falls in: the week_start a
+// check-in made at `now` is saved under. The same answer on any machine.
+export function mondayOf(now: Date): string {
+  return mondayOfISO(melbourneDateOf(now));
+}
+
+// This week's Monday and the ones before it, newest first.
+export function recentMondays(count: number, now: Date): string[] {
+  const first = mondayOf(now);
+  return Array.from({ length: count }, (_, i) => addDaysISO(first, -7 * i));
+}
+
+// The instant Melbourne's clocks read `hour`:`minute` on the calendar day
+// `iso`. Melbourne is UTC+10 or UTC+11 (daylight saving); the one that
+// gives back the same wall-clock time is the answer.
+export function melbourneInstant(iso: string, hour: number, minute = 0): Date {
+  const wall = utcOf(iso) + (hour * 60 + minute) * 60_000;
+  for (const offsetHours of [11, 10]) {
+    const instant = new Date(wall - offsetHours * 3_600_000);
+    const parts = melbourneParts(instant);
+    if (parts.date === iso && parts.hour === hour) return instant;
+  }
+  throw new Error(`melbourneInstant: ${iso} ${hour}:${minute} does not exist in Melbourne`);
+}
+
+// The next time after `now` that it is `hour`:00 on `weekday` (0 Sunday to
+// 6 Saturday) in Melbourne, e.g. Prayer & Praise, Wednesday 7 pm.
+export function nextMelbourneWeekly(now: Date, weekday: number, hour: number): Date {
+  const today = melbourneParts(now);
+  const ahead = (weekday - today.weekday + 7) % 7;
+  const candidate = melbourneInstant(addDaysISO(today.date, ahead), hour);
+  return candidate.getTime() > now.getTime() ? candidate : melbourneInstant(addDaysISO(today.date, ahead + 7), hour);
+}
+
 export function monthKeyOf(iso: string): string {
   utcOf(iso);
   return iso.slice(0, 7);

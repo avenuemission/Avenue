@@ -19,6 +19,7 @@ import {
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { SUPPORT_ZOOM } from "@/content/support";
+import { formatTime, formatWeekdayDayMonth } from "@/lib/domain/dates/format";
 
 // The server sends the confirmation to the signed-in leader's own address
 // and adds the Zoom details itself.
@@ -61,22 +62,6 @@ function getUpcomingCallDates(): { thursdays: Date[]; saturdays: Date[] } {
   return { thursdays, saturdays };
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-AU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString("en-AU", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
 export default function LeaderSupportPage() {
   const router = useRouter();
   // Any signed-in leader (the layout sends anyone else to /login).
@@ -99,7 +84,7 @@ export default function LeaderSupportPage() {
     setSubmitting(true);
 
     try {
-      const formattedDate = `${formatDate(date)} at ${formatTime(date)}`;
+      const formattedDate = `${formatWeekdayDayMonth(date)} at ${formatTime(date)}`;
       const res = await postSupportForm({
         name: user?.name || "",
         company: "",
@@ -258,7 +243,7 @@ export default function LeaderSupportPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-white font-medium">{formatDate(date)}</p>
+                            <p className="text-white font-medium">{formatWeekdayDayMonth(date)}</p>
                             <p className="text-gray-500 text-sm">{formatTime(date)}</p>
                           </div>
                           <Calendar className="w-5 h-5 text-gray-500" />
@@ -284,7 +269,7 @@ export default function LeaderSupportPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-white font-medium">{formatDate(date)}</p>
+                            <p className="text-white font-medium">{formatWeekdayDayMonth(date)}</p>
                             <p className="text-gray-500 text-sm">{formatTime(date)}</p>
                           </div>
                           <Calendar className="w-5 h-5 text-gray-500" />

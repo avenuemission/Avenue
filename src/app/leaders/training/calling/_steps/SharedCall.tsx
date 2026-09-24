@@ -4,6 +4,7 @@ import type { StepProps } from "@/components/leaders/journey/WizardShell";
 import { OutcomeButton } from "@/components/leaders/journey/WizardShell";
 import { isIsoDate, type CallingData } from "@/lib/domain/journey";
 import { SHARED_SCENARIO } from "@/content/calling";
+import { formatLong } from "@/lib/domain/dates/format";
 
 type Shared = NonNullable<CallingData["shared"]>;
 
@@ -13,12 +14,6 @@ function todayLocal(): string {
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
   return `${now.getFullYear()}-${m}-${d}`;
-}
-
-// "2026-09-24" to "24 September 2026".
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
 }
 
 // Section 3: a short scenario about inviting people into your life, then
@@ -70,7 +65,7 @@ export default function SharedCall({ value, save, finish }: StepProps<Shared>) {
       {saidYes ? (
         <>
           <p className="text-sm text-white">
-            {isIsoDate(date) ? `You said yes on ${formatDate(date)}.` : "You said yes."}
+            {isIsoDate(date) ? `You said yes on ${formatLong(date)}.` : "You said yes."}
           </p>
           <OutcomeButton label="On to the Specific Call" onClick={finish} />
         </>
