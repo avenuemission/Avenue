@@ -462,15 +462,23 @@ button.av-lamp {
   background: var(--lamp);
   box-shadow: 0 0 0 4px var(--lamp-soft), 0 0 22px 4px rgba(255, 197, 107, 0.55);
 }
+/* Round 2 spec 2: about half the first round's size, 40 px on phones and
+   64 px from md. The small (wizard) size below is unchanged: line-height
+   stays 0.92 because the small rule inherits it (pre-flight F1). */
 .av-phase-title {
   font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 400;
-  font-size: clamp(44px, 11vw, 120px);
+  font-size: 40px;
   line-height: 0.92;
   letter-spacing: -0.02em;
-  margin: 18px 0 22px;
+  margin: 14px 0 18px;
   overflow-wrap: anywhere;
   color: var(--ink);
+}
+@media (min-width: 768px) {
+  .av-phase-title {
+    font-size: 64px;
+  }
 }
 .av-opening-small .av-phase-title {
   font-size: clamp(40px, 7vw, 64px);

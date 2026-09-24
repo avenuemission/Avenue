@@ -33,6 +33,7 @@ import {
 } from "@/lib/avenue";
 import AvenueMap from "@/components/avenue/AvenueMap";
 import PhaseOpening from "@/components/avenue/PhaseOpening";
+import ClampedText from "@/components/avenue/ClampedText";
 import JourneyFooter from "@/components/avenue/JourneyFooter";
 import Moment from "@/components/avenue/Moment";
 import { useMoment } from "@/components/avenue/useMoment";
@@ -327,7 +328,7 @@ export default function TrainingPage() {
                   verse={verse.text}
                 />
                 {phase.subtitle !== phase.scripture ? <p className="night-label mt-6">{phase.subtitle}</p> : null}
-                <p className="mt-4 max-w-[62ch] text-sm leading-relaxed text-[var(--muted)]">{phase.description}</p>
+                <ClampedText text={phase.description} className="mt-4" />
                 {isGrowthPhase ? (
                   <p className="night-label mt-4">{hasCheckedInThisWeek ? "Checked in this week" : "Not yet this week"}</p>
                 ) : null}
