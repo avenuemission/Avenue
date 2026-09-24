@@ -15,7 +15,7 @@ import { emailTablesError, PREFS_COLUMNS, type LeaderRow, type PrefsRow } from "
 import type { GuideRow } from "./topic";
 
 // The Foundations module ids, from the same content the training page uses.
-export function foundationsModuleIds(): string[] {
+function foundationsModuleIds(): string[] {
   const phase = INITIAL_PHASES.find((p) => p.id === "phase1");
   if (!phase || phase.modules.length === 0) throw new Error("loadSnapshot: no Foundations modules in INITIAL_PHASES");
   return phase.modules.map((m) => m.id);

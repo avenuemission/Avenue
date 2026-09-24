@@ -5,6 +5,7 @@ import { logout } from "@/lib/client/auth";
 function toLogin(): void {
   logout();
   if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- runs outside React (no router); a full load also drops in-memory leader state.
     window.location.href = "/login";
   }
 }

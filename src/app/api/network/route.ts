@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
+import { isUuid } from "@/lib/domain/ids";
 import { normaliseEmail, wouldCreateCycle } from "@/lib/domain/network";
 import { scopeNetwork } from "@/lib/domain/networkScope";
 import { requireLeader } from "@/lib/server/requireLeader";
@@ -25,11 +26,7 @@ const COLUMNS =
 // cast failure), which would otherwise surface as a 500 with the database's
 // own message in the response body. Check the shape here instead and 400
 // on anything that cannot possibly be a uuid, before it ever reaches a
-// query.
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function isUuid(value: string): boolean {
-  return UUID_PATTERN.test(value);
-}
+// query (isUuid).
 
 async function loadRows(): Promise<Row[]> {
   const { data, error } = await getSupabaseAdmin().from("network_people").select(COLUMNS);

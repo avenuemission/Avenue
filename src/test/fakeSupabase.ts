@@ -5,7 +5,7 @@
 // insert, upsert, update or delete), else "table", else an empty result:
 // [] for a list select, null otherwise.
 
-export interface FakeError {
+interface FakeError {
   message: string;
   code?: string;
 }
@@ -15,7 +15,7 @@ export interface FakeResult {
   error?: FakeError | null;
 }
 
-export type FakeCall = [string, string, ...unknown[]];
+type FakeCall = [string, string, ...unknown[]];
 
 // A result can also be worked out from the chain's own calls (without the
 // table name), e.g. to answer two maybeSingle() lookups on one table

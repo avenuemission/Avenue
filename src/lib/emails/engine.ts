@@ -21,13 +21,14 @@
 //    paused before each claim after the first, capped per run, and stop
 //    once the time budget is spent (the rest wait for the next hour).
 import { melbourneParts, mondayOfISO } from "@/lib/domain/dates/melbourne";
+import { isUuid } from "@/lib/domain/ids";
 import { composeFor, type Outgoing, type Snapshot } from "./compose";
 import type { RenderedEmail } from "./layout";
 import { recipientsFor, type EmailKind, type PrefsRow } from "./prefs";
 import { dueKinds, periodKeyFor } from "./schedule";
 import { topicForWeek } from "./topic";
 
-export type LogStatus = "sent" | "baseline";
+type LogStatus = "sent" | "baseline";
 
 export interface EngineDb {
   // Makes sure every email has a preferences row (and so a token); returns all rows.
@@ -68,7 +69,7 @@ export interface RunReport {
   unparseableGuides: string[];
 }
 
-export const BASELINE_KEY = "baseline";
+const BASELINE_KEY = "baseline";
 
 // Thrown by a send that did not finish in time. Whether the mail server
 // accepted the email is unknown, so the engine keeps the claim.
@@ -78,8 +79,6 @@ export class SendOutcomeUnknownError extends Error {
     this.name = "SendOutcomeUnknownError";
   }
 }
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // One address and nothing else: no spaces, commas, semicolons, quotes or
 // angle brackets, any of which could turn one "to" into several.
@@ -181,7 +180,7 @@ export async function runLeaderEmails(deps: EngineDeps): Promise<RunReport> {
             report.deferred.push(label(out));
             continue;
           }
-          if (typeof recipient.token !== "string" || !UUID.test(recipient.token)) {
+          if (!isUuid(recipient.token)) {
             throw new Error(`refusing ${out.kind} to ${out.email}: no unsubscribe token`);
           }
           // Pause BEFORE claiming: a run stopped mid-pause leaves no

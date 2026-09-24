@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "@/lib/client/auth";
 import { useLeaderSession } from "@/hooks/useLeaderSession";
 
-export const LEADER_GATE_ERROR = "We couldn't check your access. Check your connection and reload.";
+const LEADER_GATE_ERROR = "We couldn't check your access. Check your connection and reload.";
 
 // The full-access gate for pages behind it (the calling and launch wizards,
 // their printable pages, the emails page). Reads the session the leaders

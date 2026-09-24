@@ -112,7 +112,7 @@ function assertWebLinks(content: Pick<EmailContent, "blocks" | "cta">): void {
 
 // The site logo as text: letter-spaced uppercase AVENUE in a plain sans,
 // then a thin chevron. No image, so it shows before images are allowed.
-export const WORDMARK_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+const WORDMARK_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 export const WORDMARK_HTML = `<span style="font-family:${WORDMARK_FONT};font-size:18px;line-height:1;font-weight:bold;letter-spacing:6px;text-transform:uppercase;color:${COLOURS.ink};">AVENUE</span><span style="font-family:${WORDMARK_FONT};font-size:22px;line-height:1;font-weight:300;color:${COLOURS.lamp};padding-left:4px;">&rsaquo;</span>`;
 
 const TEXT = `font-family:${SANS};font-size:16px;line-height:1.6;color:${COLOURS.ink};`;

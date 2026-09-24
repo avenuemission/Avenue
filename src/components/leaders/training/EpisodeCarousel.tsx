@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Play, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { isPlaceholderThumb, nextThumbSize, THUMB_ORDER, thumbUrl, type ThumbSize } from "@/lib/domain/youtubeThumb";
 
-export interface CarouselEpisode {
+interface CarouselEpisode {
   id: string;
   title: string;
   youtubeId: string;
@@ -17,8 +18,8 @@ interface EpisodeCarouselProps {
   onToggleWatched: (episodeId: string) => void;
 }
 
-// YouTube serves thumbnails straight off img.youtube.com, no API key and no
-// next/image domain config needed, so a plain <img> is the right call here.
+// YouTube serves thumbnails straight off img.youtube.com with no API key, so
+// they are served as-is (unoptimized): no next/image domain config needed.
 // Starts at the 16:9 maxresdefault and steps down on a 404 or on YouTube's
 // 120 px grey placeholder (round 3 spec 1). The carousel mounts only on the
 // client, after the leader gate, so onError and onLoad always fire here.
@@ -30,11 +31,12 @@ function EpisodeThumb({ youtubeId, dimmed }: { youtubeId: string; dimmed: boolea
     else console.error(`EpisodeCarousel: no thumbnail loaded for YouTube video ${youtubeId}`);
   };
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={thumbUrl(youtubeId, size)}
       alt=""
-      loading="lazy"
+      width={1280}
+      height={720}
+      unoptimized
       onError={fallBack}
       onLoad={(e) => {
         if (isPlaceholderThumb(e.currentTarget.naturalWidth)) fallBack();
@@ -59,28 +61,25 @@ export default function EpisodeCarousel({
   const pct = total > 0 ? (watchedCount / total) * 100 : 0;
 
   // A single video has nothing to page through, so it renders bare (no arrows,
-  // no counter): see updateArrows staying false.
+  // no counter): the arrows effect below returns before tracking scroll.
   const isSingle = total <= 1;
 
-  const updateArrows = () => {
+  // Re-run when the episode count changes: the scroll width changes with it.
+  useEffect(() => {
     const el = scrollerRef.current;
     if (!el || isSingle) return;
-    setCanScrollLeft(el.scrollLeft > 8);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
-  };
-
-  useEffect(() => {
+    const updateArrows = () => {
+      setCanScrollLeft(el.scrollLeft > 8);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+    };
     updateArrows();
-    const el = scrollerRef.current;
-    if (!el) return;
     el.addEventListener("scroll", updateArrows, { passive: true });
     window.addEventListener("resize", updateArrows);
     return () => {
       el.removeEventListener("scroll", updateArrows);
       window.removeEventListener("resize", updateArrows);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [total]);
+  }, [total, isSingle]);
 
   const scrollByCards = (direction: 1 | -1) => {
     const el = scrollerRef.current;

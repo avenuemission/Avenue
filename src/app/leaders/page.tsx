@@ -248,10 +248,10 @@ export default function LeadersPage() {
                 Leaders Calendar
                 <ExternalLink className="h-3 w-3" />
               </a>
-              <a href="/" className={quickLinkClass}>
+              <Link href="/" className={quickLinkClass}>
                 <Globe className="h-4 w-4" />
                 Main Website
-              </a>
+              </Link>
             </div>
           )}
         </div>

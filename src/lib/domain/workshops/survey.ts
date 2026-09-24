@@ -111,7 +111,7 @@ export const TEGMARK_OUTCOMES: { id: string; label: string; desc: string; field:
   { id: "dictatorship", label: "AI Dictatorship", desc: "Concentrated power where AI serves a totalitarian regime controlling all aspects of life.", field: "tegmarkRankDictatorship", column: "tegmark_rank_dictatorship" },
   { id: "enslaved", label: "Enslaved AGI", desc: "Superintelligent AI exists but is controlled by a small elite who monopolize its benefits.", field: "tegmarkRankEnslaved", column: "tegmark_rank_enslaved" },
   { id: "gatekeeper", label: "Gatekeeper", desc: "Strict global regulation prevents AGI development, maintaining status quo but limiting progress.", field: "tegmarkRankGatekeeper", column: "tegmark_rank_gatekeeper" },
-  { id: "zookeeper", label: "Zookeeper", desc: "AI manages humanity much like we manage animals in zoos\u2014kept comfortable but controlled.", field: "tegmarkRankZookeeper", column: "tegmark_rank_zookeeper" },
+  { id: "zookeeper", label: "Zookeeper", desc: "AI manages humanity much like we manage animals in zoos: kept comfortable but controlled.", field: "tegmarkRankZookeeper", column: "tegmark_rank_zookeeper" },
   { id: "libertarian", label: "Libertarian Utopia", desc: "Free market AI where individuals and corporations compete, creating wealth but also inequality.", field: "tegmarkRankLibertarian", column: "tegmark_rank_libertarian" },
   { id: "egalitarian", label: "Egalitarian Utopia", desc: "AI benefits are shared equally across humanity, eliminating poverty and class divides.", field: "tegmarkRankEgalitarian", column: "tegmark_rank_egalitarian" },
   { id: "protector", label: "Protector AGI", desc: "Benevolent AI acts as a guardian, guiding humanity toward flourishing while respecting freedom.", field: "tegmarkRankProtector", column: "tegmark_rank_protector" },
@@ -210,7 +210,7 @@ export const SURVEY_SECTIONS: SurveySection[] = [
           { value: "perplexity", label: "Perplexity" },
           { value: "image-ai", label: "Image AI (Midjourney, DALL-E)" },
           { value: "other", label: "Other" },
-          { value: "none", label: "None \u2014 haven't used AI" },
+          { value: "none", label: "None: haven't used AI" },
         ],
       },
     ],
@@ -222,7 +222,7 @@ export const SURVEY_SECTIONS: SurveySection[] = [
     cardTitle: "Your Personal Line",
     cardDescription: "Where you personally draw the line in your own AI use",
     navTitle: "Your Personal Line",
-    intro: "These questions are about your personal use and convictions \u2014 not what everyone should do.",
+    intro: "These questions are about your personal use and convictions, not what everyone should do.",
     questions: [
       { kind: "scale", field: "personalSpiritualUse", column: "personal_spiritual_use", question: "I use AI in my personal spiritual practices (prayer, Bible study, devotions)", options: AGREE_SCALE },
       { kind: "scale", field: "faithImpact", column: "faith_impact", question: "Overall, AI tools have had a positive impact on my faith", options: AGREE_SCALE },
@@ -240,7 +240,7 @@ export const SURVEY_SECTIONS: SurveySection[] = [
           { value: "creative-worship", label: "Creating worship music or art" },
           { value: "sermon-prep", label: "Preparing sermons or devotionals" },
           { value: "theological-decisions", label: "Theological decision-making" },
-          { value: "none", label: "None \u2014 I have no personal off-limits" },
+          { value: "none", label: "None: I have no personal off-limits" },
         ],
       },
       { kind: "scale", field: "idolatryPotential", column: "idolatry_potential", question: "AI has the potential to become something people worship or idolise", options: AGREE_SCALE },
@@ -248,7 +248,7 @@ export const SURVEY_SECTIONS: SurveySection[] = [
         kind: "scale",
         field: "neighbourPrinciple",
         column: "neighbour_principle",
-        question: "Does the principle Jesus taught \u2014 to love your neighbour as yourself \u2014 currently apply, or will it ever apply, to how we treat AI?",
+        question: "Does the principle Jesus taught (love your neighbour as yourself) currently apply, or will it ever apply, to how we treat AI?",
         options: APPROPRIATE_SCALE,
       },
     ],
@@ -297,7 +297,7 @@ export const SURVEY_SECTIONS: SurveySection[] = [
           { value: "pastors", label: "Local pastors and church leaders" },
           { value: "technologists", label: "Tech-literate members in the congregation" },
           { value: "collaboration", label: "Collaboration between all of the above" },
-          { value: "personal", label: "Personal discernment \u2014 no formal guidance needed" },
+          { value: "personal", label: "Personal discernment: no formal guidance needed" },
           { value: "unsure", label: "Not sure" },
         ],
       },
@@ -373,7 +373,7 @@ const SESSION_CODE_MAX = 64;
 const ANSWER_MAX = 2000;
 const LIST_ITEMS_MAX = 50;
 
-export interface SurveySubmission {
+interface SurveySubmission {
   sessionCode: string;
   answers: SurveyAnswers;
 }

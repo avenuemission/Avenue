@@ -76,6 +76,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <noscript>
+          {/* eslint-disable-next-line @next/next/no-img-element -- Meta Pixel no-JS fallback: next/image would lazy-load it, so it would never fire. */}
           <img
             height="1"
             width="1"

@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { serverError } from "@/lib/server/http";
+import { isUuid } from "@/lib/domain/ids";
 import { MAX_PEOPLE, PERSON_COLUMNS, toPerson, validatePersonInput, type PersonRow } from "@/lib/domain/people";
 
 // My People: a private list per leader. Every query is filtered by the
 // verified owner email, so another leader's row is simply not found
 // (404), never read-then-refused.
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(request: NextRequest) {
   const cfgErr = adminConfigError();
@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
   const id = body && typeof body.id === "string" ? body.id : "";
-  if (!UUID.test(id)) return NextResponse.json({ error: "id must be a uuid" }, { status: 400 });
+  if (!isUuid(id)) return NextResponse.json({ error: "id must be a uuid" }, { status: 400 });
   const parsed = validatePersonInput(body, "update");
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
@@ -85,7 +85,7 @@ export async function DELETE(request: NextRequest) {
   if ("response" in auth) return auth.response;
 
   const id = new URL(request.url).searchParams.get("id") ?? "";
-  if (!UUID.test(id)) return NextResponse.json({ error: "id must be a uuid" }, { status: 400 });
+  if (!isUuid(id)) return NextResponse.json({ error: "id must be a uuid" }, { status: 400 });
 
   const { data, error } = await getSupabaseAdmin()
     .from("leader_people")

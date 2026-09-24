@@ -4,7 +4,7 @@
 import { vi } from "vitest";
 import { NextRequest } from "next/server";
 
-export const ADMIN_KEY = "test-admin-key";
+const ADMIN_KEY = "test-admin-key";
 
 export function stubAdminEnv(): void {
   vi.stubEnv("ADMIN_API_KEY", ADMIN_KEY);

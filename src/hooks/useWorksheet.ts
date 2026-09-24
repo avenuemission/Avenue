@@ -16,8 +16,8 @@ import {
   waitForIdle,
 } from "@/lib/domain/worksheetReset";
 
-export const SAVE_DEBOUNCE_MS = 600;
-export const NOT_SAVED_MESSAGE = "Not saved yet, retrying when you next change it";
+const SAVE_DEBOUNCE_MS = 600;
+const NOT_SAVED_MESSAGE = "Not saved yet, retrying when you next change it";
 
 type SectionKey<T> = Extract<keyof T, string>;
 

@@ -7,7 +7,7 @@
 export const THUMB_ORDER = ["maxresdefault", "sddefault", "hqdefault"] as const;
 export type ThumbSize = (typeof THUMB_ORDER)[number];
 
-export const PLACEHOLDER_MAX_WIDTH = 120;
+const PLACEHOLDER_MAX_WIDTH = 120;
 
 export function thumbUrl(youtubeId: string, size: ThumbSize): string {
   return `https://img.youtube.com/vi/${youtubeId}/${size}.jpg`;

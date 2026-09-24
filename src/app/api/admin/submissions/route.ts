@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireAdmin } from "@/lib/server/requireAdmin";
 import { jsonError, serverError } from "@/lib/server/http";
-import { isUuid, submissionArchiveWrite } from "@/lib/domain/adminContent";
+import { isUuid } from "@/lib/domain/ids";
+import { submissionArchiveWrite } from "@/lib/domain/adminContent";
 
 // Public submissions come in through POST /api/forms/<type>. This route is
 // the admin's view of them.

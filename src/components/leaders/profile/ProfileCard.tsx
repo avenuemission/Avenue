@@ -15,6 +15,7 @@ import {
   Compass,
   Rocket,
 } from "lucide-react";
+import NextImage from "next/image";
 import Link from "next/link";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { clearLeaderCache } from "@/lib/client/dedupeFetch";
@@ -214,8 +215,9 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
 
   const avatar = (url: string, size: string, text: string) =>
     url ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={url} alt="" className={`${size} rounded-full object-cover border border-[var(--border)]`} />
+      // Uploaded avatars are already small: served as-is (unoptimized).
+      // The size classes set the rendered size; 96 is the largest used.
+      <NextImage src={url} alt="" width={96} height={96} unoptimized className={`${size} rounded-full object-cover border border-[var(--border)]`} />
     ) : (
       <div
         className={`${size} rounded-full border border-[var(--border)] bg-[var(--surface-hover)] flex items-center justify-center font-bold text-[var(--accent)] ${text}`}

@@ -76,14 +76,20 @@ export default function IcnuEditor({
     void save(text);
   };
 
+  // The unmount flush below runs once, so it reads save through a ref that
+  // always holds the latest render's save.
+  const saveRef = useRef(save);
+  useEffect(() => {
+    saveRef.current = save;
+  });
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (textRef.current.trim() !== lastSavedRef.current.trim()) {
-        void save(textRef.current);
+        void saveRef.current(textRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

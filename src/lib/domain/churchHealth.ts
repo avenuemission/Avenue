@@ -30,8 +30,8 @@ export const NO_GROUP = "No group set";
 // No check-in with a week_start this many days before this Monday or
 // earlier raises the "no check-in for 3+ weeks" flag. It is also the span of
 // the four-week window: this Monday and the three before it.
-export const STALE_DAYS = 21;
-export const MONTHS_SHOWN = 12;
+const STALE_DAYS = 21;
+const MONTHS_SHOWN = 12;
 
 export interface HealthLeaderRow {
   email: string;
@@ -62,7 +62,7 @@ export interface HealthCheckinRow extends GaugeScores {
   week_start: string;
 }
 
-export interface LeaderCounts {
+interface LeaderCounts {
   email: string;
   name: string;
   group: string;
@@ -70,7 +70,7 @@ export interface LeaderCounts {
   names: Record<Metric, string[]>;
 }
 
-export interface LeaderHealth {
+interface LeaderHealth {
   email: string;
   name: string;
   lastCheckin: string | null;
@@ -101,7 +101,7 @@ export function normEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-export function emptyCounts(): MetricCounts {
+function emptyCounts(): MetricCounts {
   return { pathways: 0, intersections: 0, streetlights: 0 };
 }
 

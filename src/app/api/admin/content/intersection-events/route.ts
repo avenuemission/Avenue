@@ -3,7 +3,8 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireAdmin } from "@/lib/server/requireAdmin";
 import { jsonError, serverError } from "@/lib/server/http";
-import { intersectionDateWrite, intersectionEventWrite, isUuid } from "@/lib/domain/adminContent";
+import { intersectionDateWrite, intersectionEventWrite } from "@/lib/domain/adminContent";
+import { isUuid } from "@/lib/domain/ids";
 
 // Admin reads and writes for Intersection events and their dates. Both
 // show on /intersection, which reads them on the server.

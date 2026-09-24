@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ valid: true, code: exact.code, include_life_3: exact.include_life_3 });
   }
 
-  // Fuzzy match — find closest active session code
+  // Fuzzy match: find the closest active session code
   const { data: allSessions, error: sessionsError } = await db
     .from("workshop_sessions")
     .select("code")

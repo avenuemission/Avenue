@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Monitor, QrCode } from "lucide-react";
+import Image from "next/image";
 import QRCode from "qrcode";
 
 export default function WorkshopDisplayPage() {
@@ -13,10 +14,8 @@ export default function WorkshopDisplayPage() {
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    if (!sessionCode.trim()) {
-      setQrDataUrl("");
-      return;
-    }
+    // The QR block only renders while a code is entered.
+    if (!sessionCode.trim()) return;
 
     const generateQR = async () => {
       setGenerating(true);
@@ -99,9 +98,12 @@ export default function WorkshopDisplayPage() {
               {/* QR Code */}
               <div className="flex justify-center">
                 {qrDataUrl ? (
-                  <img
+                  <Image
                     src={qrDataUrl}
                     alt="QR Code"
+                    width={400}
+                    height={400}
+                    unoptimized
                     className="w-64 h-64 sm:w-80 sm:h-80"
                   />
                 ) : generating ? (

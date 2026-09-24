@@ -14,7 +14,7 @@ export const FORM_TYPES = [
   "event-updates",
 ] as const;
 
-export type FormType = (typeof FORM_TYPES)[number];
+type FormType = (typeof FORM_TYPES)[number];
 
 export interface FormSubmission {
   type: FormType;
@@ -27,7 +27,7 @@ export type FormParse = { ok: true; value: FormSubmission } | { ok: false; error
 
 // One address, no display name. Commas, semicolons, CR and LF are refused
 // separately so nothing can become a list or an extra mail header.
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX = 254;
 export const NAME_MAX = 100;
 const VALUE_MAX = 2000;
@@ -137,14 +137,14 @@ export function parseForm(type: string, body: unknown): FormParse {
 // is given, emails the results with that same reflection. The reflection
 // comes back from the browser only with the server's signature, which the
 // route verifies before using it.
-export interface ApestRequest {
+interface ApestRequest {
   results: ApestResults;
   email: string | null;
   name: string;
   signedReflection: { text: string; signature: string } | null;
 }
 
-export const REFLECTION_MAX = 5000;
+const REFLECTION_MAX = 5000;
 
 export type ApestParse = { ok: true; value: ApestRequest } | { ok: false; error: string };
 

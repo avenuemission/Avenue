@@ -374,7 +374,7 @@ export default function StewardshipSurvey() {
             <div className="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 mb-6 mt-4">
               <h4 className="text-white text-sm font-semibold mb-2 uppercase tracking-wider">Context from the culture</h4>
               <p className="text-gray-300 text-sm leading-relaxed mb-3">
-                In <em>Life 3.0</em>, Max Tegmark describes <strong className="text-white">AGI (Artificial General Intelligence)</strong> &mdash; AI that can perform any intellectual task a human can, with the potential to recursively improve itself. He outlines seven possible futures for humanity if AGI emerges.
+                In <em>Life 3.0</em>, Max Tegmark describes <strong className="text-white">AGI (Artificial General Intelligence)</strong>: AI that can perform any intellectual task a human can, with the potential to recursively improve itself. He outlines seven possible futures for humanity if AGI emerges.
               </p>
               <p className="text-gray-400 text-xs italic">
                 Drag the cards below to rank from most desirable (1) to least desirable (7). Which future are we stewarding toward?
@@ -397,10 +397,10 @@ export default function StewardshipSurvey() {
                 Christians & AI: A Study in Technological Stewardship
               </h2>
               <p className="text-gray-300 text-base sm:text-lg mb-6 leading-relaxed italic">
-                &ldquo;The earth is the Lord&apos;s, and everything in it.&rdquo; &mdash; Psalm 24:1
+                &ldquo;The earth is the Lord&apos;s, and everything in it.&rdquo; &ndash; Psalm 24:1
               </p>
               <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-8">
-                AI is reshaping how we work, relate, worship and think. This survey asks how Christians are engaging with it &mdash; and what the Church should do next. No technical knowledge required. All answers are anonymous.
+                AI is reshaping how we work, relate, worship and think. This survey asks how Christians are engaging with it, and what the Church should do next. No technical knowledge required. All answers are anonymous.
               </p>
             </div>
 
@@ -569,7 +569,7 @@ export default function StewardshipSurvey() {
               TECHNOLOGICAL STEWARDSHIP
             </h1>
             <p className="text-gray-300 text-base md:text-xl max-w-2xl mx-auto italic">
-              &ldquo;The earth is the Lord&apos;s, and everything in it...&rdquo; &mdash; Psalm 24:1
+              &ldquo;The earth is the Lord&apos;s, and everything in it...&rdquo; &ndash; Psalm 24:1
             </p>
           </div>
         </div>

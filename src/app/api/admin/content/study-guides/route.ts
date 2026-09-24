@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireAdmin } from "@/lib/server/requireAdmin";
 import { jsonError, serverError } from "@/lib/server/http";
 import { STUDY_GUIDE_COLUMNS, studyGuideWrite } from "@/lib/domain/studyGuides";
-import { isUuid } from "@/lib/domain/adminContent";
+import { isUuid } from "@/lib/domain/ids";
 
 // Admin reads and writes for study guides. Guides show on /pathways (this
 // week's topic, read on the server) and on /leaders/study-guides, which

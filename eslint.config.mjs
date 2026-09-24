@@ -30,39 +30,83 @@ const NO_BROWSER_CLIENT = {
   message: "Server code must not import the anon browser client. Use getSupabaseAdmin from @/lib/server/supabaseAdmin.",
 };
 
+// The same boundaries by resolved file path (import/no-restricted-paths), so a
+// relative import such as "../server/x" cannot slip past the alias patterns
+// above. Each block below sets both rules, with the same override caveat.
+// Targets are all of src/: the block's files glob picks which files apply.
+const EMAILS_SHARED = ["./prefs.ts", "./topic.ts", "./schedule.ts"];
+const zone = (from, message, except) => ({ target: "./src", from, message, ...(except ? { except } : {}) });
+const Z_APP = zone("./src/app", NO_APP.message);
+const Z_SERVER_IN_CLIENT = [
+  zone("./src/lib/server", NO_SERVER_IN_CLIENT.message),
+  zone("./src/lib/emails", NO_SERVER_IN_CLIENT.message, EMAILS_SHARED),
+];
+const Z_UNGUARDED_SERVER = [
+  zone("./src/lib/server/mail", NO_UNGUARDED_SERVER.message),
+  zone("./src/lib/server/adminRead.ts", NO_UNGUARDED_SERVER.message),
+  zone("./src/lib/emails", NO_UNGUARDED_SERVER.message, EMAILS_SHARED),
+];
+const Z_DOMAIN = [
+  zone("./src/lib/server", "lib/domain is pure: no server modules."),
+  zone("./src/lib/client", "lib/domain is pure: no client modules."),
+];
+const Z_BROWSER_CLIENT = zone("./src/lib/client/supabaseBrowser.ts", NO_BROWSER_CLIENT.message);
+const paths = (...zones) => ["error", { basePath: import.meta.dirname, zones: zones.flat() }];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
     files: ["src/lib/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [NO_APP] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [NO_APP] }],
+      "import/no-restricted-paths": paths(Z_APP),
+    },
   },
   {
     files: ["src/lib/domain/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [NO_APP, ...DOMAIN_BANS] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [NO_APP, ...DOMAIN_BANS] }],
+      "import/no-restricted-paths": paths(Z_APP, Z_DOMAIN),
+    },
   },
   {
     files: ["src/lib/server/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [NO_APP, NO_BROWSER_CLIENT] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [NO_APP, NO_BROWSER_CLIENT] }],
+      "import/no-restricted-paths": paths(Z_APP, Z_BROWSER_CLIENT),
+    },
   },
   {
     files: ["src/app/api/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [NO_BROWSER_CLIENT] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [NO_BROWSER_CLIENT] }],
+      "import/no-restricted-paths": paths(Z_BROWSER_CLIENT),
+    },
   },
   {
     files: ["src/components/**", "src/hooks/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [NO_APP, NO_SERVER_IN_CLIENT] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [NO_APP, NO_SERVER_IN_CLIENT] }],
+      "import/no-restricted-paths": paths(Z_APP, Z_SERVER_IN_CLIENT),
+    },
   },
   {
     // Pages, layouts and colocated components may be client code. They may
     // import guarded server modules (Next rejects those in client bundles),
     // but not the modules left unguarded for the Netlify function.
     files: ["src/app/**/*.tsx"],
-    rules: { "no-restricted-imports": ["error", { patterns: [NO_UNGUARDED_SERVER] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [NO_UNGUARDED_SERVER] }],
+      "import/no-restricted-paths": paths(Z_UNGUARDED_SERVER),
+    },
   },
   {
     files: ["src/lib/client/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [NO_APP, NO_SERVER_IN_CLIENT] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [NO_APP, NO_SERVER_IN_CLIENT] }],
+      "import/no-restricted-paths": paths(Z_APP, Z_SERVER_IN_CLIENT),
+    },
   },
   // Override default ignores of eslint-config-next.
   globalIgnores([

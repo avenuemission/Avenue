@@ -52,7 +52,7 @@ export const RESET_COPY: Record<WorksheetKind, ResetCopy> = {
 };
 
 export const RESET_WAIT_MS = 15_000;
-export const RESET_BUSY_MESSAGE = "A save is still running, so nothing was reset. Try again.";
+const RESET_BUSY_MESSAGE = "A save is still running, so nothing was reset. Try again.";
 
 // Resolves once isBusy() is false, checking every pollMs. Throws
 // RESET_BUSY_MESSAGE if it is still busy after timeoutMs, so the caller

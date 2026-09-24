@@ -7,7 +7,7 @@
 import { melbourneParts, monthKeyOf } from "@/lib/domain/dates/melbourne";
 import { EMAIL_KINDS, type EmailKind } from "./prefs";
 
-export const SEND_HOUR: Record<EmailKind, number> = {
+const SEND_HOUR: Record<EmailKind, number> = {
   rpms: 18, // Sunday
   digest: 7, // Monday
   church_health: 7, // 1st of the month
@@ -16,7 +16,7 @@ export const SEND_HOUR: Record<EmailKind, number> = {
 };
 
 // The last Melbourne hour a kind is still due, inclusive.
-export const LAST_HOUR: Record<EmailKind, number> = {
+const LAST_HOUR: Record<EmailKind, number> = {
   rpms: 23,
   digest: 23,
   church_health: 23,

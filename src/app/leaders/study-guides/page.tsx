@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/lib/client/auth";
 import { useLeaderSession } from "@/hooks/useLeaderSession";

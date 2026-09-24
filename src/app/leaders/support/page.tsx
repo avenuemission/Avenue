@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/lib/client/auth";
 import { useLeaderSession } from "@/hooks/useLeaderSession";
@@ -36,7 +35,6 @@ export default function LeaderSupportPage() {
   const router = useRouter();
   // Any signed-in leader (the layout sends anyone else to /login).
   const { user } = useLeaderSession();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [customTime, setCustomTime] = useState({ date: "", time: "", company: "" });
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -50,7 +48,6 @@ export default function LeaderSupportPage() {
   };
 
   const handleSelectDate = async (date: Date) => {
-    setSelectedDate(date);
     setSubmitting(true);
 
     try {
@@ -179,7 +176,6 @@ export default function LeaderSupportPage() {
             <button
               onClick={() => {
                 setSubmitted(false);
-                setSelectedDate(null);
                 setShowCustomForm(false);
               }}
               className="mt-6 text-[var(--accent)] hover:text-[var(--accent)] text-sm"

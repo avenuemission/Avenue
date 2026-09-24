@@ -3,17 +3,13 @@
 // values, so a bad value is a 400 with a clear message rather than a
 // database error. Pure: the routes do the reads and writes.
 
+import { isUuid } from "@/lib/domain/ids";
 import { parseGuideOn } from "@/lib/domain/studyGuides";
 
 export type Picked<T> = { row: T } | { error: string };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-export function isUuid(value: unknown): value is string {
-  return typeof value === "string" && UUID.test(value);
-}
 
 // A bigint primary key sent as a number or as its digits.
 export function positiveIntId(value: unknown): number | null {

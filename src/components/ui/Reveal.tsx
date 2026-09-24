@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface RevealProps {
   children: ReactNode;
-  /** Stagger delay in ms — use to cascade a group of items. */
+  /** Stagger delay in ms: use it to cascade a group of items. */
   delay?: number;
   className?: string;
 }
@@ -22,11 +22,9 @@ export default function Reveal({ children, delay = 0, className = "" }: RevealPr
     const node = ref.current;
     if (!node) return;
 
-    // Respect reduced-motion: reveal immediately, skip the observer.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
-      return;
-    }
+    // Reduced motion: the .reveal CSS already shows the content as-is, so
+    // skip the observer (no state change needed).
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const observer = new IntersectionObserver(
       (entries) => {

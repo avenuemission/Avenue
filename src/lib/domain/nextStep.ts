@@ -2,7 +2,7 @@
 // Foundations, Calling, Launch and this week's check-in. Pure.
 import { CALLING_TOTAL, LAUNCH_TOTAL } from "@/lib/domain/journey";
 
-export type NextStepId = "foundations" | "calling" | "launch" | "checkin" | "done";
+type NextStepId = "foundations" | "calling" | "launch" | "checkin" | "done";
 
 export interface NextStep {
   id: NextStepId;

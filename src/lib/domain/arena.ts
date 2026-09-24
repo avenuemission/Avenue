@@ -22,8 +22,8 @@ export const COUNTER_MEANINGS: Record<CounterKey, string> = {
   // Henry to check wording
   streetlights: "Disciples who step out to lead or serve",
 };
-export type Counters = Record<CounterKey, number>;
-export type Capacity = "strained" | "restored" | "drained";
+type Counters = Record<CounterKey, number>;
+type Capacity = "strained" | "restored" | "drained";
 
 export interface CounterMove {
   delta: Counters;
@@ -60,7 +60,7 @@ export function parseCounters(text: string): CounterMove {
   return move;
 }
 
-export const GAP_IDS = ["thinTeam", "noMissionGroup", "homeHosting", "noRhythm", "noApprentice"] as const;
+const GAP_IDS = ["thinTeam", "noMissionGroup", "homeHosting", "noRhythm", "noApprentice"] as const;
 export type GapId = (typeof GAP_IDS)[number];
 
 // bites: shown on a curveball the gap makes harder. thin and action: the
@@ -132,7 +132,7 @@ export function detectGaps(plan: ArenaPlan): GapId[] {
   return gaps;
 }
 
-export interface ArenaChoice {
+interface ArenaChoice {
   label: string;
   verdict: string;
   counters: string;

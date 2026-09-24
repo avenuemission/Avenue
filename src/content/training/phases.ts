@@ -1,5 +1,5 @@
 // Phase Types
-export interface Episode {
+interface Episode {
   id: string;
   title: string;
   youtubeId: string;

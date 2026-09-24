@@ -18,7 +18,7 @@ export interface NetworkPerson {
   joined: boolean;
 }
 
-export interface LayoutNode {
+interface LayoutNode {
   id: string;
   person: NetworkPerson;
   x: number;
@@ -26,13 +26,13 @@ export interface LayoutNode {
   depth: number;
 }
 
-export interface LayoutEdge {
+interface LayoutEdge {
   fromId: string;
   toId: string;
   confirmed: boolean;
 }
 
-export interface Bounds {
+interface Bounds {
   minX: number;
   minY: number;
   maxX: number;

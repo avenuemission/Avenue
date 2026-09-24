@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { X } from "lucide-react";
 import ProfileCard from "@/components/leaders/profile/ProfileCard";
 import EmailPrefsPanel from "@/components/leaders/emails/EmailPrefsPanel";
@@ -79,10 +80,13 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
         className="no-print inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lamp)]"
       >
         {summary?.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          // Uploaded avatars are already small: served as-is (unoptimized).
+          <Image
             src={summary.avatarUrl}
             alt=""
+            width={36}
+            height={36}
+            unoptimized
             className="h-9 w-9 rounded-full border border-[var(--line-2)] object-cover"
           />
         ) : (

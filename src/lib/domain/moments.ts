@@ -8,7 +8,7 @@ import { formatLong } from "@/lib/domain/dates/format";
 export type Flags = Record<string, boolean>;
 
 // Priority order: a phase walked outranks the smaller milestones.
-export const MOMENT_KEYS = [
+const MOMENT_KEYS = [
   "walked:phase1",
   "walked:phase2",
   "walked:phase3",

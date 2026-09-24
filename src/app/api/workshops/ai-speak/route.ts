@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "TTS generation failed" }, { status: 500 });
   }
 
-  // Stream the body directly back — avoids buffering the full audio in memory
+  // Stream the body directly back: this avoids buffering the full audio in memory
   // and prevents serverless timeout on long TTS responses
   return new NextResponse(response.body, {
     status: 200,

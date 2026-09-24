@@ -3,16 +3,16 @@
 // /api/worksheets and its tests. The caller's email never comes from
 // input: the route takes it from the verified session.
 
-export const WORKSHEET_KINDS = ["calling", "launch"] as const;
+const WORKSHEET_KINDS = ["calling", "launch"] as const;
 export type WorksheetKind = (typeof WORKSHEET_KINDS)[number];
 
-export const WORKSHEET_SECTIONS = {
+const WORKSHEET_SECTIONS = {
   calling: ["layers", "callable", "shared", "apest", "seasonal", "conversation"],
   launch: ["prayer", "mission", "space", "team", "intentional", "rhythm", "invite", "arena", "actions"],
 } as const satisfies Record<WorksheetKind, readonly string[]>;
 
-export const MAX_DEPTH = 5;
-export const MAX_VALUE_CHARS = 20_000;
+const MAX_DEPTH = 5;
+const MAX_VALUE_CHARS = 20_000;
 
 export interface WorksheetPatch {
   kind: WorksheetKind;
@@ -26,7 +26,7 @@ export function parseKind(value: unknown): WorksheetKind | null {
     : null;
 }
 
-export function isSectionOf(kind: WorksheetKind, section: unknown): section is string {
+function isSectionOf(kind: WorksheetKind, section: unknown): section is string {
   return typeof section === "string" && (WORKSHEET_SECTIONS[kind] as readonly string[]).includes(section);
 }
 

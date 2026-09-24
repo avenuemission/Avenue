@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use } from "react";
+import React, { useState, useEffect, useRef, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { leaderFetch } from "@/lib/client/leaderFetch";
@@ -151,7 +151,7 @@ function TegmarkResults({ responses }: { responses: SurveyRow[] }) {
   return (
     <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 mb-4">
       <p className="text-white text-sm font-medium mb-1">Tegmark Outcome Ranking</p>
-      <p className="text-gray-500 text-xs mb-3">Average rank — lower = more desirable to this group</p>
+      <p className="text-gray-500 text-xs mb-3">Average rank: lower = more desirable to this group</p>
       {scored.map((item, i) => (
         <div key={item.label} className="flex items-center gap-3 mb-2">
           <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
@@ -259,7 +259,6 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
   });
   // AI recommendation state
   const [aiWritten, setAiWritten] = useState("");
-  const [aiSpoken, setAiSpoken] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
@@ -272,12 +271,7 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
 
   // Any signed-in leader (the layout sends anyone else to /login).
   const { user } = useLeaderSession();
-  useEffect(() => {
-    if (!user) return;
-    loadData();
-  }, [code, user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     const [resultsRes, sessionRes] = await Promise.all([
       leaderFetch(`/api/workshops/results?code=${code}`),
@@ -287,11 +281,16 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
     const sessionsData = await sessionRes.json();
     setResponses(Array.isArray(resultsData) ? resultsData : []);
     // Find current session settings
-    const session = Array.isArray(sessionsData) ? sessionsData.find((s: any) => s.code === code) : null;
+    const session = Array.isArray(sessionsData) ? sessionsData.find((s: { code?: string }) => s.code === code) : null;
     setIncludeLife3(session?.include_life_3 !== false);
     setLastFetched(new Date());
     setLoading(false);
-  };
+  }, [code]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadData();
+  }, [loadData, user]);
 
   const toggleSection = (id: string) =>
     setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
@@ -425,19 +424,16 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
               <AiRecommendationSection
                 responses={responses}
                 written={aiWritten}
-                spoken={aiSpoken}
                 loading={aiLoading}
                 error={aiError}
                 audioUrl={audioUrl}
                 audioPlaying={audioPlaying}
                 audioFinished={audioFinished}
-                audioRef={audioRef}
                 sessionCode={code}
                 onGenerate={async () => {
                   setAiLoading(true);
                   setAiError("");
                   setAiWritten("");
-                  setAiSpoken("");
                   setAudioUrl("");
                   setAudioPlaying(false);
                   setAudioFinished(false);
@@ -452,7 +448,6 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
                     if (!recRes.ok) throw new Error("Recommendation failed");
                     const { written, spoken } = await recRes.json();
                     setAiWritten(written);
-                    setAiSpoken(spoken);
                     // Generate audio
                     const ttsRes = await leaderFetch("/api/workshops/ai-speak", {
                       method: "POST",
@@ -563,13 +558,12 @@ function MarkdownAnalysis({ text }: { text: string }) {
 // ─── AI Recommendation Section ───────────────────────────────────────────────
 
 function AiRecommendationSection({
-  responses, written, spoken, loading, error, audioUrl, audioPlaying, audioFinished,
-  audioRef, onGenerate, onStop, onReplay, sessionCode,
+  responses, written, loading, error, audioUrl, audioPlaying, audioFinished,
+  onGenerate, onStop, onReplay, sessionCode,
 }: {
   responses: SurveyRow[];
-  written: string; spoken: string; loading: boolean; error: string;
+  written: string; loading: boolean; error: string;
   audioUrl: string; audioPlaying: boolean; audioFinished: boolean;
-  audioRef: React.RefObject<HTMLAudioElement | null>;
   onGenerate: () => void; onStop: () => void; onReplay: () => void;
   sessionCode: string;
 }) {
@@ -622,8 +616,8 @@ function AiRecommendationSection({
     <div>
       {/* Intro */}
       <p className="text-gray-400 text-sm mb-5 leading-relaxed">
-        Click Generate to have AI analyse your group&apos;s survey results and produce a strategic recommendation —
-        then it will speak a punchy summary to the room.
+        Click Generate to have AI analyse your group&apos;s survey results and produce a strategic recommendation.
+        Then it will speak a punchy summary to the room.
       </p>
 
       {/* Generate button */}

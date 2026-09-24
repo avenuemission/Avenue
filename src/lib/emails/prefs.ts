@@ -2,6 +2,8 @@
 // 3.1 and 3.4). Pure, so it is safe in the browser (the Emails panel) and
 // on the server (routes and the engine).
 
+import { isUuid } from "@/lib/domain/ids";
+
 export const EMAIL_KINDS = ["rpms", "digest", "church_health", "apprentice", "milestones"] as const;
 export type EmailKind = (typeof EMAIL_KINDS)[number];
 export type EmailPrefs = Record<EmailKind, boolean>;
@@ -44,8 +46,6 @@ export const PREVIEW_TOKEN = "00000000-0000-4000-8000-000000000000";
 
 // A single string literal so Supabase's column parser can read it.
 export const PREFS_COLUMNS = "email, rpms, digest, church_health, apprentice, milestones, unsubscribe_token";
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface PrefsRow {
   email: string;
@@ -112,7 +112,7 @@ export function validatePrefsPatch(body: unknown): { patch: Partial<EmailPrefs> 
 
 export function parseUnsubscribe(token: unknown, kind: unknown): { token: string; kinds: EmailKind[] } | { error: string } {
   const invalid = { error: "This unsubscribe link is not valid." };
-  if (typeof token !== "string" || !UUID.test(token)) return invalid;
+  if (!isUuid(token)) return invalid;
   if (kind === "all") return { token: token.toLowerCase(), kinds: [...EMAIL_KINDS] };
   if (!isEmailKind(kind)) return invalid;
   return { token: token.toLowerCase(), kinds: [kind] };

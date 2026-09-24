@@ -11,7 +11,7 @@ export interface MonthRef {
   month: number; // 0 to 11
 }
 
-export interface CalendarDay {
+interface CalendarDay {
   iso: string; // YYYY-MM-DD
   day: number;
   inMonth: boolean;

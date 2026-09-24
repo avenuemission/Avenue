@@ -11,12 +11,12 @@ import { runLeaderEmails, SendOutcomeUnknownError, type RunReport } from "./engi
 import { createEngineDb } from "./engineDb";
 import { loadSnapshot } from "./loadSnapshot";
 
-export const MAX_SENDS_PER_RUN = 20;
-export const SEND_DELAY_MS = 1000;
+const MAX_SENDS_PER_RUN = 20;
+const SEND_DELAY_MS = 1000;
 // Netlify stops a scheduled function at 30 s. Each send opens a fresh Gmail
 // SMTP connection (the shared transporter is not pooled), so a run stops
 // claiming new work after 20 s and leaves the rest for the next hour.
-export const RUN_BUDGET_MS = 20_000;
+const RUN_BUDGET_MS = 20_000;
 // Nodemailer's own timeouts are minutes long, so one hung send could run
 // past Netlify's 30 s stop with nothing logged. Each send gets 8 s.
 export const SEND_TIMEOUT_MS = 8_000;

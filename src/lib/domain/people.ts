@@ -2,6 +2,8 @@
 // API route and its tests share one definition. Owner and id are never
 // accepted from input: the route sets owner_email from the session.
 
+import { isUuid } from "@/lib/domain/ids";
+
 export const SPACES = ["first", "second", "third"] as const;
 export const METRICS = ["pathways", "intersections", "streetlights"] as const;
 export type Space = (typeof SPACES)[number];
@@ -10,7 +12,6 @@ export type Metric = (typeof METRICS)[number];
 export const MAX_PEOPLE = 500;
 const MAX_NAME = 80;
 const MAX_ICNU = 2000;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface Person {
   id: string;
@@ -113,7 +114,7 @@ export function validatePersonInput(body: unknown, mode: "create" | "update"): {
   }
 
   if ("networkPersonId" in b) {
-    if (b.networkPersonId !== null && (typeof b.networkPersonId !== "string" || !UUID.test(b.networkPersonId))) {
+    if (b.networkPersonId !== null && !isUuid(b.networkPersonId)) {
       return { error: "networkPersonId must be a uuid or null" };
     }
     values.network_person_id = b.networkPersonId;

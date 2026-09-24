@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   intersectionDateWrite,
   intersectionEventWrite,
-  isUuid,
   leaderAccessWrite,
   leaderCreateWrite,
   pathwayGroupWrite,
@@ -14,12 +13,6 @@ import {
 const UUID = "0b8f7a52-2c1e-4d3a-9a57-6c7f0e1d2b3c";
 
 describe("ids", () => {
-  it("isUuid accepts a uuid and nothing else", () => {
-    expect(isUuid(UUID)).toBe(true);
-    expect(isUuid("abc")).toBe(false);
-    expect(isUuid(7)).toBe(false);
-  });
-
   it("positiveIntId reads a positive integer from a number or its digits", () => {
     expect(positiveIntId(4)).toBe(4);
     expect(positiveIntId("12")).toBe(12);

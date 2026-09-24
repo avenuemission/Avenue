@@ -46,7 +46,7 @@ const METRIC_PANELS: { metric: Metric; title: string; definition: string; empty:
 
 // The week's RPMS scores plus the one-sentence reflection, as held by
 // useCheckins while the leader edits them.
-export interface CheckinForm {
+interface CheckinForm {
   relational: number;
   physical: number;
   mental: number;

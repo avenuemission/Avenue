@@ -73,7 +73,7 @@ export interface ApestResults {
 }
 
 // Four questions per role, five points each.
-export const MAX_PER_ROLE = 20;
+const MAX_PER_ROLE = 20;
 
 // Percent per role, exactly as the public page has always computed it.
 export function scoreApest(answers: readonly number[]): ApestResults {

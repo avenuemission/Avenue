@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { requestCode, verifyCode, requestAccess } from "@/lib/client/auth";
 import { Mail, User, KeyRound, ArrowRight } from "lucide-react";
 
@@ -175,9 +176,9 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-6 text-center">
-          <a href="/" className="inline-flex min-h-[44px] items-center text-xs text-[var(--dim)] hover:text-[var(--muted)]">
+          <Link href="/" className="inline-flex min-h-[44px] items-center text-xs text-[var(--dim)] hover:text-[var(--muted)]">
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

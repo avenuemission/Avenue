@@ -126,7 +126,7 @@ export function progressFor(email: string, snap: Snapshot): AvenueProgress {
 }
 
 // Every milestone the leader has right now. The log decides which are new.
-export function milestonesFor(email: string, snap: Snapshot): Milestone[] {
+function milestonesFor(email: string, snap: Snapshot): Milestone[] {
   const p = progressFor(email, snap);
   const out: Milestone[] = [];
   for (const stop of ["phase1", "phase2", "phase3"] as const) if (stopWalked(stop, p)) out.push({ type: "walked", stop });
@@ -139,7 +139,7 @@ export function milestonesFor(email: string, snap: Snapshot): Milestone[] {
   return out;
 }
 
-export function milestoneKey(m: Milestone): string {
+function milestoneKey(m: Milestone): string {
   switch (m.type) {
     case "walked":
       return `${m.stop}-walked`;
