@@ -150,8 +150,7 @@ export default function LeadersPage() {
     <div className="avenue-night">
       {/* Header */}
       <header className="border-b border-[var(--line)]">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-2 sm:px-6">
-          <span className="text-sm font-semibold text-[var(--ink)]">Leaders Hub</span>
+        <div className="mx-auto flex max-w-4xl items-center justify-end px-4 py-2 sm:px-6">
           <div className="flex items-center gap-3">
             <button
               onClick={handleLogout}

@@ -189,9 +189,12 @@ export default function ResourcesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <span className="text-white text-lg font-semibold uppercase tracking-wider">
-                Leaders Hub
-              </span>
+              <Link
+                href="/leaders"
+                className="inline-flex min-h-[44px] items-center text-white text-lg font-semibold uppercase tracking-wider transition-colors hover:text-[var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lamp)]"
+              >
+                Dashboard
+              </Link>
             </div>
             <div className="flex items-center space-x-4">
               <span className="hidden text-gray-400 text-sm sm:inline">

@@ -100,8 +100,11 @@ export default function WorkshopsPage() {
       <header className="relative z-10 border-b border-[var(--border)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.push("/leaders")} className="text-gray-400 hover:text-white transition-colors text-sm">
-              ← Leaders Hub
+            <button
+              onClick={() => router.push("/leaders")}
+              className="inline-flex min-h-[44px] items-center text-gray-400 hover:text-white transition-colors text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lamp)]"
+            >
+              ← Dashboard
             </button>
             <span className="text-gray-700">|</span>
             <span className="text-white font-semibold">Workshop Sessions</span>

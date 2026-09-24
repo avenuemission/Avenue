@@ -115,10 +115,10 @@ export default function NetworkPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link
             href="/leaders"
-            className="flex items-center gap-2 text-sm text-[var(--muted)] transition-colors hover:text-white"
+            className="flex min-h-[44px] items-center gap-2 text-sm text-[var(--muted)] transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lamp)]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Leaders Hub
+            Dashboard
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-[var(--muted)] sm:inline">{user.name}</span>
