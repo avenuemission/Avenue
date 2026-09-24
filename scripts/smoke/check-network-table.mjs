@@ -1,5 +1,5 @@
 // Confirms network_people exists with every column the API expects.
-// Run: node --env-file=.env.local scripts/check-network-table.mjs
+// Run: node --env-file=.env.local scripts/smoke/check-network-table.mjs
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

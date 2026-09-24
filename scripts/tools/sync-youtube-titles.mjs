@@ -1,8 +1,8 @@
 // ============================================================
 // Pull the real video titles from YouTube into the training page.
 //
-//   node scripts/sync-youtube-titles.mjs          (rewrite in place)
-//   node scripts/sync-youtube-titles.mjs --check  (report only, no writes)
+//   node scripts/tools/sync-youtube-titles.mjs          (rewrite in place)
+//   node scripts/tools/sync-youtube-titles.mjs --check  (report only, no writes)
 //
 // Titles are stored in the source rather than fetched at runtime, so the
 // page never waits on YouTube and the names are visible in code review.

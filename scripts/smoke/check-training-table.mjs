@@ -1,5 +1,5 @@
 // Confirms leader_training_progress exists with every column the API expects.
-// Run: node --env-file=.env.local scripts/check-training-table.mjs
+// Run: node --env-file=.env.local scripts/smoke/check-training-table.mjs
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

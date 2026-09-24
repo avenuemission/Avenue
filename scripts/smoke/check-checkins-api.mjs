@@ -1,5 +1,5 @@
 // Exercises /api/leader-checkins against the local dev server, then cleans up.
-// Run: node --env-file=.env.local scripts/check-checkins-api.mjs
+// Run: node --env-file=.env.local scripts/smoke/check-checkins-api.mjs
 import { createClient } from "@supabase/supabase-js";
 import { tokenFor } from "../lib/fixtures.mjs";
 

@@ -1,5 +1,5 @@
 // Exercises /api/leader-training against the local dev server, then cleans up.
-// Run: node --env-file=.env.local scripts/check-training-api.mjs
+// Run: node --env-file=.env.local scripts/smoke/check-training-api.mjs
 import { createClient } from "@supabase/supabase-js";
 import { tokenFor } from "../lib/fixtures.mjs";
 

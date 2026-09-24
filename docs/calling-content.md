@@ -1,4 +1,4 @@
-Source of truth for the site is src/app/leaders/training/calling/content.ts. Edit either, then ask for them to be brought back in line.
+Source of truth for the site is src/content/calling.ts. Edit either, then ask for them to be brought back in line.
 
 Every word is Henry's, from "Scripts for Podcast on Calling".
 

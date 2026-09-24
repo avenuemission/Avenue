@@ -1,5 +1,5 @@
 // Signs up a throwaway leader, checks a network node appeared, cleans up.
-// Run: node --env-file=.env.local scripts/check-network-signup.mjs
+// Run: node --env-file=.env.local scripts/smoke/check-network-signup.mjs
 import { createClient } from "@supabase/supabase-js";
 import { tokenFor, cleanupFixtures } from "../lib/fixtures.mjs";
 

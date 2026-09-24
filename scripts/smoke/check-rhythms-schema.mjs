@@ -1,6 +1,6 @@
 // Confirms the Growth and Multiplication schema is in place:
 // the leader_checkins table, and apprentice_step on network_people.
-// Run: node --env-file=.env.local scripts/check-rhythms-schema.mjs
+// Run: node --env-file=.env.local scripts/smoke/check-rhythms-schema.mjs
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
