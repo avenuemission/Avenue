@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { User } from "@/lib/client/auth";
 import { leaderFetch } from "@/lib/client/leaderFetch";
-import type { NetworkPerson, NetworkDepth } from "@/app/leaders/training/_components/Phase5Multiply";
+import type { NetworkPerson, NetworkDepth } from "@/lib/domain/network";
 
 // Phase 5's discipleship network view for the leader training page: state,
 // the load effect, and the apprenticeship step update. Moved out of

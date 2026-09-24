@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { icnuStartText, type Person } from "@/lib/domain/people";
-import type { NetworkPerson } from "./Phase5Multiply";
+import type { NetworkPerson } from "@/lib/domain/network";
 
 const SAVE_DELAY_MS = 800;
 

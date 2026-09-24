@@ -6,29 +6,10 @@ import { Users, ChevronDown, CheckCircle2, Circle, UserPlus } from "lucide-react
 import { APPRENTICE_STEPS, apprenticeStepLabel, rungAfterTap } from "@/lib/domain/apprentice";
 import { multiplySummary } from "@/lib/domain/phaseSummaries";
 import type { Person } from "@/lib/domain/people";
+import type { NetworkDepth, NetworkPerson } from "@/lib/domain/network";
 import IcnuEditor from "./IcnuEditor";
 import Glow from "@/components/leaders/avenue/Glow";
 import Expander from "@/components/leaders/avenue/Expander";
-
-// A person from the discipleship network (/api/network), as seen from phase
-// 5. This is a separate shape from lib/networkLayout's NetworkPerson because
-// it also carries apprenticeStep, which that shared type does not yet.
-export interface NetworkPerson {
-  id: string;
-  firstName: string;
-  lastName: string | null;
-  email: string | null;
-  avatarUrl: string | null;
-  sentOutBy: string | null;
-  linkStatus: "pending" | "confirmed";
-  joined: boolean;
-  apprenticeStep: number;
-}
-
-export interface NetworkDepth {
-  generations: number;
-  people: number;
-}
 
 interface Phase5MultiplyProps {
   sentByViewer: NetworkPerson[];

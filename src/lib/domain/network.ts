@@ -3,6 +3,26 @@
 // that matter are unit tested rather than clicked through.
 // ============================================================
 
+// A person from the discipleship network (/api/network), as seen from phase
+// 5. This is a separate shape from lib/domain/networkLayout's NetworkPerson because
+// it also carries apprenticeStep, which that shared type does not yet.
+export interface NetworkPerson {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+  sentOutBy: string | null;
+  linkStatus: "pending" | "confirmed";
+  joined: boolean;
+  apprenticeStep: number;
+}
+
+export interface NetworkDepth {
+  generations: number;
+  people: number;
+}
+
 // A person cannot be more than this many links from a root. Well past
 // anything real, and it stops a corrupted chain hanging a request.
 export const MAX_CHAIN = 50;

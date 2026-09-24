@@ -3,8 +3,8 @@
 // default export is a function. It never calls the function, so nothing is
 // read, sent or written. Catches a module in the function's import graph
 // that cannot load in plain Node (for example one guarded with server-only).
-// Run: node scripts/smoke/check-function-bundle.mjs
-import { execFileSync, execSync } from "node:child_process";
+// Run: npm run check:function
+import { build } from "esbuild";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -16,24 +16,17 @@ const outDir = mkdtempSync(join(tmpdir(), "avenue-function-bundle-"));
 const outFile = join(outDir, "leader-emails.mjs");
 
 try {
-  const args = [
-    "--yes",
-    "esbuild@0.28.2",
-      ENTRY,
-    "--bundle",
-    "--platform=node",
-    "--format=esm",
-      `--outfile=${outFile}`,
-    "--log-level=warning",
+  await build({
+    entryPoints: [ENTRY],
+    absWorkingDir: REPO,
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    outfile: outFile,
+    logLevel: "warning",
     // Bundled CommonJS dependencies (nodemailer) call require().
-    "--banner:js=import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
-  ];
-  // npx is a .cmd on Windows, which only runs through a shell.
-  if (process.platform === "win32") {
-    execSync(["npx", ...args.map((a) => `"${a}"`)].join(" "), { cwd: REPO, stdio: "inherit" });
-  } else {
-    execFileSync("npx", args, { cwd: REPO, stdio: "inherit" });
-  }
+    banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
+  });
 
   let mod;
   try {
