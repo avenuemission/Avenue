@@ -197,7 +197,7 @@ export default function Phase4Growth({
         {/* The history */}
         <div className="mt-10">
           <h4 className="night-h2 mb-4">Recent weeks</h4>
-          <CheckinHistory weeks={historyWeeks} checkins={checkins} />
+          <CheckinHistory weeks={historyWeeks} checkins={checkins} currentWeekStart={currentWeekStart} />
         </div>
       </Expander>
 
