@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -16,15 +16,20 @@ const FORMS: { name: string; test: (text: string) => boolean }[] = [
 
 const SRC = fileURLToPath(new URL("..", import.meta.url));
 
+// Every non-binary file under src. A file with a NUL byte (images, icons)
+// is binary and skipped.
 function sourceFiles(): string[] {
   return readdirSync(SRC, { recursive: true, encoding: "utf8" })
-    .filter((path) => /\.(ts|tsx|css)$/.test(path))
-    .map((path) => join(SRC, path));
+    .map((path) => join(SRC, path))
+    .filter((file) => statSync(file).isFile() && !readFileSync(file).includes(0));
 }
 
 describe("no em dashes in src", () => {
-  it("finds the source files", () => {
-    expect(sourceFiles().length).toBeGreaterThan(100);
+  it("finds the source files and skips binary ones", () => {
+    const files = sourceFiles();
+    expect(files.length).toBeGreaterThan(100);
+    expect(files.some((f) => f.endsWith(".css"))).toBe(true);
+    expect(files.some((f) => /\.(png|ico)$/.test(f))).toBe(false);
   });
 
   it("has none in any form", () => {

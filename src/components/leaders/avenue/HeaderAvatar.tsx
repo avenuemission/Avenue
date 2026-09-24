@@ -87,6 +87,7 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
             width={36}
             height={36}
             unoptimized
+            loading="eager"
             className="h-9 w-9 rounded-full border border-[var(--line-2)] object-cover"
           />
         ) : (

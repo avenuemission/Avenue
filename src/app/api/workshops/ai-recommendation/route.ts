@@ -150,6 +150,7 @@ export async function POST(request: NextRequest) {
   const writtenPrompt = `You are a sharp strategic consultant with deep pastoral instincts. You have just analysed survey results from a group of Christians discussing AI. Produce a structured written analysis.
 
 Use plain English. Be specific: reference actual scores and patterns from the data. Dry humour welcome but don't force it.
+Do not use em dashes: use commas, colons or new sentences instead.
 
 Format your response EXACTLY as follows using these section headings and bullet points. Use markdown: ## for headings, - for bullet points, **bold** for numbered recommendation headlines.
 
@@ -184,6 +185,7 @@ ${summary}`;
 CRITICAL RULES:
 - Do NOT mention any specific numbers, scores, averages, or percentages. No "3.4 out of 5" or "67% said". Use qualitative language only: "most of you", "the majority", "a strong lean toward", "a real hesitation around", "surprisingly few", etc.
 - No headings, no bullet points, no lists. Pure spoken word, written to be read aloud naturally.
+- Do not use em dashes: use commas, colons or new sentences instead.
 - Sound like a smart, warm human friend who knows both strategy and theology. Conversational. Funny when it fits naturally.
 
 STRUCTURE (follow this order exactly):

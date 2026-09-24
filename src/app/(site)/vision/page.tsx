@@ -35,7 +35,7 @@ const beliefsData = [
   {
     question: "What do we believe about God?",
     answer:
-      "We believe in one God (Father, Son, and Holy Spirit) who is love and the Creator of all things. Jesus Christ is our Savior, fully God and fully human, who lived, died, and rose again for our salvation. The Holy Spirit works in us to guide, comfort, and transform us. The Spirit's inspired scriptures are the way we know the heart of God",
+      "We believe in one God: Father, Son, and Holy Spirit. God is love and the Creator of all things. Jesus Christ is our Savior, fully God and fully human, who lived, died, and rose again for our salvation. The Holy Spirit works in us to guide, comfort, and transform us. The Spirit's inspired scriptures are the way we know the heart of God",
   },
   {
     question: "What do we believe about humanity?",

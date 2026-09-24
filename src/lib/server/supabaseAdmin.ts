@@ -55,7 +55,7 @@ function serviceRoleKeyProblem(): string | null {
         return `SUPABASE_SERVICE_ROLE_KEY is a "${role}" key, not a service_role key. Use the service_role / secret key and redeploy.`;
       }
     } catch {
-      // Can't decode: leave it; a genuinely broken key will surface a Supabase error instead.
+      // Can't decode it. Leave it: a genuinely broken key will surface a Supabase error instead.
     }
   }
   return null;

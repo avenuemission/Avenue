@@ -8,7 +8,6 @@
     "src/**/*.{ts,tsx,css}"
   ],
   "ignoreDependencies": [
-    "@netlify/plugin-nextjs",
-    "sharp"
+    "@netlify/plugin-nextjs"
   ]
 }

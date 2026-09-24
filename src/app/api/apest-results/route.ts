@@ -35,7 +35,8 @@ Please provide a personalized response (4 short paragraphs) that includes:
 4. Gracefully mention the challenges and blind spots of their strongest giftings
 3. A biblical example of someone with a similar profile (e.g., Paul as Apostle/Teacher, Barnabas as Shepherd/Evangelist, etc.)
 
-Keep the tone warm, encouraging, and focused on how they can use these gifts to serve others and lead in community. Do not use markdown formatting - just plain text paragraphs.`;
+Keep the tone warm, encouraging, and focused on how they can use these gifts to serve others and lead in community. Do not use markdown formatting - just plain text paragraphs.
+Do not use em dashes: use commas, colons or new sentences instead.`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
