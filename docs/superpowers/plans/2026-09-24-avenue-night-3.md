@@ -15,7 +15,7 @@
 - **Branch `feat/avenue-night-3`.** It exists and holds the round 3 spec commit.
 - **Never `git push`.** Commit locally only. Henry says "push" when he wants a deploy.
 - **Never `git add`** `HANDOVER.md`, `HANDOVER-v2.md`, `HANDOVER_PROMPT*.md` (any `HANDOVER*.md`), `.mcp.json`, `scripts/demo-network.mjs`. Always `git add` exact paths, never `git add -A` or `git add .`.
-- **Presentation only, with exactly these exceptions.** (1) The new `DELETE /api/worksheets?kind=` handler in `src/app/api/worksheets/route.ts` (Task 5). (2) The additive `reset()` in `src/lib/useWorksheet.ts` that cancels queued saves, waits for in-flight ones and calls that endpoint (Task 6). (3) Spec 5's PersonPicker fix: Enter triggers the same `POST` / `PATCH` to `/api/people` that the existing buttons send (Task 7). Nothing else changes saving, auth, API calls, data shape or completion rules. Do not edit `src/lib/journey.ts`, `useTrainingProgress.ts`, `progressMerge.ts`, `useCheckins.ts`, `useNetworkView.ts`, `useMyPeople.ts`, `src/lib/auth.ts`, `src/lib/requireLeader.ts`, `src/lib/worksheets.ts`, or any other `src/app/api/**` file. The existing `GET` and `PATCH` handlers in `route.ts` stay byte for byte. Reading their values is fine.
+- **Presentation only, with exactly these exceptions.** (1) The new `DELETE /api/worksheets?kind=` handler in `src/app/api/worksheets/route.ts` (Task 5). (2) The additive `reset()` in `src/lib/useWorksheet.ts` that cancels queued saves, waits for in-flight ones and calls that endpoint, with the page-wide in-flight count and reset epoch that `send` records and checks for it (Task 6). (3) Spec 5's PersonPicker fix: Enter triggers the same `POST` / `PATCH` to `/api/people` that the existing buttons send (Task 7). Nothing else changes saving, auth, API calls, data shape or completion rules. Do not edit `src/lib/journey.ts`, `useTrainingProgress.ts`, `progressMerge.ts`, `useCheckins.ts`, `useNetworkView.ts`, `useMyPeople.ts`, `src/lib/auth.ts`, `src/lib/requireLeader.ts`, `src/lib/worksheets.ts`, or any other `src/app/api/**` file. The existing `GET` and `PATCH` handlers in `route.ts` stay byte for byte. Reading their values is fine.
 - **Reset safety.** The route runs `requireLeader(request)` before any query, takes the email only from `auth.leader.email` (never the body or query), validates `kind` with the existing `parseKind`, deletes only `leader_worksheets` where `email` = session email and `kind` = that kind, and returns a 500 with the database message on any error. It touches no other table. Reset gets its own security-focused review.
 - **Print output of the Calling Profile and Launch Plan stays black on white**, with the same boxes and content as today. Reset buttons and the reset dialog carry `no-print`.
 - **Never use an em dash (U+2014)** anywhere: code, comments, UI copy, commit messages, this plan. Use a colon, a comma, or a new sentence. En dashes (U+2013) only in number ranges. In tests build an em dash with `String.fromCharCode(0x2014)`; never type one (the Write tool turns a backslash-u 2014 escape into the real character).
@@ -49,12 +49,24 @@
 | Spec 1 | The fallback chain lives in `src/lib/youtubeThumb.ts`. When `hqdefault` also fails the image stays on `hqdefault` and `console.error` names the video id | Fail loud; `hqdefault` exists for every public video |
 | Spec 2, route order | `adminConfigError()` stays first, as in `GET` and `PATCH`; it reads env vars only. `requireLeader(request)` is the first thing that touches data | Keeps the three handlers identical in shape |
 | Spec 2, response for no row | Deleting when no row exists is still `{ ok: true }` (200) | Reset is idempotent; a second tap must not error |
-| Spec 2, pending saves | `reset()` cancels every queued save and clears unsent values (the leader asked to wipe them), then waits up to 15 s for any in-flight `PATCH` to land before sending `DELETE`. If one is still running it throws "A save is still running, so nothing was reset. Try again." and deletes nothing. While resetting, `send` does nothing | An in-flight `PATCH` that landed after the delete would bring the row back |
+| Spec 2, pending saves | `reset()` cancels every queued save (the typed values stay queued, unsent), moves the page-wide reset epoch for that kind, then waits up to 15 s for every in-flight `PATCH` of that kind from any copy of the hook on the page (a wizard that just unmounted is still sending) before sending `DELETE`. Unsent values are dropped only once the delete succeeds; if the wait times out ("A save is still running, so nothing was reset. Try again.") or the delete fails, they go back in the save queue. While resetting, `send` does nothing; a copy of the hook that loaded before the latest reset drops its later saves with a `console.warn` | An in-flight `PATCH` that landed after the delete, or a late save from an unmounted wizard (the APEST reflection resolves seconds later), would bring the row back |
 | Spec 2, after reset | `reset()` clears local data to `{}` and re-runs the existing `GET` read (a `reloadKey` in the load effect's dependencies) | Spec: "reloads that worksheet (the existing useWorksheet read path)" |
 | Spec 2, dialog lists | Calling: "Your answers in all six Calling sections", "Your APEST results and the AI reflection", "Your Calling Profile, which is made from those answers". Launch: "Your answers in all seven Launch steps", "Your Arena run", "Your Launch Plan, including the actions you ticked". Both add "People on My People are kept." | The spec lists what is wiped but not the words; people live in `leader_people`, which reset never touches |
 | Spec 2, button labels | Page button "Reset Calling" / "Reset Launch" (outlined, 44 px). Hub text button "Reset Calling" / "Reset Launch" (muted, underlined, 44 px tall). Dialog busy label "Resetting..." | Spec names the actions; quiet on the hub |
 | Spec 5 | Enter with an exact full-name match (case and extra spaces ignored) that is not on this list tags that person (the existing pick path). An exact match already on this list (or excluded) clears the field and shows nothing new. Otherwise Enter adds the typed name (the existing Add path). The hint shows only while the field is not focused and holds text | Spec 5 "Found" bullet |
 | Spec 5 | The picker's suggestion and Add buttons become `min-h-[44px]` | They were about 36 px; the task edits that markup anyway |
+
+## Pre-flight rulings (round 3, 24 Sep)
+
+Full notes: `.superpowers/sdd/avenue-night-3/preflight.md`. Each ruling is already folded into the task text below.
+
+- F1 (Task 6): `reset()` waits for every in-flight save of that kind from any `useWorksheet` copy on the page, and a copy loaded before a reset drops its later saves (page-wide count and epoch in `worksheetReset.ts`, 2 new tests), so an unmounted wizard's last save or a late APEST reflection cannot bring a reset row back.
+- F2 (Task 6): unsent typing is dropped only once the delete succeeds; on a timeout or a failed delete it goes back in the save queue, so "nothing was reset" is true.
+- F3 (Task 7): a second Enter or a held Enter while the first request runs does nothing (`enterBusyRef`), so one name cannot be added twice.
+- F4 (Task 7): focus returns to the field from an effect once `busy` clears, because the input is still disabled when the request's promise settles.
+- F5 (Task 6): a failed reset reopens the dialog to show its error, since a second Escape can close a modal dialog while busy.
+- F6 (Task 5): `check-auth.mjs` also proves the reset leaves another table (A's profile) alone; the reset block has ten checks, not eight.
+- F7 (Task 3): a module's tick button names its in-progress state (`DOT_SR_TEXT`), because the dot is `aria-hidden` and the `aria-label` hides everything else.
 
 ## File map
 
@@ -82,7 +94,7 @@
 | `src/app/api/worksheets/route.ts` | Modify | 5 | `DELETE` handler (appended) |
 | `src/app/api/worksheets/route.test.ts` | Create | 5 | Route tests with mocks |
 | `scripts/check-auth.mjs` | Modify | 5 | 401/403 for DELETE; reset end to end |
-| `src/lib/worksheetReset.ts` | Create | 6 | `RESET_COPY`, `waitForIdle` |
+| `src/lib/worksheetReset.ts` | Create | 6 | `RESET_COPY`, `waitForIdle`, page-wide in-flight count and reset epoch per kind |
 | `src/lib/worksheetReset.test.ts` | Create | 6 | Tests |
 | `src/lib/useWorksheet.ts` | Modify | 6 | Additive `reset()` |
 | `src/components/journey/ResetWorksheet.tsx` | Create | 6 | Reset button plus native `<dialog>` confirm |
@@ -93,9 +105,9 @@
 | `src/lib/personPicker.test.ts` | Create | 7 | Tests |
 | `src/components/people/PersonPicker.tsx` | Modify | 7 | Enter adds or tags; unsaved hint |
 
-Expected test count: 268 at the start, 287 after Task 1, 290 after Task 2, 293 after Task 4, 299 after Task 5, 305 after Task 6, 311 after Task 7 (final).
+Expected test count: 268 at the start, 287 after Task 1, 290 after Task 2, 293 after Task 4, 299 after Task 5, 307 after Task 6, 313 after Task 7 (final).
 
-Planner dry run (24 Sep, on `96b7eb2`): every code block in Tasks 1 to 7 was applied to a scratch working tree and then reverted. Result: 311 tests passing, `tsc` clean, lint 54, `npm run build` passes, and the Task 3 Step 9 grep and Task 6 Step 5 diff check give the expected output.
+Planner dry run (24 Sep, on `96b7eb2`): every code block in Tasks 1 to 7 was applied to a scratch working tree and then reverted. Result: 311 tests passing, `tsc` clean, lint 54, `npm run build` passes, and the Task 3 Step 9 grep and Task 6 Step 5 diff check give the expected output. The pre-flight rulings below changed Tasks 3, 5, 6 and 7 afterwards (two more tests, so 313); their changed code was dry-run again for `tsc`, lint and the unit tests (see the rulings).
 
 ---
 
@@ -706,7 +718,7 @@ With a fixture leader that has at least one weekly check-in and no apprentice on
 - Modify: `src/app/leaders/training/CallingCard.tsx` (imports, `lamps`, `completed`, `firstOpen`)
 - Modify: `src/app/leaders/training/LaunchCard.tsx` (imports, `lamps`, `completed`, `firstOpen`)
 - Modify: `src/app/leaders/training/launch/ArenaStep.tsx` (`MonthStreet` at lines 40-51, arena import)
-- Modify: `src/app/leaders/training/PhaseModules.tsx` (imports, the dot inside the tick button)
+- Modify: `src/app/leaders/training/PhaseModules.tsx` (imports, the tick button's `aria-label`, the dot inside the tick button)
 
 **Interfaces:**
 - Consumes (Task 1): `type DotStatus`, `DOT_SR_TEXT`, `callingSectionStatus`, `launchStepStatus`, `launchWizardStepStatus`, `moduleStatus`, `arenaMonthStatus` from `@/lib/stepStatus`.
@@ -1118,7 +1130,23 @@ In `src/app/leaders/training/PhaseModules.tsx`, add after the `Glow` import:
 
 ```tsx
 import StepDot from "@/components/avenue/StepDot";
-import { moduleStatus } from "@/lib/stepStatus";
+import { DOT_SR_TEXT, moduleStatus } from "@/lib/stepStatus";
+```
+
+Replace (the dot is `aria-hidden`, so the button's name carries the in-progress state; ticked wording unchanged):
+
+```tsx
+                aria-label={module.completed ? `${module.title}: done. Tap to untick.` : `${module.title}: mark done`}
+```
+
+with:
+
+```tsx
+                aria-label={
+                  module.completed
+                    ? `${module.title}: done. Tap to untick.`
+                    : `${module.title}${DOT_SR_TEXT[moduleStatus(module)]}: mark done`
+                }
 ```
 
 Replace:
@@ -1579,6 +1607,17 @@ add:
         bCalling.length === 1 && bCalling[0].data?.layers?.placements?.s1 === "seasonal",
         JSON.stringify(bCalling)
       );
+      const { data: aProfile, error: aProfileErr } = await db
+        .from("leader_profiles")
+        .select("about")
+        .eq("email", A)
+        .maybeSingle();
+      if (aProfileErr) throw new Error(aProfileErr.message);
+      check(
+        "A's profile is untouched by the reset (no other table)",
+        aProfile?.about === "written by A",
+        JSON.stringify(aProfile)
+      );
       const again = await call("DELETE", "/api/worksheets?kind=calling", { token: tokenA });
       check("a second reset is still ok", again.status === 200 && again.json?.ok === true, JSON.stringify(again));
       const badReset = await call("DELETE", "/api/worksheets?kind=profile", { token: tokenA });
@@ -1619,11 +1658,11 @@ node --env-file=.env.local scripts/check-auth.mjs
 npm run guard
 ```
 
-Expected: `clean`; then every line `ok`, including the new "no token, garbage token, non-leader token" lines for `DELETE /api/worksheets?kind=calling` (401, 401, 403) and the eight reset lines, ending `fixtures cleaned` and `all passed`; then `clean`. Any `FAIL` stops the branch until fixed.
+Expected: `clean`; then every line `ok`, including the new "no token, garbage token, non-leader token" lines for `DELETE /api/worksheets?kind=calling` (401, 401, 403) and the ten reset lines, ending `fixtures cleaned` and `all passed`; then `clean`. Any `FAIL` stops the branch until fixed.
 
 - [ ] **Step 9: Security-focused review (controller dispatches)**
 
-Dispatch a reviewer on this task's diff with this brief: the handler runs `requireLeader` before any query; the email comes only from `auth.leader.email`; `kind` goes through `parseKind`; the delete filters on both `email` and `kind` on `leader_worksheets` only; every error returns non-2xx; `GET` and `PATCH` are byte for byte unchanged; `check-auth.mjs` proves 401 without a token, 403 for a non-leader, own-kind cleared, other kind and other leader untouched. Verdict must be clean before Task 6 starts.
+Dispatch a reviewer on this task's diff with this brief: the handler runs `requireLeader` before any query; the email comes only from `auth.leader.email`; `kind` goes through `parseKind`; the delete filters on both `email` and `kind` on `leader_worksheets` only; every error returns non-2xx; `GET` and `PATCH` are byte for byte unchanged; `check-auth.mjs` proves 401 without a token, 403 for a non-leader, own-kind cleared, other kind, other leader and another table (A's profile) untouched. Verdict must be clean before Task 6 starts.
 
 ---
 
@@ -1632,7 +1671,7 @@ Dispatch a reviewer on this task's diff with this brief: the handler runs `requi
 **Files:**
 - Create: `src/lib/worksheetReset.ts`
 - Test: `src/lib/worksheetReset.test.ts`
-- Modify: `src/lib/useWorksheet.ts` (additive only: one import, `reloadKey` state, `resettingRef`, one guard line in `send`, the load effect's dependency list, `reset`, the return value)
+- Modify: `src/lib/useWorksheet.ts` (additive only: one import, `reloadKey` state, `resettingRef` and `epochRef`, one line at the top of the load effect, the load effect's dependency list, two guards in `send`, one line each where `send` adds and removes its in-flight mark, `reset`, the return value)
 - Create: `src/components/journey/ResetWorksheet.tsx`
 - Modify: `src/app/globals.css` (the focus ring selector list at lines 298-300; a new `.av-dialog` block after the `.av-sheet` media query)
 - Modify: `src/app/leaders/training/calling/profile/page.tsx` (import, `reset` from the hook, a block before `<JourneyFooter />`)
@@ -1644,7 +1683,7 @@ Dispatch a reviewer on this task's diff with this brief: the handler runs `requi
 **Interfaces:**
 - Consumes (Task 5): `DELETE /api/worksheets?kind=` returning `{ ok: true }` or `{ error }`. `type WorksheetKind` from `@/lib/worksheets`. `leaderFetch` from `@/lib/leaderFetch`.
 - Produces:
-  - From `src/lib/worksheetReset.ts`: `interface ResetCopy { button: string; title: string; wiped: string[]; kept: string; confirm: string }`, `RESET_COPY: Record<WorksheetKind, ResetCopy>`, `RESET_LEAD = "This wipes:"`, `RESET_FINAL = "This can't be undone."`, `RESET_WAIT_MS = 15_000`, `RESET_BUSY_MESSAGE`, `waitForIdle(isBusy: () => boolean, timeoutMs: number, pollMs?: number): Promise<void>`.
+  - From `src/lib/worksheetReset.ts`: `interface ResetCopy { button: string; title: string; wiped: string[]; kept: string; confirm: string }`, `RESET_COPY: Record<WorksheetKind, ResetCopy>`, `RESET_LEAD = "This wipes:"`, `RESET_FINAL = "This can't be undone."`, `RESET_WAIT_MS = 15_000`, `RESET_BUSY_MESSAGE`, `waitForIdle(isBusy: () => boolean, timeoutMs: number, pollMs?: number): Promise<void>`, and the page-wide bookkeeping shared by every `useWorksheet` copy: `saveStarted(kind)`, `saveEnded(kind)` (throws if nothing was started), `savesInFlight(kind): number`, `resetEpoch(kind): number`, `beginResetEpoch(kind): number`.
   - `useWorksheet(...)` also returns `reset: () => Promise<void>`.
   - `ResetWorksheet` default export, props `{ kind: WorksheetKind; onReset: () => Promise<void>; variant: "button" | "quiet" }`.
   - `CallingCardProps` and `LaunchCardProps` gain `onReset: () => Promise<void>`.
@@ -1655,7 +1694,17 @@ Create `src/lib/worksheetReset.test.ts`:
 
 ```ts
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RESET_COPY, RESET_FINAL, RESET_LEAD, waitForIdle } from "./worksheetReset";
+import {
+  beginResetEpoch,
+  RESET_COPY,
+  RESET_FINAL,
+  RESET_LEAD,
+  resetEpoch,
+  saveEnded,
+  saveStarted,
+  savesInFlight,
+  waitForIdle,
+} from "./worksheetReset";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -1721,6 +1770,26 @@ describe("waitForIdle", () => {
     await failed;
   });
 });
+
+describe("page-wide save bookkeeping", () => {
+  it("counts saves on the wire per kind and fails loud on an unmatched end", () => {
+    saveStarted("calling");
+    saveStarted("calling");
+    saveEnded("calling");
+    expect(savesInFlight("calling")).toBe(1);
+    expect(savesInFlight("launch")).toBe(0);
+    saveEnded("calling");
+    expect(savesInFlight("calling")).toBe(0);
+    expect(() => saveEnded("calling")).toThrow("saveEnded(calling) without a matching saveStarted");
+  });
+  it("moves the reset epoch for one kind only", () => {
+    const calling = resetEpoch("calling");
+    const launch = resetEpoch("launch");
+    expect(beginResetEpoch("calling")).toBe(calling + 1);
+    expect(resetEpoch("calling")).toBe(calling + 1);
+    expect(resetEpoch("launch")).toBe(launch);
+  });
+});
 ```
 
 - [ ] **Step 2: Run the tests to see them fail**
@@ -1733,9 +1802,10 @@ Expected: FAIL: "Failed to resolve import ./worksheetReset".
 Create `src/lib/worksheetReset.ts`:
 
 ```ts
-// Reset Calling and Reset Launch (round 3 spec 2). Pure: the confirm
-// dialog's words, and the wait that lets a save already on the wire land
-// before the delete, so it cannot write an old answer back afterwards.
+// Reset Calling and Reset Launch (round 3 spec 2): the confirm dialog's
+// words, the wait that lets a save already on the wire land before the
+// delete (so it cannot write an old answer back afterwards), and the small
+// page-wide count of saves and resets that wait relies on.
 import type { WorksheetKind } from "@/lib/worksheets";
 
 export interface ResetCopy {
@@ -1796,19 +1866,57 @@ export async function waitForIdle(isBusy: () => boolean, timeoutMs: number, poll
     await new Promise((resolve) => setTimeout(resolve, pollMs));
   }
 }
+
+// Page-wide bookkeeping, shared by every useWorksheet copy on the page:
+// the hub, the profile, and a wizard that has just unmounted but is still
+// sending its last save. reset() waits until no save of that kind is on the
+// wire, and a copy that loaded before the latest reset drops its later saves
+// (an APEST reflection can resolve seconds after the leader left the step).
+const inFlight: Record<WorksheetKind, number> = { calling: 0, launch: 0 };
+const epoch: Record<WorksheetKind, number> = { calling: 0, launch: 0 };
+
+export function saveStarted(kind: WorksheetKind): void {
+  inFlight[kind] += 1;
+}
+
+export function saveEnded(kind: WorksheetKind): void {
+  if (inFlight[kind] <= 0) throw new Error(`saveEnded(${kind}) without a matching saveStarted`);
+  inFlight[kind] -= 1;
+}
+
+export function savesInFlight(kind: WorksheetKind): number {
+  return inFlight[kind];
+}
+
+export function resetEpoch(kind: WorksheetKind): number {
+  return epoch[kind];
+}
+
+export function beginResetEpoch(kind: WorksheetKind): number {
+  epoch[kind] += 1;
+  return epoch[kind];
+}
 ```
 
 - [ ] **Step 4: Run the tests to see them pass**
 
 Run: `npx vitest run src/lib/worksheetReset.test.ts`
-Expected: PASS, 6 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 5: `reset()` in useWorksheet (additive)**
 
 In `src/lib/useWorksheet.ts`, after the line `import type { WorksheetKind } from "@/lib/worksheets";` add:
 
 ```ts
-import { RESET_WAIT_MS, waitForIdle } from "@/lib/worksheetReset";
+import {
+  beginResetEpoch,
+  RESET_WAIT_MS,
+  resetEpoch,
+  saveEnded,
+  saveStarted,
+  savesInFlight,
+  waitForIdle,
+} from "@/lib/worksheetReset";
 ```
 
 After the line `  const [saveError, setSaveError] = useState<string | null>(null);` add:
@@ -1821,9 +1929,20 @@ After the line `  const [saveError, setSaveError] = useState<string | null>(null
 After the line `  const unmountedRef = useRef(false);` add:
 
 ```ts
-  // True while reset() runs: send does nothing, so no queued or retried
-  // save can write an old answer back after the delete (round 3 spec 2).
+  // True while reset() runs: send does nothing (queued values stay queued),
+  // so no save can write an old answer back after the delete (round 3
+  // spec 2).
   const resettingRef = useRef(false);
+  // The page-wide reset epoch this copy loaded under. A copy that loaded
+  // before a later reset (a wizard that has unmounted but still gets a late
+  // APEST reflection) drops its saves instead of writing old answers back.
+  const epochRef = useRef(0);
+```
+
+Directly after the load effect's first line `  useEffect(() => {` (the one whose next line is `    if (!enabled) return;`), add:
+
+```ts
+    epochRef.current = resetEpoch(kind);
 ```
 
 Replace the load effect's dependency line:
@@ -1849,37 +1968,62 @@ with:
 ```ts
       if (resettingRef.current) return;
       if (!pendingRef.current.has(section)) return;
+      if (epochRef.current !== resetEpoch(kind)) {
+        // This worksheet was reset after this copy loaded: an old answer
+        // must not be written back (round 3 spec 2).
+        pendingRef.current.delete(section);
+        console.warn(`Worksheet save dropped after a reset (${kind}.${section})`);
+        return;
+      }
+```
+
+In the same function, directly after the line `      inFlightRef.current.add(section);` add:
+
+```ts
+      saveStarted(kind);
+```
+
+and in its `finally`, directly after the line `        inFlightRef.current.delete(section);` add:
+
+```ts
+        saveEnded(kind);
 ```
 
 After the whole `flushSection` callback (ending `  }, []);`, directly before the comment `// Warn before leaving with unsaved typing, and send anything still`), add:
 
 ```ts
   // Reset Calling or Reset Launch (round 3 spec 2). Queued saves are
-  // cancelled and unsent typing is dropped (the leader asked to wipe it),
-  // then any save already on the wire is allowed to land first, so it
-  // cannot write an old answer back after the delete. If one is still
-  // running after RESET_WAIT_MS this throws and deletes nothing. A failed
-  // delete throws the server's message. On success the worksheet is
-  // re-read through the normal load path.
+  // stopped (their values stay queued, unsent) and the reset epoch moves,
+  // so any other copy of this worksheet on the page drops its later saves.
+  // Every save of this kind already on the wire, from any copy, lands
+  // before the delete, so it cannot write an old answer back. If one is
+  // still running after RESET_WAIT_MS this throws and deletes nothing. A
+  // failed delete throws the server's message. Unsent typing is dropped
+  // only once the delete succeeded; otherwise it goes back in the queue.
+  // On success the worksheet is re-read through the normal load path.
   const reset = useCallback(async () => {
     resettingRef.current = true;
+    for (const t of timersRef.current.values()) clearTimeout(t);
+    timersRef.current.clear();
+    beginResetEpoch(kind);
+    let wiped = false;
     try {
-      for (const t of timersRef.current.values()) clearTimeout(t);
-      timersRef.current.clear();
-      pendingRef.current.clear();
-      await waitForIdle(() => inFlightRef.current.size > 0, RESET_WAIT_MS);
-      pendingRef.current.clear(); // anything typed while waiting is wiped too
+      await waitForIdle(() => savesInFlight(kind) > 0, RESET_WAIT_MS);
       const res = await leaderFetch(`/api/worksheets?kind=${kind}`, { method: "DELETE" });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || `Could not reset (${res.status})`);
+      wiped = true;
+      pendingRef.current.clear();
       setData({});
       setSaveError(null);
       setError(null);
       setReloadKey((k) => k + 1);
     } finally {
+      epochRef.current = resetEpoch(kind);
       resettingRef.current = false;
+      if (!wiped) for (const section of pendingRef.current.keys()) schedule(section, SAVE_DEBOUNCE_MS);
     }
-  }, [kind]);
+  }, [kind, schedule]);
 ```
 
 Replace the return line:
@@ -1955,6 +2099,9 @@ export default function ResetWorksheet({ kind, onReset, variant }: ResetWorkshee
       setOpen(false);
     } catch (e) {
       setError((e as Error).message);
+      // A second Escape can close a modal dialog even while busy (the
+      // browser's close watcher), so open it again to show the error.
+      setOpen(true);
     } finally {
       setBusy(false);
     }
@@ -2239,7 +2386,7 @@ with:
 
 - [ ] **Step 10: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 305 passing (299 + 6), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 307 passing (299 + 8), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 11: Commit**
 
@@ -2257,6 +2404,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Open it: the dialog is centred, titled "Reset Calling?", lists the three wiped items, "People on My People are kept.", "This can't be undone.", and "Cancel" has the lamp focus ring. Escape closes it and focus returns to "Reset Calling". Tab moves between Cancel and "Yes, reset Calling" only (focus is trapped).
 - "Yes, reset Calling": the label reads "Resetting..." briefly, the dialog closes, every profile section shows its empty state. Reload: still empty. `/leaders/training`: the Calling dots are all off, "0 of 6"; the Launch block is unchanged.
 - Pending-save guard: on `/leaders/training/launch/plan`, tick an action and within half a second press "Reset Launch", then "Yes, reset Launch". Network panel: no `PATCH /api/worksheets` is sent after the `DELETE` (a PATCH already on the wire finishes before it). Reload: no action is ticked and the plan is empty.
+- Late save from a page you left: on `/leaders/training/calling`, finish the APEST quiz and, while the reflection is still being written, go to `/leaders/training` and "Reset Calling", "Yes, reset Calling". Wait 20 s and reload: Calling is still empty, and the console shows "Worksheet save dropped after a reset (calling.apest)" if the reflection came back after the reset.
 - Hub quiet buttons: "Reset Calling" and "Reset Launch" appear under the two buttons in each block as quiet underlined text, 44 px tall, and open the same dialog.
 - A failed delete (DevTools, block request URL `/api/worksheets?kind=launch` for DELETE only, or take the dev server down): the dialog stays open and shows the error in amber; nothing is wiped.
 - Delete the fixture by exact email, then `npm run guard` prints `clean`.
@@ -2268,7 +2416,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Files:**
 - Create: `src/lib/personPicker.ts`
 - Test: `src/lib/personPicker.test.ts`
-- Modify: `src/components/people/PersonPicker.tsx` (imports, state, `pick`, the name split, the input, the two list buttons, a hint line)
+- Modify: `src/components/people/PersonPicker.tsx` (imports, state and two refs, `pick`, the name split, `onEnter` and a refocus effect, the input, the two list buttons, a hint line)
 
 **Interfaces:**
 - Consumes: `type Person` from `@/lib/people`. The existing `send("POST" | "PATCH", body)` inside `PersonPicker` (same `/api/people` calls as today).
@@ -2412,7 +2560,7 @@ import type { Metric, Person, Space } from "@/lib/people";
 with:
 
 ```tsx
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { leaderFetch } from "@/lib/leaderFetch";
 import type { Metric, Person, Space } from "@/lib/people";
 import { enterChoice, splitName, unsavedHint } from "@/lib/personPicker";
@@ -2447,6 +2595,12 @@ with:
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const hintId = useId();
+  // Set while a request started by Enter runs, so a second Enter (or a held
+  // key) before the field is disabled cannot add the same person twice.
+  const enterBusyRef = useRef(false);
+  // Set when Enter sent a request: the field is disabled while it runs and
+  // loses focus, so it gets focus back once busy clears (the effect below).
+  const refocusRef = useRef(false);
 ```
 
 Replace the `pick` function:
@@ -2483,22 +2637,35 @@ with:
     name ? send("POST", { firstName: name.firstName, lastName: name.lastName, ...tagCreate(tag) }) : Promise.resolve();
 
   // Enter: tag an exact match not yet on this list, clear an exact match
-  // already on it, otherwise add the typed name. Focus comes back to the
-  // field afterwards (it is disabled while the request runs).
+  // already on it, otherwise add the typed name. One request at a time.
   const onEnter = () => {
+    if (busy || enterBusyRef.current) return;
     const choice = enterChoice(query, people, (p) => hasTag(p, tag) || (exclude?.includes(p.id) ?? false));
-    let done: Promise<void>;
-    if (choice.kind === "existing") done = pick(choice.person);
-    else if (choice.kind === "add") done = add();
-    else {
-      if (choice.kind === "already") {
-        setError(null);
-        setQuery("");
-      }
+    if (choice.kind === "nothing") return;
+    if (choice.kind === "already") {
+      setError(null);
+      setQuery("");
       return;
     }
-    void done.then(() => inputRef.current?.focus());
+    if (choice.kind === "existing" && tag.kind === "none") {
+      void pick(choice.person); // no request, so the field keeps focus
+      return;
+    }
+    enterBusyRef.current = true;
+    refocusRef.current = true;
+    const done = choice.kind === "existing" ? pick(choice.person) : add();
+    void done.finally(() => {
+      enterBusyRef.current = false;
+    });
   };
+
+  // The field is enabled again only after React re-renders with busy false,
+  // so focus it here rather than when the request's promise settles.
+  useEffect(() => {
+    if (busy || !refocusRef.current) return;
+    refocusRef.current = false;
+    inputRef.current?.focus();
+  }, [busy]);
 
   const hint = busy ? null : unsavedHint(query, focused);
 ```
@@ -2585,7 +2752,7 @@ with:
 
 - [ ] **Step 6: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 311 passing (305 + 6), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 313 passing (307 + 6), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 7: Commit**
 
@@ -2606,6 +2773,7 @@ node --env-file=.env.local -e "import('./scripts/lib/fixtures.mjs').then(async (
 ```
 
 (replace `FIXTURE_EMAIL@example.invalid` with the fixture's exact email). Expected: the row for "Fixture" / "Enter" with `metrics` holding `pathways`.
+- Under Streetlights type "Fixture Double" and press Enter twice quickly, then type "Fixture Held" and hold Enter for a second: the query above shows exactly one "Fixture" / "Double" row and one "Fixture" / "Held" row.
 - Under Intersections type "fixture enter" (any case) and press Enter: the same person is tagged, not a second person (the query above shows one row, now with both metrics).
 - Type "Half typed" under Streetlights and Tab away: "Not saved yet. Press Enter or tap Add." shows under the field in muted text. Focus back and it goes away. Tapping "Add ... to My People" still works and the suggestion rows are 44 px tall.
 - `/leaders/training/launch`, Launch team step: type a new name and press Enter; the person joins the team as the Add button would.
@@ -2629,7 +2797,7 @@ npm run build
 npm run guard
 ```
 
-Expected: tsc prints nothing; 311 tests pass; lint at most 54 problems; build passes; guard prints `clean`.
+Expected: tsc prints nothing; 313 tests pass; lint at most 54 problems; build passes; guard prints `clean`.
 
 - [ ] **Step 2: The end-to-end auth check**
 
