@@ -134,8 +134,10 @@ export default async function PathwaysPage() {
               </p>
 
               <div className="pt-4">
+                {/* No prefetch: /login pulls in supabase-js and the serif font. */}
                 <Link
                   href="/login"
+                  prefetch={false}
                   className="inline-block bg-[var(--accent)] text-white px-10 py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
                 >
                   Become a Pathway Leader

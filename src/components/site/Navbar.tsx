@@ -109,7 +109,9 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Countdown Timer, Giving and Login */}
+          {/* Countdown Timer, Giving and Login. The Login/Leaders links do not
+              prefetch: those routes pull in supabase-js and the serif font,
+              which public pages should not download. */}
           <div className="hidden sm:flex items-center space-x-3">
             <CountdownTimer variant="navbar" />
             <Link
@@ -123,6 +125,7 @@ export default function Navbar() {
             </Link>
             <Link
               href={signedIn ? "/leaders" : "/login"}
+              prefetch={false}
               className="flex items-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
             >
               {signedIn ? (
@@ -216,6 +219,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href={signedIn ? "/leaders" : "/login"}
+              prefetch={false}
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center space-x-2 bg-gray-800/80 hover:bg-gray-700/80 rounded-full px-4 py-2 transition-colors"
               >

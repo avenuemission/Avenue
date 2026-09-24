@@ -88,6 +88,10 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
                 fill
                 className="object-cover"
                 sizes="240px"
+                // The first card is fully in view at load and is the LCP
+                // element on mobile, so it loads first instead of competing
+                // with the lazy cards behind it.
+                preload={index === 0}
               />
             </div>
           ))}
