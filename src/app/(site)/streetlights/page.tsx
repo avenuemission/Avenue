@@ -40,7 +40,7 @@ export default function StreetlightsPage() {
     email: "",
     supportType: "",
     message: "",
-    website: "",
+    company: "",
   });
   const [supportSubmitted, setSupportSubmitted] = useState(false);
 
@@ -70,41 +70,19 @@ export default function StreetlightsPage() {
     e.preventDefault();
     if (supportForm.name && supportForm.email && supportForm.supportType) {
       try {
-        // Submit to Netlify Forms
-        const netlifyData = new FormData();
-        netlifyData.append("form-name", "mission-support");
-        netlifyData.append("name", supportForm.name);
-        netlifyData.append("email", supportForm.email);
-        netlifyData.append("supportType", supportForm.supportType);
-        netlifyData.append("message", supportForm.message);
-        await fetch("/", {
-          method: "POST",
-          body: netlifyData,
-        });
-
-        // Send email notification
-        await fetch("/api/send-email", {
+        const res = await fetch("/api/forms/mission-support", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            type: "missionSupport",
-            data: { ...supportForm },
-          }),
-        });
-
-        // Save to Supabase (admin dashboard)
-        await fetch("/api/submissions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            form_type: "mission-support",
             name: supportForm.name,
             email: supportForm.email,
+            company: supportForm.company,
             data: { supportType: supportForm.supportType, message: supportForm.message },
           }),
         });
+        if (!res.ok) throw new Error(`Form failed (${res.status})`);
         setSupportSubmitted(true);
-        setSupportForm({ name: "", email: "", supportType: "", message: "", website: "" });
+        setSupportForm({ name: "", email: "", supportType: "", message: "", company: "" });
         setTimeout(() => setSupportSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -502,14 +480,13 @@ export default function StreetlightsPage() {
                     Support this mission with your time or resources. Fill out the form below and we&apos;ll be in touch.
                   </p>
 
-                  <form onSubmit={handleSupportSubmit} className="space-y-4" data-netlify="true" name="mission-support">
-                    <input type="hidden" name="form-name" value="mission-support" />
+                  <form onSubmit={handleSupportSubmit} className="space-y-4">
                     {/* Honeypot */}
                     <input
                       type="text"
-                      name="website"
-                      value={supportForm.website}
-                      onChange={(e) => setSupportForm({ ...supportForm, website: e.target.value })}
+                      name="company"
+                      value={supportForm.company}
+                      onChange={(e) => setSupportForm({ ...supportForm, company: e.target.value })}
                       style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
                       tabIndex={-1}
                       autoComplete="off"

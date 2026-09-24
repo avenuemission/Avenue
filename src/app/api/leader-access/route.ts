@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { sendLeaderSignupNotification } from "@/lib/server/mail/transport";
+import { sendLeaderSignupNotification } from "@/lib/emails/public/admin";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 

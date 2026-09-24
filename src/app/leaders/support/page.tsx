@@ -16,6 +16,18 @@ import {
   ChevronDown,
 } from "lucide-react";
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
+import { leaderFetch } from "@/lib/client/leaderFetch";
+import { SUPPORT_ZOOM } from "@/content/support";
+
+// The server sends the confirmation to the signed-in leader's own address
+// and adds the Zoom details itself.
+function postSupportForm(body: { name: string; company: string; data: Record<string, string> }) {
+  return leaderFetch("/api/forms/leader-support", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
 
 // Generate next 3 weeks of Thursdays and Saturdays
 function getUpcomingCallDates(): { thursdays: Date[]; saturdays: Date[] } {
@@ -64,18 +76,12 @@ function formatTime(date: Date): string {
   });
 }
 
-const ZOOM_INFO = {
-  link: "https://monash.zoom.us/j/5879274261?pwd=T296WXNGTEpDN20yZWZnb1d0ZFY3UT09",
-  meetingId: "587 927 4261",
-  passcode: "793139",
-};
-
 export default function LeaderSupportPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [customTime, setCustomTime] = useState({ date: "", time: "", website: "" });
+  const [customTime, setCustomTime] = useState({ date: "", time: "", company: "" });
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -102,45 +108,13 @@ export default function LeaderSupportPage() {
     setSubmitting(true);
 
     try {
-      // Submit to Netlify Forms
-      const netlifyData = new FormData();
-      netlifyData.append("form-name", "leader-support");
-      netlifyData.append("leaderName", user?.name || "");
-      netlifyData.append("leaderEmail", user?.email || "");
-      netlifyData.append("selectedDate", `${formatDate(date)} at ${formatTime(date)}`);
-      await fetch("/", {
-        method: "POST",
-        body: netlifyData,
+      const formattedDate = `${formatDate(date)} at ${formatTime(date)}`;
+      const res = await postSupportForm({
+        name: user?.name || "",
+        company: "",
+        data: { selectedDate: date.toISOString(), formattedDate },
       });
-
-      await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "leaderSupport",
-          data: {
-            leaderName: user?.name,
-            leaderEmail: user?.email,
-            selectedDate: date.toISOString(),
-            formattedDate: `${formatDate(date)} at ${formatTime(date)}`,
-            zoomLink: ZOOM_INFO.link,
-            meetingId: ZOOM_INFO.meetingId,
-            passcode: ZOOM_INFO.passcode,
-          },
-        }),
-      });
-
-      // Save to Supabase (admin dashboard)
-      await fetch("/api/submissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          form_type: "leader-support",
-          name: user?.name,
-          email: user?.email,
-          data: { selectedDate: date.toISOString(), formattedDate: `${formatDate(date)} at ${formatTime(date)}` },
-        }),
-      });
+      if (!res.ok) throw new Error(`Booking failed (${res.status})`);
       setSubmitted(true);
     } catch (error) {
       console.error("Error submitting:", error);
@@ -156,44 +130,12 @@ export default function LeaderSupportPage() {
     setSubmitting(true);
 
     try {
-      // Submit to Netlify Forms
-      const netlifyData = new FormData();
-      netlifyData.append("form-name", "leader-support-custom");
-      netlifyData.append("leaderName", user?.name || "");
-      netlifyData.append("leaderEmail", user?.email || "");
-      netlifyData.append("requestedDate", customTime.date);
-      netlifyData.append("requestedTime", customTime.time);
-      await fetch("/", {
-        method: "POST",
-        body: netlifyData,
+      const res = await postSupportForm({
+        name: user?.name || "",
+        company: customTime.company,
+        data: { requestedDate: customTime.date, requestedTime: customTime.time, custom: "true" },
       });
-
-      await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "leaderSupportCustom",
-          data: {
-            leaderName: user?.name,
-            leaderEmail: user?.email,
-            requestedDate: customTime.date,
-            requestedTime: customTime.time,
-            website: customTime.website,
-          },
-        }),
-      });
-
-      // Save to Supabase (admin dashboard)
-      await fetch("/api/submissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          form_type: "leader-support",
-          name: user?.name,
-          email: user?.email,
-          data: { requestedDate: customTime.date, requestedTime: customTime.time, custom: true },
-        }),
-      });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
       setSubmitted(true);
     } catch (error) {
       console.error("Error submitting:", error);
@@ -275,15 +217,15 @@ export default function LeaderSupportPage() {
               <div className="space-y-2 text-sm">
                 <p className="text-gray-400">
                   <span className="text-gray-500">Link:</span>{" "}
-                  <a href={ZOOM_INFO.link} className="text-[var(--accent)] hover:underline break-all">
+                  <a href={SUPPORT_ZOOM.link} className="text-[var(--accent)] hover:underline break-all">
                     Join Meeting
                   </a>
                 </p>
                 <p className="text-gray-400">
-                  <span className="text-gray-500">Meeting ID:</span> {ZOOM_INFO.meetingId}
+                  <span className="text-gray-500">Meeting ID:</span> {SUPPORT_ZOOM.meetingId}
                 </p>
                 <p className="text-gray-400">
-                  <span className="text-gray-500">Passcode:</span> {ZOOM_INFO.passcode}
+                  <span className="text-gray-500">Passcode:</span> {SUPPORT_ZOOM.passcode}
                 </p>
               </div>
             </div>
@@ -381,19 +323,13 @@ export default function LeaderSupportPage() {
               </button>
 
               {showCustomForm && (
-                <form
-                  onSubmit={handleCustomSubmit}
-                  className="mt-6 space-y-4"
-                  data-netlify="true"
-                  name="leader-support-custom"
-                >
-                  <input type="hidden" name="form-name" value="leader-support-custom" />
+                <form onSubmit={handleCustomSubmit} className="mt-6 space-y-4">
                   {/* Honeypot field - hidden from humans, bots will fill it */}
                   <input
                     type="text"
-                    name="website"
-                    value={customTime.website}
-                    onChange={(e) => setCustomTime({ ...customTime, website: e.target.value })}
+                    name="company"
+                    value={customTime.company}
+                    onChange={(e) => setCustomTime({ ...customTime, company: e.target.value })}
                     style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
                     tabIndex={-1}
                     autoComplete="off"

@@ -9,7 +9,7 @@ export default function ApestQuizPage() {
   const [answers, setAnswers] = useState<number[]>(Array(QUESTIONS.length).fill(0));
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<ApestResults | null>(null);
-  const [emailForm, setEmailForm] = useState({ email: "", name: "", website: "" });
+  const [emailForm, setEmailForm] = useState({ email: "", name: "", company: "" });
   const [emailSent, setEmailSent] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [personalizedResponse, setPersonalizedResponse] = useState<string | null>(null);
@@ -69,36 +69,18 @@ export default function ApestQuizPage() {
     e.preventDefault();
     if (emailForm.email && results) {
       try {
-        // Submit to Netlify Forms
-        const netlifyData = new FormData();
-        netlifyData.append("form-name", "apest-results");
-        netlifyData.append("name", emailForm.name);
-        netlifyData.append("email", emailForm.email);
-        netlifyData.append("apostle", `${results.apostle}%`);
-        netlifyData.append("prophet", `${results.prophet}%`);
-        netlifyData.append("evangelist", `${results.evangelist}%`);
-        netlifyData.append("shepherd", `${results.shepherd}%`);
-        netlifyData.append("teacher", `${results.teacher}%`);
-        await fetch("/", {
-          method: "POST",
-          body: netlifyData,
-        });
-
-        // Send email with results and personalized message
-        await fetch("/api/send-email", {
+        // The server writes the email from the results; nothing else is sent.
+        const res = await fetch("/api/apest-results", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            type: "apestResults",
-            data: {
-              name: emailForm.name,
-              email: emailForm.email,
-              results,
-              personalizedMessage: personalizedResponse || APEST_ROLES[getTopRole()].leadershipBenefit,
-              website: emailForm.website,
-            },
+            results,
+            name: emailForm.name,
+            email: emailForm.email,
+            company: emailForm.company,
           }),
         });
+        if (!res.ok) throw new Error(`Sending results failed (${res.status})`);
         setEmailSent(true);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -333,19 +315,13 @@ export default function ApestQuizPage() {
                 Email Your Results
               </h3>
               {!emailSent ? (
-                <form
-                  onSubmit={handleEmailSubmit}
-                  className="space-y-4 max-w-md mx-auto"
-                  data-netlify="true"
-                  name="apest-results"
-                >
-                  <input type="hidden" name="form-name" value="apest-results" />
+                <form onSubmit={handleEmailSubmit} className="space-y-4 max-w-md mx-auto">
                   {/* Honeypot field - hidden from humans, bots will fill it */}
                   <input
                     type="text"
-                    name="website"
-                    value={emailForm.website}
-                    onChange={(e) => setEmailForm({ ...emailForm, website: e.target.value })}
+                    name="company"
+                    value={emailForm.company}
+                    onChange={(e) => setEmailForm({ ...emailForm, company: e.target.value })}
                     style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
                     tabIndex={-1}
                     autoComplete="off"

@@ -102,7 +102,7 @@ export function isHttpUrl(value: string | null | undefined): value is string {
   }
 }
 
-function assertWebLinks(content: EmailContent): void {
+function assertWebLinks(content: Pick<EmailContent, "blocks" | "cta">): void {
   const hrefs = content.blocks.flatMap((b) => (b.type === "link" ? [b.href] : []));
   if (content.cta) hrefs.push(content.cta.href);
   for (const href of hrefs) {
@@ -157,12 +157,23 @@ function blockText(block: Block): string[] {
   }
 }
 
+// The part of an email that is the same for every audience: everything
+// but the footer. Leader emails add unsubscribe links in the footer; the
+// public replies in emails/public/layout.ts add a plain site link.
+export type FrameContent = Omit<EmailContent, "kind" | "token">;
+
+// footerHtml is trusted markup built by the caller (every value in it must
+// already be escaped); footerText is the plain-text footer, one line each.
+export interface FrameFooter {
+  html: string;
+  text: string[];
+}
+
 // Henry to check wording
-function renderHtml(content: EmailContent, footer: FooterLinks): string {
+function renderHtml(content: FrameContent, footerHtml: string): string {
   const cta = content.cta
     ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:12px 0 4px 0;"><tr><td bgcolor="${COLOURS.button}" style="padding:14px 28px;border-radius:999px;background-color:${COLOURS.button};"><a href="${esc(content.cta.href)}" style="display:inline-block;font-family:${SANS};font-size:16px;font-weight:bold;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(content.cta.label)}</a></td></tr></table>`
     : "";
-  const link = `color:${COLOURS.muted};text-decoration:underline;`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -186,8 +197,7 @@ ${content.blocks.map(blockHtml).join("\n")}
 ${cta}
 </td></tr>
 <tr><td style="padding:24px 8px 0 8px;font-family:${SANS};font-size:12px;line-height:1.8;color:${COLOURS.muted};">
-You get this because you lead with Avenue Mission.<br>
-<a href="${esc(footer.manageUrl)}" style="${link}">Manage emails</a> &nbsp;|&nbsp; <a href="${esc(footer.unsubscribeUrl)}" style="${link}">Unsubscribe from these</a> &nbsp;|&nbsp; <a href="${esc(footer.unsubscribeAllUrl)}" style="${link}">Unsubscribe from all</a>
+${footerHtml}
 </td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
@@ -198,26 +208,41 @@ You get this because you lead with Avenue Mission.<br>
 }
 
 // Henry to check wording
-function renderText(content: EmailContent, footer: FooterLinks): string {
+function renderText(content: FrameContent, footerText: string[]): string {
   const lines = ["AVENUE", "", content.eyebrow, content.heading, "", ...content.blocks.flatMap(blockText)];
   if (content.cta) lines.push(`${content.cta.label}: ${content.cta.href}`, "");
-  lines.push(
-    "--",
-    "You get this because you lead with Avenue Mission.",
-    `Manage emails: ${footer.manageUrl}`,
-    `Unsubscribe from these: ${footer.unsubscribeUrl}`,
-    `Unsubscribe from all: ${footer.unsubscribeAllUrl}`
-  );
+  lines.push("--", ...footerText);
   return lines.join("\n");
 }
 
-export function renderEmail(content: EmailContent): RenderedEmail {
+// The branded card with any footer. Refuses non-web links; escapes every
+// value in the content.
+export function renderFrame(content: FrameContent, footer: FrameFooter): { html: string; text: string } {
   assertWebLinks(content);
-  const footer = footerLinks(content.token, content.kind);
+  return { html: renderHtml(content, footer.html), text: renderText(content, footer.text) };
+}
+
+const FOOTER_LINK = `color:${COLOURS.muted};text-decoration:underline;`;
+
+function leaderFooter(links: FooterLinks): FrameFooter {
+  return {
+    html: `You get this because you lead with Avenue Mission.<br>
+<a href="${esc(links.manageUrl)}" style="${FOOTER_LINK}">Manage emails</a> &nbsp;|&nbsp; <a href="${esc(links.unsubscribeUrl)}" style="${FOOTER_LINK}">Unsubscribe from these</a> &nbsp;|&nbsp; <a href="${esc(links.unsubscribeAllUrl)}" style="${FOOTER_LINK}">Unsubscribe from all</a>`,
+    text: [
+      "You get this because you lead with Avenue Mission.",
+      `Manage emails: ${links.manageUrl}`,
+      `Unsubscribe from these: ${links.unsubscribeUrl}`,
+      `Unsubscribe from all: ${links.unsubscribeAllUrl}`,
+    ],
+  };
+}
+
+export function renderEmail(content: EmailContent): RenderedEmail {
+  const { html, text } = renderFrame(content, leaderFooter(footerLinks(content.token, content.kind)));
   return {
     subject: content.subject,
-    html: renderHtml(content, footer),
-    text: renderText(content, footer),
+    html,
+    text,
     headers: listUnsubscribeHeaders(content.token, content.kind),
   };
 }

@@ -3,39 +3,7 @@ import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireAdmin } from "@/lib/server/requireAdmin";
 import { serverError } from "@/lib/server/http";
 
-const VALID_TYPES = [
-  "start-pathway",
-  "join-pathway",
-  "mission-support",
-  "idea-submission",
-  "leader-support",
-  "event-updates",
-];
-
-// POST: public, record a new form submission
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { form_type, name, email, data } = body;
-
-    if (!form_type || !VALID_TYPES.includes(form_type)) {
-      return NextResponse.json({ error: "Invalid form_type" }, { status: 400 });
-    }
-
-    const { error } = await getSupabaseAdmin().from("form_submissions").insert({
-      form_type,
-      name: name ?? null,
-      email: email ?? null,
-      data: data ?? {},
-    });
-
-    if (error) return serverError("submissions POST", error);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return serverError("submissions POST", error);
-  }
-}
+// Public submissions come in through POST /api/forms/<type>.
 
 // GET: admin, list submissions (optionally filter by ?type=)
 export async function GET(request: NextRequest) {

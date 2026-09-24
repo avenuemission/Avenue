@@ -348,18 +348,6 @@ export default function TechnologicalStewardshipPage() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      // Submit to Netlify Forms
-      const formData = new FormData();
-      formData.append("form-name", "technological-stewardship-survey");
-      Object.entries(surveyData).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          formData.append(key, value.join(", "));
-        } else {
-          formData.append(key, value);
-        }
-      });
-      await fetch("/", { method: "POST", body: formData });
-
       // Submit to Supabase via API
       if (sessionCode) {
         await fetch("/api/workshops/submit", {
@@ -884,40 +872,6 @@ export default function TechnologicalStewardshipPage() {
   if (submitted) {
     return (
       <>
-        {/* Hidden Netlify form for build-time detection */}
-        <form name="technological-stewardship-survey" data-netlify="true" hidden>
-          <input type="text" name="ageRange" />
-          <input type="text" name="isChristian" />
-          <input type="text" name="denomination" />
-          <input type="text" name="role" />
-          <input type="text" name="techComfort" />
-          <input type="text" name="aiTools" />
-          <input type="text" name="personalSpiritualUse" />
-          <input type="text" name="faithImpact" />
-          <input type="text" name="decisionDependency" />
-          <input type="text" name="personalOffLimits" />
-          <input type="text" name="offLimitsUses" />
-          <input type="text" name="idolatryPotential" />
-          <input type="text" name="churchSermonPrep" />
-          <input type="text" name="churchSocialMedia" />
-          <input type="text" name="churchWebsite" />
-          <input type="text" name="churchOperations" />
-          <input type="text" name="churchDisclosure" />
-          <input type="text" name="churchHasPosition" />
-          <input type="text" name="whoShouldLead" />
-          <input type="text" name="formalPolicy" />
-          <input type="text" name="unemploymentConcern" />
-          <input type="text" name="surveillanceResistance" />
-          <input type="text" name="eschatologicalSignificance" />
-          <input type="text" name="tegmarkRankDictatorship" />
-          <input type="text" name="tegmarkRankEnslaved" />
-          <input type="text" name="tegmarkRankGatekeeper" />
-          <input type="text" name="tegmarkRankZookeeper" />
-          <input type="text" name="tegmarkRankLibertarian" />
-          <input type="text" name="tegmarkRankEgalitarian" />
-          <input type="text" name="tegmarkRankProtector" />
-          <textarea name="finalVision"></textarea>
-        </form>
         <div className="min-h-screen bg-black flex items-center justify-center px-6">
         <div className="text-center max-w-2xl">
           <CheckCircle className="w-20 h-20 text-green-400 mx-auto mb-6" />

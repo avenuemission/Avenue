@@ -35,7 +35,7 @@ function getNextWednesday7pm(): Date {
 }
 
 export default function IntersectionPage() {
-  const [formData, setFormData] = useState({ name: "", email: "", website: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", company: "" });
   const [submitted, setSubmitted] = useState(false);
   const [events, setEvents] = useState<IntersectionEvent[]>([]);
   const [dates, setDates] = useState<IntersectionEventDate[]>([]);
@@ -91,39 +91,14 @@ export default function IntersectionPage() {
     e.preventDefault();
     if (formData.name && formData.email) {
       try {
-        // Submit to Netlify Forms
-        const netlifyData = new FormData();
-        netlifyData.append("form-name", "event-updates");
-        netlifyData.append("name", formData.name);
-        netlifyData.append("email", formData.email);
-        await fetch("/", {
-          method: "POST",
-          body: netlifyData,
-        });
-
-        // Send email notification
-        await fetch("/api/send-email", {
+        const res = await fetch("/api/forms/event-updates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "eventUpdates",
-            data: { email: formData.email, website: formData.website },
-          }),
+          body: JSON.stringify({ name: formData.name, email: formData.email, company: formData.company, data: {} }),
         });
-
-        // Save to Supabase (admin dashboard)
-        await fetch("/api/submissions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            form_type: "event-updates",
-            name: formData.name,
-            email: formData.email,
-            data: { website: formData.website },
-          }),
-        });
+        if (!res.ok) throw new Error(`Form failed (${res.status})`);
         setSubmitted(true);
-        setFormData({ name: "", email: "", website: "" });
+        setFormData({ name: "", email: "", company: "" });
         setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -338,19 +313,13 @@ export default function IntersectionPage() {
               Receive Event Updates via Email
             </p>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-6"
-              data-netlify="true"
-              name="event-updates"
-            >
-              <input type="hidden" name="form-name" value="event-updates" />
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Honeypot field - hidden from humans, bots will fill it */}
               <input
                 type="text"
-                name="website"
-                value={formData.website}
-                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                name="company"
+                value={formData.company}
+                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                 style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
                 tabIndex={-1}
                 autoComplete="off"
