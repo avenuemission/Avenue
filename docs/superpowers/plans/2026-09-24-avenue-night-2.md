@@ -15,7 +15,7 @@
 - **Branch `feat/avenue-night-2`.** It exists and holds the round 2 spec commit.
 - **Never `git push`.** Commit locally only. Henry says "push" when he wants a deploy.
 - **Never `git add`** `HANDOVER.md`, `HANDOVER-v2.md`, `HANDOVER_PROMPT*.md` (any `HANDOVER*.md`), `.mcp.json`, `scripts/demo-network.mjs`. Always `git add` exact paths, never `git add -A` or `git add .`.
-- **Presentation only.** Do not change saving, auth, API calls, data shape, completion rules, or `useTrainingProgress.ts` / `progressMerge.ts` (no edit to either file on this branch). Do not change `src/lib/journey.ts`, `src/lib/useWorksheet.ts`, `useCheckins.ts`, `useNetworkView.ts`, `useMyPeople.ts`, `src/lib/auth.ts`, or any `src/app/api/**` file. Reading their values is fine. ProfileCard's load and save behaviour stays exactly as it is (it is reused inside the new panel; the only edit to it is importing `initialsOf` from `src/lib/profileAvatar.ts`).
+- **Presentation only.** Do not change saving, auth, API calls, data shape, completion rules, or `useTrainingProgress.ts` / `progressMerge.ts` (no edit to either file on this branch). Do not change `src/lib/journey.ts`, `src/lib/useWorksheet.ts`, `useCheckins.ts`, `useNetworkView.ts`, `useMyPeople.ts`, `src/lib/auth.ts`, or any `src/app/api/**` file. Reading their values is fine. ProfileCard's load and save behaviour stays exactly as it is (it is reused inside the new panel; the only edits to it are importing `initialsOf` from `src/lib/profileAvatar.ts` and removing the `collapsible` prop and its collapsed branch, which have no caller left once the dashboard card goes: pre-flight F2).
 - **Print output of the Calling Profile and Launch Plan stays black on white**, with the same boxes and the same content as today (`@media print` rules in `globals.css`). The header avatar never prints.
 - **Never use an em dash (U+2014)** anywhere: code, comments, UI copy, commit messages, this plan. Use a colon, a comma, or a new sentence. En dashes (U+2013) only in number ranges. In tests build an em dash with `String.fromCharCode(0x2014)`; never type one (the Write tool turns a backslash-u 2014 escape into the real character).
 - **New copy is exactly the spec's wording.** Each new intro or meaning line carries the code comment `// Henry to check wording` on the line above it. No other new content.
@@ -38,15 +38,16 @@
 
 | Where | Decision | Why |
 |---|---|---|
-| Spec 1, which pages | Avatar on the dashboard, journey hub, Calling and Launch wizards, Calling Profile, Launch Plan, and the Network, Resources, Study Guides and Support pages. Not on Admin or the Workshop pages | Only the hub has a true pill header; the other leader pages have a plain header with the leader's name. Admin is behind its own key and the Workshop pages are now admin tools (spec 5b) |
-| Spec 1, panel | Native `<dialog>` with `showModal()`: Escape, focus trap and top layer come from the browser. A click on the backdrop also closes it. Closing refocuses the avatar and re-reads the photo | A saved new photo shows in the header without a reload; no custom focus trap to get wrong |
-| Spec 1, photo source | The avatar reads `GET /api/leader-profile` (the endpoint ProfileCard already reads). If it fails, the initials show and the error goes to `console.error` | No new endpoint or data. The initials are an honest state, not a silent fake |
+| Spec 1, which pages | Avatar on the dashboard, journey hub, Calling and Launch wizards, Calling Profile, Launch Plan, and the Network, Resources, Study Guides and Support pages. Not on Admin or the Workshop pages | Only the hub has a true pill header; the other leader pages have a plain header with the leader's name. Admin is behind its own key and the Workshop pages are presenter screens. Support keeps the avatar: leaders still use it and it has leader auth only (pre-flight F11) |
+| Spec 1, panel | Native `<dialog>` with `showModal()`: Escape, focus trap and top layer come from the browser. A click outside the sheet's box (on the backdrop) also closes it; a click on empty space inside the sheet does not (pre-flight F3). Escape discarding an unsaved edit is accepted as native behaviour. Closing refocuses the avatar and re-reads the photo | A saved new photo shows in the header without a reload; no custom focus trap to get wrong |
+| Spec 1, photo source | The avatar reads `GET /api/leader-profile` (the endpoint ProfileCard already reads). If it fails, the initials show and the error goes to `console.error` | No new endpoint or data. The initials are an honest state, not a silent fake. This is a new read-only call site of an existing endpoint (same auth; the dashboard already made this read); accepted, and the Task 4 report notes it (pre-flight F7) |
 | Spec 2 | Title 40 px on phones, 64 px from `md`; the small (wizard) title rule is untouched | Spec 2 numbers |
 | Spec 3, Recent weeks | Recent weeks sits inside the Leader health expander, under the check-in | It is RPMS history; Church health has no weeks |
 | Spec 3, default open | Decided once, the first time check-ins load. Also opens when the check-in failed to load, so the "Try again" prompt is visible. Saving does not close it | "Opens by default when this week's check-in is not saved yet" |
 | Spec 3, closed summaries while loading | "Loading..." while the data is loading, "Could not load" on error | A summary must never claim "Not checked in" before the data has arrived |
+| Spec 3, closed summary while saving | Leader health's closed summary reads "Saving..." while a save is in flight and "Could not save. Open to try again." after a failed save, via `leaderHealthStatus` (pre-flight F4) | Closing the expander unmounts the Save button's own state, so a failure must not hide behind "Not checked in this week" |
 | Spec 3 | The "Four gauges from Dave Ferguson's Multiplier" line in the check-in card is removed; the Leader health intro now says it. The hub's "Checked in this week / Not yet this week" label is removed; the closed summary says it | No repeated lines |
-| Spec 3.2, chart taps | Each of the 12 weeks is a full-height transparent button column over the chart (about 28 px wide at 375 px, 150 px tall). The calendar rows are the full-size, keyboard-first route to the same detail | Twelve 44 px columns cannot fit in 343 px |
+| Spec 3.2, chart taps | Each of the 12 weeks is a full-height transparent button column over the chart (about 28 px wide at 375 px, 150 px tall). The calendar rows are the full-size, keyboard-first route to the same detail | Twelve 44 px columns cannot fit in 343 px. The below-44 px width is accepted (pre-flight F10) |
 | Spec 3.2, x labels | Every third week is labelled, counting back from this week (4 labels) | Twelve labels overlap at 375 px |
 | Spec 3.2, calendar | Future weeks in the current month show but are disabled. The selected week gets the raised night background; the current week keeps its blue ring | Nothing to show for a week that has not happened |
 | Spec 4 | The meanings and the Arena intro live in `src/lib/arena.ts` beside `COUNTER_KEYS`, pinned by one test | One place for the counter vocabulary |
@@ -54,13 +55,30 @@
 | Spec 5 | The empty-list instruction ("No one yet. Add someone you're apprenticing, then tap their name...") stays; it is an instruction, not one of the "sending nobody yet" lines | It tells a new leader what tapping a name does |
 | Spec 5b | The Admin link row sits at the top of the unlocked Admin view (after the admin key), not on the lock screen | Keeps admin tools behind the admin key as today; no auth change |
 
+## Pre-flight rulings
+
+From `.superpowers/sdd/avenue-night-2/preflight.md`, all accepted by the controller. Each is already folded into its task below.
+
+- **F1 (Task 3):** the base `.av-phase-title` keeps `line-height: 0.92`, so the small (wizard, Profile, Plan) title is truly unchanged.
+- **F2 (Task 4):** ProfileCard loses the now-dead `collapsible` prop, its `open` state, collapsed branch, collapse button and `ChevronUp` import.
+- **F3 (Task 4):** the panel closes on a click only when it lands outside the sheet's bounding box; Escape discarding an edit is accepted.
+- **F4 (Tasks 1, 5):** `leaderHealthStatus` makes Leader health's closed summary say "Saving..." or "Could not save. Open to try again."; 2 new tests.
+- **F5 (Task 4):** "Welcome, {name}" becomes `hidden sm:inline` on Resources, Study Guides and Support; the Profile and Plan top rows get `flex-wrap gap-2`.
+- **F6 (Task 9):** build as specced (Henry: "remove everywhere"); the report notes that pending leaders have no in-app booking link.
+- **F7 (Task 4):** the avatar's read of `/api/leader-profile` is accepted as a read-only call site; the report notes it.
+- **F8 (Task 5):** the duplicated metric count stays (unchanged old code); no refactor.
+- **F9 (Task 3):** ClampedText also measures once after `document.fonts.ready`.
+- **F10 (Task 6):** the about 28 px chart columns are accepted; the calendar rows are the full-size route.
+- **F11 (decisions):** the Workshop rationale now reads "presenter screens"; Support keeps its avatar.
+- **F12 (Task 5):** Expander's button holds only the title and chevron; intro and summary sit below it and are linked with `aria-describedby`.
+
 ## File map
 
 | File | Status | Task | Responsibility |
 |---|---|---|---|
 | `src/lib/rpms.ts` | Create | 1 | The four gauges: key, label, letter, colour variable, meaning line |
 | `src/lib/rpms.test.ts` | Create | 1 | Tests |
-| `src/lib/phaseSummaries.ts` | Create | 1 | Growth intros, Leader and Church health closed summaries, default-open rule, Multiply summary |
+| `src/lib/phaseSummaries.ts` | Create | 1 | Growth intros, Leader and Church health closed summaries, save-state summary, default-open rule, Multiply summary |
 | `src/lib/phaseSummaries.test.ts` | Create | 1 | Tests |
 | `src/lib/profileAvatar.ts` | Create | 1 | `initialsOf`, `avatarFromProfileResponse` |
 | `src/lib/profileAvatar.test.ts` | Create | 1 | Tests |
@@ -72,7 +90,7 @@
 | `src/components/avenue/ClampedText.tsx` | Create | 3 | Two-line clamp with Read more / Show less |
 | `src/app/leaders/training/page.tsx` | Modify | 3, 4, 5, 8 | ClampedText (3); avatar (4); Growth props, label removed (5); Multiply label removed, teaching moved (8) |
 | `src/components/avenue/HeaderAvatar.tsx` | Create | 4 | 44 px avatar button plus the profile panel |
-| `src/components/ui/ProfileCard.tsx` | Modify | 4 | Import `initialsOf` from the lib (no behaviour change) |
+| `src/components/ui/ProfileCard.tsx` | Modify | 4 | Import `initialsOf` from the lib; remove the dead `collapsible` branch (no behaviour change for any caller) |
 | `src/app/leaders/page.tsx` | Modify | 4, 9 | Avatar in header, collapsed ProfileCard removed (4); Support and Workshop Hub removed from Tools, pending-access link removed (9) |
 | `src/components/journey/WizardShell.tsx` | Modify | 4 | New `user` prop, avatar at the right of the top row |
 | `src/app/leaders/training/calling/page.tsx` | Modify | 4 | Pass `user` to WizardShell |
@@ -98,7 +116,7 @@
 | `src/app/leaders/training/calling/content.ts` | Modify | 9 | `supportLink` removed |
 | `src/app/leaders/admin/page.tsx` | Modify | 9 | Leader Support and Workshop Hub link row |
 
-Expected test count: 230 at the start, 249 after Task 1, 265 after Task 2, 266 after Task 7 (final).
+Expected test count: 230 at the start, 251 after Task 1, 267 after Task 2, 268 after Task 7 (final).
 
 ---
 
@@ -113,7 +131,7 @@ Expected test count: 230 at the start, 249 after Task 1, 265 after Task 2, 266 a
 - Consumes: `METRICS`, `type Person` from `src/lib/people.ts`.
 - Produces:
   - `rpms.ts`: `type GaugeKey = "relational" | "physical" | "mental" | "spiritual"`; `interface GaugeScores { relational: number; physical: number; mental: number; spiritual: number }`; `interface Gauge { key: GaugeKey; label: string; letter: string; colour: string; meaning: string }` (`colour` is a CSS value such as `"var(--g-relational)"`); `const GAUGES: readonly Gauge[]` in check-in order.
-  - `phaseSummaries.ts`: `LEADER_HEALTH_INTRO: string`, `CHURCH_HEALTH_INTRO: string`, `NOT_CHECKED_IN: string`, `leaderHealthSummary(checkins: (GaugeScores & { weekStart: string })[], currentWeekStart: string): string`, `leaderHealthStartsOpen(checkins: { weekStart: string }[], currentWeekStart: string): boolean`, `churchHealthSummary(people: Pick<Person, "metrics">[]): string`, `multiplySummary(depth: { people: number; generations: number }): string`.
+  - `phaseSummaries.ts`: `LEADER_HEALTH_INTRO: string`, `CHURCH_HEALTH_INTRO: string`, `NOT_CHECKED_IN: string`, `leaderHealthSummary(checkins: (GaugeScores & { weekStart: string })[], currentWeekStart: string): string`, `leaderHealthStartsOpen(checkins: { weekStart: string }[], currentWeekStart: string): boolean`, `SAVING: string`, `SAVE_FAILED: string`, `leaderHealthStatus(summary: string, saving: boolean, saveError: string | null): string`, `churchHealthSummary(people: Pick<Person, "metrics">[]): string`, `multiplySummary(depth: { people: number; generations: number }): string`.
   - `profileAvatar.ts`: `initialsOf(name: string): string`, `interface AvatarSummary { name: string; avatarUrl: string }`, `avatarFromProfileResponse(json: unknown, fallbackName: string): AvatarSummary`.
 
 - [ ] **Step 1: Write the failing tests for the gauges**
@@ -161,9 +179,12 @@ import {
   churchHealthSummary,
   LEADER_HEALTH_INTRO,
   leaderHealthStartsOpen,
+  leaderHealthStatus,
   leaderHealthSummary,
   multiplySummary,
   NOT_CHECKED_IN,
+  SAVE_FAILED,
+  SAVING,
 } from "./phaseSummaries";
 
 const week = (weekStart: string, relational: number, physical: number, mental: number, spiritual: number) => ({
@@ -192,6 +213,18 @@ describe("leaderHealthStartsOpen", () => {
   });
   it("starts closed once this week is saved", () => {
     expect(leaderHealthStartsOpen([{ weekStart: "2026-09-21" }], "2026-09-21")).toBe(false);
+  });
+});
+
+describe("leaderHealthStatus", () => {
+  it("says a save is in flight, and a failed save wins over the scores", () => {
+    expect(leaderHealthStatus(NOT_CHECKED_IN, true, null)).toBe(SAVING);
+    expect(SAVING).toBe("Saving...");
+    expect(leaderHealthStatus("This week: R 7 · P 5 · M 6 · S 8", false, "Network down")).toBe(SAVE_FAILED);
+    expect(SAVE_FAILED).toBe("Could not save. Open to try again.");
+  });
+  it("passes the summary through when nothing is saving or failed", () => {
+    expect(leaderHealthStatus(NOT_CHECKED_IN, false, null)).toBe(NOT_CHECKED_IN);
   });
 });
 
@@ -378,6 +411,18 @@ export function leaderHealthStartsOpen(checkins: { weekStart: string }[], curren
   return !checkins.some((c) => c.weekStart === currentWeekStart);
 }
 
+export const SAVING = "Saving...";
+export const SAVE_FAILED = "Could not save. Open to try again.";
+
+// The closed Leader health summary while a save is in flight or has failed
+// (pre-flight F4): closing the expander hides the Save button's own state,
+// so a failure must not hide behind the scores or "Not checked in".
+export function leaderHealthStatus(summary: string, saving: boolean, saveError: string | null): string {
+  if (saving) return SAVING;
+  if (saveError) return SAVE_FAILED;
+  return summary;
+}
+
 // "Named: 3 · 1 · 0" in Pathways, Intersections, Streetlights order. Three
 // separate lists, so one person can count in more than one.
 export function churchHealthSummary(people: Pick<Person, "metrics">[]): string {
@@ -428,11 +473,11 @@ export function avatarFromProfileResponse(json: unknown, fallbackName: string): 
 - [ ] **Step 8: Run the tests to see them pass**
 
 Run: `npx vitest run src/lib/rpms.test.ts src/lib/phaseSummaries.test.ts src/lib/profileAvatar.test.ts`
-Expected: PASS, 19 tests (3 + 10 + 6).
+Expected: PASS, 21 tests (3 + 12 + 6).
 
 - [ ] **Step 9: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 249 passing (230 + 19), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 251 passing (230 + 21), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 10: Commit**
 
@@ -834,7 +879,7 @@ Expected: PASS, 16 tests (10 + 6).
 
 - [ ] **Step 7: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 265 passing (249 + 16), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 267 passing (251 + 16), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 8: Commit**
 
@@ -881,12 +926,13 @@ with:
 
 ```css
 /* Round 2 spec 2: about half the first round's size, 40 px on phones and
-   64 px from md. The small (wizard) size below is unchanged. */
+   64 px from md. The small (wizard) size below is unchanged: line-height
+   stays 0.92 because the small rule inherits it (pre-flight F1). */
 .av-phase-title {
   font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 400;
   font-size: 40px;
-  line-height: 1;
+  line-height: 0.92;
   letter-spacing: -0.02em;
   margin: 14px 0 18px;
   overflow-wrap: anywhere;
@@ -899,7 +945,7 @@ with:
 }
 ```
 
-Leave `.av-opening-small .av-phase-title` exactly as it is. It comes later in the file and has higher specificity, so the wizard title keeps `clamp(40px, 7vw, 64px)`.
+Leave `.av-opening-small .av-phase-title` exactly as it is. It comes later in the file and has higher specificity, so the wizard title keeps `clamp(40px, 7vw, 64px)` and its own margin. It does not set line-height, which is why the base rule keeps `0.92` (the only base changes are font-size and margin).
 
 - [ ] **Step 2: Write ClampedText**
 
@@ -919,7 +965,10 @@ export interface ClampedTextProps {
 // "Show less" button. The button only appears when the text really is cut
 // off: a ResizeObserver compares the clamped height with the full height,
 // and runs again whenever the width changes (rotating a phone, resizing a
-// window). While expanded nothing is measured, so "Show less" stays put.
+// window). It also measures once the web fonts have loaded: a font swap can
+// re-wrap the text without changing the clamped box, which the observer
+// would miss (pre-flight F9). While expanded nothing is measured, so
+// "Show less" stays put.
 export default function ClampedText({ text, className = "" }: ClampedTextProps) {
   const ref = useRef<HTMLParagraphElement>(null);
   const id = useId();
@@ -930,13 +979,19 @@ export default function ClampedText({ text, className = "" }: ClampedTextProps) 
     if (expanded) return;
     const el = ref.current;
     if (!el || typeof ResizeObserver === "undefined") return;
+    let cancelled = false;
+    const measure = () => {
+      if (!cancelled) setOverflows(el.scrollHeight > el.clientHeight + 1);
+    };
     // ResizeObserver reports once as soon as it starts observing, so the
     // first measurement needs no separate call.
-    const observer = new ResizeObserver(() => {
-      setOverflows(el.scrollHeight > el.clientHeight + 1);
-    });
+    const observer = new ResizeObserver(measure);
     observer.observe(el);
-    return () => observer.disconnect();
+    document.fonts?.ready.then(measure);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
   }, [expanded, text]);
 
   return (
@@ -988,7 +1043,7 @@ The section is keyed by `phase.id`, so switching phases mounts a fresh ClampedTe
 
 - [ ] **Step 4: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 265 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 267 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 5: Commit**
 
@@ -1006,7 +1061,8 @@ At 375 px and at desktop (1280 px), on `/leaders/training`:
 - The intro under each opening shows exactly two lines, then "Read more". Tapping it shows the whole paragraph and the button reads "Show less"; tapping again collapses. The button is at least 44 px tall and shows the lamp focus ring when reached by Tab; Enter and Space toggle it.
 - Screen reader name check (read_page): the button has `aria-expanded` false then true.
 - Widen the desktop window until a short intro fits in two lines (or pick a phase whose intro is short): no button shows.
-- Open `/leaders/training/calling`: the wizard's small title is the same size as before this task.
+- Open `/leaders/training/calling`, `/leaders/training/calling/profile` and `/leaders/training/launch/plan`: the small title has the same size and line spacing as before this task (compare with `main`).
+- Cold load (hard reload, cache disabled) of `/leaders/training`: "Read more" shows under a long intro after the fonts arrive.
 
 ---
 
@@ -1015,7 +1071,7 @@ At 375 px and at desktop (1280 px), on `/leaders/training`:
 **Files:**
 - Modify: `src/app/globals.css` (the focus-ring selector list at about line 292, and a new block just before the `/* PRINT: Calling Profile and Launch Plan */` banner at about line 586)
 - Create: `src/components/avenue/HeaderAvatar.tsx`
-- Modify: `src/components/ui/ProfileCard.tsx:86-90` (local `initialsOf` replaced by the lib import)
+- Modify: `src/components/ui/ProfileCard.tsx` (lines 86-90: local `initialsOf` replaced by the lib import; lines 15, 107-116, 234-250, 452-461: the dead `collapsible` branch removed, pre-flight F2)
 - Modify: `src/app/leaders/page.tsx` (header, and the "My Profile" block at lines 211-214)
 - Modify: `src/app/leaders/training/page.tsx` (the import block and the pill header, lines 240-261 before Task 3's one-line import)
 - Modify: `src/components/journey/WizardShell.tsx` (props and the top row, lines 18-29 and 62-67)
@@ -1026,7 +1082,7 @@ At 375 px and at desktop (1280 px), on `/leaders/training`:
 - Modify: `src/app/leaders/network/page.tsx`, `src/app/leaders/resources/page.tsx`, `src/app/leaders/study-guides/page.tsx`, `src/app/leaders/support/page.tsx` (headers)
 
 **Interfaces:**
-- Consumes: `initialsOf`, `avatarFromProfileResponse`, `type AvatarSummary` (Task 1); `ProfileCard` (unchanged props `{ email; fallbackName; collapsible? }`); `leaderFetch`.
+- Consumes: `initialsOf`, `avatarFromProfileResponse`, `type AvatarSummary` (Task 1); `ProfileCard` (props become `{ email; fallbackName }`: `collapsible` is removed in Step 3, its only caller is the dashboard block this task deletes); `leaderFetch`.
 - Produces:
   - `HeaderAvatar` default export, props `{ user: { email: string; name: string } | null }`. Renders nothing while `user` is null.
   - `WizardShellProps` gains a required `user: { email: string; name: string } | null`.
@@ -1209,9 +1265,17 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
         className="av-sheet no-print"
         onClose={handleClose}
         onClick={(e) => {
-          // The body fills the dialog, so a click landing on the dialog
-          // element itself is a click on the backdrop.
-          if (e.target === e.currentTarget) setOpen(false);
+          // A click on the ::backdrop reports the dialog as its target, but
+          // so does a click on empty space inside the sheet (on desktop the
+          // sheet is full height and the card is shorter). Only a click
+          // outside the sheet's box closes it, so an unsaved edit is never
+          // dropped by a stray click inside (pre-flight F3). Keyboard
+          // activation reports 0,0 and never targets the dialog itself.
+          if (e.target !== e.currentTarget) return;
+          const box = e.currentTarget.getBoundingClientRect();
+          const inside =
+            e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom;
+          if (!inside) setOpen(false);
         }}
       >
         <div className="av-sheet-body">
@@ -1234,7 +1298,7 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
 }
 ```
 
-- [ ] **Step 3: ProfileCard uses the shared initials rule**
+- [ ] **Step 3: ProfileCard uses the shared initials rule and loses its dead collapsed mode**
 
 In `src/components/ui/ProfileCard.tsx`, delete the local function (lines 86-90):
 
@@ -1252,7 +1316,65 @@ and add, after `import { leaderFetch } from "@/lib/leaderFetch";`:
 import { initialsOf } from "@/lib/profileAvatar";
 ```
 
-Nothing else in ProfileCard changes (the rule is character for character the same).
+The rule is character for character the same.
+
+Then remove the collapsed mode (pre-flight F2). Its only caller was the dashboard's `collapsible` card, which Step 4 deletes; every remaining caller (the panel) already renders the always-open card, so nothing a leader sees changes.
+
+1. Delete `  ChevronUp,` from the lucide-react import list.
+2. In `interface ProfileCardProps`, delete `  collapsible?: boolean;`.
+3. The signature becomes:
+
+```tsx
+export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
+```
+
+4. Delete these three lines:
+
+```tsx
+  // Collapsed by default only when the parent asks for it, so every other
+  // caller keeps the old always-open behaviour.
+  const [open, setOpen] = useState(!collapsible);
+```
+
+5. Delete the whole collapsed branch:
+
+```tsx
+  // ---------- Collapsed ----------
+  // Just the avatar. The dashboard leads with actions, not with your own face.
+  if (collapsible && !open && !editing) {
+    return (
+      <div className="flex justify-center">
+        <button
+          onClick={() => setOpen(true)}
+          aria-expanded={false}
+          aria-label="Open my profile"
+          title="My Profile"
+          className="rounded-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+        >
+          {avatar(profile.avatar_url, "w-14 h-14", "text-base")}
+        </button>
+      </div>
+    );
+  }
+
+```
+
+6. In display mode, delete the collapse button:
+
+```tsx
+        {collapsible && (
+          <button
+            onClick={() => setOpen(false)}
+            aria-expanded
+            aria-label="Collapse my profile"
+            className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] p-2 text-[var(--muted)] hover:text-white hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)] transition-all"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+        )}
+```
+
+Nothing else in ProfileCard changes: `load`, `save`, `pickPhoto`, edit mode and display mode are untouched. Confirm with `grep -n "collapsible\|setOpen\|ChevronUp" src/components/ui/ProfileCard.tsx` (no output).
 
 - [ ] **Step 4: Dashboard: avatar in the header, collapsed card removed**
 
@@ -1404,6 +1526,18 @@ with:
         </div>
 ```
 
+and let that row wrap at 375 px (pre-flight F5): its opening line
+
+```tsx
+      <div className="no-print flex items-center justify-between">
+```
+
+becomes
+
+```tsx
+      <div className="no-print flex flex-wrap items-center justify-between gap-2">
+```
+
 (The row already has `no-print`, so none of it prints.) In `calling/profile/page.tsx`, line 57 becomes:
 
 ```tsx
@@ -1444,11 +1578,29 @@ with:
               <HeaderAvatar user={user} />
 ```
 
+In the same three files, hide the welcome line below `sm` so the avatar fits at 375 px (pre-flight F5, as Network does). Replace:
+
+```tsx
+              <span className="text-gray-400 text-sm">
+                Welcome, {user.name}
+              </span>
+```
+
+with:
+
+```tsx
+              <span className="hidden text-gray-400 text-sm sm:inline">
+                Welcome, {user.name}
+              </span>
+```
+
 Do not touch `src/app/leaders/admin/page.tsx` or the `src/app/leaders/workshops/**` pages (see the decisions table).
 
 - [ ] **Step 9: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 265 passing (unchanged), `npm run lint` at most 54 (removing the dashboard's ProfileCard import cannot add a problem), `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 267 passing (unchanged), `npm run lint` at most 54 (removing the dashboard's ProfileCard import and the dead collapsed branch cannot add a problem), `npm run build` passes.
+
+In the task report, note (pre-flight F7) that HeaderAvatar is a new read-only call site of the existing `GET /api/leader-profile` (same auth; the dashboard's card already made this read), fired on each leader page and after each panel close.
 
 - [ ] **Step 10: Commit**
 
@@ -1465,7 +1617,8 @@ At 375 px and at desktop, signed in as a test leader (`@example.invalid`, guard 
 - Dashboard `/leaders`: a round 36 px photo (or initials) at the top right of the header; the collapsed avatar that sat in the middle of the page is gone; nothing else moved.
 - The same avatar at the top right on `/leaders/training` (inside the pill), `/leaders/training/calling`, `/leaders/training/launch`, `/leaders/training/calling/profile`, `/leaders/training/launch/plan`, `/leaders/network`, `/leaders/resources`, `/leaders/study-guides`, `/leaders/support`. No horizontal scroll at 375 px on any of them.
 - Tap it: on the phone a full-width sheet rises from the bottom (about 88 percent of the height, scrolls inside); on desktop a 480 px sheet on the right, full height. The backdrop dims the page. The ProfileCard inside shows and its Edit and Save work exactly as before (edit the "About me" line, save, reopen: it stuck; then put it back).
-- Keyboard: Tab to the avatar (lamp ring), Enter opens, focus lands on the close button, Tab stays inside the panel, Escape closes and focus is back on the avatar. The close button and a click on the dim backdrop also close it.
+- Keyboard: Tab to the avatar (lamp ring), Enter opens, focus lands on the close button, Tab stays inside the panel, Escape closes and focus is back on the avatar. The close button and a click on the dim backdrop also close it. On desktop, a click on the empty space below the card inside the sheet does not close it; start an edit, click there, and the edit is still open.
+- At 375 px, `/leaders/resources`, `/leaders/study-guides`, `/leaders/support`: no "Welcome" line, the avatar fits, no horizontal scroll; the Profile and Plan top rows wrap cleanly if needed.
 - Upload a new photo in the panel, save, close: the header avatar shows the new photo without a reload. Remove it again afterwards.
 - Print preview of `/leaders/training/calling/profile` and `/leaders/training/launch/plan`: no avatar, output otherwise unchanged.
 
@@ -1481,7 +1634,7 @@ At 375 px and at desktop, signed in as a test leader (`@example.invalid`, guard 
 - Modify: `src/app/leaders/training/page.tsx` (the `hasCheckedInThisWeek` line, the Growth label block and the `<Phase4Growth` call; find them by content, Tasks 3 and 4 shifted the line numbers by a few)
 
 **Interfaces:**
-- Consumes: `GAUGES`, `type Gauge` (Task 1); `LEADER_HEALTH_INTRO`, `CHURCH_HEALTH_INTRO`, `leaderHealthSummary`, `leaderHealthStartsOpen`, `churchHealthSummary` (Task 1); `CheckinHistory` (today's props `{ weeks, checkins }`; Task 6 adds `currentWeekStart`).
+- Consumes: `GAUGES`, `type Gauge` (Task 1); `LEADER_HEALTH_INTRO`, `CHURCH_HEALTH_INTRO`, `leaderHealthSummary`, `leaderHealthStartsOpen`, `leaderHealthStatus`, `churchHealthSummary` (Task 1); `CheckinHistory` (today's props `{ weeks, checkins }`; Task 6 adds `currentWeekStart`).
 - Produces:
   - `Expander` default export, props `{ id: string; title: string; intro?: string; summary?: string; open: boolean; onToggle: () => void; children: ReactNode }`. Task 8 uses it for "Why multiply?".
   - `RpmsSlider` default export, props `{ gauge: Gauge; value: number; onChange: (next: number) => void }`.
@@ -1600,10 +1753,17 @@ export interface ExpanderProps {
 // A button row that opens a section in place (round 2 spec 3 and 5): serif
 // heading, an optional one-line intro, and, only while closed, a one-line
 // summary. 44 px or taller, aria-expanded, a hairline above. The chevron
-// turns without animating under reduced motion.
+// turns without animating under reduced motion. The heading button holds
+// only the title and chevron, so its accessible name stays short; the
+// intro and summary sit below it and are read as its description
+// (pre-flight F12).
 export default function Expander({ id, title, intro, summary, open, onToggle, children }: ExpanderProps) {
   const buttonId = `${id}-button`;
   const panelId = `${id}-panel`;
+  const introId = `${id}-intro`;
+  const summaryId = `${id}-summary`;
+  const showSummary = !open && !!summary;
+  const describedBy = [intro ? introId : null, showSummary ? summaryId : null].filter(Boolean).join(" ") || undefined;
   return (
     <section className="border-t border-[var(--line)]">
       <h3 className="m-0">
@@ -1612,24 +1772,31 @@ export default function Expander({ id, title, intro, summary, open, onToggle, ch
           id={buttonId}
           aria-expanded={open}
           aria-controls={panelId}
+          aria-describedby={describedBy}
           onClick={onToggle}
-          className="flex min-h-[44px] w-full items-start gap-4 py-5 text-left"
+          className="flex min-h-[44px] w-full items-center gap-4 pt-5 pb-1 text-left"
         >
-          <span className="min-w-0 flex-1">
-            <span className="block font-serif text-2xl leading-tight text-[var(--ink)]">{title}</span>
-            {intro ? <span className="mt-1 block text-sm leading-relaxed text-[var(--muted)]">{intro}</span> : null}
-            {!open && summary ? (
-              <span className="mt-2 block text-sm tabular-nums text-[var(--ink-2)]">{summary}</span>
-            ) : null}
-          </span>
+          <span className="min-w-0 flex-1 font-serif text-2xl leading-tight text-[var(--ink)]">{title}</span>
           <ChevronDown
             aria-hidden="true"
-            className={`mt-1.5 h-5 w-5 flex-shrink-0 text-[var(--muted)] motion-safe:transition-transform ${
+            className={`h-5 w-5 flex-shrink-0 text-[var(--muted)] motion-safe:transition-transform ${
               open ? "rotate-180" : ""
             }`}
           />
         </button>
       </h3>
+      <div className="pb-5">
+        {intro ? (
+          <p id={introId} className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
+            {intro}
+          </p>
+        ) : null}
+        {showSummary ? (
+          <p id={summaryId} className="mt-2 text-sm tabular-nums text-[var(--ink-2)]">
+            {summary}
+          </p>
+        ) : null}
+      </div>
       {open ? (
         <div id={panelId} role="region" aria-labelledby={buttonId} className="pb-10">
           {children}
@@ -1715,6 +1882,7 @@ import {
   churchHealthSummary,
   LEADER_HEALTH_INTRO,
   leaderHealthStartsOpen,
+  leaderHealthStatus,
   leaderHealthSummary,
 } from "@/lib/phaseSummaries";
 import type { Metric, Person } from "@/lib/people";
@@ -1810,11 +1978,13 @@ export default function Phase4Growth({
   }
   const leaderIsOpen = leaderOpen ?? false;
 
+  // A save in flight or a failed save wins (pre-flight F4): the closed
+  // expander hides the Save button's own state, so it must say so here.
   const leaderSummary = !checkinsLoaded
     ? "Loading..."
     : checkinLoadError
       ? "Could not load"
-      : leaderHealthSummary(checkins, currentWeekStart);
+      : leaderHealthStatus(leaderHealthSummary(checkins, currentWeekStart), checkinSaving, checkinSaveError);
   const churchSummary = !peopleLoaded ? "Loading..." : peopleError ? "Could not load" : churchHealthSummary(people);
 
   return (
@@ -1956,7 +2126,7 @@ export default function Phase4Growth({
 }
 ```
 
-What changed against today, so a reviewer can diff with intent: the `ScoreRow` buttons and the local `RPMS_GAUGES` are replaced by `RpmsSlider` over `GAUGES`; the "Four gauges from Dave Ferguson's Multiplier" line is gone (the Leader health intro says it); "Your three metrics" heading is replaced by the Church health expander; `text-white` on non-button text became `text-[var(--ink)]`. The form fields, `setCheckinForm` updates, the retry, `saveCheckin` and the metric lists are character for character the same logic.
+What changed against today, so a reviewer can diff with intent: the `ScoreRow` buttons and the local `RPMS_GAUGES` are replaced by `RpmsSlider` over `GAUGES`; the "Four gauges from Dave Ferguson's Multiplier" line is gone (the Leader health intro says it); "Your three metrics" heading is replaced by the Church health expander; `text-white` on non-button text became `text-[var(--ink)]`. The form fields, `setCheckinForm` updates, the retry, `saveCheckin` and the metric lists are character for character the same logic. The per-metric `count` inside the columns is the unchanged old code and duplicates `churchHealthSummary`'s counting; that is accepted, do not refactor it (pre-flight F8).
 
 - [ ] **Step 5: Hub: pass the week, drop the old label**
 
@@ -1984,7 +2154,7 @@ In the `<Phase4Growth` call add, on the line after `currentWeekLabel={currentWee
 
 - [ ] **Step 6: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 265 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 267 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 7: Commit**
 
@@ -2003,7 +2173,8 @@ At 375 px and desktop, on `/leaders/training?phase=phase4` with a test leader:
 - Four sliders in rose, green, sky and violet. Each shows its meaning line, and the big number in its colour matches the thumb. Drag each to 1 and to 10: the fill ends under the thumb at both ends. Touch target is the full 44 px row.
 - Keyboard: Tab to a slider (lamp ring), arrow keys move it one step, Home and End jump to 1 and 10.
 - Save check-in: "Saved." appears as before; reload the page: Leader health now starts closed and its summary reads "This week: R 7 · P 5 · M 6 · S 8" with the saved numbers; opening it shows the form pre-filled.
-- Expanders: Enter and Space toggle, `aria-expanded` flips, the summary line hides while open. With reduced motion on, the chevron flips without turning.
+- Expanders: Enter and Space toggle, `aria-expanded` flips, the summary line hides while open. With reduced motion on, the chevron flips without turning. read_page: each expander button's name is just its title ("Leader health", "Church health"), with the intro and closed summary as its description.
+- Save state while closed: change a slider, tap Save, close Leader health at once: the summary reads "Saving..." then the new scores. With the network offline in dev tools, save then close: the summary reads "Could not save. Open to try again."
 - Church health open: the three columns and name tagging work as before (tag and untag one name, then undo).
 
 ---
@@ -2185,7 +2356,9 @@ const Y_TICKS = [1, 5, 10];
 // Round 2 spec 3.2: an inline SVG line chart, one line per gauge in its
 // colour, y from 1 to 10, a missed week leaves a gap. No chart library.
 // A transparent button column over each week makes the whole column a tap
-// target for that week's detail (the calendar rows are the full-size route).
+// target for that week's detail. The columns are narrower than 44 px at
+// phone width; that is accepted because the calendar rows are the
+// full-size, keyboard-first route to the same detail (pre-flight F10).
 export default function CheckinTrend({ weeks, checkins, selected, onSelect }: CheckinTrendProps) {
   const box = CHART_BOX;
   const n = weeks.length;
@@ -2434,7 +2607,7 @@ with:
 
 - [ ] **Step 6: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 265 passing (unchanged), `npm run lint` at most 54, `npm run build` passes. Also confirm `git diff --stat src/app/leaders/training/useCheckins.ts src/components/journey/NextStepCard.tsx` prints nothing.
+`npx tsc --noEmit` clean, `npm test` 267 passing (unchanged), `npm run lint` at most 54, `npm run build` passes. Also confirm `git diff --stat src/app/leaders/training/useCheckins.ts src/components/journey/NextStepCard.tsx` prints nothing.
 
 - [ ] **Step 7: Commit**
 
@@ -2630,7 +2803,7 @@ with:
 
 - [ ] **Step 6: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 266 passing (265 + 1), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 268 passing (267 + 1), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 7: Commit**
 
@@ -2912,7 +3085,7 @@ In the `<Phase5Multiply` call, add after `addingPerson={addingPerson}`:
 
 - [ ] **Step 4: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 266 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 268 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 5: Commit**
 
@@ -2946,7 +3119,7 @@ At 375 px and desktop, `/leaders/training?phase=phase5`:
 - Consumes: nothing new.
 - Produces: `CONVERSATION_CONTENT` loses `supportLink` (its only user was ConversationStep; no test references it; `content.test.ts` only checks the whole module for em dashes, which still passes).
 
-Spec 5b. The Support and Workshop pages and their access rules are unchanged: this task only moves links.
+Spec 5b. The Support and Workshop pages and their access rules are unchanged: this task only moves links. Build it as specced: Henry's explicit decision was "remove everywhere" (pre-flight F6). In the task report, note that a leader waiting for access now has no in-app link to book the first pastor call.
 
 - [ ] **Step 1: Dashboard Tools list**
 
@@ -3068,7 +3241,7 @@ If that three-line anchor is not unique in the file (it appears only once today,
 
 - [ ] **Step 4: Run the gates**
 
-`npx tsc --noEmit` clean, `npm test` 266 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
+`npx tsc --noEmit` clean, `npm test` 268 passing (unchanged), `npm run lint` at most 54, `npm run build` passes.
 
 - [ ] **Step 5: Commit**
 
@@ -3103,7 +3276,7 @@ npm run build
 npm run guard
 ```
 
-Expected: tsc prints nothing; 266 tests pass; lint at most 54 problems; build passes; guard prints `clean`.
+Expected: tsc prints nothing; 268 tests pass; lint at most 54 problems; build passes; guard prints `clean`.
 
 - [ ] **Step 2: Protected files untouched**
 
