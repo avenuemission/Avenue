@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { isPlaceholderThumb, nextThumbSize, THUMB_ORDER, thumbUrl, type ThumbSize } from "@/lib/youtubeThumb";
 
 export interface CarouselEpisode {
   id: string;
@@ -18,8 +19,30 @@ interface EpisodeCarouselProps {
 
 // YouTube serves thumbnails straight off img.youtube.com, no API key and no
 // next/image domain config needed, so a plain <img> is the right call here.
-const thumbUrl = (youtubeId: string) =>
-  `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+// Starts at the 16:9 maxresdefault and steps down on a 404 or on YouTube's
+// 120 px grey placeholder (round 3 spec 1). The carousel mounts only on the
+// client, after the leader gate, so onError and onLoad always fire here.
+function EpisodeThumb({ youtubeId, dimmed }: { youtubeId: string; dimmed: boolean }) {
+  const [size, setSize] = useState<ThumbSize>(THUMB_ORDER[0]);
+  const fallBack = () => {
+    const next = nextThumbSize(size);
+    if (next) setSize(next);
+    else console.error(`EpisodeCarousel: no thumbnail loaded for YouTube video ${youtubeId}`);
+  };
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={thumbUrl(youtubeId, size)}
+      alt=""
+      loading="lazy"
+      onError={fallBack}
+      onLoad={(e) => {
+        if (isPlaceholderThumb(e.currentTarget.naturalWidth)) fallBack();
+      }}
+      className={`w-full aspect-video object-cover ${dimmed ? "opacity-50" : ""}`}
+    />
+  );
+}
 
 export default function EpisodeCarousel({
   episodes,
@@ -119,15 +142,7 @@ export default function EpisodeCarousel({
                   aria-label={`Play ${ep.title}`}
                   className="block w-full overflow-hidden rounded-lg border border-[var(--border)] hover:border-[var(--border-strong)] transition-all"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={thumbUrl(ep.youtubeId)}
-                    alt=""
-                    loading="lazy"
-                    className={`w-full aspect-video object-cover ${
-                      ep.watched ? "opacity-50" : ""
-                    }`}
-                  />
+                  <EpisodeThumb key={ep.youtubeId} youtubeId={ep.youtubeId} dimmed={ep.watched} />
                   <span className="absolute inset-0 flex items-center justify-center">
                     <span className="w-11 h-11 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
                       <Play className="w-4 h-4 text-white fill-white ml-0.5" />
