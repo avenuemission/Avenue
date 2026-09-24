@@ -9,6 +9,16 @@ export function tooMany(): NextResponse {
   return jsonError(429, "Too many attempts. Please wait a few minutes and try again.");
 }
 
+// The error's kind only: a mailer message can quote the recipient address,
+// so log this, not the error, when a send fails.
+export function errorKind(error: unknown): string {
+  if (error instanceof Error) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === "string" ? `${error.name} ${code}` : error.name;
+  }
+  return typeof error;
+}
+
 // The one place a route handler turns an unexpected failure into a
 // response. Logs the real cause server-side (with a context label so it is
 // findable) but never puts it in the response body: a raw database or

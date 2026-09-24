@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { APEST_ROLES, QUESTIONS, SCALE_OPTIONS, scoreApest, topRole, type ApestResults, type RoleKey } from "@/lib/domain/apest";
+import { emailApestResults } from "@/lib/client/apestEmail";
 
 export default function ApestQuiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -11,6 +12,7 @@ export default function ApestQuiz() {
   const [results, setResults] = useState<ApestResults | null>(null);
   const [emailForm, setEmailForm] = useState({ email: "", name: "", company: "" });
   const [emailSent, setEmailSent] = useState(false);
+  const [emailFailed, setEmailFailed] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [personalizedResponse, setPersonalizedResponse] = useState<string | null>(null);
   // The server's signature over the reflection, so the email can carry
@@ -72,30 +74,24 @@ export default function ApestQuiz() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (emailForm.email && results) {
-      try {
-        // The email carries the reflection shown on this page, checked by the
-        // server against its signature. With none (OpenAI failed), the server
-        // uses the strongest gift's text, which is what this page shows then.
-        const signed =
-          personalizedResponse && reflectionSignature
-            ? { reflection: personalizedResponse, signature: reflectionSignature }
-            : {};
-        const res = await fetch("/api/apest-results", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            results,
-            name: emailForm.name,
-            email: emailForm.email,
-            company: emailForm.company,
-            ...signed,
-          }),
-        });
-        if (!res.ok) throw new Error(`Sending results failed (${res.status})`);
-        setEmailSent(true);
-      } catch (error) {
-        console.error("Form submission error:", error);
-      }
+      // The email carries the reflection shown on this page, checked by the
+      // server against its signature. With none (OpenAI failed), the server
+      // uses the strongest gift's text, which is what this page shows then.
+      const signed =
+        personalizedResponse && reflectionSignature
+          ? { reflection: personalizedResponse, signature: reflectionSignature }
+          : {};
+      setEmailFailed(false);
+      const sent = await emailApestResults({
+        results,
+        name: emailForm.name,
+        email: emailForm.email,
+        company: emailForm.company,
+        ...signed,
+      });
+      // On failure the results stay on screen and the form stays open to retry.
+      if (sent) setEmailSent(true);
+      else setEmailFailed(true);
     }
   };
 
@@ -368,6 +364,11 @@ export default function ApestQuiz() {
                       Send Results
                     </button>
                   </div>
+                  {emailFailed && (
+                    <p role="alert" className="text-red-400 text-sm text-center">
+                      We couldn&apos;t email your results. Your results are shown above.
+                    </p>
+                  )}
                 </form>
               ) : (
                 <p className="text-green-400 text-center">
@@ -386,6 +387,7 @@ export default function ApestQuiz() {
                   setAnswers(Array(QUESTIONS.length).fill(0));
                   setResults(null);
                   setEmailSent(false);
+                  setEmailFailed(false);
                   setPersonalizedResponse(null);
                   setReflectionSignature(null);
                   setIsLoadingAI(false);

@@ -16,12 +16,12 @@ function fakeDeps(overrides: Partial<RateDeps> = {}): RateDeps {
 describe("RATE", () => {
   it("has the exact rules the rest of the app relies on", () => {
     expect(RATE).toEqual({
-      form: { name: "form", windowSeconds: 600, max: 5 },
+      form: { name: "form", windowSeconds: 600, max: 30 },
       formRecipient: { name: "form-to", windowSeconds: 3600, max: 3 },
       signup: { name: "signup", windowSeconds: 3600, max: 5 },
-      openai: { name: "openai", windowSeconds: 3600, max: 10 },
-      workshopCode: { name: "ws-code", windowSeconds: 600, max: 30 },
-      workshopSubmit: { name: "ws-submit", windowSeconds: 600, max: 10 },
+      openai: { name: "openai", windowSeconds: 3600, max: 60 },
+      workshopCode: { name: "ws-code", windowSeconds: 600, max: 300 },
+      workshopSubmit: { name: "ws-submit", windowSeconds: 600, max: 200 },
       adminFail: { name: "admin-fail", windowSeconds: 900, max: 5 },
     });
   });
@@ -32,7 +32,7 @@ describe("allow", () => {
     const deps = fakeDeps();
     const result = await allow(RATE.form, "1.2.3.4", deps);
     expect(result).toBe(true);
-    expect(deps.hit).toHaveBeenCalledWith("form:1.2.3.4", 600, 5);
+    expect(deps.hit).toHaveBeenCalledWith("form:1.2.3.4", 600, 30);
   });
 
   it("returns false when the deps report the caller is over the limit", async () => {

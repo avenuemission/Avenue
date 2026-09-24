@@ -8,7 +8,8 @@ export interface RateRule {
 }
 
 // The one place every rate-limited surface's window/max lives. Change a
-// limit here, not at the call site.
+// limit here, not at the call site. Per-IP limits are sized for a room, not
+// a person: at church or an in-room workshop everyone shares one venue IP.
 export const RATE: {
   form: RateRule;
   formRecipient: RateRule;
@@ -18,12 +19,12 @@ export const RATE: {
   workshopSubmit: RateRule;
   adminFail: RateRule;
 } = {
-  form: { name: "form", windowSeconds: 600, max: 5 },
+  form: { name: "form", windowSeconds: 600, max: 30 },
   formRecipient: { name: "form-to", windowSeconds: 3600, max: 3 },
   signup: { name: "signup", windowSeconds: 3600, max: 5 },
-  openai: { name: "openai", windowSeconds: 3600, max: 10 },
-  workshopCode: { name: "ws-code", windowSeconds: 600, max: 30 },
-  workshopSubmit: { name: "ws-submit", windowSeconds: 600, max: 10 },
+  openai: { name: "openai", windowSeconds: 3600, max: 60 },
+  workshopCode: { name: "ws-code", windowSeconds: 600, max: 300 },
+  workshopSubmit: { name: "ws-submit", windowSeconds: 600, max: 200 },
   adminFail: { name: "admin-fail", windowSeconds: 900, max: 5 },
 };
 

@@ -88,6 +88,10 @@ describe("buildCsp", () => {
     expect(d.get("media-src")).toEqual(expect.arrayContaining(["'self'", "blob:"]));
   });
 
+  it("lets the admin email preview show images from the live site on any host", () => {
+    expect(d.get("img-src")).toContain("https://www.avenuemission.com");
+  });
+
   it("allows the Google Ads hosts the linked gtag config loads and beacons to", () => {
     expect(d.get("script-src")).toContain("https://googleads.g.doubleclick.net");
     for (const name of ["img-src", "connect-src"]) {

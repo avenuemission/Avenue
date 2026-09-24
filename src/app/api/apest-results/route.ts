@@ -6,7 +6,7 @@ import { adminNotificationEmail, sendAdminEmail } from "@/lib/emails/public/admi
 import { sendEmail } from "@/lib/server/mail/transport";
 import { allow, RATE } from "@/lib/server/rateLimit";
 import { clientIp } from "@/lib/server/clientIp";
-import { jsonError, serverError, tooMany } from "@/lib/server/http";
+import { errorKind, jsonError, serverError, tooMany } from "@/lib/server/http";
 import { signText, verifyText } from "@/lib/server/signedText";
 
 // The results, an optional name and email, and the signed reflection
@@ -118,19 +118,33 @@ export async function POST(request: NextRequest) {
     if (!(await allow(RATE.form, clientIp(request)))) return tooMany();
 
     const reflection = signedReflection ? signedReflection.text : APEST_ROLES[topRole(results)].leadershipBenefit;
-    if (await allow(RATE.formRecipient, email.toLowerCase())) {
-      const visitor = apestResultsEmail(name, bound, reflection);
-      await sendEmail(email, visitor.subject, visitor.html, { text: visitor.text });
-    }
-    await sendAdminEmail(
-      adminNotificationEmail("APEST Quiz Results", {
-        name: name || "Not provided",
-        email,
-        ...Object.fromEntries(Object.entries(results).map(([role, value]) => [role, `${value}%`])),
-      })
-    );
+    const visitorTo = (await allow(RATE.formRecipient, email.toLowerCase())) ? email : null;
 
-    return NextResponse.json({ ok: true });
+    // Nothing is stored here, but the policy matches the forms route: admin
+    // first, then the visitor; a mail failure is logged (which email and the
+    // error kind: no personal data) and reported as emailed: false, not as
+    // an error, so the page can say so and keep the results on screen.
+    const admin = adminNotificationEmail("APEST Quiz Results", {
+      name: name || "Not provided",
+      email,
+      ...Object.fromEntries(Object.entries(results).map(([role, value]) => [role, `${value}%`])),
+    });
+    const sends: [string, () => Promise<void>][] = [["admin", () => sendAdminEmail(admin)]];
+    if (visitorTo) {
+      const visitor = apestResultsEmail(name, bound, reflection);
+      sends.push(["results", () => sendEmail(visitorTo, visitor.subject, visitor.html, { text: visitor.text })]);
+    }
+    let emailed = true;
+    for (const [which, send] of sends) {
+      try {
+        await send();
+      } catch (mailError) {
+        emailed = false;
+        console.error(`apest-results: ${which} email failed`, errorKind(mailError));
+      }
+    }
+
+    return NextResponse.json({ ok: true, emailed });
   } catch (error) {
     return serverError("apest-results POST", error);
   }

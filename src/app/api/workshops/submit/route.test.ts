@@ -58,6 +58,14 @@ describe("POST /api/workshops/submit", () => {
     expect(fake.calls).toEqual([]);
   });
 
+  it("a JSON 500, never a bodyless one, when the rate limiter is down", async () => {
+    h.allow.mockRejectedValueOnce(new Error("rate_limit_hit: connection refused"));
+    const res = await post({ sessionCode: "ABCD", surveyData: blankAnswers() });
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: "Something went wrong. Please try again." });
+    expect(fake.calls).toEqual([]);
+  });
+
   it("400 for missing sessionCode or surveyData, no insert attempted", async () => {
     expect((await post({ surveyData: blankAnswers() })).status).toBe(400);
     expect((await post({ sessionCode: "ABCD" })).status).toBe(400);

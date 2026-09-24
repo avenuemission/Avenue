@@ -51,14 +51,15 @@ All limits live in `RATE` in `src/lib/server/rateLimit.ts`. Change them there, n
 
 | Rule | Limit | Keyed by | Used on |
 |---|---|---|---|
-| `form` | 5 per 10 min | IP | `POST /api/forms/[type]`, `POST /api/apest-results` |
+| `form` | 30 per 10 min | IP | `POST /api/forms/[type]`, `POST /api/apest-results` |
 | `formRecipient` | 3 per hour | Visitor's email | The confirmation email for those forms (skipped, not refused, when over) |
 | `signup` | 5 per hour | IP | `POST /api/leader-access` |
-| `openai` | 10 per hour | IP | `POST /api/apest-results` when it calls OpenAI |
-| `workshopCode` | 30 per 10 min | IP | `/api/workshops/validate-code` |
-| `workshopSubmit` | 10 per 10 min | IP | `/api/workshops/submit` |
+| `openai` | 60 per hour | IP | `POST /api/apest-results` when it calls OpenAI |
+| `workshopCode` | 300 per 10 min | IP | `/api/workshops/validate-code` |
+| `workshopSubmit` | 200 per 10 min | IP | `/api/workshops/submit` |
 | `adminFail` | 5 per 15 min (6 in practice, see above) | IP | Wrong admin passcodes (`requireAdmin`) |
 
+- Per-IP limits are sized for a room, not a person: at church or an in-room workshop everyone shares the venue's one IP.
 - The IP comes from Netlify's `x-nf-client-connection-ip` header, which a visitor cannot fake (`lib/server/clientIp.ts`).
 - Sign-in codes are also rate limited by Supabase Auth itself (it answers 429).
 

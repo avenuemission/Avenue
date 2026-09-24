@@ -7,16 +7,7 @@ import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { allow, RATE } from "@/lib/server/rateLimit";
 import { clientIp } from "@/lib/server/clientIp";
-import { jsonError, serverError, tooMany } from "@/lib/server/http";
-
-// The error's kind only: a mailer message can quote the recipient address.
-function errorKind(error: unknown): string {
-  if (error instanceof Error) {
-    const code = (error as { code?: unknown }).code;
-    return typeof code === "string" ? `${error.name} ${code}` : error.name;
-  }
-  return typeof error;
-}
+import { errorKind, jsonError, serverError, tooMany } from "@/lib/server/http";
 
 // POST /api/forms/<type>: the one public form endpoint. The server picks
 // every recipient: the admin notification goes to the fixed admin address,

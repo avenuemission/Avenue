@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { jsonError, serverError, tooMany } from "./http";
+import { errorKind, jsonError, serverError, tooMany } from "./http";
 
 describe("jsonError", () => {
   it("returns the given status with an { error } body", async () => {
@@ -44,5 +44,14 @@ describe("serverError", () => {
     const res = serverError("network reparent", { secret: "sb_secret_abc123" });
     const body = await res.json();
     expect(JSON.stringify(body)).not.toContain("sb_secret_abc123");
+  });
+});
+
+describe("errorKind", () => {
+  it("names the error and its code, never its message (a mailer message can quote an address)", () => {
+    const err = Object.assign(new Error("550 no such user ann@example.invalid"), { code: "EENVELOPE" });
+    expect(errorKind(err)).toBe("Error EENVELOPE");
+    expect(errorKind(new TypeError("ann@example.invalid"))).toBe("TypeError");
+    expect(errorKind("ann@example.invalid")).toBe("string");
   });
 });

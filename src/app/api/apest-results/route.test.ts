@@ -8,8 +8,8 @@ vi.mock("@/lib/server/mail/transport", () => ({ sendEmail: h.sendEmail, isEmailC
 vi.mock("@/lib/server/rateLimit", () => ({
   allow: h.allow,
   RATE: {
-    openai: { name: "openai", windowSeconds: 3600, max: 10 },
-    form: { name: "form", windowSeconds: 600, max: 5 },
+    openai: { name: "openai", windowSeconds: 3600, max: 60 },
+    form: { name: "form", windowSeconds: 600, max: 30 },
     formRecipient: { name: "form-to", windowSeconds: 3600, max: 3 },
   },
 }));
@@ -55,6 +55,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
+
+const visitorCall = () => h.sendEmail.mock.calls.find((c) => c[0] !== ADMIN)!;
 
 const signed = (text = REFLECTION) => ({ reflection: text, signature: signText(text, results) });
 
@@ -103,16 +105,42 @@ describe("POST /api/apest-results: emailing the results", () => {
     expect(res.status).toBe(200);
     expect(h.fetch).not.toHaveBeenCalled();
     expect(h.allow).toHaveBeenCalledWith(expect.objectContaining({ name: "form" }), IP);
-    expect(h.sendEmail.mock.calls.map((c) => c[0])).toEqual(["ann@example.invalid", ADMIN]);
+    // Admin first, then the visitor: the same order as the forms route.
+    expect(h.sendEmail.mock.calls.map((c) => c[0])).toEqual([ADMIN, "ann@example.invalid"]);
     expect(h.sendEmail.mock.calls.map((c) => c[1])).toEqual([
-      "Your APEST Quiz Results - Discover Your Gifts",
       "New Form Submission: APEST Quiz Results",
+      "Your APEST Quiz Results - Discover Your Gifts",
     ]);
-    const visitor = h.sendEmail.mock.calls[0];
+    const visitor = visitorCall();
     expect(visitor[2]).toContain("You lead by sending.");
     expect(visitor[2]).toContain("You also care for people.");
     expect(visitor[3]).toEqual({ text: expect.stringContaining("Apostle: 30%") });
-    expect(h.sendEmail.mock.calls[1][3].text).toContain("Teacher: 10%");
+    expect(h.sendEmail.mock.calls[0][3].text).toContain("Teacher: 10%");
+    expect(await res.json()).toEqual({ ok: true, emailed: true });
+  });
+
+  it("visitor email fails after the admin was told: 200 with emailed: false, logged without the address", async () => {
+    h.sendEmail.mockImplementation(async (to: string) => {
+      if (to !== ADMIN) throw Object.assign(new Error("550 no such user ann@example.invalid"), { code: "EENVELOPE" });
+    });
+    const res = await post({ results, email: "ann@example.invalid", name: "Ann", ...signed() });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, emailed: false });
+    expect(h.sendEmail.mock.calls.map((c) => c[0])).toEqual([ADMIN, "ann@example.invalid"]);
+    const logged = JSON.stringify((console.error as unknown as { mock: { calls: unknown[][] } }).mock.calls);
+    expect(logged).toContain("apest-results");
+    expect(logged).not.toContain("ann@example.invalid");
+    expect(logged).not.toContain("Ann");
+  });
+
+  it("admin email fails: still emails the visitor, 200 with emailed: false", async () => {
+    h.sendEmail.mockImplementation(async (to: string) => {
+      if (to === ADMIN) throw new Error("Gmail is not configured");
+    });
+    const res = await post({ results, email: "ann@example.invalid", ...signed() });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, emailed: false });
+    expect(h.sendEmail.mock.calls.map((c) => c[0])).toEqual([ADMIN, "ann@example.invalid"]);
   });
 
   it("400 and nothing sent when the reflection was changed", async () => {
@@ -142,13 +170,13 @@ describe("POST /api/apest-results: emailing the results", () => {
     await post({ results, email: "ann@example.invalid" });
     expect(h.fetch).not.toHaveBeenCalled();
     // apostle is the top role in these results
-    expect(h.sendEmail.mock.calls[0][3].text).toContain(APEST_ROLES.apostle.leadershipBenefit);
+    expect(visitorCall()[3].text).toContain(APEST_ROLES.apostle.leadershipBenefit);
   });
 
   it("escapes the reflection and the name in the email", async () => {
     const evil = `<a href="https://evil.invalid">click</a>`;
     await post({ results, email: "ann@example.invalid", name: "<b>Ann</b>", ...signed(evil) });
-    const html = h.sendEmail.mock.calls[0][2] as string;
+    const html = visitorCall()[2] as string;
     expect(html).not.toContain(`<a href="https://evil.invalid">`);
     expect(html).not.toContain("<b>Ann</b>");
     expect(html).toContain("&lt;b&gt;Ann&lt;/b&gt;");

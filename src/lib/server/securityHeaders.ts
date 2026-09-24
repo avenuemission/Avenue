@@ -54,6 +54,7 @@ const ORIGINS: Record<FetchDirective, readonly string[]> = {
     "https://ad.doubleclick.net",
     "https://www.google.com.au",
     "https://www.facebook.com", // Meta pixel beacon
+    "https://www.avenuemission.com", // email images, in the admin email preview on any host
   ],
   "font-src": ["'self'", "https://fonts.gstatic.com"],
   "connect-src": [

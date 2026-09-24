@@ -46,6 +46,16 @@ describe("POST /api/workshops/validate-code", () => {
     expect(h.allow).toHaveBeenCalledWith(expect.objectContaining({ name: "ws-code" }), IP);
   });
 
+  it("a JSON 500, never a bodyless one, when the rate limiter is down", async () => {
+    h.allow.mockRejectedValueOnce(new Error("rate_limit_hit: connection refused"));
+    fake = fakeSupabase();
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const res = await post({ code: "ABCD" });
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: "Something went wrong. Please try again." });
+    expect(fake.calls).toEqual([]);
+  });
+
   it("valid: an exact match via the admin client", async () => {
     fake = fakeSupabase({ "workshop_sessions.select.single": { data: { code: "ABCD", status: "active", include_life_3: true } } });
     h.getSupabaseAdmin.mockReturnValue(fake.db);

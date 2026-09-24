@@ -23,7 +23,13 @@ function levenshtein(a: string, b: string): number {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await allow(RATE.workshopCode, clientIp(request)))) return tooMany();
+  // allow() throws if the limiter itself is down: a JSON 500, never a
+  // bodyless one and never an unlimited check.
+  try {
+    if (!(await allow(RATE.workshopCode, clientIp(request)))) return tooMany();
+  } catch (error) {
+    return serverError("workshops/validate-code rate limit", error);
+  }
 
   let body: unknown;
   try {

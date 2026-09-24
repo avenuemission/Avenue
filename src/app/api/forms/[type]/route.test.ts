@@ -16,7 +16,7 @@ vi.mock("@/lib/server/mail/transport", () => ({ sendEmail: h.sendEmail, isEmailC
 vi.mock("@/lib/server/rateLimit", () => ({
   allow: h.allow,
   RATE: {
-    form: { name: "form", windowSeconds: 600, max: 5 },
+    form: { name: "form", windowSeconds: 600, max: 30 },
     formRecipient: { name: "form-to", windowSeconds: 3600, max: 3 },
   },
 }));

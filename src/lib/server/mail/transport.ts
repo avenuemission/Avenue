@@ -2,8 +2,6 @@
 // The one mailer. Templates live in lib/emails (leader) and lib/emails/public.
 import nodemailer from "nodemailer";
 
-const FROM_EMAIL = `Avenue Mission <${process.env.GMAIL_USER}>`;
-
 // Create Gmail SMTP transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -25,15 +23,15 @@ export function isEmailConfigured(): boolean {
   return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 }
 
-// Send email helper
+// Sends one email. Fails loud: with Gmail not configured it throws, so a
+// caller never reports an email as sent when nothing went out.
 export async function sendEmail(to: string, subject: string, html: string, options: SendOptions = {}): Promise<void> {
   if (!isEmailConfigured()) {
-    console.error("Email service not configured - missing GMAIL_USER or GMAIL_APP_PASSWORD");
-    return;
+    throw new Error("Email is not configured: GMAIL_USER and GMAIL_APP_PASSWORD must both be set");
   }
 
   await transporter.sendMail({
-    from: FROM_EMAIL,
+    from: `Avenue Mission <${process.env.GMAIL_USER}>`,
     to,
     subject,
     html,

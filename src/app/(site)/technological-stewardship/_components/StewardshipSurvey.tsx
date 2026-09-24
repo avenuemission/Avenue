@@ -13,6 +13,7 @@ import {
   type SurveyOption,
   type SurveyQuestion,
 } from "@/lib/domain/workshops/survey";
+import { checkSessionCode, planSubmit, submitSurvey } from "@/lib/client/workshopSurvey";
 
 // Section icons, in section order (01 to 05).
 const SECTION_ICONS = [Users, BookOpen, Sparkles, Globe, AlertTriangle];
@@ -177,6 +178,8 @@ export default function StewardshipSurvey() {
   const [surveyData, setSurveyData] = useState<SurveyAnswers>(blankAnswers);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitNeedsCode, setSubmitNeedsCode] = useState(false);
   const [sessionCode, setSessionCode] = useState("");
   const [sessionCodeInput, setSessionCodeInput] = useState("");
   const [sessionCodeError, setSessionCodeError] = useState("");
@@ -211,41 +214,43 @@ export default function StewardshipSurvey() {
     setSessionCodeSuggestion("");
     if (!code.trim()) return;
     setSessionCodeChecking(true);
-    const res = await fetch("/api/workshops/validate-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    });
-    const data = await res.json();
+    const check = await checkSessionCode(code);
     setSessionCodeChecking(false);
-    if (data.valid) {
-      setSessionCode(data.code);
+    if (check.kind === "valid") {
+      setSessionCode(check.code);
       setSessionCodeValid(true);
       setSessionCodeError("");
-      setIncludeLife3(data.include_life_3 !== false);
-    } else {
+      setIncludeLife3(check.includeLife3);
+    } else if (check.kind === "invalid") {
       setSessionCodeValid(false);
       setSessionCode("");
-      setSessionCodeError(data.error || "Invalid code");
-      if (data.suggestion) setSessionCodeSuggestion(data.suggestion);
+      setSessionCodeError(check.error);
+      if (check.suggestion) setSessionCodeSuggestion(check.suggestion);
+    } else {
+      // Rate limited, server down or offline: say so, and leave the code
+      // as it was rather than treating it as wrong.
+      setSessionCodeError(check.error);
     }
   };
 
   const handleSubmit = async () => {
+    setSubmitError("");
+    setSubmitNeedsCode(false);
+    const plan = planSubmit(sessionCode, sessionCodeInput);
+    if (plan === "needCode") {
+      setSubmitNeedsCode(true);
+      setSubmitError("Your workshop session code isn't confirmed yet, so your answers were not saved. Go back to the start, tap Check next to the code, then submit again. Your answers are kept.");
+      return;
+    }
+    if (plan === "skip") {
+      setSubmitted(true);
+      return;
+    }
     setSubmitting(true);
     try {
-      // Submit to Supabase via API
-      if (sessionCode) {
-        await fetch("/api/workshops/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionCode, surveyData }),
-        });
-      }
-
-      setSubmitted(true);
-    } catch (error) {
-      console.error("Form submission error:", error);
+      const result = await submitSurvey(sessionCode, surveyData);
+      if (result.ok) setSubmitted(true);
+      else setSubmitError(result.error);
     } finally {
       setSubmitting(false);
     }
@@ -425,6 +430,8 @@ export default function StewardshipSurvey() {
                   value={sessionCodeInput}
                   onChange={(e) => {
                     setSessionCodeInput(e.target.value.toUpperCase());
+                    // Only a code confirmed by Check is ever submitted.
+                    setSessionCode("");
                     setSessionCodeValid(false);
                     setSessionCodeError("");
                     setSessionCodeSuggestion("");
@@ -632,6 +639,27 @@ export default function StewardshipSurvey() {
                     <Send size={20} />
                   </button>
                 )}
+              </div>
+            )}
+
+            {submitError && currentStep === totalSteps - 1 && (
+              <div role="alert" className="mt-4 rounded-lg border border-red-500/60 bg-red-950/40 p-4 text-sm text-red-200">
+                <p>{submitError}</p>
+                <button
+                  onClick={() => {
+                    if (submitNeedsCode) {
+                      setSubmitError("");
+                      setSubmitNeedsCode(false);
+                      goToStep(0);
+                    } else {
+                      handleSubmit();
+                    }
+                  }}
+                  disabled={submitting}
+                  className="mt-3 rounded-full bg-red-700 px-5 py-2 font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                >
+                  {submitNeedsCode ? "Go to the session code" : submitting ? "Trying again..." : "Try again"}
+                </button>
               </div>
             )}
           </div>

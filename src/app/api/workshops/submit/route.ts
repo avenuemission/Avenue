@@ -17,7 +17,13 @@ export async function POST(request: NextRequest) {
   if (!parsed.ok) return jsonError(400, parsed.error);
   const { sessionCode, answers: surveyData } = parsed.value;
 
-  if (!(await allow(RATE.workshopSubmit, clientIp(request)))) return tooMany();
+  // allow() throws if the limiter itself is down: a JSON 500, never a
+  // bodyless one and never an unlimited submit.
+  try {
+    if (!(await allow(RATE.workshopSubmit, clientIp(request)))) return tooMany();
+  } catch (error) {
+    return serverError("workshops/submit rate limit", error);
+  }
 
   const { error } = await getSupabaseAdmin().from("survey_responses").insert({
     session_code: sessionCode,
