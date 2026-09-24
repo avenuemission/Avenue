@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Users, ChevronDown, CheckCircle2, Circle, UserPlus } from "lucide-react";
 import { rungAfterTap } from "@/lib/apprentice";
+import { multiplySummary } from "@/lib/phaseSummaries";
 import type { Person } from "@/lib/people";
 import IcnuEditor from "./IcnuEditor";
 import Glow from "@/components/avenue/Glow";
+import Expander from "@/components/avenue/Expander";
 
 // Hero Maker's five apprenticeship steps (Dave Ferguson). Index 0 is not one
 // of the book's five, it is "not started yet" so every person in the network
@@ -61,6 +63,8 @@ interface Phase5MultiplyProps {
   icnuDrafts: Map<string, string>;
   addPerson: (fields: { firstName: string; lastName: string; email: string }) => Promise<string | null>;
   addingPerson: boolean;
+  teachingTitle: string; // the phase subtitle, shown inside "Why multiply?"
+  teaching: string; // the Paul and Timothy teaching (phase description)
 }
 
 const FIELD =
@@ -180,11 +184,12 @@ function AddPersonForm({
   );
 }
 
-// Phase 5 (Multiply) content, shown instead of the modules grid. State and
-// handlers come from useNetworkView and useMyPeople via the page; sentByViewer
-// is computed in the page because the orbital summary reads it too. Each row
-// is person-first: a private ICNU note plus a five-rung apprenticeship
-// checklist, collapsed until tapped so the list stays scannable.
+// Phase 5 (Multiply), round 2 spec 5: people first. The person list and the
+// add form lead, then one summary line and the family tree link, then the
+// teaching behind "Why multiply?". State and handlers come from
+// useNetworkView and useMyPeople via the page. Each row is person-first: a
+// private ICNU note plus a five-rung apprenticeship checklist, collapsed
+// until tapped so the list stays scannable.
 export default function Phase5Multiply({
   sentByViewer,
   networkLoaded,
@@ -201,28 +206,14 @@ export default function Phase5Multiply({
   icnuDrafts,
   addPerson,
   addingPerson,
+  teachingTitle,
+  teaching,
 }: Phase5MultiplyProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [whyOpen, setWhyOpen] = useState(false);
 
   return (
     <div className="space-y-10">
-      <p className="text-sm text-[var(--muted)]">
-        Hero Maker&rsquo;s five practices: Multiplication Thinking, Permission Giving, Disciple
-        Multiplying, Gift Activating, Kingdom Building.
-      </p>
-
-      <p className="text-sm text-[var(--ink)]">
-        {!networkLoaded ? (
-          "Loading your network..."
-        ) : networkError ? (
-          <span className="text-red-400">{networkError}</span>
-        ) : networkDepth.people === 0 ? (
-          "This is the beginning: nobody is multiplying below you yet."
-        ) : (
-          `${networkDepth.people} ${networkDepth.people === 1 ? "person" : "people"} multiplying through ${networkDepth.generations} ${networkDepth.generations === 1 ? "generation" : "generations"} below you`
-        )}
-      </p>
-
       {/* Your people: the core of the phase, a list on the night ground */}
       <div>
         <span className="eyebrow">Your people</span>
@@ -335,21 +326,33 @@ export default function Phase5Multiply({
         )}
       </div>
 
-      {/* The family tree link */}
-      <Link
-        href="/leaders/network"
-        className="panel p-6 flex flex-col justify-between"
-      >
-        <div className="flex items-center gap-2 mb-2">
-          <Users className="w-4 h-4 text-[var(--accent)]" />
-          <span className="eyebrow">Family tree</span>
-        </div>
-        <h3 className="text-base font-semibold text-white mb-2">See the whole network</h3>
-        <p className="text-sm text-[var(--muted)] leading-relaxed">
-          The same steps, seen as a chart: everyone sent out, and everyone they have sent
-          out in turn.
-        </p>
-      </Link>
+      {/* One summary line, then the family tree as a single link. A
+          network error is already shown in the list above, so it is not
+          repeated here. */}
+      <div>
+        {networkLoaded && !networkError ? (
+          <p className="text-sm text-[var(--ink)]">{multiplySummary(networkDepth)}</p>
+        ) : null}
+        <Link
+          href="/leaders/network"
+          className="mt-1 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-[var(--accent)]"
+        >
+          <Users className="h-4 w-4" aria-hidden="true" />
+          See the family tree
+        </Link>
+      </div>
+
+      {/* The teaching, behind an expander */}
+      <div className="border-b border-[var(--line)]">
+        <Expander id="multiply-why" title="Why multiply?" open={whyOpen} onToggle={() => setWhyOpen((o) => !o)}>
+          <p className="night-label">{teachingTitle}</p>
+          <p className="mt-3 max-w-[62ch] text-sm leading-relaxed text-[var(--muted)]">{teaching}</p>
+          <p className="mt-6 max-w-[62ch] text-sm leading-relaxed text-[var(--muted)]">
+            Hero Maker&rsquo;s five practices: Multiplication Thinking, Permission Giving, Disciple
+            Multiplying, Gift Activating, Kingdom Building.
+          </p>
+        </Expander>
+      </div>
     </div>
   );
 }

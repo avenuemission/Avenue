@@ -328,21 +328,11 @@ export default function TrainingPage() {
                   short={verse.short}
                   verse={verse.text}
                 />
-                {phase.subtitle !== phase.scripture ? <p className="night-label mt-6">{phase.subtitle}</p> : null}
-                <ClampedText text={phase.description} className="mt-4" />
-                {isMultiplyPhase ? (
-                  <p className="night-label mt-4">
-                    {/* Gated on networkLoaded/networkError so it never flashes
-                        "Sending nobody yet" before the network has loaded. */}
-                    {!networkLoaded
-                      ? "Loading..."
-                      : networkError
-                        ? "Could not load"
-                        : sentByViewer.length === 0
-                          ? "Sending nobody yet"
-                          : `Sending ${sentByViewer.length} out`}
-                  </p>
+                {/* Multiply shows its subtitle and teaching inside "Why multiply?" (round 2 spec 5). */}
+                {!isMultiplyPhase && phase.subtitle !== phase.scripture ? (
+                  <p className="night-label mt-6">{phase.subtitle}</p>
                 ) : null}
+                {!isMultiplyPhase ? <ClampedText text={phase.description} className="mt-4" /> : null}
 
                 <div className="mt-10">
                   {isGrowthPhase ? (
@@ -383,6 +373,8 @@ export default function TrainingPage() {
                       icnuDrafts={icnuDrafts}
                       addPerson={addPerson}
                       addingPerson={addingPerson}
+                      teachingTitle={phase.subtitle}
+                      teaching={phase.description}
                     />
                   ) : isCallingPhase ? (
                     <CallingCard data={calling.data} loaded={calling.loaded} error={calling.error} />
