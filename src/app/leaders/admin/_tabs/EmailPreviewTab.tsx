@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { EMAIL_KIND_INFO, EMAIL_KINDS, type EmailKind } from "@/lib/emails/prefs";
+import { adminFetch } from "@/lib/client/adminFetch";
 
 // Spec 3.3 preview: render any leader's email as the engine would send it
 // now, in a sandboxed frame. Nothing is sent from here.
@@ -33,7 +34,7 @@ export default function EmailPreviewTab({ adminKey }: { adminKey: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/leader-access/admin", { headers: { authorization: `Bearer ${adminKey}` } })
+    adminFetch("/api/admin/leaders", adminKey)
       .then(async (res) => {
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error || `Could not load leaders (${res.status})`);
@@ -59,9 +60,7 @@ export default function EmailPreviewTab({ adminKey }: { adminKey: string }) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/email-preview?kind=${kind}&email=${encodeURIComponent(email)}`, {
-        headers: { authorization: `Bearer ${adminKey}` },
-      });
+      const res = await adminFetch(`/api/admin/email-preview?kind=${kind}&email=${encodeURIComponent(email)}`, adminKey);
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || `Could not render the preview (${res.status})`);
       setPreview(body as Preview);

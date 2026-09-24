@@ -99,4 +99,46 @@ describe("PUT /api/leader-profile", () => {
     expect(res.status).toBe(400);
     expect((await res.json()).error).toBe("That pathway group no longer exists.");
   });
+  it("is 400 for an external avatar link, even https, before touching the table", async () => {
+    const res = await put({ avatar_url: "https://tracker.example/pixel.png" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("Photo must be an uploaded png, jpeg or webp image.");
+    expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
+  });
+
+  it("saves an uploaded jpeg avatar and clears it with an empty string", async () => {
+    const fake = fakeSupabase({ "leader_profiles.upsert": { data: {} } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    const jpeg = "data:image/jpeg;base64,/9j/4AAQ";
+    expect((await put({ avatar_url: jpeg })).status).toBe(200);
+    expect((await put({ avatar_url: "" })).status).toBe(200);
+    const rows = fake.calls.filter((c) => c[1] === "upsert").map((c) => c[2] as Record<string, unknown>);
+    expect(rows[0].avatar_url).toBe(jpeg);
+    expect(rows[1].avatar_url).toBeNull();
+  });
+
+  it("keeps the 413 for a photo that is too large", async () => {
+    const res = await put({ avatar_url: "data:image/jpeg;base64," + "A".repeat(400_000) });
+    expect(res.status).toBe(413);
+  });
+
+  it("is 400 for a role or APEST gift outside the lists, before touching the table", async () => {
+    const role = await put({ role: "Admin" });
+    expect(role.status).toBe(400);
+    expect((await role.json()).error).toBe("role must be one of Leader, Apprentice, Coordinator, Member");
+    const apest = await put({ apest: "Pastor" });
+    expect(apest.status).toBe(400);
+    expect((await apest.json()).error).toBe("apest must be one of Apostle, Prophet, Evangelist, Shepherd, Teacher");
+    expect(h.getSupabaseAdmin).not.toHaveBeenCalled();
+  });
+
+  it("accepts a listed role and gift, and clears them with an empty string", async () => {
+    const fake = fakeSupabase({ "leader_profiles.upsert": { data: {} } });
+    h.getSupabaseAdmin.mockReturnValue(fake.db);
+    expect((await put({ role: "Coordinator", apest: "Teacher" })).status).toBe(200);
+    expect((await put({ role: "", apest: "" })).status).toBe(200);
+    const rows = fake.calls.filter((c) => c[1] === "upsert").map((c) => c[2] as Record<string, unknown>);
+    expect(rows[0]).toMatchObject({ role: "Coordinator", apest: "Teacher" });
+    expect(rows[1]).toMatchObject({ role: null, apest: null });
+  });
 });

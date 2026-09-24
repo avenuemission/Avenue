@@ -6,6 +6,7 @@ import { METRICS, type Metric } from "@/lib/domain/people";
 import { GAUGES } from "@/lib/domain/rpms";
 import { linePoints, METRIC_LABELS, type ChurchHealth } from "@/lib/domain/churchHealth";
 import { monthLabel } from "@/lib/domain/dates/melbourne";
+import { adminFetch } from "@/lib/client/adminFetch";
 
 // Spec 2: the read-only Church Health tab on /leaders/admin. The gauge
 // colours appear only in the Leader health section.
@@ -31,7 +32,7 @@ export default function ChurchHealthTab({ adminKey }: { adminKey: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/church-health", { headers: { authorization: `Bearer ${adminKey}` } })
+    adminFetch("/api/admin/church-health", adminKey)
       .then(async (res) => {
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error || `Could not load church health (${res.status})`);

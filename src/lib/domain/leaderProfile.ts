@@ -19,6 +19,24 @@ export const PROFILE_TEXT_FIELDS = [
   "coffee_order",
 ] as const;
 
+// The choices the profile editor offers. The database checks the same lists
+// (leader_profiles_role_allowed and leader_profiles_apest_allowed, migration
+// 015), so a new role needs a migration as well.
+export const PROFILE_ROLES = ["Leader", "Apprentice", "Coordinator", "Member"] as const;
+export const PROFILE_APEST = ["Apostle", "Prophet", "Evangelist", "Shepherd", "Teacher"] as const;
+
+// role and apest after normalising ("" is already null): null or a listed
+// value, else the message to send back.
+export function profileChoiceError(row: { role?: unknown; apest?: unknown }): string | null {
+  const lists = { role: PROFILE_ROLES, apest: PROFILE_APEST } as const;
+  for (const key of ["role", "apest"] as const) {
+    const value = row[key];
+    if (value === undefined || value === null) continue;
+    if (!(lists[key] as readonly unknown[]).includes(value)) return `${key} must be one of ${lists[key].join(", ")}`;
+  }
+  return null;
+}
+
 export const PROFILE_COLUMNS = `${PROFILE_TEXT_FIELDS.join(", ")}, pathway_group_id, pathway_groups(name)`;
 
 export type ProfileResponse = Record<string, unknown> & {

@@ -2,14 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { serverError } from "@/lib/server/http";
-import { PROFILE_COLUMNS, PROFILE_TEXT_FIELDS, pathwayGroupIdFrom, profileResponse } from "@/lib/domain/leaderProfile";
+import {
+  PROFILE_COLUMNS,
+  PROFILE_TEXT_FIELDS,
+  pathwayGroupIdFrom,
+  profileChoiceError,
+  profileResponse,
+} from "@/lib/domain/leaderProfile";
+import { isSafeAvatar, MAX_AVATAR_CHARS } from "@/lib/domain/urls";
 
 // Only PROFILE_TEXT_FIELDS and pathwayGroupId are written. Anything else in
 // the body is ignored, so a caller can't set updated_at or invent columns.
 
-// Avatars are stored as client-resized data URLs. Cap the size so a huge
+// Avatars are stored as client-resized data URLs (isSafeAvatar): never an
+// external link, which would load from someone else's server for every
+// leader who views the network. MAX_AVATAR_CHARS caps the size so a huge
 // image can't be pushed into the database.
-const MAX_AVATAR_CHARS = 400_000; // ~300KB of base64
 
 // Empty strings should clear a field, and date columns reject "" outright.
 function normalise(value: unknown): string | null {
@@ -61,6 +69,11 @@ export async function PUT(request: NextRequest) {
   for (const key of PROFILE_TEXT_FIELDS) {
     if (key in body) row[key] = normalise(body[key]);
   }
+  if (typeof row.avatar_url === "string" && !isSafeAvatar(row.avatar_url)) {
+    return NextResponse.json({ error: "Photo must be an uploaded png, jpeg or webp image." }, { status: 400 });
+  }
+  const choiceError = profileChoiceError(row);
+  if (choiceError) return NextResponse.json({ error: choiceError }, { status: 400 });
   if ("pathwayGroupId" in body) {
     const group = pathwayGroupIdFrom(body.pathwayGroupId);
     if ("error" in group) return NextResponse.json({ error: group.error }, { status: 400 });

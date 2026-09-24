@@ -1,3 +1,5 @@
+import { isSafeHttpsUrl } from "@/lib/domain/urls";
+
 // Study guide dates. study_guides.guide_on is a Postgres date, which the API
 // sends as an ISO "YYYY-MM-DD" string. This is the one place that reads it.
 // Pure: no fetches, no clock.
@@ -49,11 +51,16 @@ export function dayMonthYearToGuideOn(raw: unknown): string | null {
 export const STUDY_GUIDE_COLUMNS = "id, guide_on, series, topic, scripture, spotify_url, pdf_url, color, sort_order";
 const WRITABLE = ["guide_on", "series", "topic", "scripture", "spotify_url", "pdf_url", "color", "sort_order"] as const;
 const BAD_DATE = "guide_on must be a date (YYYY-MM-DD)";
+const BAD_COLOR = "color must be a hex colour like #3b82f6";
+// Matches the database check study_guides_color_hex (migration 015).
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+const LINKS = ["spotify_url", "pdf_url"] as const;
 
 // Picks the writable columns from an admin request body. Anything else (id,
 // created_at, the legacy guide_date) is dropped. A create needs a real date;
-// an update may leave the date out but may not blank it. An empty PDF link is
-// stored as null.
+// an update may leave the date out but may not blank it. Links must be
+// https (or empty); an empty PDF link is stored as null. The colour must be
+// #rrggbb; an empty colour is stored as null.
 export function studyGuideWrite(
   body: unknown,
   mode: "create" | "update"
@@ -67,7 +74,17 @@ export function studyGuideWrite(
     if (!iso) return { error: BAD_DATE };
     row.guide_on = iso;
   }
+  for (const key of LINKS) {
+    if (!(key in row)) continue;
+    const value = row[key];
+    if (value === null || value === "") continue;
+    if (typeof value !== "string" || !isSafeHttpsUrl(value)) return { error: `${key} must be an https:// link` };
+  }
   if (row.pdf_url === "") row.pdf_url = null;
+  if ("color" in row) {
+    if (row.color === "" || row.color === null) row.color = null;
+    else if (typeof row.color !== "string" || !HEX_COLOR.test(row.color)) return { error: BAD_COLOR };
+  }
   if (mode === "create") row.sort_order = row.sort_order ?? 0;
   return { row };
 }

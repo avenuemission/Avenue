@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { initialsOf } from "@/lib/domain/profileAvatar";
+import { PROFILE_APEST, PROFILE_ROLES } from "@/lib/domain/leaderProfile";
 
 interface ProfileText {
   display_name: string;
@@ -60,8 +61,6 @@ const EMPTY_TEXT: ProfileText = {
 
 const EMPTY: Profile = { ...EMPTY_TEXT, pathwayGroupId: null, pathwayGroupName: "" };
 
-const ROLES = ["Leader", "Apprentice", "Coordinator", "Member"];
-const APEST = ["Apostle", "Prophet", "Evangelist", "Shepherd", "Teacher"];
 
 const AVATAR_PX = 256;
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // reject huge originals before decoding
@@ -336,7 +335,7 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
               onChange={(e) => setDraft({ ...draft, role: e.target.value })}
             >
               <option value="">Not set</option>
-              {ROLES.map((r) => (
+              {PROFILE_ROLES.map((r) => (
                 <option key={r} value={r}>
                   {r}
                 </option>
@@ -352,7 +351,7 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
               onChange={(e) => setDraft({ ...draft, apest: e.target.value })}
             >
               <option value="">Not set</option>
-              {APEST.map((a) => (
+              {PROFILE_APEST.map((a) => (
                 <option key={a} value={a}>
                   {a}
                 </option>

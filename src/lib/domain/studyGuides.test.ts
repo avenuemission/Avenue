@@ -113,6 +113,36 @@ describe("studyGuideWrite", () => {
     expect(studyGuideWrite({ guide_on: "2026-10-07" }, "create")).toEqual({ row: { guide_on: "2026-10-07", sort_order: 0 } });
   });
 
+  it("accepts a #rrggbb colour in either case and stores an empty one as null", () => {
+    expect(studyGuideWrite({ color: "#A1b2C3" }, "update")).toEqual({ row: { color: "#A1b2C3" } });
+    expect(studyGuideWrite({ color: "" }, "update")).toEqual({ row: { color: null } });
+    expect(studyGuideWrite({ color: null }, "update")).toEqual({ row: { color: null } });
+  });
+
+  it("refuses any other colour, so the database check never turns into a 500", () => {
+    const error = "color must be a hex colour like #3b82f6";
+    expect(studyGuideWrite({ color: "blue" }, "update")).toEqual({ error });
+    expect(studyGuideWrite({ color: "#fff" }, "update")).toEqual({ error });
+    expect(studyGuideWrite({ color: "#3b82f6; x" }, "update")).toEqual({ error });
+  });
+
+  it("accepts https links and empty links", () => {
+    expect(
+      studyGuideWrite({ spotify_url: "https://open.spotify.com/x", pdf_url: "https://example.com/a.pdf" }, "update")
+    ).toEqual({ row: { spotify_url: "https://open.spotify.com/x", pdf_url: "https://example.com/a.pdf" } });
+    expect(studyGuideWrite({ spotify_url: "", pdf_url: "" }, "update")).toEqual({ row: { spotify_url: "", pdf_url: null } });
+  });
+
+  it("refuses javascript:, http and other non-https links", () => {
+    expect(studyGuideWrite({ spotify_url: "javascript:alert(1)" }, "update")).toEqual({
+      error: "spotify_url must be an https:// link",
+    });
+    expect(studyGuideWrite({ pdf_url: "http://example.com/a.pdf" }, "update")).toEqual({
+      error: "pdf_url must be an https:// link",
+    });
+    expect(studyGuideWrite({ pdf_url: 5 }, "update")).toEqual({ error: "pdf_url must be an https:// link" });
+  });
+
   it("refuses a body that is not an object", () => {
     expect(studyGuideWrite(null, "create")).toEqual({ error: "Body must be an object" });
     expect(studyGuideWrite([], "update")).toEqual({ error: "Body must be an object" });
