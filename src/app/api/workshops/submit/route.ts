@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/client/supabaseBrowser";
-import { serverError } from "@/lib/server/http";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { allow, RATE } from "@/lib/server/rateLimit";
+import { clientIp } from "@/lib/server/clientIp";
+import { jsonError, serverError, tooMany } from "@/lib/server/http";
+import { parseSurveySubmission } from "@/lib/domain/workshops/survey";
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { sessionCode, surveyData } = body;
-
-  if (!sessionCode || !surveyData) {
-    return NextResponse.json({ error: "Missing sessionCode or surveyData" }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError(400, "Invalid request");
   }
 
-  const { error } = await supabase.from("survey_responses").insert({
+  const parsed = parseSurveySubmission(body);
+  if (!parsed.ok) return jsonError(400, parsed.error);
+  const { sessionCode, answers: surveyData } = parsed.value;
+
+  if (!(await allow(RATE.workshopSubmit, clientIp(request)))) return tooMany();
+
+  const { error } = await getSupabaseAdmin().from("survey_responses").insert({
     session_code: sessionCode,
     age_range: surveyData.ageRange,
     is_christian: surveyData.isChristian,

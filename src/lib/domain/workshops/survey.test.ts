@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { answerColumns, blankAnswers, scaleResultLabel, SURVEY_SECTIONS, TEGMARK_OUTCOMES } from "./survey";
+import { answerColumns, blankAnswers, parseSurveySubmission, scaleResultLabel, SURVEY_SECTIONS, TEGMARK_OUTCOMES } from "./survey";
 
 const repo = process.cwd();
 
@@ -56,5 +56,88 @@ describe("the survey definition", () => {
   it("labels scale answers for the results page", () => {
     expect(scaleResultLabel({ value: "1", label: "Strongly Disagree" })).toBe(`1 ${String.fromCharCode(0x2013)} Strongly Disagree`);
     expect(scaleResultLabel({ value: "?", label: "Not Sure" })).toBe("Not Sure");
+  });
+});
+
+describe("parseSurveySubmission", () => {
+  const valid = () => ({ sessionCode: "ABCD", surveyData: { ...blankAnswers(), finalVision: "Be kind." } });
+
+  it("accepts a blank, fully-defaulted submission", () => {
+    const parsed = parseSurveySubmission(valid());
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) throw new Error("expected ok");
+    expect(parsed.value.sessionCode).toBe("ABCD");
+    expect(parsed.value.answers.finalVision).toBe("Be kind.");
+    expect(parsed.value.answers.aiTools).toEqual([]);
+  });
+
+  it("rejects a missing or blank session code", () => {
+    expect(parseSurveySubmission({ ...valid(), sessionCode: "" }).ok).toBe(false);
+    expect(parseSurveySubmission({ ...valid(), sessionCode: undefined }).ok).toBe(false);
+    expect(parseSurveySubmission({ ...valid(), sessionCode: 5 }).ok).toBe(false);
+    expect(parseSurveySubmission({ ...valid(), sessionCode: "x".repeat(65) }).ok).toBe(false);
+  });
+
+  it("rejects an unexpected top-level field", () => {
+    const parsed = parseSurveySubmission({ ...valid(), extra: "nope" });
+    expect(parsed.ok).toBe(false);
+  });
+
+  it("rejects a non-object surveyData", () => {
+    expect(parseSurveySubmission({ sessionCode: "ABCD", surveyData: "nope" }).ok).toBe(false);
+    expect(parseSurveySubmission({ sessionCode: "ABCD", surveyData: null }).ok).toBe(false);
+  });
+
+  it("rejects an unknown survey field (known keys only)", () => {
+    const body = valid();
+    (body.surveyData as Record<string, unknown>).notARealField = "x";
+    expect(parseSurveySubmission(body).ok).toBe(false);
+  });
+
+  it("caps a text field at 2000 characters", () => {
+    const body = valid();
+    body.surveyData.finalVision = "a".repeat(2000);
+    expect(parseSurveySubmission(body).ok).toBe(true);
+    body.surveyData.finalVision = "a".repeat(2001);
+    expect(parseSurveySubmission(body).ok).toBe(false);
+  });
+
+  it("caps each item of a list field at 2000 characters", () => {
+    const body = valid();
+    (body.surveyData.aiTools as string[]) = ["a".repeat(2000)];
+    expect(parseSurveySubmission(body).ok).toBe(true);
+    (body.surveyData.aiTools as string[]) = ["a".repeat(2001)];
+    expect(parseSurveySubmission(body).ok).toBe(false);
+  });
+
+  it("rejects a list field given a non-array, and a text field given an array", () => {
+    const body = valid();
+    (body.surveyData as Record<string, unknown>).aiTools = "chatgpt";
+    expect(parseSurveySubmission(body).ok).toBe(false);
+
+    const body2 = valid();
+    (body2.surveyData as Record<string, unknown>).finalVision = ["nope"];
+    expect(parseSurveySubmission(body2).ok).toBe(false);
+  });
+
+  it("keeps Tegmark rank values in range 1 to 7, or blank", () => {
+    const body = valid();
+    body.surveyData.tegmarkRankProtector = "7";
+    expect(parseSurveySubmission(body).ok).toBe(true);
+    body.surveyData.tegmarkRankProtector = "";
+    expect(parseSurveySubmission(body).ok).toBe(true);
+    body.surveyData.tegmarkRankProtector = "8";
+    expect(parseSurveySubmission(body).ok).toBe(false);
+    body.surveyData.tegmarkRankProtector = "0";
+    expect(parseSurveySubmission(body).ok).toBe(false);
+    body.surveyData.tegmarkRankProtector = "abc";
+    expect(parseSurveySubmission(body).ok).toBe(false);
+  });
+
+  it("defaults any field the caller left out", () => {
+    const parsed = parseSurveySubmission({ sessionCode: "ABCD", surveyData: {} });
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) throw new Error("expected ok");
+    expect(parsed.value.answers).toEqual(blankAnswers());
   });
 });

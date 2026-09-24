@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { serverError } from "@/lib/server/http";
 
@@ -15,7 +15,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Missing session code" }, { status: 400 });
   }
 
-  const { error } = await supabase
+  const { error } = await getSupabaseAdmin()
     .from("survey_responses")
     .delete()
     .eq("session_code", code.toUpperCase());

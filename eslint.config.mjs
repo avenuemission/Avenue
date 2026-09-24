@@ -22,6 +22,13 @@ const DOMAIN_BANS = [
   { group: ["@supabase/*"], message: "lib/domain is pure: no Supabase." },
   { group: ["@/lib/server", "@/lib/server/*", "@/lib/client", "@/lib/client/*"], message: "lib/domain is pure: no server or client modules." },
 ];
+// The anon browser client bypasses RLS assumptions server code relies on
+// (see supabaseAdmin.ts). Route handlers and server modules must use
+// getSupabaseAdmin instead; only lib/client/** may import the browser client.
+const NO_BROWSER_CLIENT = {
+  group: ["@/lib/client/supabaseBrowser"],
+  message: "Server code must not import the anon browser client. Use getSupabaseAdmin from @/lib/server/supabaseAdmin.",
+};
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -33,6 +40,14 @@ const eslintConfig = defineConfig([
   {
     files: ["src/lib/domain/**"],
     rules: { "no-restricted-imports": ["error", { patterns: [NO_APP, ...DOMAIN_BANS] }] },
+  },
+  {
+    files: ["src/lib/server/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [NO_APP, NO_BROWSER_CLIENT] }] },
+  },
+  {
+    files: ["src/app/api/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [NO_BROWSER_CLIENT] }] },
   },
   {
     files: ["src/components/**", "src/hooks/**"],

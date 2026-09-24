@@ -3,6 +3,31 @@ import { requireLeader } from "@/lib/server/requireLeader";
 
 export const maxDuration = 60;
 
+// Enough for a genuine free-text answer, small enough that a leader session
+// cannot be used to run up an unbounded OpenAI bill by posting a huge or
+// malformed responses array straight to this route.
+const TEXT_MAX = 8000;
+const RESPONSES_MAX = 1000;
+
+// Every response must be a plain object of string fields, each capped at
+// TEXT_MAX. Anything else (not an array, empty, too many rows, a row that
+// isn't a plain object, a field over the cap) fails the whole request.
+function validateResponses(value: unknown): Record<string, string>[] | null {
+  if (!Array.isArray(value) || value.length === 0 || value.length > RESPONSES_MAX) return null;
+  const out: Record<string, string>[] = [];
+  for (const row of value) {
+    if (typeof row !== "object" || row === null || Array.isArray(row)) return null;
+    const clean: Record<string, string> = {};
+    for (const [key, v] of Object.entries(row as Record<string, unknown>)) {
+      if (typeof v !== "string") continue;
+      if (v.length > TEXT_MAX) return null;
+      clean[key] = v;
+    }
+    out.push(clean);
+  }
+  return out;
+}
+
 function summariseResponses(responses: Record<string, string>[]): string {
   if (responses.length === 0) return "No responses available.";
 
@@ -114,11 +139,12 @@ export async function POST(request: NextRequest) {
   }
 
   const { responses } = await request.json();
-  if (!responses || responses.length === 0) {
+  const validated = validateResponses(responses);
+  if (!validated) {
     return NextResponse.json({ error: "No responses provided" }, { status: 400 });
   }
 
-  const summary = summariseResponses(responses);
+  const summary = summariseResponses(validated);
 
   // ── Written recommendation ──────────────────────────────────────────────────
   const writtenPrompt = `You are a sharp strategic consultant with deep pastoral instincts. You have just analysed survey results from a group of Christians discussing AI. Produce a structured written analysis.

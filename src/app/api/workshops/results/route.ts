@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { serverError } from "@/lib/server/http";
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
 
-  let query = supabase.from("survey_responses").select("*");
+  let query = getSupabaseAdmin().from("survey_responses").select("*");
   if (code && code !== "ALL") {
     query = query.eq("session_code", code.toUpperCase());
   }

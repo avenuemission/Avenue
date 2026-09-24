@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { serverError } from "@/lib/server/http";
 
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   if ("response" in auth) return auth.response;
   if (!auth.leader.fullAccess) return NextResponse.json({ error: "Access denied. Full leader access required." }, { status: 403 });
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseAdmin()
     .from("workshop_sessions")
     .select("*, survey_responses(count)")
     .order("created_at", { ascending: false });
@@ -33,9 +33,10 @@ export async function POST(request: NextRequest) {
   }
 
   const normalized = code.trim().toUpperCase();
+  const db = getSupabaseAdmin();
 
   // Try with include_life_3 column first
-  let { data, error } = await supabase
+  let { data, error } = await db
     .from("workshop_sessions")
     .insert({ code: normalized, include_life_3: include_life_3 !== false })
     .select()
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   // Fallback: if column doesn't exist, insert without it
   if (error && error.message?.includes("include_life_3")) {
-    const result = await supabase
+    const result = await db
       .from("workshop_sessions")
       .insert({ code: normalized })
       .select()

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/client/supabaseBrowser";
+import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { allow, RATE } from "@/lib/server/rateLimit";
+import { clientIp } from "@/lib/server/clientIp";
+import { jsonError, serverError, tooMany } from "@/lib/server/http";
+
+const CODE_MAX = 64;
 
 // Levenshtein distance for typo detection
 function levenshtein(a: string, b: string): number {
@@ -18,29 +23,47 @@ function levenshtein(a: string, b: string): number {
 }
 
 export async function POST(request: NextRequest) {
-  const { code } = await request.json();
-  if (!code) {
+  if (!(await allow(RATE.workshopCode, clientIp(request)))) return tooMany();
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError(400, "Invalid request");
+  }
+
+  const code = (body as { code?: unknown } | null)?.code;
+  if (typeof code !== "string" || !code.trim() || code.length > CODE_MAX) {
     return NextResponse.json({ valid: false, error: "No code provided" }, { status: 400 });
   }
 
   const normalized = code.trim().toUpperCase();
+  const db = getSupabaseAdmin();
 
   // Exact match first
-  const { data: exact } = await supabase
+  const { data: exact, error: exactError } = await db
     .from("workshop_sessions")
     .select("code, status, include_life_3")
     .eq("code", normalized)
     .single();
+
+  if (exactError && exactError.code !== "PGRST116") {
+    return serverError("workshops/validate-code POST (exact)", exactError);
+  }
 
   if (exact) {
     return NextResponse.json({ valid: true, code: exact.code, include_life_3: exact.include_life_3 });
   }
 
   // Fuzzy match — find closest active session code
-  const { data: allSessions } = await supabase
+  const { data: allSessions, error: sessionsError } = await db
     .from("workshop_sessions")
     .select("code")
     .eq("status", "active");
+
+  if (sessionsError) {
+    return serverError("workshops/validate-code POST (fuzzy)", sessionsError);
+  }
 
   if (!allSessions || allSessions.length === 0) {
     return NextResponse.json({ valid: false, error: "No active sessions found" });

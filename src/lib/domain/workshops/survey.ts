@@ -361,3 +361,81 @@ export function answerColumns(): { field: SurveyField; column: string }[] {
 export function scaleResultLabel(option: SurveyOption): string {
   return option.value === "?" ? option.label : `${option.value} \u2013 ${option.label}`;
 }
+
+
+// ── Submission validation ──────────────────────────────────────────────
+// What /api/workshops/submit accepts from the public survey form: only the
+// fields this survey defines, strings capped so nobody can post a
+// multi-megabyte answer, and the Tegmark ranking fields restricted to the
+// range the form itself offers (1 to 7, or blank).
+
+const SESSION_CODE_MAX = 64;
+const ANSWER_MAX = 2000;
+const LIST_ITEMS_MAX = 50;
+
+export interface SurveySubmission {
+  sessionCode: string;
+  answers: SurveyAnswers;
+}
+
+export type SurveyParse = { ok: true; value: SurveySubmission } | { ok: false; error: string };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// Field -> "multi" for a checkbox list, "text" for everything else
+// (including the Tegmark ranking, which stores "1".."7" as text).
+function fieldKinds(): Map<SurveyField, "multi" | "text"> {
+  const kinds = new Map<SurveyField, "multi" | "text">();
+  for (const section of SURVEY_SECTIONS) {
+    for (const q of section.questions) {
+      if (q.kind === "ranking") for (const o of TEGMARK_OUTCOMES) kinds.set(o.field, "text");
+      else kinds.set(q.field, q.kind === "multi" ? "multi" : "text");
+    }
+  }
+  return kinds;
+}
+
+const TEGMARK_RANK_FIELDS: Set<SurveyField> = new Set(TEGMARK_OUTCOMES.map((o) => o.field));
+const TEGMARK_RANK_PATTERN = /^[1-7]$/;
+
+export function parseSurveySubmission(body: unknown): SurveyParse {
+  if (!isPlainObject(body)) return { ok: false, error: "Invalid request" };
+  const unknownTop = Object.keys(body).find((k) => k !== "sessionCode" && k !== "surveyData");
+  if (unknownTop) return { ok: false, error: `Unexpected field: ${unknownTop}` };
+
+  const { sessionCode, surveyData } = body;
+  if (typeof sessionCode !== "string" || !sessionCode.trim() || sessionCode.length > SESSION_CODE_MAX) {
+    return { ok: false, error: "Missing sessionCode or surveyData" };
+  }
+  if (!isPlainObject(surveyData)) return { ok: false, error: "Missing sessionCode or surveyData" };
+
+  const kinds = fieldKinds();
+  const unknownField = Object.keys(surveyData).find((k) => !kinds.has(k as SurveyField));
+  if (unknownField) return { ok: false, error: `Unexpected field: ${unknownField}` };
+
+  const answers = blankAnswers();
+  for (const [field, kind] of kinds) {
+    const value = surveyData[field];
+    if (value === undefined) continue;
+
+    if (kind === "multi") {
+      if (!Array.isArray(value) || value.length > LIST_ITEMS_MAX || value.some((v) => typeof v !== "string" || v.length > ANSWER_MAX)) {
+        return { ok: false, error: `Invalid answer: ${field}` };
+      }
+      (answers as unknown as Record<string, string[]>)[field] = value as string[];
+      continue;
+    }
+
+    if (typeof value !== "string" || value.length > ANSWER_MAX) {
+      return { ok: false, error: `Invalid answer: ${field}` };
+    }
+    if (TEGMARK_RANK_FIELDS.has(field) && value !== "" && !TEGMARK_RANK_PATTERN.test(value)) {
+      return { ok: false, error: `Invalid answer: ${field}` };
+    }
+    (answers as unknown as Record<string, string>)[field] = value;
+  }
+
+  return { ok: true, value: { sessionCode, answers } };
+}
