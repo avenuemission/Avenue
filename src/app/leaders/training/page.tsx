@@ -317,7 +317,6 @@ export default function TrainingPage() {
               month: "long",
             });
             const historyWeeks = recentMondays(CHECKIN_HISTORY_WEEKS, new Date()).slice().reverse();
-            const hasCheckedInThisWeek = checkins.some((c) => c.weekStart === currentWeekStart);
             const verse = VERSES[phase.id as StopId];
 
             return (
@@ -331,9 +330,6 @@ export default function TrainingPage() {
                 />
                 {phase.subtitle !== phase.scripture ? <p className="night-label mt-6">{phase.subtitle}</p> : null}
                 <ClampedText text={phase.description} className="mt-4" />
-                {isGrowthPhase ? (
-                  <p className="night-label mt-4">{hasCheckedInThisWeek ? "Checked in this week" : "Not yet this week"}</p>
-                ) : null}
                 {isMultiplyPhase ? (
                   <p className="night-label mt-4">
                     {/* Gated on networkLoaded/networkError so it never flashes
@@ -352,6 +348,7 @@ export default function TrainingPage() {
                   {isGrowthPhase ? (
                     <Phase4Growth
                       currentWeekLabel={currentWeekLabel}
+                      currentWeekStart={currentWeekStart}
                       historyWeeks={historyWeeks}
                       checkins={checkins}
                       checkinsLoaded={checkinsLoaded}

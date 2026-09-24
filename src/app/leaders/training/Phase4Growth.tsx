@@ -1,19 +1,23 @@
-import type { Dispatch, SetStateAction } from "react";
+"use client";
+
+import { useState, type Dispatch, type SetStateAction } from "react";
 import CheckinHistory, { CheckinEntry } from "@/components/ui/CheckinHistory";
 import TaggedPeople from "@/components/people/TaggedPeople";
 import Glow from "@/components/avenue/Glow";
+import Expander from "@/components/avenue/Expander";
+import RpmsSlider from "./growth/RpmsSlider";
+import { GAUGES } from "@/lib/rpms";
+import {
+  CHURCH_HEALTH_INTRO,
+  churchHealthSummary,
+  LEADER_HEALTH_INTRO,
+  leaderHealthStartsOpen,
+  leaderHealthStatus,
+  leaderHealthSummary,
+} from "@/lib/phaseSummaries";
 import type { Metric, Person } from "@/lib/people";
 
-// The four RPMS gauges from Ferguson's Multiplier, in the fixed order the
-// weekly check-in form uses.
-const RPMS_GAUGES: { key: "relational" | "physical" | "mental" | "spiritual"; label: string }[] = [
-  { key: "relational", label: "Relational" },
-  { key: "physical", label: "Physical" },
-  { key: "mental", label: "Mental" },
-  { key: "spiritual", label: "Spiritual" },
-];
-
-// How many recent weeks the history strip shows.
+// How many recent weeks the history shows.
 export const CHECKIN_HISTORY_WEEKS = 12;
 
 // The three named metrics, Henry's definitions from HANDOVER.md 3.3,
@@ -39,46 +43,6 @@ const METRIC_PANELS: { metric: Metric; title: string; definition: string; empty:
   },
 ];
 
-// One gauge's 1-to-10 picker: ten small buttons, one tap sets the score.
-// This is the whole "four taps" the check-in is meant to cost, times four
-// gauges. No slider, no text field, nothing that needs explaining.
-function ScoreRow({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (next: number) => void;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm text-white">{label}</span>
-        <span className="text-sm font-semibold text-[var(--accent)] tabular-nums">{value}/10</span>
-      </div>
-      <div className="flex gap-1">
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => onChange(n)}
-            aria-label={`${label} ${n} out of 10`}
-            aria-pressed={value === n}
-            className={`flex-1 h-8 rounded-md text-xs font-medium transition-colors ${
-              n <= value
-                ? "bg-[var(--accent)] text-white"
-                : "bg-[var(--surface-hover)] text-[var(--muted)] hover:bg-[var(--border-strong)]"
-            }`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // The week's RPMS scores plus the one-sentence reflection, as held by
 // useCheckins while the leader edits them.
 export interface CheckinForm {
@@ -91,6 +55,7 @@ export interface CheckinForm {
 
 interface Phase4GrowthProps {
   currentWeekLabel: string;
+  currentWeekStart: string; // the Monday the form edits (useCheckins' editingWeekStart)
   historyWeeks: string[];
   checkins: CheckinEntry[];
   checkinsLoaded: boolean;
@@ -109,11 +74,13 @@ interface Phase4GrowthProps {
   onPersonChange: (person: Person) => void;
 }
 
-// Phase 4 (Growth) content, shown instead of the modules grid. State and
-// handlers for the check-in come from useCheckins via the page, and the
-// three metric lists read and write My People via useMyPeople.
+// Phase 4 (Growth), round 2 spec 3: two expanders. Leader health holds the
+// weekly RPMS check-in and its history; Church health holds the three named
+// lists. State and handlers come from useCheckins and useMyPeople via the
+// page; saving is exactly as before (same form fields, same saveCheckin).
 export default function Phase4Growth({
   currentWeekLabel,
+  currentWeekStart,
   historyWeeks,
   checkins,
   checkinsLoaded,
@@ -131,126 +98,158 @@ export default function Phase4Growth({
   peopleError,
   onPersonChange,
 }: Phase4GrowthProps) {
+  // null until check-ins first load, then decided once: open while this
+  // week's check-in is unsaved, or when it failed to load so the retry
+  // shows. Saving afterwards does not close it.
+  const [leaderOpen, setLeaderOpen] = useState<boolean | null>(null);
+  const [churchOpen, setChurchOpen] = useState(false);
+  if (leaderOpen === null && checkinsLoaded) {
+    setLeaderOpen(checkinLoadError !== null || leaderHealthStartsOpen(checkins, currentWeekStart));
+  }
+  const leaderIsOpen = leaderOpen ?? false;
+
+  // A save in flight or a failed save wins (pre-flight F4): the closed
+  // expander hides the Save button's own state, so it must say so here.
+  const leaderSummary = !checkinsLoaded
+    ? "Loading..."
+    : checkinLoadError
+      ? "Could not load"
+      : leaderHealthStatus(leaderHealthSummary(checkins, currentWeekStart), checkinSaving, checkinSaveError);
+  const churchSummary = !peopleLoaded ? "Loading..." : peopleError ? "Could not load" : churchHealthSummary(people);
+
   return (
-    <div className="space-y-12">
-      {/* The weekly check-in: a raised card because it takes input */}
-      <div className="night-card p-6">
-        <span className="eyebrow">This week</span>
-        <h3 className="mt-1 mb-2 font-serif text-2xl text-[var(--ink)]">Week of {currentWeekLabel}</h3>
-        <p className="text-sm text-[var(--muted)] mb-4">
-          Four gauges from Dave Ferguson&rsquo;s Multiplier: Relational, Physical, Mental and Spiritual.
-        </p>
-        {!checkinsLoaded ? (
-          <p className="text-sm text-[var(--muted)]">Loading your check-in...</p>
-        ) : checkinLoadError ? (
-          // No form is rendered here on purpose. Rendering it
-          // at its 5/5/5/5 defaults with Save enabled would
-          // let a leader whose real scores simply failed to
-          // load overwrite them with defaults they never saw.
-          <div className="rounded-xl border border-dashed border-[var(--line-2)] p-6 text-center">
-            <p className="text-sm text-white mb-1">This week&rsquo;s check-in could not be loaded.</p>
-            <p className="text-sm text-[var(--muted)] mb-4">{checkinLoadError}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setCheckinsLoaded(false);
-                setCheckinLoadAttempt((n) => n + 1);
-              }}
-              className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 rounded-full border border-[var(--line-2)] text-white text-sm font-semibold"
-            >
-              Try again
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-4 mb-5">
-              {RPMS_GAUGES.map(({ key, label }) => (
-                <ScoreRow
-                  key={key}
-                  label={label}
-                  value={checkinForm[key]}
-                  onChange={(next) => setCheckinForm((prev) => ({ ...prev, [key]: next }))}
-                />
-              ))}
-            </div>
-            <div className="mb-4">
-              <label htmlFor="checkin-reflection" className="text-sm text-white mb-1.5 block">
-                One sentence
-              </label>
-              <textarea
-                id="checkin-reflection"
-                value={checkinForm.reflection}
-                onChange={(e) => setCheckinForm((prev) => ({ ...prev, reflection: e.target.value }))}
-                maxLength={2000}
-                rows={2}
-                placeholder="How this week actually went."
-                className="w-full rounded-lg bg-[var(--night)] border border-[var(--line-2)] p-3 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] resize-none"
-              />
-            </div>
-            <div className="flex items-center gap-3">
+    <div>
+      <Expander
+        id="growth-leader"
+        title="Leader health"
+        intro={LEADER_HEALTH_INTRO}
+        summary={leaderSummary}
+        open={leaderIsOpen}
+        onToggle={() => setLeaderOpen(!leaderIsOpen)}
+      >
+        {/* The weekly check-in: a raised card because it takes input */}
+        <div className="night-card p-6">
+          <span className="eyebrow">This week</span>
+          <h4 className="mt-1 mb-4 font-serif text-2xl text-[var(--ink)]">Week of {currentWeekLabel}</h4>
+          {!checkinsLoaded ? (
+            <p className="text-sm text-[var(--muted)]">Loading your check-in...</p>
+          ) : checkinLoadError ? (
+            // No form is rendered here on purpose. Rendering it
+            // at its 5/5/5/5 defaults with Save enabled would
+            // let a leader whose real scores simply failed to
+            // load overwrite them with defaults they never saw.
+            <div className="rounded-xl border border-dashed border-[var(--line-2)] p-6 text-center">
+              <p className="text-sm text-[var(--ink)] mb-1">This week&rsquo;s check-in could not be loaded.</p>
+              <p className="text-sm text-[var(--muted)] mb-4">{checkinLoadError}</p>
               <button
                 type="button"
-                onClick={saveCheckin}
-                disabled={checkinSaving}
-                className="min-h-[44px] px-5 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                onClick={() => {
+                  setCheckinsLoaded(false);
+                  setCheckinLoadAttempt((n) => n + 1);
+                }}
+                className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 rounded-full border border-[var(--line-2)] text-[var(--ink)] text-sm font-semibold"
               >
-                {checkinSaving ? "Saving..." : "Save check-in"}
+                Try again
               </button>
-              {checkinSaved && !checkinSaving && <span className="text-xs text-[var(--lamp)]">Saved.</span>}
-              {checkinSaveError && <span className="text-xs text-red-400">{checkinSaveError}</span>}
             </div>
-          </>
-        )}
-      </div>
-
-      {/* Your three metrics: three columns of names, no card per metric */}
-      <div>
-        <h3 className="night-h2">Your three metrics</h3>
-        <p className="text-sm text-[var(--muted)] mt-1 mb-6">
-          Three separate lists, not a ladder. Anyone can sit in more than one.
-        </p>
-        {!peopleLoaded ? (
-          <p className="text-sm text-[var(--muted)]">Loading your people...</p>
-        ) : peopleError ? (
-          <p className="text-sm text-red-400">{peopleError}</p>
-        ) : (
-          <div className="grid grid-cols-1 border-t border-[var(--line)] md:grid-cols-3 md:divide-x md:divide-[var(--line)]">
-            {METRIC_PANELS.map(({ metric, title, definition, empty }) => {
-              const count = people.filter((p) => p.metrics.includes(metric)).length;
-              return (
-                <div
-                  key={metric}
-                  className="border-b border-[var(--line)] py-6 md:border-b-0 md:px-5 md:first:pl-0 md:last:pr-0"
-                >
-                  <h4 className="font-serif text-xl text-[var(--ink)]">{title}</h4>
-                  <p className="mt-1 mb-3 text-xs text-[var(--muted)]">{definition}</p>
-                  <Glow as="div" trigger={count} className="-mx-2 mb-3 inline-block rounded-lg px-2">
-                    <p className="tabular-nums">
-                      <span
-                        className={`font-serif text-4xl ${count > 0 ? "text-[var(--lamp)]" : "text-[var(--dim)]"}`}
-                      >
-                        {count}
-                      </span>
-                      <span className="ml-2 text-sm text-[var(--muted)]">named</span>
-                    </p>
-                  </Glow>
-                  <TaggedPeople
-                    tag={{ kind: "metric", value: metric }}
-                    people={people}
-                    onChange={onPersonChange}
-                    emptyText={empty}
+          ) : (
+            <>
+              <div className="space-y-6 mb-6">
+                {GAUGES.map((gauge) => (
+                  <RpmsSlider
+                    key={gauge.key}
+                    gauge={gauge}
+                    value={checkinForm[gauge.key]}
+                    onChange={(next) => setCheckinForm((prev) => ({ ...prev, [gauge.key]: next }))}
                   />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                ))}
+              </div>
+              <div className="mb-4">
+                <label htmlFor="checkin-reflection" className="text-sm text-[var(--ink)] mb-1.5 block">
+                  One sentence
+                </label>
+                <textarea
+                  id="checkin-reflection"
+                  value={checkinForm.reflection}
+                  onChange={(e) => setCheckinForm((prev) => ({ ...prev, reflection: e.target.value }))}
+                  maxLength={2000}
+                  rows={2}
+                  placeholder="How this week actually went."
+                  className="w-full rounded-lg bg-[var(--night)] border border-[var(--line-2)] p-3 text-sm text-[var(--ink)] placeholder-[var(--muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] resize-none"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={saveCheckin}
+                  disabled={checkinSaving}
+                  className="min-h-[44px] px-5 py-2 rounded-full bg-[var(--accent)] text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {checkinSaving ? "Saving..." : "Save check-in"}
+                </button>
+                {checkinSaved && !checkinSaving && <span className="text-xs text-[var(--lamp)]">Saved.</span>}
+                {checkinSaveError && <span className="text-xs text-red-400">{checkinSaveError}</span>}
+              </div>
+            </>
+          )}
+        </div>
 
-      {/* The history */}
-      <div>
-        <h3 className="night-h2 mb-4">Recent weeks</h3>
-        <CheckinHistory weeks={historyWeeks} checkins={checkins} />
+        {/* The history */}
+        <div className="mt-10">
+          <h4 className="night-h2 mb-4">Recent weeks</h4>
+          <CheckinHistory weeks={historyWeeks} checkins={checkins} />
+        </div>
+      </Expander>
+
+      <div className="border-b border-[var(--line)]">
+        <Expander
+          id="growth-church"
+          title="Church health"
+          intro={CHURCH_HEALTH_INTRO}
+          summary={churchSummary}
+          open={churchOpen}
+          onToggle={() => setChurchOpen((o) => !o)}
+        >
+          <p className="text-sm text-[var(--muted)] mb-6">
+            Three separate lists, not a ladder. Anyone can sit in more than one.
+          </p>
+          {!peopleLoaded ? (
+            <p className="text-sm text-[var(--muted)]">Loading your people...</p>
+          ) : peopleError ? (
+            <p className="text-sm text-red-400">{peopleError}</p>
+          ) : (
+            <div className="grid grid-cols-1 border-t border-[var(--line)] md:grid-cols-3 md:divide-x md:divide-[var(--line)]">
+              {METRIC_PANELS.map(({ metric, title, definition, empty }) => {
+                const count = people.filter((p) => p.metrics.includes(metric)).length;
+                return (
+                  <div
+                    key={metric}
+                    className="border-b border-[var(--line)] py-6 md:border-b-0 md:px-5 md:first:pl-0 md:last:pr-0"
+                  >
+                    <h4 className="font-serif text-xl text-[var(--ink)]">{title}</h4>
+                    <p className="mt-1 mb-3 text-xs text-[var(--muted)]">{definition}</p>
+                    <Glow as="div" trigger={count} className="-mx-2 mb-3 inline-block rounded-lg px-2">
+                      <p className="tabular-nums">
+                        <span
+                          className={`font-serif text-4xl ${count > 0 ? "text-[var(--lamp)]" : "text-[var(--dim)]"}`}
+                        >
+                          {count}
+                        </span>
+                        <span className="ml-2 text-sm text-[var(--muted)]">named</span>
+                      </p>
+                    </Glow>
+                    <TaggedPeople
+                      tag={{ kind: "metric", value: metric }}
+                      people={people}
+                      onChange={onPersonChange}
+                      emptyText={empty}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Expander>
       </div>
     </div>
   );

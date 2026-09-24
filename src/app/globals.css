@@ -29,6 +29,12 @@
   --lamp-2: #ffdca0;
   --lamp-soft: rgba(255, 197, 107, 0.16);
   --accent-soft: rgba(79, 124, 255, 0.14);
+
+  /* ---- RPMS gauges (round 2 spec 3.1): Growth only ---- */
+  --g-relational: #ff8fa3;
+  --g-physical: #6fdca0;
+  --g-mental: #7cc7ff;
+  --g-spiritual: #b9a2ff;
 }
 
 @theme inline {
@@ -590,6 +596,76 @@ button.av-lamp {
   .av-bulbfill {
     fill: #ffc56b;
   }
+}
+
+/* RPMS slider (round 2 spec 3.1): a native range input, 44 px tall to
+   touch, over a drawn track. The filled part is the gauge colour (--g),
+   the rest --line-2. --p is the filled share, 0 to 100; the fill ends at
+   the thumb's centre (thumb 24 px wide). */
+.av-range {
+  position: relative;
+  height: 44px;
+}
+.av-range-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 999px;
+  background: var(--line-2);
+  overflow: hidden;
+}
+.av-range-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(12px + (100% - 24px) * var(--p) / 100);
+  border-radius: 999px;
+  background: var(--g);
+}
+.av-range-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.av-range-input::-webkit-slider-runnable-track {
+  height: 44px;
+  background: transparent;
+}
+.av-range-input::-moz-range-track {
+  height: 44px;
+  background: transparent;
+}
+.av-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 10px;
+  border-radius: 50%;
+  border: 3px solid var(--night-2);
+  background: var(--g);
+  box-shadow: 0 0 0 1px var(--g);
+}
+.av-range-input::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid var(--night-2);
+  background: var(--g);
+  box-shadow: 0 0 0 1px var(--g);
+}
+.av-range-input:focus-visible {
+  border-radius: 12px;
 }
 
 /* The profile panel (round 2 spec 1): a native <dialog>, so the browser
