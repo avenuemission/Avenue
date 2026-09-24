@@ -16,6 +16,7 @@ import {
   FileText,
   Music,
 } from "lucide-react";
+import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 
 interface StudyGuide {
   date: string;
@@ -123,7 +124,7 @@ export default function StudyGuidesPage() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-400 text-sm">
+              <span className="hidden text-gray-400 text-sm sm:inline">
                 Welcome, {user.name}
               </span>
               <button
@@ -133,6 +134,7 @@ export default function StudyGuidesPage() {
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm">Logout</span>
               </button>
+              <HeaderAvatar user={user} />
             </div>
           </div>
         </div>

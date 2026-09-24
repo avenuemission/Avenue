@@ -5,6 +5,7 @@ import Link from "next/link";
 import PrintButton from "@/components/journey/PrintButton";
 import PhaseOpening from "@/components/avenue/PhaseOpening";
 import JourneyFooter from "@/components/avenue/JourneyFooter";
+import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 import { VERSES } from "../../verses";
 import { useLeaderGate } from "@/lib/useLeaderGate";
 import { useWorksheet } from "@/lib/useWorksheet";
@@ -54,7 +55,7 @@ function EmptyNext({ line, label, step }: { line: string; label: string; step: n
 // leader's sender or the admins. Journal answers stay on screen only,
 // behind a toggle, and are never inside the printed output (Ruling C3).
 export default function CallingProfilePage() {
-  const { ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate();
   const { data, loaded, error } = useWorksheet<CallingData>("calling", ready);
   const { people, peopleLoaded, peopleError } = useMyPeople(ready);
   const [showJournal, setShowJournal] = useState(false);
@@ -129,11 +130,14 @@ export default function CallingProfilePage() {
   return (
     <div className="avenue-night">
     <div className="print-page max-w-3xl mx-auto px-4 py-8 space-y-8 print:space-y-4">
-      <div className="no-print flex items-center justify-between">
+      <div className="no-print flex flex-wrap items-center justify-between gap-2">
         <Link href="/leaders/training/calling" className="min-h-[44px] inline-flex items-center text-sm text-[var(--muted)] hover:text-white">
           Back to Calling
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          <HeaderAvatar user={user} />
+        </div>
       </div>
 
       {/* Print keeps the original title block; the screen shows the phase opening. */}

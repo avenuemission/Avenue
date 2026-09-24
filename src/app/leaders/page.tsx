@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getCurrentUser, logout, User } from "@/lib/auth";
 import { leaderFetch } from "@/lib/leaderFetch";
 import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/avenue";
-import ProfileCard from "@/components/ui/ProfileCard";
+import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 import NextStepCard from "@/components/journey/NextStepCard";
 import {
   GraduationCap,
@@ -156,13 +156,16 @@ export default function LeadersPage() {
       <header className="border-b border-[var(--line)]">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-2 sm:px-6">
           <span className="text-sm font-semibold text-[var(--ink)]">Leaders Hub</span>
-          <button
-            onClick={handleLogout}
-            className="flex min-h-[44px] items-center gap-2 text-[var(--muted)] transition-colors hover:text-white"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="text-sm">Logout</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="flex min-h-[44px] items-center gap-2 text-[var(--muted)] transition-colors hover:text-white"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="text-sm">Logout</span>
+            </button>
+            <HeaderAvatar user={user} />
+          </div>
         </div>
       </header>
 
@@ -207,11 +210,6 @@ export default function LeadersPage() {
             <NextStepCard enabled apprenticesOnRung={apprenticesOnRung} networkFailed={networkFailed} />
           </div>
         )}
-
-        {/* My Profile */}
-        <div className="mb-12">
-          <ProfileCard email={user.email} fallbackName={user.name} collapsible />
-        </div>
 
         {/* Tools: a quiet hairline list */}
         <nav aria-label="Leader tools">

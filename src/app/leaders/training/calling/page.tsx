@@ -31,7 +31,7 @@ import ConversationStep from "./ConversationStep";
 // "calling" worksheet.
 export default function CallingPage() {
   const router = useRouter();
-  const { ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate();
   const { data, loaded, error, saveSection, flushSection, savingSection, saveError } = useWorksheet<CallingData>(
     "calling",
     ready
@@ -161,6 +161,7 @@ export default function CallingPage() {
     <>
       <WizardShell
         phaseId="phase2"
+        user={user}
         name="Calling"
         title="Discover your calling"
         steps={steps}

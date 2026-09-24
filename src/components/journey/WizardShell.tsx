@@ -7,6 +7,7 @@ import { VERSES } from "@/app/leaders/training/verses";
 import PhaseOpening from "@/components/avenue/PhaseOpening";
 import LampSteps from "@/components/avenue/LampSteps";
 import JourneyFooter from "@/components/avenue/JourneyFooter";
+import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 
 // Each step component receives its own saved section and two callbacks.
 export interface StepProps<T> {
@@ -17,6 +18,7 @@ export interface StepProps<T> {
 
 export interface WizardShellProps {
   phaseId: "phase2" | "phase3";
+  user: { email: string; name: string } | null; // the signed-in leader, for the header avatar
   name: string; // "Calling" or "Launch"
   title: string; // "Discover your calling" or "Plan your launch"
   steps: WizardStepMeta[];
@@ -51,7 +53,7 @@ export function OutcomeButton(props: { label: string; onClick: () => void; disab
 // (lit when complete, blue ring on the current one, tap to jump), one quiet
 // time line, the save state, and the step itself on a raised night card.
 export default function WizardShell(props: WizardShellProps) {
-  const { phaseId, name, title, steps, lampLabels, current, onSelect, saving, saveError, children } = props;
+  const { phaseId, user, name, title, steps, lampLabels, current, onSelect, saving, saveError, children } = props;
   const verse = VERSES[phaseId];
   const stop = STOP_IDS.indexOf(phaseId) + 1;
   const completeCount = steps.filter((s) => s.complete).length;
@@ -59,12 +61,15 @@ export default function WizardShell(props: WizardShellProps) {
   return (
     <div className="avenue-night">
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <Link
-          href="/leaders/training"
-          className="no-print inline-flex min-h-[44px] items-center text-sm text-[var(--muted)] hover:text-white"
-        >
-          Back to your journey
-        </Link>
+        <div className="no-print flex items-center justify-between gap-4">
+          <Link
+            href="/leaders/training"
+            className="inline-flex min-h-[44px] items-center text-sm text-[var(--muted)] hover:text-white"
+          >
+            Back to your journey
+          </Link>
+          <HeaderAvatar user={user} />
+        </div>
 
         <div className="mt-4">
           <PhaseOpening

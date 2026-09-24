@@ -270,6 +270,7 @@ export default function LaunchPage() {
     <>
       <WizardShell
         phaseId="phase3"
+        user={user}
         name="Launch"
         title="Plan your launch"
         steps={steps}

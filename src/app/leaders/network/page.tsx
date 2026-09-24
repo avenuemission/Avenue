@@ -9,6 +9,7 @@ import { leaderFetch } from "@/lib/leaderFetch";
 import Reveal from "@/components/ui/Reveal";
 import NetworkGraph from "@/components/ui/NetworkGraph";
 import type { NetworkPerson } from "@/lib/networkLayout";
+import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 
 export default function NetworkPage() {
   const router = useRouter();
@@ -119,7 +120,10 @@ export default function NetworkPage() {
             <ArrowLeft className="h-4 w-4" />
             Leaders Hub
           </Link>
-          <span className="text-sm text-[var(--muted)]">{user.name}</span>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-[var(--muted)] sm:inline">{user.name}</span>
+            <HeaderAvatar user={user} />
+          </div>
         </div>
       </header>
 

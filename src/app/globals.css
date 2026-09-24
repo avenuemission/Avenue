@@ -290,7 +290,8 @@ html {
 /* The moment card is fixed and, in the wizards, rendered outside
    .avenue-night, so it carries the same focus ring and muted colour (F6). */
 .avenue-night :focus-visible,
-.av-moment :focus-visible {
+.av-moment :focus-visible,
+.av-sheet :focus-visible {
   outline: 2px solid var(--lamp);
   outline-offset: 3px;
 }
@@ -588,6 +589,57 @@ button.av-lamp {
   }
   .av-bulbfill {
     fill: #ffc56b;
+  }
+}
+
+/* The profile panel (round 2 spec 1): a native <dialog>, so the browser
+   handles Escape, the focus trap and the top layer. A full-width sheet
+   rising from the bottom on phones, a right-hand sheet from md. It sits
+   outside .avenue-night on some pages, so it carries the night muted
+   colour, the lamp focus ring (above) and the night panel itself. */
+.av-sheet {
+  --muted: #8b94a7;
+  position: fixed;
+  inset: 0;
+  margin: auto 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  /* fit-content, not auto: with inset 0 an auto height would stretch to
+     88vh even for a short card. The auto top margin then pins it to the
+     bottom edge. */
+  height: fit-content;
+  max-height: 88vh;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 18px 18px 0 0;
+  background: var(--night);
+  color: var(--ink);
+  overflow-y: auto;
+}
+.av-sheet::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+.av-sheet-body {
+  padding: 8px 16px 24px;
+}
+.av-sheet .panel {
+  background: var(--night-2);
+  border-color: var(--line);
+  border-radius: 18px;
+}
+.av-sheet .eyebrow {
+  color: var(--muted);
+}
+@media (min-width: 768px) {
+  .av-sheet {
+    margin: 0 0 0 auto;
+    width: 480px;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 18px 0 0 18px;
+  }
+  .av-sheet-body {
+    padding: 12px 24px 32px;
   }
 }
 

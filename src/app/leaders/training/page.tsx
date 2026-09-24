@@ -34,6 +34,7 @@ import {
 import AvenueMap from "@/components/avenue/AvenueMap";
 import PhaseOpening from "@/components/avenue/PhaseOpening";
 import ClampedText from "@/components/avenue/ClampedText";
+import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 import JourneyFooter from "@/components/avenue/JourneyFooter";
 import Moment from "@/components/avenue/Moment";
 import { useMoment } from "@/components/avenue/useMoment";
@@ -238,7 +239,7 @@ export default function TrainingPage() {
       )}
 
       {/* Header: the sticky pill, quieter */}
-      <header className="sticky top-4 z-50 mx-4 mt-4 flex max-w-5xl items-center justify-between rounded-full border border-[var(--line)] bg-[var(--night-2)] px-6 py-2 lg:mx-auto">
+      <header className="sticky top-4 z-50 mx-4 mt-4 flex max-w-5xl items-center justify-between rounded-full border border-[var(--line)] bg-[var(--night-2)] pl-6 pr-2 py-2 lg:mx-auto">
         <span className="text-sm font-semibold text-[var(--ink)]">Leadership Journey</span>
         <div className="flex items-center gap-4">
           {saving && <span className="hidden text-xs text-[var(--muted)] sm:inline">Saving...</span>}
@@ -258,6 +259,7 @@ export default function TrainingPage() {
             <LogOut className="h-4 w-4" />
             <span className="hidden text-sm sm:inline">Logout</span>
           </button>
+          <HeaderAvatar user={user} />
         </div>
       </header>
 

@@ -16,6 +16,7 @@ import {
   FileDown,
   Download,
 } from "lucide-react";
+import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 
 const RESOURCES = {
   music: [
@@ -193,7 +194,7 @@ export default function ResourcesPage() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-400 text-sm">
+              <span className="hidden text-gray-400 text-sm sm:inline">
                 Welcome, {user.name}
               </span>
               <button
@@ -203,6 +204,7 @@ export default function ResourcesPage() {
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm">Logout</span>
               </button>
+              <HeaderAvatar user={user} />
             </div>
           </div>
         </div>
