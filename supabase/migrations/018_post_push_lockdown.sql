@@ -1,3 +1,4 @@
+-- APPLIED to the live database 2026-09-24 after the chore/cleanup deploy (ea741d9) went live.
 -- ============================================================
 -- 018 Post-push lockdown (phase B).
 --
@@ -68,5 +69,8 @@ drop function if exists public.leader_profiles_sync_pathway_group();
 
 alter table public.study_guides drop column if exists guide_date;
 alter table public.leader_profiles drop column if exists pathway_group;
+
+-- Repeat the 016 cleanup: main kept inserting empty pdf_url strings during phase A.
+update public.study_guides set pdf_url = null where pdf_url = '';
 
 commit;
