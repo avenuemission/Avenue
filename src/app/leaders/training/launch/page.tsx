@@ -15,6 +15,7 @@ import {
   type LaunchStepId,
 } from "@/lib/journey";
 import { LAUNCH_LAMP_LABELS } from "@/lib/avenue";
+import { launchWizardStepStatus } from "@/lib/stepStatus";
 import { useMoment } from "@/components/avenue/useMoment";
 import Moment from "@/components/avenue/Moment";
 import { SPACES, type Space } from "@/lib/people";
@@ -99,6 +100,9 @@ export default function LaunchPage() {
         ? !ARENA_ENABLED || data.arena?.done === true
         : false,
   }));
+  const stepStatus = Object.fromEntries(
+    LAUNCH_STEPS.map((s) => [s.id, launchWizardStepStatus(s.id, data, ARENA_ENABLED)])
+  );
 
   const loaded = launch.loaded && calling.loaded;
   const [stepParam] = useState(() =>
@@ -275,6 +279,7 @@ export default function LaunchPage() {
         title="Plan your launch"
         steps={steps}
         lampLabels={LAUNCH_LAMP_LABELS}
+        stepStatus={stepStatus}
         current={current}
         onSelect={goTo}
         saving={launch.savingSection !== null}

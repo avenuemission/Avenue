@@ -6,6 +6,7 @@ import { STOP_IDS } from "@/lib/avenue";
 import { VERSES } from "@/app/leaders/training/verses";
 import PhaseOpening from "@/components/avenue/PhaseOpening";
 import LampSteps from "@/components/avenue/LampSteps";
+import type { DotStatus } from "@/lib/stepStatus";
 import JourneyFooter from "@/components/avenue/JourneyFooter";
 import HeaderAvatar from "@/components/avenue/HeaderAvatar";
 
@@ -23,6 +24,7 @@ export interface WizardShellProps {
   title: string; // "Discover your calling" or "Plan your launch"
   steps: WizardStepMeta[];
   lampLabels: Record<string, string>; // short lamp label per step id
+  stepStatus: Record<string, DotStatus>; // off, in progress or done, per step id
   current: number;
   onSelect: (index: number) => void;
   saving: boolean; // savingSection !== null
@@ -49,11 +51,13 @@ export function OutcomeButton(props: { label: string; onClick: () => void; disab
 }
 
 // Layout for the Calling and Launch wizards (spec 4.2). The page owns
-// navigation and data; the shell draws the phase opening, a lamp per step
-// (lit when complete, blue ring on the current one, tap to jump), one quiet
-// time line, the save state, and the step itself on a raised night card.
+// navigation and data; the shell draws the phase opening, a dot per step
+// (off, in progress or done; the current step's label is underlined; tap
+// to jump), one quiet time line, the save state, and the step itself on a
+// raised night card.
 export default function WizardShell(props: WizardShellProps) {
-  const { phaseId, user, name, title, steps, lampLabels, current, onSelect, saving, saveError, children } = props;
+  const { phaseId, user, name, title, steps, lampLabels, stepStatus, current, onSelect, saving, saveError, children } =
+    props;
   const verse = VERSES[phaseId];
   const stop = STOP_IDS.indexOf(phaseId) + 1;
   const completeCount = steps.filter((s) => s.complete).length;
@@ -83,7 +87,11 @@ export default function WizardShell(props: WizardShellProps) {
           >
             <p className="mb-6 text-sm text-[var(--muted)]">{title}</p>
             <LampSteps
-              steps={steps.map((s) => ({ id: s.id, label: lampLabels[s.id] ?? s.title, done: s.complete }))}
+              steps={steps.map((s) => {
+                const status = stepStatus[s.id];
+                if (!status) throw new Error(`WizardShell: no status for step ${s.id}`);
+                return { id: s.id, label: lampLabels[s.id] ?? s.title, status };
+              })}
               currentIndex={current}
               onSelect={onSelect}
               label={`${name}: ${completeCount} of ${steps.length} steps complete`}

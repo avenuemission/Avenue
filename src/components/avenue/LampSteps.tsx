@@ -1,11 +1,13 @@
 "use client";
 
 import Glow from "./Glow";
+import StepDot from "./StepDot";
+import { DOT_SR_TEXT, type DotStatus } from "@/lib/stepStatus";
 
 export interface LampStep {
   id: string;
   label: string;
-  done: boolean;
+  status: DotStatus;
 }
 
 export interface LampStepsProps {
@@ -16,24 +18,24 @@ export interface LampStepsProps {
   dense?: boolean; // six narrow lamps for the Arena months
 }
 
-// A row of small lamps, one per step (spec 2): lit when complete, a blue ring
-// on the current one, wrapping on phones. With onSelect each lamp is a
-// button that jumps to its step. A lamp that lights glows once.
+// A row of step dots (round 3 spec 4), one per step, wrapping on phones:
+// off, in progress (pulsing) or done (lit). The step you are on is shown by
+// its label only, bright and underlined. With onSelect each step is a
+// button that jumps to it. A dot that turns done glows once.
 export default function LampSteps({ steps, currentIndex, onSelect, label, dense = false }: LampStepsProps) {
   return (
     <ol className={`av-lamps ${dense ? "av-lamps-dense" : ""}`} aria-label={label}>
       {steps.map((step, i) => {
         const current = i === currentIndex;
-        const cls = `av-lamp ${step.done ? "is-lit" : ""} ${current ? "is-current" : ""}`;
+        const cls = `av-lamp is-${step.status} ${current ? "is-current" : ""}`;
         const inner = (
           <>
-            <Glow trigger={step.done ? "lit" : null}>
-              <span className="av-lamp-glass" aria-hidden="true" />
+            <Glow trigger={step.status === "done" ? "lit" : null}>
+              <StepDot status={step.status} />
             </Glow>
-            <span className="av-lamp-post" aria-hidden="true" />
             <span className="av-lamp-label">{step.label}</span>
             <span className="sr-only">
-              {step.done ? ", done" : ", not done yet"}
+              {DOT_SR_TEXT[step.status]}
               {current ? ", current step" : ""}
             </span>
           </>

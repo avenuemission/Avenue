@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import LampSteps from "@/components/avenue/LampSteps";
+import LampSteps, { type LampStep } from "@/components/avenue/LampSteps";
 import { CALLING_LAMP_LABELS } from "@/lib/avenue";
-import { CALLING_SECTION_IDS, CALLING_TOTAL, callingSectionComplete, type CallingData } from "@/lib/journey";
+import { CALLING_SECTION_IDS, CALLING_TOTAL, type CallingData } from "@/lib/journey";
+import { callingSectionStatus } from "@/lib/stepStatus";
 
 export interface CallingCardProps {
   data: Partial<CallingData>;
@@ -18,13 +19,13 @@ export interface CallingCardProps {
 export default function CallingCard({ data, loaded, error }: CallingCardProps) {
   const router = useRouter();
   const ok = loaded && !error;
-  const lamps = CALLING_SECTION_IDS.map((id) => ({
+  const lamps: LampStep[] = CALLING_SECTION_IDS.map((id) => ({
     id,
     label: CALLING_LAMP_LABELS[id],
-    done: ok && callingSectionComplete(id, data),
+    status: ok ? callingSectionStatus(id, data) : "off",
   }));
-  const completed = lamps.filter((l) => l.done).length;
-  const firstOpen = lamps.findIndex((l) => !l.done);
+  const completed = lamps.filter((l) => l.status === "done").length;
+  const firstOpen = lamps.findIndex((l) => l.status !== "done");
 
   return (
     <div className="space-y-6">

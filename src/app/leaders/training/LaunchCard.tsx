@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import LampSteps from "@/components/avenue/LampSteps";
+import LampSteps, { type LampStep } from "@/components/avenue/LampSteps";
 import { LAUNCH_LAMP_LABELS } from "@/lib/avenue";
-import { LAUNCH_STEP_IDS, LAUNCH_TOTAL, launchStepComplete, type LaunchData } from "@/lib/journey";
+import { LAUNCH_STEP_IDS, LAUNCH_TOTAL, type LaunchData } from "@/lib/journey";
+import { launchStepStatus } from "@/lib/stepStatus";
 
 export interface LaunchCardProps {
   data: Partial<LaunchData>;
@@ -17,13 +18,13 @@ export interface LaunchCardProps {
 export default function LaunchCard({ data, loaded, error }: LaunchCardProps) {
   const router = useRouter();
   const ok = loaded && !error;
-  const lamps = LAUNCH_STEP_IDS.map((id) => ({
+  const lamps: LampStep[] = LAUNCH_STEP_IDS.map((id) => ({
     id,
     label: LAUNCH_LAMP_LABELS[id],
-    done: ok && launchStepComplete(id, data),
+    status: ok ? launchStepStatus(id, data) : "off",
   }));
-  const completed = lamps.filter((l) => l.done).length;
-  const firstOpen = lamps.findIndex((l) => !l.done);
+  const completed = lamps.filter((l) => l.status === "done").length;
+  const firstOpen = lamps.findIndex((l) => l.status !== "done");
 
   return (
     <div className="space-y-6">

@@ -17,6 +17,7 @@ import {
   type ArenaState,
   type CounterKey,
 } from "@/lib/arena";
+import { arenaMonthStatus } from "@/lib/stepStatus";
 import type { LaunchData } from "@/lib/journey";
 import { CURVEBALLS, DEFAULT_ORDER } from "./arenaContent";
 
@@ -37,10 +38,14 @@ const COUNTER_NAMES: Record<CounterKey, string> = {
 
 const MONTHS = DEFAULT_ORDER.length;
 
-// The six months as a street of small lamps: lit once played, a blue ring
-// on the month being played. Display only.
+// The six months as a row of dots: done once played, the month in play
+// pulsing mid-run, its label underlined. Display only.
 function MonthStreet({ state }: { state: ArenaState }) {
-  const steps = DEFAULT_ORDER.map((id, i) => ({ id: `month-${i + 1}-${id}`, label: `Month ${i + 1}`, done: i < state.month }));
+  const steps = DEFAULT_ORDER.map((id, i) => ({
+    id: `month-${i + 1}-${id}`,
+    label: `Month ${i + 1}`,
+    status: arenaMonthStatus(i, state),
+  }));
   return (
     <LampSteps
       dense

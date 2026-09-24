@@ -390,32 +390,38 @@ html {
 button.av-lamp {
   cursor: pointer;
 }
-.av-lamp-glass {
+/* Step dots (round 3 spec 4): one dot per step, no stem. Done: a solid
+   warm dot with its glow. In progress: the same warm dot pulsing, about
+   2.4 s, opacity and glow only. Off: a dim hollow dot. Used by LampSteps
+   and the Foundations module ticks. */
+.av-dot {
   display: block;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   border: 1px solid var(--line-2);
-  background: #131926;
+  background: transparent;
 }
-.av-lamp.is-lit .av-lamp-glass {
+.av-dot.is-done {
   background: var(--lamp);
   border-color: var(--lamp);
   box-shadow: 0 0 18px 4px rgba(255, 197, 107, 0.45);
 }
-.av-lamp.is-current .av-lamp-glass {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
+.av-dot.is-progress {
+  background: var(--lamp);
+  border-color: var(--lamp);
+  animation: av-dot-pulse 2.4s ease-in-out infinite;
 }
-.av-lamp.is-lit.is-current .av-lamp-glass {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft), 0 0 18px 4px rgba(255, 197, 107, 0.45);
+@keyframes av-dot-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 14px 3px rgba(255, 197, 107, 0.4); }
+  50% { opacity: 0.4; box-shadow: 0 0 4px 1px rgba(255, 197, 107, 0.15); }
 }
-.av-lamp-post {
-  display: block;
-  width: 2px;
-  height: 26px;
-  background: var(--line-2);
+@media (prefers-reduced-motion: reduce) {
+  .av-dot.is-progress {
+    animation: none;
+    opacity: 0.5;
+    box-shadow: 0 0 10px 2px rgba(255, 197, 107, 0.25);
+  }
 }
 .av-lamp-label {
   font-size: 11.5px;
@@ -423,9 +429,16 @@ button.av-lamp {
   text-align: center;
   color: var(--muted);
 }
-.av-lamp.is-lit .av-lamp-label,
+.av-lamp.is-done .av-lamp-label,
+.av-lamp.is-progress .av-lamp-label {
+  color: var(--ink-2);
+}
+/* The step you are on: its label only, bright and underlined. No ring. */
 .av-lamp.is-current .av-lamp-label {
   color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 /* Six Arena months must fit one row at 375 px. */
 .av-lamps-dense {

@@ -11,6 +11,7 @@ import {
   type CallingSectionId,
 } from "@/lib/journey";
 import { CALLING_LAMP_LABELS } from "@/lib/avenue";
+import { callingSectionStatus } from "@/lib/stepStatus";
 import { useMoment } from "@/components/avenue/useMoment";
 import Moment from "@/components/avenue/Moment";
 import { useLeaderGate } from "@/lib/useLeaderGate";
@@ -44,6 +45,7 @@ export default function CallingPage() {
     minutes: s.minutes,
     complete: callingSectionComplete(s.id, data),
   }));
+  const stepStatus = Object.fromEntries(CALLING_SECTIONS.map((s) => [s.id, callingSectionStatus(s.id, data)]));
 
   const [stepParam] = useState(() =>
     typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("step")
@@ -166,6 +168,7 @@ export default function CallingPage() {
         title="Discover your calling"
         steps={steps}
         lampLabels={CALLING_LAMP_LABELS}
+        stepStatus={stepStatus}
         current={current}
         onSelect={goTo}
         saving={savingSection !== null}

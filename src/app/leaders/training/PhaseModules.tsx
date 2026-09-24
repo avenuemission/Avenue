@@ -1,5 +1,7 @@
 import EpisodeCarousel from "@/components/ui/EpisodeCarousel";
 import Glow from "@/components/avenue/Glow";
+import StepDot from "@/components/avenue/StepDot";
+import { DOT_SR_TEXT, moduleStatus } from "@/lib/stepStatus";
 import { CheckCircle2, Video, FileText, Lightbulb } from "lucide-react";
 import { Module, Phase } from "./phases";
 
@@ -26,7 +28,8 @@ interface PhaseModulesProps {
 
 // The modules list used by Foundations, as a clean list on the night ground
 // (spec 4.1). Progress state and the tick handlers come from
-// useTrainingProgress via the page. A ticked module's lamp is lit.
+// useTrainingProgress via the page. A ticked module's dot is lit; a module
+// with an episode watched but not ticked pulses (round 3 spec 4).
 export default function PhaseModules({
   phase,
   toggleModuleComplete,
@@ -45,18 +48,15 @@ export default function PhaseModules({
                 type="button"
                 onClick={() => toggleModuleComplete(phase.id, module.id)}
                 aria-pressed={module.completed}
-                aria-label={module.completed ? `${module.title}: done. Tap to untick.` : `${module.title}: mark done`}
+                aria-label={
+                  module.completed
+                    ? `${module.title}: done. Tap to untick.`
+                    : `${module.title}${DOT_SR_TEXT[moduleStatus(module)]}: mark done`
+                }
                 className="-ml-3 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
               >
                 <Glow trigger={module.completed ? "lit" : null}>
-                  <span
-                    aria-hidden="true"
-                    className={`block h-[14px] w-[14px] rounded-full border ${
-                      module.completed
-                        ? "border-[var(--lamp)] bg-[var(--lamp)] shadow-[0_0_18px_4px_rgba(255,197,107,0.45)]"
-                        : "border-[var(--line-2)] bg-[#131926]"
-                    }`}
-                  />
+                  <StepDot status={moduleStatus(module)} />
                 </Glow>
               </button>
               <div className="min-w-0 flex-1 pt-2">
