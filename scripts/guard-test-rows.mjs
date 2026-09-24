@@ -11,13 +11,18 @@ const COLUMNS = [
   ["leader_checkins", "email"],
   ["leader_people", "owner_email"],
   ["leader_worksheets", "email"],
+  ["leader_email_prefs", "email"],
+  ["leader_email_log", "email"],
 ];
+
+// Tables from migrations that may not be applied yet (009 waits for Henry).
+const OPTIONAL_TABLES = new Set(["leader_people", "leader_worksheets", "leader_email_prefs", "leader_email_log"]);
 
 const hits = [];
 for (const [table, column] of COLUMNS) {
   const { data, error } = await db.from(table).select(column).ilike(column, `%${FIXTURE_DOMAIN}`);
   if (error) {
-    if ((table === "leader_people" || table === "leader_worksheets") && /does not exist|schema cache/i.test(error.message)) continue;
+    if (OPTIONAL_TABLES.has(table) && /does not exist|schema cache/i.test(error.message)) continue;
     console.error(`ERROR reading ${table}.${column}: ${error.message}`);
     process.exit(2);
   }
