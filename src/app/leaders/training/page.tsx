@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/client/auth";
+import { logout } from "@/lib/client/auth";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { recentMondays } from "@/lib/domain/dates/weeks";
 import { LogOut, ArrowLeft, X } from "lucide-react";
 
@@ -18,7 +19,6 @@ import { useCheckins } from "@/hooks/useCheckins";
 import { useNetworkView } from "@/hooks/useNetworkView";
 import { useMyPeople } from "@/hooks/useMyPeople";
 import { useWorksheet } from "@/hooks/useWorksheet";
-import { leaderFetch } from "@/lib/client/leaderFetch";
 import { callingCompleteCount, launchCompleteCount, type CallingData, type LaunchData } from "@/lib/domain/journey";
 import {
   apprenticesOnRung,
@@ -45,10 +45,11 @@ function isStopId(value: string | null): value is StopId {
 
 export default function TrainingPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [accessChecked, setAccessChecked] = useState(false);
+  // Full access only. Any answer but a confirmed full access (including a
+  // failed check) goes back to the dashboard, as before.
+  const { user, fullAccess, accessFailure } = useLeaderSession();
+  const hasAccess = fullAccess === true;
+  const accessChecked = fullAccess !== null || accessFailure !== null;
   // null means "not chosen": the hub then opens the stop the leader is at.
   const [expandedPhase, setExpandedPhase] = useState<StopId | null>(() => {
     if (typeof window === "undefined") return null;
@@ -105,27 +106,8 @@ export default function TrainingPage() {
   const launchDone = launchCompleteCount(launch.data);
 
   useEffect(() => {
-    setMounted(true);
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push("/login");
-    } else {
-      setUser(currentUser);
-      leaderFetch("/api/leader-access")
-        .then((res) => res.json())
-        .then((data) => {
-          setHasAccess(data.full_access === true);
-          setAccessChecked(true);
-          if (!data.full_access) {
-            router.push("/leaders");
-          }
-        })
-        .catch(() => {
-          setAccessChecked(true);
-          router.push("/leaders");
-        });
-    }
-  }, [router]);
+    if (accessChecked && !hasAccess) router.push("/leaders");
+  }, [accessChecked, hasAccess, router]);
 
   const handleLogout = () => {
     logout();
@@ -179,7 +161,7 @@ export default function TrainingPage() {
   if (networkLoaded && !networkError) momentFlags["walked:phase5"] = stopWalked("phase5", avenueProgress);
   const { moment, dismiss } = useMoment(momentFlags);
 
-  if (!mounted || !user || !accessChecked || !hasAccess) {
+  if (!user || !accessChecked || !hasAccess) {
     return (
       <div className="avenue-night flex items-center justify-center">
         <div className="text-[var(--ink)]">Loading...</div>

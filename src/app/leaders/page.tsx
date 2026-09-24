@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/client/auth";
+import { logout } from "@/lib/client/auth";
 import { leaderFetch } from "@/lib/client/leaderFetch";
+import { clearLeaderCache, dedupedLeaderJson } from "@/lib/client/dedupeFetch";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/domain/avenue";
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 import NextStepCard from "@/components/leaders/journey/NextStepCard";
@@ -28,6 +30,11 @@ const AVENUE_CALENDAR_URL =
 const LEADERS_CALENDAR_URL =
   "https://calendar.google.com/calendar/embed?src=c_f77b62d0efa5c8f706f97ed58b880dc6bdbd9ca0a67d4b413748de6f0b2f612e%40group.calendar.google.com&ctz=Australia%2FSydney";
 
+interface DashboardNetwork {
+  viewerId?: string | null;
+  people?: DashboardNetworkPerson[];
+}
+
 interface DashboardNetworkPerson {
   id: string;
   firstName?: string;
@@ -38,10 +45,11 @@ interface DashboardNetworkPerson {
 
 export default function LeadersPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [hasFullAccess, setHasFullAccess] = useState(false);
-  const [accessChecked, setAccessChecked] = useState(false);
+  // Signed in (the layout sends anyone else to /login). The dashboard is
+  // open to pending leaders too: full access only unlocks some tools.
+  const { user, fullAccess, accessFailure } = useLeaderSession();
+  const hasFullAccess = fullAccess === true;
+  const accessChecked = fullAccess !== null || accessFailure !== null;
   const [quickOpen, setQuickOpen] = useState(false);
   const [pendingSender, setPendingSender] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -50,48 +58,26 @@ export default function LeadersPage() {
   const [networkFailed, setNetworkFailed] = useState(false);
   const [greetingTime] = useState(() => new Date());
 
+  // One read of the network: the map's Multiply stop, and whether someone
+  // has claimed to have sent this person out.
   useEffect(() => {
-    setMounted(true);
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push("/login");
-    } else {
-      setUser(currentUser);
-      // Check leader access
-      leaderFetch("/api/leader-access")
-        .then((res) => res.json())
-        .then((data) => {
-          setHasFullAccess(data.full_access === true);
-          setAccessChecked(true);
-        })
-        .catch(() => {
-          setAccessChecked(true);
-        });
-
-      // One read of the network: the map's Multiply stop, and whether
-      // someone has claimed to have sent this person out.
-      leaderFetch("/api/network")
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) throw new Error(data?.error || `Could not load your network (${res.status})`);
-          return data;
-        })
-        .then((data) => {
-          const people: DashboardNetworkPerson[] = data.people ?? [];
-          setApprenticesOnRung(countApprenticesOnRung(people, data.viewerId ?? null));
-          const me = people.find((p) => p.id === data.viewerId);
-          if (!me?.sentOutBy || me.linkStatus === "confirmed") return;
-          const sender = people.find((p) => p.id === me.sentOutBy);
-          setPendingSender(sender?.firstName ?? "Someone");
-        })
-        .catch((e) => {
-          // The banner is a nicety and must not break the dashboard; the map
-          // says plainly that Multiply could not be checked.
-          console.error("Dashboard network load failed", e);
-          setNetworkFailed(true);
-        });
-    }
-  }, [router]);
+    if (!user) return;
+    dedupedLeaderJson<DashboardNetwork>("/api/network")
+      .then((data) => {
+        const people: DashboardNetworkPerson[] = data.people ?? [];
+        setApprenticesOnRung(countApprenticesOnRung(people, data.viewerId ?? null));
+        const me = people.find((p) => p.id === data.viewerId);
+        if (!me?.sentOutBy || me.linkStatus === "confirmed") return;
+        const sender = people.find((p) => p.id === me.sentOutBy);
+        setPendingSender(sender?.firstName ?? "Someone");
+      })
+      .catch((e) => {
+        // The banner is a nicety and must not break the dashboard; the map
+        // says plainly that Multiply could not be checked.
+        console.error("Dashboard network load failed", e);
+        setNetworkFailed(true);
+      });
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -108,6 +94,7 @@ export default function LeadersPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action }),
       });
+      clearLeaderCache("/api/network");
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         setPendingError(data?.error || "We could not save your answer. Please try again.");
@@ -121,7 +108,7 @@ export default function LeadersPage() {
     }
   };
 
-  if (!mounted || !user) {
+  if (!user) {
     return (
       <div className="avenue-night flex items-center justify-center">
         <div className="text-[var(--ink)]">Loading...</div>

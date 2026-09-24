@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/client/auth";
+import { logout } from "@/lib/client/auth";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import {
   LogOut,
   ArrowLeft,
@@ -78,8 +79,8 @@ function formatTime(date: Date): string {
 
 export default function LeaderSupportPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
+  // Any signed-in leader (the layout sends anyone else to /login).
+  const { user } = useLeaderSession();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [customTime, setCustomTime] = useState({ date: "", time: "", company: "" });
   const [showCustomForm, setShowCustomForm] = useState(false);
@@ -87,16 +88,6 @@ export default function LeaderSupportPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const { thursdays, saturdays } = getUpcomingCallDates();
-
-  useEffect(() => {
-    setMounted(true);
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push("/login");
-    } else {
-      setUser(currentUser);
-    }
-  }, [router]);
 
   const handleLogout = () => {
     logout();
@@ -144,7 +135,7 @@ export default function LeaderSupportPage() {
     }
   };
 
-  if (!mounted || !user) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>

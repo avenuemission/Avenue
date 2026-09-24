@@ -1,19 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Plus, Users, X } from "lucide-react";
-import { getCurrentUser, type User } from "@/lib/client/auth";
 import { leaderFetch } from "@/lib/client/leaderFetch";
+import { clearLeaderCache, dedupedLeaderJson, LeaderFetchError } from "@/lib/client/dedupeFetch";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import Reveal from "@/components/ui/Reveal";
 import NetworkGraph from "@/components/leaders/network/NetworkGraph";
 import type { NetworkPerson } from "@/lib/domain/networkLayout";
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 
 export default function NetworkPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  // Open to every signed-in leader. For a pending leader the API itself
+  // returns only their own part of the network (spec D4).
+  const { user } = useLeaderSession();
   const [people, setPeople] = useState<NetworkPerson[]>([]);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,15 +29,13 @@ export default function NetworkPage() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const res = await leaderFetch("/api/network");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not load the network.");
+      const data = await dedupedLeaderJson<{ people?: NetworkPerson[]; viewerId?: string | null }>("/api/network");
       setPeople(data.people ?? []);
       setViewerId(data.viewerId ?? null);
       setLoaded(true);
       return true;
     } catch (e) {
-      setError((e as Error).message);
+      setError(e instanceof LeaderFetchError ? (e.serverError ?? "Could not load the network.") : (e as Error).message);
       setLoaded(false);
       setSelected(null);
       return false;
@@ -46,14 +45,9 @@ export default function NetworkPage() {
   }, []);
 
   useEffect(() => {
-    const current = getCurrentUser();
-    if (!current) {
-      router.push("/login");
-      return;
-    }
-    setUser(current);
+    if (!user) return;
     load();
-  }, [router, load]);
+  }, [user, load]);
 
   const act = async (body: Record<string, unknown>) => {
     if (!user) return;
@@ -65,6 +59,7 @@ export default function NetworkPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
       });
+      clearLeaderCache("/api/network");
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "That did not work.");
       return await load();

@@ -1,8 +1,9 @@
 // A stand-in for the Supabase query builder, for route and adapter tests.
 // Every call is recorded as [table, method, ...args]. Awaiting a chain
-// resolves with the result registered for "table.operation" (select,
-// insert, upsert, update or delete), else for "table", else an empty
-// result: [] for a list select, null otherwise.
+// resolves with the result registered for "table.operation.single" when the
+// chain ended in maybeSingle()/single(), else "table.operation" (select,
+// insert, upsert, update or delete), else "table", else an empty result:
+// [] for a list select, null otherwise.
 
 export interface FakeError {
   message: string;
@@ -82,7 +83,11 @@ export function fakeSupabase(results: Record<string, FakeResult> = {}) {
         return chain;
       },
       then(onFulfilled: (value: FakeResponse) => unknown, onRejected?: (reason: unknown) => unknown) {
-        const r = results[`${table}.${operation}`] ?? results[table] ?? {};
+        const r =
+          (single ? results[`${table}.${operation}.single`] : undefined) ??
+          results[`${table}.${operation}`] ??
+          results[table] ??
+          {};
         const empty = operation === "select" && !single ? [] : null;
         const response: FakeResponse = { data: r.data === undefined ? empty : r.data, error: r.error ?? null };
         return Promise.resolve(response).then(onFulfilled, onRejected);

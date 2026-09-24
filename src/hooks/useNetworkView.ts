@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { User } from "@/lib/client/auth";
 import { leaderFetch } from "@/lib/client/leaderFetch";
+import { clearLeaderCache, dedupedLeaderJson } from "@/lib/client/dedupeFetch";
 import type { NetworkPerson, NetworkDepth } from "@/lib/domain/network";
 
 // Phase 5's discipleship network view for the leader training page: state,
@@ -35,11 +36,7 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
   useEffect(() => {
     if (!accessChecked || !hasAccess || !user) return;
     let cancelled = false;
-    leaderFetch("/api/network")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load network (${res.status})`);
-        return res.json();
-      })
+    dedupedLeaderJson<{ people?: NetworkPerson[]; viewerId?: string | null; depth?: NetworkDepth }>("/api/network")
       .then((data) => {
         if (cancelled) return;
         setNetworkPeople(data.people ?? []);
@@ -69,6 +66,7 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", ...fields }),
       });
+      clearLeaderCache("/api/network");
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error || `Could not add that person (${res.status})`);
       setReloadKey((k) => k + 1);
@@ -98,6 +96,7 @@ export function useNetworkView(user: User | null, accessChecked: boolean, hasAcc
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "set-apprentice-step", id, step }),
       });
+      clearLeaderCache("/api/network");
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(body?.error || `Could not update that step (${res.status})`);

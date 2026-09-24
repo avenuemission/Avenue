@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/client/auth";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { RefreshCw, Users, ArrowLeft, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles, Volume2, Square, RotateCcw, Download, FileText } from "lucide-react";
 
@@ -350,11 +350,12 @@ export default function WorkshopDisplayPage({ params }: { params: Promise<{ code
   const [showDenomination, setShowDenomination] = useState(false);
   const [includeLife3, setIncludeLife3] = useState(true);
 
+  // Any signed-in leader (the layout sends anyone else to /login).
+  const { user } = useLeaderSession();
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) { router.push("/login"); return; }
+    if (!user) return;
     loadData();
-  }, [code, router]);
+  }, [code, user]);
 
   const loadData = async () => {
     setLoading(true);

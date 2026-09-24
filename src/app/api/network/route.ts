@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, adminConfigError } from "@/lib/server/supabaseAdmin";
 import { normaliseEmail, wouldCreateCycle } from "@/lib/domain/network";
+import { scopeNetwork } from "@/lib/domain/networkScope";
 import { requireLeader } from "@/lib/server/requireLeader";
 import { requireAdmin } from "@/lib/server/requireAdmin";
 import { serverError } from "@/lib/server/http";
@@ -172,17 +173,24 @@ export async function GET(request: NextRequest) {
     if (!viewer) return NextResponse.json({ error: "Not a leader account" }, { status: 403 });
 
     const rows = await loadRows();
-    const avatars = await loadAvatars(rows);
     const depth = computeDepth(rows, viewer.id);
+    // Pending leaders see only their own part of the network (spec D4):
+    // themselves, their sender and their descendants. Emails never leave
+    // the server; no client reads them.
+    const visible = scopeNetwork(
+      rows.map((r) => ({ ...r, sentOutBy: r.sent_out_by })),
+      viewer.id,
+      auth.leader.fullAccess
+    );
+    const avatars = await loadAvatars(visible);
 
     return NextResponse.json({
       viewerId: viewer.id,
       depth,
-      people: rows.map((r) => ({
+      people: visible.map((r) => ({
         id: r.id,
         firstName: r.first_name,
         lastName: r.last_name,
-        email: r.email,
         avatarUrl: (r.email && avatars.get(r.email)) || null,
         sentOutBy: r.sent_out_by,
         linkStatus: r.link_status,

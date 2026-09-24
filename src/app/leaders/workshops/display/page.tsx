@@ -2,23 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/client/auth";
 import { ArrowLeft, Monitor, QrCode } from "lucide-react";
 import QRCode from "qrcode";
 
 export default function WorkshopDisplayPage() {
+  // Signed-in leaders only: the layout sends anyone else to /login.
   const router = useRouter();
   const [sessionCode, setSessionCode] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [generating, setGenerating] = useState(false);
-
-  useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-  }, [router]);
 
   useEffect(() => {
     if (!sessionCode.trim()) {

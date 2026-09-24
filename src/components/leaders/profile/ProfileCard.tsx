@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { leaderFetch } from "@/lib/client/leaderFetch";
+import { clearLeaderCache } from "@/lib/client/dedupeFetch";
 import { initialsOf } from "@/lib/domain/profileAvatar";
 import { PROFILE_APEST, PROFILE_ROLES } from "@/lib/domain/leaderProfile";
 
@@ -188,6 +189,10 @@ export default function ProfileCard({ email, fallbackName }: ProfileCardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
+      // The header avatar and the network's photos read these through the
+      // shared cache: the next read must see this save.
+      clearLeaderCache("/api/leader-profile");
+      clearLeaderCache("/api/network");
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Could not save your profile.");
       setProfile(draft);

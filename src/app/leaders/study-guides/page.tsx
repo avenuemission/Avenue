@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/client/auth";
-import { leaderFetch } from "@/lib/client/leaderFetch";
+import { logout } from "@/lib/client/auth";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { getStudyGuides } from "@/lib/client/content";
 import { formatGuideOn } from "@/lib/domain/studyGuides";
 import {
@@ -31,39 +31,21 @@ interface StudyGuide {
 
 export default function StudyGuidesPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
+  // Full access only. Any answer but a confirmed full access (including a
+  // failed check) goes back to the dashboard, as before.
+  const { user, fullAccess, accessFailure } = useLeaderSession();
+  const hasAccess = fullAccess === true;
+  const accessChecked = fullAccess !== null || accessFailure !== null;
   const [studyGuides, setStudyGuides] = useState<StudyGuide[]>([]);
   const [expandedGuide, setExpandedGuide] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [accessChecked, setAccessChecked] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push("/login");
-      return;
-    }
-    
-    setUser(currentUser);
-    
-    // Check leader access
-    leaderFetch("/api/leader-access")
-      .then((res) => res.json())
-      .then((data) => {
-        setHasAccess(data.full_access === true);
-        setAccessChecked(true);
-        if (!data.full_access) {
-          router.push("/leaders");
-        }
-      })
-      .catch(() => {
-        setAccessChecked(true);
-        router.push("/leaders");
-      });
+    if (accessChecked && !hasAccess) router.push("/leaders");
+  }, [accessChecked, hasAccess, router]);
 
+  useEffect(() => {
+    if (!user) return;
     // Load study guides from Supabase
     getStudyGuides()
       .then((loaded) => {
@@ -83,7 +65,7 @@ export default function StudyGuidesPage() {
         console.error("Error loading study guides:", err);
         setLoading(false);
       });
-  }, [router]);
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -103,7 +85,7 @@ export default function StudyGuidesPage() {
     return acc;
   }, {} as Record<string, { guides: (StudyGuide & { originalIndex: number })[]; color: string }>);
 
-  if (!mounted || !user || !accessChecked || !hasAccess) {
+  if (!user || !accessChecked || !hasAccess) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>

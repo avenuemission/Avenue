@@ -29,7 +29,7 @@ export type FormParse = { ok: true; value: FormSubmission } | { ok: false; error
 // separately so nothing can become a list or an extra mail header.
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX = 254;
-const NAME_MAX = 100;
+export const NAME_MAX = 100;
 const VALUE_MAX = 2000;
 const DATA_MAX_BYTES = 10000;
 
@@ -80,12 +80,17 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+// One trimmed address within the length cap: never a list, never a header break.
+export function isOneEmail(email: string): boolean {
+  return email.length <= EMAIL_MAX && !/[,;\r\n]/.test(email) && EMAIL_PATTERN.test(email);
+}
+
 function parseEmail(raw: unknown, rule: FormRule["email"]): { ok: true; email: string | null } | { ok: false } {
   if (rule === "none") return { ok: true, email: null };
   if (raw !== undefined && raw !== null && typeof raw !== "string") return { ok: false };
   const email = (raw ?? "").trim();
   if (!email) return rule === "optional" ? { ok: true, email: null } : { ok: false };
-  if (email.length > EMAIL_MAX || /[,;\r\n]/.test(email) || !EMAIL_PATTERN.test(email)) return { ok: false };
+  if (!isOneEmail(email)) return { ok: false };
   return { ok: true, email };
 }
 

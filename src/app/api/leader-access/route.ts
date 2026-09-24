@@ -1,57 +1,52 @@
-import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sendLeaderSignupNotification } from "@/lib/emails/public/admin";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { requireLeader } from "@/lib/server/requireLeader";
+import { allow, RATE } from "@/lib/server/rateLimit";
+import { clientIp } from "@/lib/server/clientIp";
+import { jsonError, serverError, tooMany } from "@/lib/server/http";
+import { isOneEmail, NAME_MAX } from "@/lib/domain/forms";
 
-interface LeaderRecord {
-  id: string;
-  email: string;
-  name: string;
-  full_access: boolean;
-  created_at: string;
+// The one answer a sign-up gets, new email or not, so this endpoint cannot
+// be used to find out who is already a leader.
+const RECEIVED = { ok: true, message: "Thanks. We will be in touch once your access is approved." };
+
+type SignupParse = { ok: true; email: string; name: string } | { ok: false; spam: true } | { ok: false; error: string };
+
+// Validates a sign-up body. Any client-sent id is ignored: the server
+// makes the id. A filled `company` honeypot is a bot.
+function parseSignup(body: unknown): SignupParse {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) return { ok: false, error: "Invalid request" };
+  const b = body as Record<string, unknown>;
+  if (b.company !== undefined && b.company !== "") return { ok: false, spam: true };
+  const email = typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
+  if (!isOneEmail(email)) return { ok: false, error: "Please give one valid email address" };
+  const name = typeof b.name === "string" ? b.name.trim() : "";
+  if (!name || name.length > NAME_MAX) return { ok: false, error: `Please give a name of 1 to ${NAME_MAX} characters` };
+  return { ok: true, email, name };
 }
 
-// Read a leader by email from Supabase, the only source requireLeader
-// reads. A lookup error throws (the POST handler returns 500) so a
-// transient failure never makes an existing leader look new.
-async function getLeader(email: string): Promise<LeaderRecord | null> {
+// Is this email already a leader? A lookup error throws (the handler
+// answers 500) so a transient failure never makes an existing leader look new.
+async function leaderExists(email: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin().from("leaders").select("email").eq("email", email).maybeSingle();
+  if (error) throw new Error(`Supabase leader lookup failed: ${error.message}`);
+  return Boolean(data);
+}
+
+// Saves a NEW pending leader. The insert ignores an existing row with the
+// same email, so an existing leader's full_access is never overwritten.
+// Returns false when a racing sign-up got there first (nothing inserted).
+async function insertPendingLeader(email: string, name: string): Promise<boolean> {
   const { data, error } = await getSupabaseAdmin()
     .from("leaders")
-    .select("id, email, name, full_access, created_at")
-    .eq("email", email.toLowerCase())
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Supabase leader lookup failed: ${error.message}`);
-  }
-  if (!data) return null;
-  return {
-    id: data.id,
-    email: data.email,
-    name: data.name,
-    full_access: data.full_access,
-    created_at: data.created_at,
-  };
-}
-
-// Save a NEW leader. The insert ignores an existing row with the same
-// email, so an existing leader's full_access is never overwritten. A
-// Supabase error throws before any mirror write happens.
-async function saveLeader(leader: LeaderRecord): Promise<void> {
-  const { error } = await getSupabaseAdmin()
-    .from("leaders")
-    .upsert({
-      id: leader.id,
-      email: leader.email.toLowerCase(),
-      name: leader.name,
-      full_access: leader.full_access,
-      created_at: leader.created_at,
-    }, { onConflict: "email", ignoreDuplicates: true });
-
-  if (error) {
-    throw new Error(`Supabase save leader failed: ${error.message}`);
-  }
+    .upsert(
+      { id: crypto.randomUUID(), email, name, full_access: false, created_at: new Date().toISOString() },
+      { onConflict: "email", ignoreDuplicates: true }
+    )
+    .select("id");
+  if (error) throw new Error(`Supabase save leader failed: ${error.message}`);
+  return Array.isArray(data) && data.length > 0;
 }
 
 // When someone signs up, take over any node their discipler already
@@ -123,62 +118,44 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Register a new leader (called during signup)
+// POST: Request access from /login. Same answer whether or not the email
+// is already a leader; only a new email gets a row and an admin email.
 export async function POST(request: NextRequest) {
+  let body: unknown;
   try {
-    const body = await request.json();
-    const { id, email, name } = body;
+    body = await request.json();
+  } catch {
+    return jsonError(400, "Invalid request");
+  }
 
-    if (!email || !name) {
-      return NextResponse.json(
-        { error: "Email and name required" },
-        { status: 400 }
-      );
-    }
+  const parsed = parseSignup(body);
+  if (!parsed.ok) {
+    if ("spam" in parsed) return NextResponse.json(RECEIVED);
+    return jsonError(400, parsed.error);
+  }
+  const { email, name } = parsed;
 
-    // Check if leader already exists
-    const existingLeader = await getLeader(email);
+  try {
+    // allow() throws if the limiter itself is down: that is a 500, never
+    // an unlimited sign-up.
+    if (!(await allow(RATE.signup, clientIp(request)))) return tooMany();
 
-    if (existingLeader) {
-      // Leader already exists, return their current access
-      return NextResponse.json({
-        success: true,
-        full_access: existingLeader.full_access,
-        message: "Leader already registered",
-      });
-    }
-
-    // Add new leader with full_access = false
-    const newLeader: LeaderRecord = {
-      id: id || Date.now().toString(),
-      email,
-      name,
-      full_access: false,
-      created_at: new Date().toISOString(),
-    };
-
-    await saveLeader(newLeader);
+    if (await leaderExists(email)) return NextResponse.json(RECEIVED);
+    if (!(await insertPendingLeader(email, name))) return NextResponse.json(RECEIVED);
 
     // Take over any node their discipler already created for them.
-    await claimNetworkNode(String(email).toLowerCase(), name);
+    await claimNetworkNode(email, name);
 
-    // Send email notification to admin about new leader signup
+    // The row is saved, so the sign-up has succeeded; a mail failure is
+    // logged, not reported.
     try {
       await sendLeaderSignupNotification(name, email);
     } catch (emailError) {
-      console.error("Failed to send leader signup notification email:", emailError);
+      console.error("leader-access: signup notification failed", emailError);
     }
 
-    return NextResponse.json({
-      success: true,
-      full_access: false,
-      message: "Leader registered with pending access",
-    });
+    return NextResponse.json(RECEIVED);
   } catch (error) {
-    console.error("Error registering leader:", error);
-    return NextResponse.json(
-      { error: "Failed to register leader" },
-      { status: 500 }
-    );
+    return serverError("leader-access POST", error);
   }
 }

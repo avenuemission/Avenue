@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("email");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  // Honeypot: hidden from people, filled by bots.
+  const [company, setCompany] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -44,8 +46,9 @@ export default function LoginPage() {
     } else if (mode === "request") {
       run(async () => {
         if (!name.trim()) throw new Error("Please enter your name");
-        await requestAccess(name, email);
-        setNotice(`We've sent a sign-in code to ${email.trim()}.`);
+        await requestAccess(name, email, company);
+        // The same words whether the email is new or already registered.
+        setNotice(`Thanks, your request has been received. We've sent a sign-in code to ${email.trim()}.`);
         setMode("code");
       });
     } else {
@@ -77,6 +80,18 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {mode === "request" && (
+              <input
+                type="text"
+                name="company"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                style={{ position: "absolute", left: "-9999px", opacity: 0 }}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
+            )}
             {mode === "request" && (
               <div>
                 <label className={LABEL}>Name</label>

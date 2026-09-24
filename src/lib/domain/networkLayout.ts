@@ -12,7 +12,6 @@ export interface NetworkPerson {
   id: string;
   firstName: string;
   lastName?: string | null;
-  email?: string | null;
   avatarUrl?: string | null;
   sentOutBy: string | null;
   linkStatus: "pending" | "confirmed";

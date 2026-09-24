@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import ProfileCard from "@/components/leaders/profile/ProfileCard";
 import EmailPrefsPanel from "@/components/leaders/emails/EmailPrefsPanel";
-import { leaderFetch } from "@/lib/client/leaderFetch";
+import { dedupedLeaderJson } from "@/lib/client/dedupeFetch";
 import { avatarFromProfileResponse, initialsOf, type AvatarSummary } from "@/lib/domain/profileAvatar";
 
 export interface HeaderAvatarProps {
@@ -36,12 +36,7 @@ export default function HeaderAvatar({ user }: HeaderAvatarProps) {
   useEffect(() => {
     if (!email) return;
     let cancelled = false;
-    leaderFetch("/api/leader-profile")
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) throw new Error(json?.error || `Could not load your profile (${res.status})`);
-        return json;
-      })
+    dedupedLeaderJson<unknown>("/api/leader-profile")
       .then((json) => {
         if (!cancelled) setSummary(avatarFromProfileResponse(json, fallbackName));
       })

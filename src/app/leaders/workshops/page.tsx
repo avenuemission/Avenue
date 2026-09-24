@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/client/auth";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import { Plus, ChevronRight, Users, Clock, BarChart2, LogOut, Trash2, Monitor } from "lucide-react";
 import { logout } from "@/lib/client/auth";
@@ -27,11 +27,12 @@ export default function WorkshopsPage() {
   const [clearError, setClearError] = useState<string | null>(null);
   const [includeLife3, setIncludeLife3] = useState(true);
 
+  // Any signed-in leader (the layout sends anyone else to /login).
+  const { user } = useLeaderSession();
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) { router.push("/login"); return; }
+    if (!user) return;
     fetchSessions();
-  }, [router]);
+  }, [user]);
 
   const fetchSessions = async () => {
     setLoading(true);

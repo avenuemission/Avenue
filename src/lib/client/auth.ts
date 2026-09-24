@@ -48,9 +48,11 @@ export async function verifyCode(email: string, code: string): Promise<User> {
   return user;
 }
 
-// Creates a pending leaders row (admin is notified), then sends a code.
-export async function requestAccess(name: string, email: string): Promise<void> {
-  const res = await postJson("/api/leader-access", { email: email.trim().toLowerCase(), name: name.trim() });
+// Asks for access (a new email becomes a pending leaders row and the admin
+// is told; the answer is the same for an email already registered), then
+// sends a sign-in code. `company` is the form's honeypot.
+export async function requestAccess(name: string, email: string, company = ""): Promise<void> {
+  const res = await postJson("/api/leader-access", { email: email.trim().toLowerCase(), name: name.trim(), company });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || "Could not register. Please try again.");

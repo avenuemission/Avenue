@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/client/auth";
 import { adminFetch } from "@/lib/client/adminFetch";
 import { useAdminKey } from "@/hooks/useAdminKey";
 import {
@@ -53,6 +52,8 @@ async function probe(key: string): Promise<"ok" | "wrong" | "locked" | "error"> 
 }
 
 export default function AdminPage() {
+  // Signed-in leaders only (the layout sends anyone else to /login), then
+  // the admin passcode below.
   const router = useRouter();
   // The stored passcode (sessionStorage "avenue_admin_key") and the one it
   // has been checked as. The admin is in once the two match.
@@ -62,10 +63,6 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState("");
   const [activeTab, setActiveTab] = useState("submissions");
   const authenticated = storedKey !== null && storedKey === verifiedKey;
-
-  useEffect(() => {
-    if (!getCurrentUser()) router.push("/login");
-  }, [router]);
 
   // A passcode kept from earlier in this tab is checked again on load.
   useEffect(() => {

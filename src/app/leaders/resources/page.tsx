@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getCurrentUser, logout, User } from "@/lib/client/auth";
+import { logout } from "@/lib/client/auth";
+import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { leaderFetch } from "@/lib/client/leaderFetch";
 import {
   LogOut,
@@ -89,52 +90,34 @@ interface DownloadableResource {
 
 export default function ResourcesPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [accessChecked, setAccessChecked] = useState(false);
+  // Full access only. Any answer but a confirmed full access (including a
+  // failed check) goes back to the dashboard, as before.
+  const { user, fullAccess, accessFailure } = useLeaderSession();
+  const hasAccess = fullAccess === true;
+  const accessChecked = fullAccess !== null || accessFailure !== null;
   const [downloads, setDownloads] = useState<DownloadableResource[]>([]);
   const [musicDownloads, setMusicDownloads] = useState<DownloadableResource[]>([]);
   const [loadingDownloads, setLoadingDownloads] = useState(true);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push("/login");
-      return;
-    }
-    
-    setUser(currentUser);
-    
-    // Check leader access
-    leaderFetch(`/api/leader-access`)
+    if (accessChecked && !hasAccess) router.push("/leaders");
+  }, [accessChecked, hasAccess, router]);
+
+  // Fetch all downloadable resources once full access is confirmed.
+  useEffect(() => {
+    if (!hasAccess) return;
+    leaderFetch(`/api/leader-resources`)
       .then((res) => res.json())
       .then((data) => {
-        setHasAccess(data.full_access === true);
-        setAccessChecked(true);
-        if (!data.full_access) {
-          router.push("/leaders");
-        } else {
-          // Fetch all downloadable resources
-          leaderFetch(`/api/leader-resources`)
-            .then((res) => res.json())
-            .then((data) => {
-              const allResources = data.resources || [];
-              // Separate music files from general downloads
-              setMusicDownloads(allResources.filter((r: DownloadableResource) => r.category === "music"));
-              setDownloads(allResources.filter((r: DownloadableResource) => r.category !== "music"));
-              setLoadingDownloads(false);
-            })
-            .catch(() => setLoadingDownloads(false));
-        }
+        const allResources = data.resources || [];
+        // Separate music files from general downloads
+        setMusicDownloads(allResources.filter((r: DownloadableResource) => r.category === "music"));
+        setDownloads(allResources.filter((r: DownloadableResource) => r.category !== "music"));
+        setLoadingDownloads(false);
       })
-      .catch(() => {
-        setAccessChecked(true);
-        router.push("/leaders");
-      });
-  }, [router]);
+      .catch(() => setLoadingDownloads(false));
+  }, [hasAccess]);
 
   const handleLogout = () => {
     logout();
@@ -172,7 +155,7 @@ export default function ResourcesPage() {
     }
   };
 
-  if (!mounted || !user || !accessChecked || !hasAccess) {
+  if (!user || !accessChecked || !hasAccess) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>
