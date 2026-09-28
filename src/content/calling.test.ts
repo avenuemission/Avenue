@@ -10,6 +10,18 @@ describe("Calling content", () => {
   it("gives every section with a video slot a summary", () => {
     for (const s of content.CALLING_SECTIONS) if (s.hasVideo) expect(s.summary.length).toBeGreaterThan(100);
   });
+  it("links every video section to its video in the Calling playlist, and only those", () => {
+    const ids = Object.fromEntries(content.CALLING_SECTIONS.map((s) => [s.id, s.youtubeId]));
+    expect(ids).toEqual({
+      layers: "tl4_rN6jrh0",
+      callable: "hSB0uoiVIqc",
+      shared: "-T3iIBc8zZQ",
+      apest: "OtRoQqBH724",
+      seasonal: "9GZrWGO8e4c",
+      conversation: null,
+    });
+    for (const s of content.CALLING_SECTIONS) expect(s.youtubeId !== null).toBe(s.hasVideo);
+  });
   it("has nine statements, three per layer, with ids s1 to s9", () => {
     expect(content.LAYER_STATEMENTS.map((s) => s.id)).toEqual([...CALLING_STATEMENT_IDS]);
     for (const layer of ["shared", "specific", "seasonal"] as const) {

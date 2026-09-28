@@ -4,7 +4,7 @@ Every word is Henry's, from "Scripts for Podcast on Calling".
 
 ## Section 1: What is a Calling
 
-About 6 minutes. Video: not yet recorded, the summary below shows in its place.
+About 6 minutes. Video: "What is a Calling?", https://www.youtube.com/watch?v=tl4_rN6jrh0 (the summary below is the script it follows).
 
 A career is what you get paid to do, but a calling is what you are made to do. Everyone is created for a calling. Anyone who is a disciple of Jesus has the exact same Shared Call, and it is permanent. Your Specific Call is a fusion of your personality, spiritual gifting and skills, and it is adaptive. Your Seasonal Call is often changing: a particular season, a particular place, or a particular ministry assignment.
 
@@ -32,7 +32,7 @@ A career is what you get paid to do, but a calling is what you are made to do. E
 
 ## Section 2: A Life that is Callable
 
-About 8 minutes. Video: not yet recorded, the summary below shows in its place.
+About 8 minutes. Video: "Callable", https://www.youtube.com/watch?v=hSB0uoiVIqc (the summary below is the script it follows).
 
 For so many of us, we haven't created the space to listen to God's voice, or to restructure our life if He does call us. All three levels of calling require us to surrender to Jesus. Being just one degree off the path God has for us can lead us somewhere we never intended to be. God cares far more about who we are becoming than what we are doing, and if God calls us, He will resource us.
 
@@ -53,7 +53,7 @@ For so many of us, we haven't created the space to listen to God's voice, or to 
 
 ## Section 3: The Shared Call
 
-About 6 minutes. Video: not yet recorded, the summary below shows in its place.
+About 6 minutes. Video: "Shared Calling", https://www.youtube.com/watch?v=-T3iIBc8zZQ (the summary below is the script it follows).
 
 The Great Commission is the mission statement God gave to the church, and it is our permanent calling. Before Jesus ever sends us out, He first calls us to be with Him (Mark 3:14). The word "go" is in the participle, so we can read it this way: as you go, make disciples. All of us have the call of inviting people into our life, the good, the bad and the ugly. We say yes to Jesus first, and then we are made ready as we follow Him.
 
@@ -72,7 +72,7 @@ No one is ready to be a disciple of Jesus. We say yes to Jesus first, and then w
 
 ## Section 4: The Specific Call
 
-About 6 minutes. Video: not yet recorded, the summary below shows in its place.
+About 8 minutes. Video: "Specific Calling", https://www.youtube.com/watch?v=OtRoQqBH724 (the summary below is the script it follows).
 
 Scripture gives us three primary gift passages: 1 Corinthians 12 covers Manifestation Gifts, Romans 12 covers Skill Gifts, and Ephesians 4 covers Calling Gifts: Apostles, Prophets, Evangelists, Shepherds and Teachers. In Ephesians 4, the gifts aren't just things people do; they are who people are. God gives these gifts not for leaders to do all the work themselves, but to be multipliers who equip everyone else. When every person functions in their gifting, the church moves toward unity and the fullness of Christ.
 
@@ -88,7 +88,7 @@ Scripture gives us three primary gift passages: 1 Corinthians 12 covers Manifest
 
 ## Section 5: The Seasonal Call
 
-About 8 minutes. Video: not yet recorded, the summary below shows in its place.
+About 10 minutes. Video: "Seasonal Calling", https://www.youtube.com/watch?v=9GZrWGO8e4c (the summary below is the script it follows).
 
 Seasonal calling is where your Shared Call and your Specific Call meet the actual terrain of your daily life. Your 1st space is your home, your 2nd space is your work, and your 3rd space is play. Knowing where God has already placed you across all three helps you figure out who you're called to reach. Your daily context across all three spaces is already your mission field. God has already given you His general instructions, so don't let fear paralyze you.
 

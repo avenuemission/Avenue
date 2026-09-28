@@ -1,7 +1,7 @@
 // Calling (phase 2) content. Every word is Henry's, from "Scripts for
 // Podcast on Calling" (C:\Users\User\Downloads). Edit here and mirror the
-// change in docs/calling-content.md. Adding a video later is one line:
-// set that section's youtubeId.
+// change in docs/calling-content.md. Each video section links its video
+// in the "Calling videos" YouTube playlist by youtubeId.
 import type { CallingSectionId, Layer, Willing } from "@/lib/domain/journey";
 import type { RoleKey } from "@/lib/domain/apest";
 import type { Space } from "@/lib/domain/people";
@@ -23,7 +23,7 @@ export const CALLING_SECTIONS: CallingSectionContent[] = [
     title: "What is a Calling",
     minutes: 6,
     hasVideo: true,
-    youtubeId: null,
+    youtubeId: "tl4_rN6jrh0",
     summary:
       "A career is what you get paid to do, but a calling is what you are made to do. Everyone is created for a calling. Anyone who is a disciple of Jesus has the exact same Shared Call, and it is permanent. Your Specific Call is a fusion of your personality, spiritual gifting and skills, and it is adaptive. Your Seasonal Call is often changing: a particular season, a particular place, or a particular ministry assignment.",
   },
@@ -33,7 +33,7 @@ export const CALLING_SECTIONS: CallingSectionContent[] = [
     title: "A Life that is Callable",
     minutes: 8,
     hasVideo: true,
-    youtubeId: null,
+    youtubeId: "hSB0uoiVIqc",
     summary:
       "For so many of us, we haven't created the space to listen to God's voice, or to restructure our life if He does call us. All three levels of calling require us to surrender to Jesus. Being just one degree off the path God has for us can lead us somewhere we never intended to be. God cares far more about who we are becoming than what we are doing, and if God calls us, He will resource us.",
   },
@@ -43,7 +43,7 @@ export const CALLING_SECTIONS: CallingSectionContent[] = [
     title: "The Shared Call",
     minutes: 6,
     hasVideo: true,
-    youtubeId: null,
+    youtubeId: "-T3iIBc8zZQ",
     summary:
       "The Great Commission is the mission statement God gave to the church, and it is our permanent calling. Before Jesus ever sends us out, He first calls us to be with Him (Mark 3:14). The word \"go\" is in the participle, so we can read it this way: as you go, make disciples. All of us have the call of inviting people into our life, the good, the bad and the ugly. We say yes to Jesus first, and then we are made ready as we follow Him.",
   },
@@ -51,9 +51,9 @@ export const CALLING_SECTIONS: CallingSectionContent[] = [
     id: "apest",
     number: 4,
     title: "The Specific Call",
-    minutes: 6,
+    minutes: 8,
     hasVideo: true,
-    youtubeId: null,
+    youtubeId: "OtRoQqBH724",
     summary:
       "Scripture gives us three primary gift passages: 1 Corinthians 12 covers Manifestation Gifts, Romans 12 covers Skill Gifts, and Ephesians 4 covers Calling Gifts: Apostles, Prophets, Evangelists, Shepherds and Teachers. In Ephesians 4, the gifts aren't just things people do; they are who people are. God gives these gifts not for leaders to do all the work themselves, but to be multipliers who equip everyone else. When every person functions in their gifting, the church moves toward unity and the fullness of Christ.",
   },
@@ -61,9 +61,9 @@ export const CALLING_SECTIONS: CallingSectionContent[] = [
     id: "seasonal",
     number: 5,
     title: "The Seasonal Call",
-    minutes: 8,
+    minutes: 10,
     hasVideo: true,
-    youtubeId: null,
+    youtubeId: "9GZrWGO8e4c",
     summary:
       "Seasonal calling is where your Shared Call and your Specific Call meet the actual terrain of your daily life. Your 1st space is your home, your 2nd space is your work, and your 3rd space is play. Knowing where God has already placed you across all three helps you figure out who you're called to reach. Your daily context across all three spaces is already your mission field. God has already given you His general instructions, so don't let fear paralyze you.",
   },
