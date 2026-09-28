@@ -31,6 +31,7 @@ const TABLES = [
   ["workshop_sessions", "code"],
   ["survey_responses", "id"],
   ["rate_limits", "key"],
+  ["crossing_scores", "id"],
 ];
 const PAGE = 1000;
 
