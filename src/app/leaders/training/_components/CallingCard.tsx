@@ -31,7 +31,7 @@ export default function CallingCard({ data, loaded, error, onReset }: CallingCar
 
   return (
     <div className="space-y-6">
-      <p className="font-serif text-2xl text-[var(--ink)]">Six sections, about 37 minutes</p>
+      <p className="font-sans font-bold uppercase tracking-tight text-xl text-[var(--ink)] md:text-2xl">Six sections, about 37 minutes</p>
       {!loaded ? (
         <p className="text-sm text-[var(--muted)]">Loading...</p>
       ) : error ? (

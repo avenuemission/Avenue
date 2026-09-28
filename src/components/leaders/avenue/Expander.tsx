@@ -13,8 +13,8 @@ export interface ExpanderProps {
   children: ReactNode;
 }
 
-// A button row that opens a section in place (round 2 spec 3 and 5): serif
-// heading, an optional one-line intro, and, only while closed, a one-line
+// A button row that opens a section in place (round 2 spec 3 and 5): a bold
+// uppercase heading, an optional one-line intro, and, only while closed, a one-line
 // summary. 44 px or taller, aria-expanded, a hairline above. The chevron
 // turns without animating under reduced motion. The heading button holds
 // only the title and chevron, so its accessible name stays short; the
@@ -39,7 +39,7 @@ export default function Expander({ id, title, intro, summary, open, onToggle, ch
           onClick={onToggle}
           className="flex min-h-[44px] w-full items-center gap-4 pt-5 pb-1 text-left"
         >
-          <span className="min-w-0 flex-1 font-serif text-2xl leading-tight text-[var(--ink)]">{title}</span>
+          <span className="min-w-0 flex-1 font-sans font-bold uppercase tracking-tight text-xl leading-tight md:text-2xl text-[var(--ink)]">{title}</span>
           <ChevronDown
             aria-hidden="true"
             className={`h-5 w-5 flex-shrink-0 text-[var(--muted)] motion-safe:transition-transform ${

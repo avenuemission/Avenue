@@ -258,7 +258,7 @@ export default function TrainingPage() {
         {/* Greeting (spec 4.1) */}
         <div className="mb-8 mt-6">
           <p className="eyebrow">Your journey</p>
-          <h1 className="mt-2 font-serif text-[34px] leading-[1.05] text-[var(--ink)] md:text-[52px]">
+          <h1 className="mt-2 font-sans font-bold uppercase tracking-tight text-[clamp(26px,7.2vw,52px)] leading-[1.05] text-[var(--ink)]">
             {greetingFor(greetingTime, user.name)}
           </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">

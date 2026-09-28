@@ -131,7 +131,7 @@ export default function Phase4Growth({
         {/* The weekly check-in: a raised card because it takes input */}
         <div className="night-card p-6">
           <span className="eyebrow">This week</span>
-          <h4 className="mt-1 mb-4 font-serif text-2xl text-[var(--ink)]">Week of {currentWeekLabel}</h4>
+          <h4 className="mt-1 mb-4 font-sans font-bold uppercase tracking-tight text-xl text-[var(--ink)] md:text-2xl">Week of {currentWeekLabel}</h4>
           {!checkinsLoaded ? (
             <p className="text-sm text-[var(--muted)]">Loading your check-in...</p>
           ) : checkinLoadError ? (
@@ -227,12 +227,12 @@ export default function Phase4Growth({
                     key={metric}
                     className="border-b border-[var(--line)] py-6 md:border-b-0 md:px-5 md:first:pl-0 md:last:pr-0"
                   >
-                    <h4 className="font-serif text-xl text-[var(--ink)]">{title}</h4>
+                    <h4 className="font-sans font-bold uppercase tracking-tight text-lg text-[var(--ink)] md:text-xl">{title}</h4>
                     <p className="mt-1 mb-3 text-xs text-[var(--muted)]">{definition}</p>
                     <Glow as="div" trigger={count} className="-mx-2 mb-3 inline-block rounded-lg px-2">
                       <p className="tabular-nums">
                         <span
-                          className={`font-serif text-4xl ${count > 0 ? "text-[var(--lamp)]" : "text-[var(--dim)]"}`}
+                          className={`font-sans text-4xl font-bold ${count > 0 ? "text-[var(--lamp)]" : "text-[var(--dim)]"}`}
                         >
                           {count}
                         </span>

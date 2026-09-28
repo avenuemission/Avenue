@@ -155,7 +155,7 @@ export default function LeadersPage() {
         {/* Greeting (spec 4.4) */}
         <div className="mb-10">
           <p className="eyebrow">Leader dashboard</p>
-          <h1 className="mt-2 font-serif text-[34px] leading-[1.05] text-[var(--ink)] md:text-[52px]">
+          <h1 className="mt-2 font-sans font-bold uppercase tracking-tight text-[clamp(26px,7.2vw,52px)] leading-[1.05] text-[var(--ink)]">
             {greetingFor(greetingTime, user.name)}
           </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">Access resources, training, and tools for Avenue leaders</p>

@@ -3,6 +3,7 @@
 **Date:** 2026-09-24
 **Status:** Approved in chat by Henry, awaiting review of this written spec
 **Mockup:** https://claude.ai/artifact/68jqrVdTcwnkW4vfv4Ra3m (map A, phase opening, moment, phone view)
+**Type update (2026-09-28):** the serif below was later removed. Leader pages and /login now use Geist only: titles are Geist bold uppercase with tight tracking (like the public pages), scripture is Geist italic, long text is Geist semibold.
 
 ---
 

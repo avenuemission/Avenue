@@ -20,7 +20,7 @@ const CHART_H = 160;
 
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lamp)]";
 const card = "rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6";
-const heading = "font-serif text-2xl text-white";
+const heading = "font-sans font-bold uppercase tracking-tight text-xl text-white md:text-2xl";
 const th = "px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--muted)]";
 const td = "px-3 py-2 text-sm text-white";
 const button = `inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[var(--border)] px-4 text-sm text-white hover:bg-[var(--surface-hover)] ${focus}`;
@@ -94,7 +94,7 @@ export default function ChurchHealthTab({ adminKey }: { adminKey: string }) {
                 <span aria-hidden="true" className="inline-block h-2 w-2 rounded-full" style={{ background: LINE_COLOURS[m] }} />
                 {METRIC_LABELS[m]}
               </p>
-              <p className="mt-1 font-serif text-4xl text-white">{data.totals[m]}</p>
+              <p className="mt-1 font-sans text-4xl font-bold text-white">{data.totals[m]}</p>
             </div>
           ))}
         </div>

@@ -131,7 +131,7 @@ export default function NextStepCard({ enabled, apprenticesOnRung, networkFailed
       ) : null}
       <div className="night-card-lit p-6">
         <span className="eyebrow">Your next step</span>
-        <h2 className="mt-2 font-serif text-3xl leading-tight text-[var(--ink)]">{step.title}</h2>
+        <h2 className="mt-2 font-sans font-bold uppercase tracking-tight text-2xl leading-tight md:text-3xl text-[var(--ink)]">{step.title}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{step.body}</p>
         <Link
           href={step.href}

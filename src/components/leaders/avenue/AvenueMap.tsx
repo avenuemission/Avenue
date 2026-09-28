@@ -108,7 +108,13 @@ export default function AvenueMap({ stops, selectedId, onSelect, hereAction, onA
               </g>
             );
           })}
-          <g style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }} fontSize={26} textAnchor="middle">
+          <g
+            style={{ fontFamily: "var(--font-geist-sans), sans-serif", textTransform: "uppercase" }}
+            fontSize={22}
+            fontWeight={700}
+            letterSpacing={-0.5}
+            textAnchor="middle"
+          >
             {stops.map((stop, i) => (
               <text key={stop.id} x={LAMP_X[i]} y={392} style={{ fill: stop.status === "ahead" ? "var(--dim)" : "var(--ink)" }}>
                 {stop.name}

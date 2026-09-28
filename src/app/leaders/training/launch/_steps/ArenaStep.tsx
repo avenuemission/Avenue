@@ -64,7 +64,7 @@ function CountersBar({ state }: { state: ArenaState }) {
         {COUNTER_KEYS.map((k) => (
           <div key={k} className="text-center">
             <p
-              className={`font-serif text-4xl tabular-nums ${
+              className={`font-sans text-4xl font-bold tabular-nums ${
                 state.counters[k] > 0 ? "text-[var(--lamp)]" : "text-[var(--dim)]"
               }`}
             >
@@ -85,7 +85,7 @@ function CountersBar({ state }: { state: ArenaState }) {
 function ScoreKey() {
   return (
     <div className="border-y border-[var(--line)] py-5">
-      <h4 className="font-serif text-xl text-[var(--ink)]">How the Arena keeps score</h4>
+      <h4 className="font-sans font-bold uppercase tracking-tight text-lg text-[var(--ink)] md:text-xl">How the Arena keeps score</h4>
       <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{ARENA_SCORE_INTRO}</p>
       <dl className="mt-4 space-y-3">
         {COUNTER_KEYS.map((k) => (
@@ -150,7 +150,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
         <CountersBar state={state} />
         {chosen ? (
           <div>
-            <p className="font-serif text-2xl leading-snug text-[var(--ink)]">{chosen.verdict}</p>
+            <p className="font-sans text-2xl font-semibold leading-snug text-[var(--ink)]">{chosen.verdict}</p>
             <p className="mt-3 text-sm text-gray-300">Effect: {chosen.counters}</p>
             <p className="eyebrow mt-5">Principle</p>
             <p className="mt-2 text-base font-semibold leading-relaxed text-[var(--ink)]">{chosen.principle}</p>
@@ -192,7 +192,7 @@ export default function ArenaStep({ plan, value, save, onShowPlan }: ArenaStepPr
                   className="absolute left-[5px] top-[2px] h-[14px] w-[14px] rounded-full bg-[var(--lamp)] shadow-[0_0_16px_4px_rgba(255,197,107,0.5)]"
                 />
                 <p className="night-label">Month {e.month}</p>
-                <p className="mt-1 font-serif text-xl leading-snug text-[var(--ink)]">{e.principle}</p>
+                <p className="mt-1 font-sans text-xl font-semibold leading-snug text-[var(--ink)]">{e.principle}</p>
                 <p className="mt-1 text-sm text-gray-300">{e.choiceLabel}</p>
                 <p className="mt-1 text-sm text-[var(--muted)]">{e.anchor}</p>
               </li>

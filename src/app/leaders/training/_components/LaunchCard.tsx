@@ -30,7 +30,7 @@ export default function LaunchCard({ data, loaded, error, onReset }: LaunchCardP
 
   return (
     <div className="space-y-6">
-      <p className="font-serif text-2xl text-[var(--ink)]">Seven steps, then your plan</p>
+      <p className="font-sans font-bold uppercase tracking-tight text-xl text-[var(--ink)] md:text-2xl">Seven steps, then your plan</p>
       {!loaded ? (
         <p className="text-sm text-[var(--muted)]">Loading...</p>
       ) : error ? (

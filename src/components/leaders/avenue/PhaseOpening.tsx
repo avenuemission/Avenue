@@ -12,7 +12,7 @@ export interface PhaseOpeningProps {
 }
 
 // The opening of a stop (spec 2, mockup section 2): "Stop N of 5 · Ephesians
-// 4" with a small lit bulb, the phase name in large serif, the verse in serif
+// 4" with a small lit bulb, the phase name in large bold uppercase, the verse in
 // italic followed by (NLT) and the full reference in mono. With no verse
 // text, the reference itself is the headline: never guessed text.
 export default function PhaseOpening({

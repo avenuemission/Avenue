@@ -60,7 +60,7 @@ export default function EmailPrefsPanel() {
 
   return (
     <section aria-labelledby="email-prefs-heading" className="night-card p-5 sm:p-6">
-      <h2 id="email-prefs-heading" className="font-serif text-2xl text-[var(--ink)]">
+      <h2 id="email-prefs-heading" className="font-sans font-bold uppercase tracking-tight text-xl text-[var(--ink)] md:text-2xl">
         Emails
       </h2>
       {/* Henry to check wording */}

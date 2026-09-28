@@ -212,7 +212,7 @@ export default function Phase5Multiply({
                       className="w-full min-h-[44px] flex items-center gap-3 text-left py-4"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="truncate font-serif text-xl text-[var(--ink)]">{name}</p>
+                        <p className="truncate font-sans text-xl font-semibold text-[var(--ink)]">{name}</p>
                         <p
                           className={`text-sm mt-0.5 ${
                             person.apprenticeStep >= 1 ? "text-[var(--lamp)]" : "text-[var(--muted)]"

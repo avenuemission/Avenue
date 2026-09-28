@@ -30,7 +30,7 @@ export default function WeekDetail({ week, checkin, onClose }: WeekDetailProps) 
             {GAUGES.map((g) => (
               <div key={g.key}>
                 <dt className="text-xs text-[var(--muted)]">{g.label}</dt>
-                <dd className="font-serif text-3xl tabular-nums" style={{ color: g.colour }}>
+                <dd className="font-sans text-3xl font-bold tabular-nums" style={{ color: g.colour }}>
                   {checkin[g.key]}
                 </dd>
               </div>

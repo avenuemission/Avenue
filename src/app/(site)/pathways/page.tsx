@@ -148,7 +148,7 @@ export default async function PathwaysPage() {
               </p>
 
               <div className="pt-4">
-                {/* No prefetch: /login pulls in supabase-js and the serif font. */}
+                {/* No prefetch: /login pulls in supabase-js. */}
                 <Link
                   href="/login"
                   prefetch={false}

@@ -78,7 +78,7 @@ export default function ResetWorksheet({ kind, onReset, variant }: ResetWorkshee
           if (busy) e.preventDefault();
         }}
       >
-        <h2 id={titleId} className="font-serif text-2xl text-[var(--ink)]">
+        <h2 id={titleId} className="font-sans font-bold uppercase tracking-tight text-xl text-[var(--ink)] md:text-2xl">
           {copy.title}
         </h2>
         <div id={bodyId}>

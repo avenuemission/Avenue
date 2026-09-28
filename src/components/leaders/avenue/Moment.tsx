@@ -10,8 +10,8 @@ export interface MomentProps {
   onDismiss: () => void;
 }
 
-// A milestone (spec 2 and 3): a lamp that ignites over about 1.4 s, a serif
-// line and a small caption, in a card fixed to the bottom of the screen so
+// A milestone (spec 2 and 3): a lamp that ignites over about 1.4 s, a bold
+// uppercase line and a small caption, in a card fixed to the bottom of the screen so
 // it is seen wherever the leader has scrolled. Under reduced motion the CSS
 // shows the lit state at once. The live region stays mounted so the text is
 // announced when a moment appears.
@@ -35,7 +35,7 @@ export default function Moment({ title, caption, play, playKey, onDismiss }: Mom
             <rect x="57" y="40" width="6" height="104" fill="#3a4458" />
             <rect className="av-bulbfill" x="40" y="28" width="40" height="13" rx="4" fill="#1a2130" />
           </svg>
-          <p className="mt-1 font-serif text-[26px] leading-tight text-[var(--ink)] md:text-[32px]">{title}</p>
+          <p className="mt-1 font-sans font-bold uppercase tracking-tight text-[clamp(20px,6vw,26px)] leading-tight text-[var(--ink)] md:text-[32px]">{title}</p>
           <p className="text-sm text-[var(--muted)]">{caption}</p>
           <button
             type="button"
