@@ -899,3 +899,6 @@ button.av-lamp {
   .scene .lit { fill: var(--lamp); }
   .scene .grow { transform: scale(1); }
 }
+
+/* Off screen: SceneStage adds .paused so the endless breathing stops. */
+.scene.paused * { animation-play-state: paused !important; } /* beats the .play shorthands */

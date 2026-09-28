@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SCENE_THRESHOLD, playScene, stillScene, type SceneRoot } from "./sceneStage";
+import { SCENE_THRESHOLD, playScene, sceneVisibility, stillScene, type SceneRoot } from "./sceneStage";
 
 function fakeRoot(ats: (string | undefined)[]) {
   const classes = new Set<string>();
@@ -48,6 +48,17 @@ describe("stillScene", () => {
   });
 });
 
-it("plays once 35% of the scene is in view", () => {
-  expect(SCENE_THRESHOLD).toBe(0.35);
+describe("sceneVisibility", () => {
+  const view = (isIntersecting: boolean, intersectionRatio: number) => ({ isIntersecting, intersectionRatio });
+
+  it("plays once enough of the scene is in view, and only the first time", () => {
+    expect(sceneVisibility(view(true, 0.1), false)).toEqual({ play: false, paused: false });
+    expect(sceneVisibility(view(true, SCENE_THRESHOLD), false)).toEqual({ play: true, paused: false });
+    expect(sceneVisibility(view(true, 1), true)).toEqual({ play: false, paused: false });
+  });
+
+  it("pauses when the scene leaves the screen and resumes when it comes back", () => {
+    expect(sceneVisibility(view(false, 0), true)).toEqual({ play: false, paused: true });
+    expect(sceneVisibility(view(true, 0.01), true)).toEqual({ play: false, paused: false });
+  });
 });

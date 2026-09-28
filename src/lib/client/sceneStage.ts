@@ -29,3 +29,21 @@ export function playScene(root: SceneRoot): void {
 export function stillScene(root: SceneRoot): void {
   root.classList.add("still");
 }
+
+/** What an IntersectionObserver entry means for a scene. */
+interface SceneView {
+  isIntersecting: boolean;
+  intersectionRatio: number;
+}
+
+/**
+ * Decide from one observer entry whether to start the scene (the first time
+ * enough of it is in view) and whether its breathing should pause (any time
+ * it is fully off screen, so infinite animations cost nothing there).
+ */
+export function sceneVisibility(view: SceneView, played: boolean): { play: boolean; paused: boolean } {
+  return {
+    play: !played && view.isIntersecting && view.intersectionRatio >= SCENE_THRESHOLD,
+    paused: !view.isIntersecting,
+  };
+}
