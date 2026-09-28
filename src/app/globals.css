@@ -902,3 +902,73 @@ button.av-lamp {
 
 /* Off screen: SceneStage adds .paused so the endless breathing stops. */
 .scene.paused * { animation-play-state: paused !important; } /* beats the .play shorthands */
+
+/* ============================================================ */
+/* LANDING SKYLINE: the home page hero                           */
+/* Ported from docs/design/landing-skyline-mockup.html (draft 5),*/
+/* which uses its own timings, a darker unlit tone and a wash.   */
+/* ============================================================ */
+
+.scene-skyline { --dim: #1a2130; }
+.scene .wash { transform: scaleY(0); transform-box: fill-box; transform-origin: 60% 0%; opacity: 0; }
+.scene.play .wash { animation: skyline-wash 3.2s ease-out forwards var(--d, 0s); }
+.scene-skyline.play .fade { animation: scene-fade-in 1s ease forwards var(--d, 0s); }
+.scene-skyline.play .glow {
+  animation: scene-fade-in 1.5s ease forwards var(--d, 0s),
+    skyline-breathe 5s ease-in-out infinite calc(var(--d, 0s) + 1.5s);
+}
+.scene-skyline.play .lit { animation: scene-light-up 0.8s ease forwards var(--d, 0s); }
+.scene-skyline.play .grow {
+  animation: scene-grow 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards var(--d, 0s),
+    skyline-breathe-scale 6s ease-in-out infinite calc(var(--d, 0s) + 2.4s);
+}
+@keyframes skyline-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+@keyframes skyline-breathe-scale { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.93); } }
+@keyframes skyline-wash {
+  0% { opacity: 0; transform: scaleY(0.05); }
+  30% { opacity: 1; }
+  100% { opacity: 0.8; transform: scaleY(1); }
+}
+.scene.still .wash { transform: scaleY(1); opacity: 0.8; }
+@media (prefers-reduced-motion: reduce) {
+  .scene .wash { transform: scaleY(1); opacity: 0.8; }
+}
+
+/* Phones: a window on the scene cropped around the cross (the mockup's
+   viewBox x 450 to 990 from y 60, ending where the scene ends at 675
+   rather than on empty night below it). Desktop: the scene fills the hero. */
+.skyline-frame {
+  position: relative;
+  aspect-ratio: 540 / 615;
+  overflow: hidden;
+}
+.skyline-frame .scene {
+  position: absolute;
+  inset: 0;
+}
+.skyline-frame .scene svg {
+  position: absolute;
+  left: -83.3333%; /* 450 / 540 */
+  top: -9.7561%; /* 60 / 615 */
+  width: 222.2222%; /* 1200 / 540 */
+  height: 109.7561%; /* 675 / 615 */
+}
+.skyline-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(5, 7, 12, 0.75) 0%, rgba(5, 7, 12, 0.35) 38%, rgba(5, 7, 12, 0) 60%);
+}
+@media (min-width: 768px) {
+  .skyline-frame {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+  }
+  .skyline-frame .scene svg {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+}

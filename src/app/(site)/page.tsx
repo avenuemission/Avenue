@@ -1,85 +1,44 @@
-import Image from "next/image";
 import Link from "next/link";
+import SceneStage from "@/components/site/scenes/SceneStage";
+import SkylineScene from "@/components/site/scenes/SkylineScene";
 
 export const revalidate = 300;
 
+/**
+ * The landing hero: Melbourne at night with six streets running to a cross
+ * on the horizon (docs/design/landing-skyline-mockup.html, draft 5). Desktop:
+ * the scene fills the hero with the text top left over a dark scrim. Phones:
+ * the scene on top, cropped around the cross, and the text centred below.
+ */
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
-      {/* Hero Section - Full viewport */}
-      <section className="relative h-screen flex items-center">
-        {/* Background - Dark space */}
-        <div className="absolute inset-0 bg-black" />
+    <div className="bg-[var(--night)] overflow-hidden">
+      <section className="relative md:h-[calc(100svh-4rem)] md:min-h-[560px]">
+        <div className="skyline-frame">
+          <SceneStage trigger="load" className="scene-skyline">
+            <SkylineScene />
+          </SceneStage>
+          <div aria-hidden="true" className="skyline-scrim hidden md:block" />
+        </div>
 
-        <div className="relative z-10 w-full h-full flex flex-col md:flex-row items-center justify-center md:justify-start">
-          {/* Mobile Layout - Stacked */}
-          <div className="md:hidden flex flex-col items-center justify-start h-full px-6 text-center pt-16">
-            {/* Space for the earth, which is drawn once below for both layouts */}
-            <div aria-hidden="true" className="w-[280px] h-[280px] mb-4" />
-            
-            {/* Text Content - Below Earth */}
-            <div className="max-w-xs pb-20">
-              <h1 className="hero-in text-3xl font-bold uppercase tracking-tight text-white leading-tight mb-3">
-                ON EARTH
-                <br />
-                AS IN HEAVEN
-              </h1>
-              <p className="hero-in text-gray-300 text-xs mb-4 px-2 leading-relaxed" style={{ animationDelay: "120ms" }}>
-                Avenue is a decentralised movement of people following Jesus,
-                convinced that disciple-making doesn&apos;t require more church
-                buildings, just the willingness to open the spaces we already
-                have
-              </p>
-              <Link
-                href="/vision"
-                className="hero-in inline-block bg-[var(--accent)] text-white px-8 py-3 rounded-full font-medium tracking-wider hover:brightness-110 transition-all"
-                style={{ animationDelay: "240ms" }}
-              >
-                EXPLORE
-              </Link>
-            </div>
-          </div>
-
-          {/* Desktop Layout - Side by Side */}
-          <div className="hidden md:flex items-center w-full h-full">
-            {/* Left Content - Positioned closer to earth */}
-            <div className="absolute left-[15%] md:left-[20%] lg:left-[25%] z-20 max-w-xl">
-              <h1 className="hero-in text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white leading-tight mb-6">
-                ON EARTH
-                <br />
-                AS IN HEAVEN
-              </h1>
-              <p className="hero-in text-gray-400 text-sm md:text-base max-w-md mb-8" style={{ animationDelay: "120ms" }}>
-                Avenue is a decentralised movement of people following Jesus,
-                convinced that disciple-making doesn&apos;t require more church
-                buildings, just the willingness to open the spaces we already
-                have
-              </p>
-              <Link
-                href="/vision"
-                className="hero-in inline-block bg-[var(--accent)] text-white px-8 py-3 rounded-full font-medium tracking-wider hover:brightness-110 transition-all"
-                style={{ animationDelay: "240ms" }}
-              >
-                EXPLORE
-              </Link>
-            </div>
-          </div>
-
-          {/* The earth, one image for both layouts. Mobile: 280px, centred at
-              the top of the stacked column (over the spacer above). Desktop:
-              much larger, on the right. It is the LCP image, so it is preloaded. */}
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:top-1/2 md:-translate-y-1/2 md:translate-x-[10%] lg:translate-x-[5%]">
-            <div className="relative w-[280px] h-[280px] md:w-[1200px] md:h-[1200px] lg:w-[1500px] lg:h-[1500px] xl:w-[1800px] xl:h-[1800px]">
-              <Image
-                src="/images/home_page_earth.jpg"
-                alt="Earth from space"
-                fill
-                sizes="(min-width: 1280px) 1800px, (min-width: 1024px) 1500px, (min-width: 768px) 1200px, 280px"
-                className="object-contain"
-                preload
-              />
-            </div>
-          </div>
+        <div className="relative z-10 px-6 pt-5 pb-16 text-center md:absolute md:left-[5.5%] md:top-[11%] md:w-[min(42%,34rem)] md:p-0 md:text-left">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold uppercase tracking-tight text-white leading-[1.02] text-balance mb-3 md:mb-5">
+            Unleashing <span className="whitespace-nowrap">God-given</span> potential
+          </h1>
+          <p
+            className="hero-in text-[#b9c0cf] text-sm md:text-base lg:text-lg leading-relaxed max-w-sm mx-auto md:mx-0 md:max-w-md mb-5 md:mb-7"
+            style={{ animationDelay: "120ms" }}
+          >
+            Avenue is a decentralised movement of people following Jesus, convinced that disciple-making
+            doesn&apos;t require more church buildings, just the willingness to open the spaces we already have
+          </p>
+          <Link
+            href="/vision"
+            className="hero-in inline-block bg-[var(--accent)] text-white px-8 py-3 rounded-full font-medium tracking-wider hover:brightness-110 transition-all"
+            style={{ animationDelay: "240ms" }}
+          >
+            EXPLORE
+          </Link>
         </div>
       </section>
     </div>
