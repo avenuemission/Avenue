@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ImageCarousel from "@/components/site/ImageCarousel";
 import DisclosureGroup from "./_components/DisclosureGroup";
+import CrossTheAvenue from "./_components/CrossTheAvenue";
 import { getCarouselImages } from "@/lib/server/content";
 import { shuffled } from "@/lib/domain/shuffle";
 import PageTitle from "@/components/ui/PageTitle";
@@ -218,6 +219,19 @@ export default async function VisionPage() {
           </div>
         </div>
       </section>
+
+      {/* ===================== */}
+      {/* CROSS THE AVENUE: a small game to close the page */}
+      {/* ===================== */}
+      <Section
+        eyebrow="Take a breather"
+        title="Cross the Avenue"
+        lead="Hop across the streets of Melbourne at night. Every streetlight you pass comes on."
+        width="wide"
+        centered
+      >
+        <CrossTheAvenue />
+      </Section>
     </div>
   );
 }

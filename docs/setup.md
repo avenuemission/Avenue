@@ -73,5 +73,6 @@ Pending leaders can sign in and use most leader pages. They see only their own p
 | Site stats | The counters on `/pathways` |
 | Church health | Leader activity overview |
 | Email previews | Renders each leader email for checking |
+| Game scores | The Cross the Avenue leaderboard on `/vision`: delete rude initials or impossible scores |
 
 Public pages show content edits on the next request (the write calls `revalidatePath`).

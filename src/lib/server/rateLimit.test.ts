@@ -23,6 +23,7 @@ describe("RATE", () => {
       workshopCode: { name: "ws-code", windowSeconds: 600, max: 300 },
       workshopSubmit: { name: "ws-submit", windowSeconds: 600, max: 200 },
       adminFail: { name: "admin-fail", windowSeconds: 900, max: 5 },
+      crossingScore: { name: "crossing", windowSeconds: 600, max: 60 },
     });
   });
 });

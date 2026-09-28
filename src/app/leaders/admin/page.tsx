@@ -18,6 +18,7 @@ import {
   BookOpen,
   BarChart3,
   HeartPulse,
+  Gamepad2,
 } from "lucide-react";
 import SubmissionsTab from "./_tabs/SubmissionsTab";
 import LeadersTab from "./_tabs/LeadersTab";
@@ -27,6 +28,7 @@ import GuidesTab from "./_tabs/GuidesTab";
 import StatsTab from "./_tabs/StatsTab";
 import ChurchHealthTab from "./_tabs/ChurchHealthTab";
 import EmailPreviewTab from "./_tabs/EmailPreviewTab";
+import GameScoresTab from "./_tabs/GameScoresTab";
 
 const TABS = [
   { id: "submissions", label: "Form Submissions", icon: FileText },
@@ -37,6 +39,7 @@ const TABS = [
   { id: "stats", label: "Site Stats", icon: BarChart3 },
   { id: "health", label: "Church Health", icon: HeartPulse },
   { id: "emails", label: "Email Previews", icon: Mail },
+  { id: "game", label: "Game Scores", icon: Gamepad2 },
 ];
 
 const LOCKED_OUT = "Too many attempts. Please wait a few minutes and try again.";
@@ -203,6 +206,7 @@ export default function AdminPage() {
         {activeTab === "stats" && <StatsTab adminKey={storedKey} />}
         {activeTab === "health" && <ChurchHealthTab adminKey={storedKey} />}
         {activeTab === "emails" && <EmailPreviewTab adminKey={storedKey} />}
+        {activeTab === "game" && <GameScoresTab adminKey={storedKey} />}
       </div>
     </div>
   );

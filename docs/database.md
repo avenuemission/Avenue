@@ -34,6 +34,7 @@ What is in the Supabase Postgres database, how the tables relate, who can touch 
 | `workshop_sessions` | Workshop room codes | `code` |
 | `survey_responses` | One workshop survey answer set | `id` |
 | `rate_limits` | Hit counters per rate-limit key and window | `key` |
+| `crossing_scores` | Cross the Avenue leaderboard on `/vision`: three-letter initials, score, game length | `id` |
 
 ## Relationships
 
@@ -105,6 +106,7 @@ There is no migration runner. Each file in `supabase/migrations/` is pasted into
 | `016_typed_columns` | `study_guides.guide_on` and `leader_profiles.pathway_group_id`, synced from the old text columns by triggers | ✅ |
 | `017_indexes_invoker_and_submissions` | Two indexes, `worksheet_set_section` as invoker, drops the anon insert policy | ✅ |
 | `018_post_push_lockdown` | Revokes all anon and authenticated access, drops the old text columns and sync triggers | ❌ **After the push only** |
+| `019_crossing_scores` | `crossing_scores` table for the Vision page game. New table only, safe before the code is live | ❌ Before the game's push |
 
 ### How to apply one
 
