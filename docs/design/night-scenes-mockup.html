@@ -1,0 +1,392 @@
+<title>Avenue Night Scenes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #f4f5f8;
+    --paper-ink: #151b2b;
+    --paper-muted: #5c6376;
+    --line: #e0e3ea;
+    --night: #05070c;
+    --night-2: #0a0e16;
+    --street: #0d121b;
+    --edge: #1a2130;
+    --ink: #eef1f7;
+    --muted: #9ca3af;
+    --dim: #2a3345;
+    --dim-2: #3a4458;
+    --lamp: #ffc56b;
+    --lamp-2: #ffdca0;
+    --blue: #4f7cff;
+    --sans: "Geist", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+  }
+  body { background: var(--ground); color: var(--paper-ink); font-family: var(--sans); font-size: 17px; line-height: 1.55; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding-inline: 18px; padding-block: 44px 90px; }
+  header.top { max-width: 70ch; display: grid; gap: 10px; margin-bottom: 36px; }
+  .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #b06d0c; }
+  h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 700; text-transform: uppercase; letter-spacing: -0.02em; line-height: 1.05; margin: 0; }
+  .lede { color: var(--paper-muted); margin: 0; }
+  .block { margin-top: 44px; display: grid; gap: 12px; }
+  .note { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; }
+  .note b { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--paper-ink); }
+  .note span { color: var(--paper-muted); font-size: 15.5px; }
+  /* A mock of the real site section */
+  .site { background: var(--night); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1fr; gap: 0; align-items: center; }
+  @media (max-width: 860px) { .site { grid-template-columns: 1fr; } }
+  .stage { position: relative; padding: 14px; }
+  .stage svg { width: 100%; height: auto; display: block; }
+  .replay { position: absolute; right: 16px; bottom: 16px; font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  .replay:hover { background: rgba(255,255,255,.12); }
+  .replay:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+  .copy { padding: 28px 30px 34px; color: var(--muted); }
+  .copy .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--lamp); }
+  .copy h2 { color: #fff; font-size: clamp(26px, 3.4vw, 40px); font-weight: 700; text-transform: uppercase; letter-spacing: -0.02em; line-height: 1.02; margin: 10px 0 16px; text-wrap: balance; }
+  .copy p { margin: 0 0 12px; max-width: 46ch; font-size: 16.5px; line-height: 1.6; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .pills span { border: 1px solid rgba(255,255,255,.14); background: #0c0d10; color: #fff; border-radius: 999px; padding: 8px 16px; font-size: 12.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  footer { margin-top: 48px; color: var(--paper-muted); font-size: 15px; max-width: 70ch; }
+
+  /* ---------- scene animation primitives ---------- */
+  .fade { opacity: 0; }
+  .play .fade { animation: fadeIn .9s ease forwards; animation-delay: var(--d, 0s); }
+  .glow { opacity: 0; }
+  .play .glow { animation: fadeIn 1.4s ease forwards var(--d, 0s), breathe 4.5s ease-in-out infinite calc(var(--d, 0s) + 1.4s); }
+  .lit { fill: var(--dim); }
+  .play .lit { animation: lightUp .7s ease forwards; animation-delay: var(--d, 0s); }
+  .draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); }
+  .play .draw { animation: draw 1.6s ease forwards; animation-delay: var(--d, 0s); }
+  .walk { opacity: 0; }
+  .play .walk { animation: walk var(--t, 2.4s) ease-in-out forwards; animation-delay: var(--d, 0s); }
+  .travel { opacity: 0; }
+  .play .travel { animation: travel var(--t, 2s) ease-in-out forwards; animation-delay: var(--d, 0s); }
+  .grow { transform: scale(0); transform-box: fill-box; transform-origin: center; }
+  .play .grow { animation: grow 1.6s cubic-bezier(.2,.8,.2,1) forwards var(--d, 0s), breatheScale 5s ease-in-out infinite calc(var(--d, 0s) + 1.6s); }
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .62; } }
+  @keyframes lightUp { to { fill: var(--lamp); } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes walk { 0% { opacity: 0; transform: translateX(var(--from)); } 12% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; transform: translateX(0); } }
+  @keyframes travel { 0% { opacity: 0; transform: translate(var(--fx), var(--fy)); } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(0, 0); } }
+  @keyframes grow { to { transform: scale(1); } }
+  @keyframes breatheScale { 0%, 100% { transform: scale(1); } 50% { transform: scale(.9); } }
+
+  /* End state for reduced motion */
+  .still .fade, .still .glow { opacity: 1; }
+  .still .lit { fill: var(--lamp); }
+  .still .draw { stroke-dashoffset: 0; }
+  .still .grow { transform: scale(1); }
+  @media (prefers-reduced-motion: reduce) { .play * { animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="kicker">Design draft 2 · for discussion</div>
+    <h1>One avenue, four views</h1>
+    <p class="lede">Each page gets a small night scene in the same style as the leader journey. Vision shows the whole avenue. Pathways, Intersection and Streetlights each zoom into one part of it. Every scene builds once when it scrolls into view, then gently glows.</p>
+  </header>
+
+  <!-- VISION -->
+  <div class="block">
+    <div class="note"><b>1 · Vision (v2)</b><span>A bird's-eye view of a whole suburb at night. One light at the central crossroads. Homes across the suburb light up (pathways), lamps come on along their streets (streetlights), light travels to where neighbours meet and blooms (intersection), then flows back along the streets to the centre, which glows brighter.</span></div>
+    <div class="site">
+      <div class="stage"><svg id="s-vision" viewBox="0 0 600 440" role="img" aria-label="A suburb at night seen from above: homes light up, streetlights spread, light meets at crossings and flows back to a light at the centre"></svg><button class="replay" type="button" data-for="s-vision">Replay</button></div>
+      <div class="copy">
+        <div class="eyebrow">The model</div>
+        <h2>One light, many homes</h2>
+        <p>Everything begins with Jesus, the light at the centre of it all.</p>
+        <p>Pathways are house churches: small communities meeting in homes, growing together around Him. From every home, streetlights reach out into the neighbourhood. And where pathways cross, they meet at the intersection to worship God in one spirit.</p>
+        <div class="pills"><span>Pathways</span><span>Intersection</span><span>Streetlights</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATHWAYS -->
+  <div class="block">
+    <div class="note"><b>2 · Pathways</b><span>One home on the avenue. People walk in from both ends of the street, and the windows light up as they gather. Then two people are sent out, one each way, and the houses on either side light up: the group has multiplied. People now walk at an unhurried pace.</span></div>
+    <div class="site">
+      <div class="stage"><svg id="s-pathways" viewBox="0 0 600 400" role="img" aria-label="People arrive at a home at night and its windows light up; a second home begins to glow"></svg><button class="replay" type="button" data-for="s-pathways">Replay</button></div>
+      <div class="copy">
+        <div class="eyebrow">How it works</div>
+        <h2>Church around a table</h2>
+        <p>A pathway is a house church. A few people meet in a home, a library or a school, wherever God has placed them.</p>
+        <p>We eat together, read the Bible together, pray and look out for one another. When a pathway grows, it sends people out to light up the next home, so the avenue keeps getting brighter.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERSECTION -->
+  <div class="block">
+    <div class="note"><b>3 · Intersection</b><span>A crossroads from above. Light travels in from homes on all four streets and meets in the middle, where a warm circle blooms and stays glowing.</span></div>
+    <div class="site">
+      <div class="stage"><svg id="s-intersection" viewBox="0 0 600 440" role="img" aria-label="Light from four homes travels along the streets and meets at a glowing crossroads"></svg><button class="replay" type="button" data-for="s-intersection">Replay</button></div>
+      <div class="copy">
+        <div class="eyebrow">Where roads meet</div>
+        <h2>Where pathways meet</h2>
+        <p>Each pathway walks its own street, and every street leads back to Jesus.</p>
+        <p>When our paths cross, we gather as one family: weekly Prayer and Praise, combined pathway nights, quarterly sermons, Avenue camps and plenty of fun in between. Many homes, one voice.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STREETLIGHTS -->
+  <div class="block">
+    <div class="note"><b>4 · Streetlights</b><span>The street seen from the side, like the journey screen. From one lit home, the lamps switch on one by one down the street, and each pool of light reveals the people it reaches.</span></div>
+    <div class="site">
+      <div class="stage"><svg id="s-streetlights" viewBox="0 0 600 400" role="img" aria-label="From a lit home, streetlights switch on one by one and light the people beneath them"></svg><button class="replay" type="button" data-for="s-streetlights">Replay</button></div>
+      <div class="copy">
+        <div class="eyebrow">Light for the street</div>
+        <h2>Every pathway lights its street</h2>
+        <p>God has placed each pathway in its neighbourhood on purpose. Streetlights are how it shines there.</p>
+        <p>Homeless outreach, songwriting, podcasts, mission trips, partnerships with local churches and organisations. Avenue helps every group turn a God-given idea into light for the people around them.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>Draft copy reuses the wording already on each page where possible. Replay any scene with its button. On the real site each scene plays when you scroll to it; people who turn off motion see the finished picture.</footer>
+</div>
+
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs = {}, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === "style") n.setAttribute("style", v); else n.setAttribute(k, v);
+    }
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const defs = (svg) => {
+    const d = el("defs", {}, svg);
+    const g = el("radialGradient", { id: svg.id + "-glow" }, d);
+    el("stop", { offset: "0%", "stop-color": "#ffc56b", "stop-opacity": ".75" }, g);
+    el("stop", { offset: "45%", "stop-color": "#ffc56b", "stop-opacity": ".22" }, g);
+    el("stop", { offset: "100%", "stop-color": "#ffc56b", "stop-opacity": "0" }, g);
+    const c = el("linearGradient", { id: svg.id + "-cone", x1: "0", y1: "0", x2: "0", y2: "1" }, d);
+    el("stop", { offset: "0%", "stop-color": "#ffc56b", "stop-opacity": ".5" }, c);
+    el("stop", { offset: "100%", "stop-color": "#ffc56b", "stop-opacity": "0" }, c);
+    return { glow: `url(#${svg.id}-glow)`, cone: `url(#${svg.id}-cone)` };
+  };
+  const stars = (svg, n, h) => {
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+    for (let i = 0; i < n; i++) el("circle", { cx: (rnd() * 600).toFixed(1), cy: (rnd() * h).toFixed(1), r: (rnd() * 1 + .4).toFixed(2), fill: "#8a93a8", opacity: (rnd() * .5 + .2).toFixed(2) }, svg);
+  };
+  const house = (parent, x, y, s, d, cls = "lit") => {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+    el("path", { d: "M-10 -2 L0 -11 L10 -2 V9 H-10 Z", class: cls, style: `--d:${d}s` }, g);
+    return g;
+  };
+
+  // ---------- 1. VISION v2: a suburb from above ----------
+  (() => {
+    const svg = document.getElementById("s-vision");
+    const g = defs(svg);
+    el("rect", { x: 0, y: 0, width: 600, height: 440, fill: "#06080d" }, svg);
+    const XS = [30, 110, 190, 300, 410, 490, 570];
+    const YS = [30, 120, 220, 320, 410];
+    const CX = 300, CY = 220;
+    // blocks of rooftops (and one park)
+    let seed = 11;
+    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+    for (let i = 0; i < XS.length - 1; i++) {
+      for (let j = 0; j < YS.length - 1; j++) {
+        const x0 = XS[i] + 9, x1 = XS[i + 1] - 9, y0 = YS[j] + 9, y1 = YS[j + 1] - 9;
+        if (i === 4 && j === 2) {
+          el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0, rx: 6, fill: "#08130e" }, svg);
+          for (let t = 0; t < 14; t++) el("circle", { cx: x0 + 8 + rnd() * (x1 - x0 - 16), cy: y0 + 8 + rnd() * (y1 - y0 - 16), r: 4 + rnd() * 4, fill: "#0c1f15" }, svg);
+          continue;
+        }
+        for (let x = x0; x < x1 - 10; x += 16) {
+          for (let y = y0; y < y1 - 8; y += 15) {
+            if (rnd() < 0.22) continue;
+            el("rect", { x: x + rnd() * 2, y: y + rnd() * 2, width: 11, height: 9, rx: 1.5, fill: rnd() < 0.5 ? "#111724" : "#0e1420" }, svg);
+          }
+        }
+      }
+    }
+    // streets, with the two main avenues a little wider
+    XS.forEach((x) => el("rect", { x: x - (x === CX ? 6 : 4), y: 0, width: x === CX ? 12 : 8, height: 440, fill: "#10151f" }, svg));
+    YS.forEach((y) => el("rect", { x: 0, y: y - (y === CY ? 6 : 4), width: 600, height: y === CY ? 12 : 8, fill: "#10151f" }, svg));
+    // the centre: one light at the main crossroads
+    el("circle", { cx: CX, cy: CY, r: 26, fill: "#0b0f17" }, svg);
+    el("circle", { cx: CX, cy: CY, r: 110, fill: g.glow, class: "glow", style: "--d:.2s" }, svg);
+    el("circle", { cx: CX, cy: CY, r: 150, fill: g.glow, class: "grow", style: "--d:7.6s" }, svg);
+    el("circle", { cx: CX, cy: CY, r: 7, fill: "#fff3d6", class: "fade", style: "--d:0s" }, svg);
+    // pathway homes, the lamps on their street, and where they meet
+    const homes = [
+      { at: [150, 165], d: 1.0, lamps: [[130, 120], [150, 120], [170, 120]], path: "M150 165 V120 H190" },
+      { at: [250, 75], d: 1.3, lamps: [[230, 120], [250, 120], [270, 120]], path: "M250 75 V120 H190" },
+      { at: [445, 165], d: 1.6, lamps: [[425, 220], [445, 220], [465, 220]], path: "M445 165 V220 H490" },
+      { at: [532, 272], d: 1.9, lamps: [[490, 252], [490, 272], [490, 292]], path: "M532 272 H490 V220" },
+      { at: [360, 370], d: 2.2, lamps: [[340, 320], [360, 320], [380, 320]], path: "M360 370 V320 H300" },
+      { at: [70, 272], d: 2.5, lamps: [[110, 252], [110, 272], [110, 292]], path: "M70 272 H110 V320 H300" },
+    ];
+    const pulses = [];
+    homes.forEach((h, i) => {
+      const [x, y] = h.at;
+      el("circle", { cx: x, cy: y, r: 40, fill: g.glow, class: "glow", style: `--d:${h.d}s` }, svg);
+      house(svg, x, y, 1.15, h.d);
+      h.lamps.forEach(([lx, ly], k) => {
+        const d = 2.9 + i * 0.12 + k * 0.22;
+        el("circle", { cx: lx, cy: ly, r: 10, fill: g.glow, class: "glow", style: `--d:${d}s` }, svg);
+        el("circle", { cx: lx, cy: ly, r: 2.4, class: "lit", style: `--d:${d}s` }, svg);
+      });
+      pulses.push({ path: h.path, at: 4.4 + (i % 2) * 0.15, dur: 1.5 });
+    });
+    const meets = [[190, 120], [490, 220], [300, 320]];
+    meets.forEach(([x, y], i) => {
+      el("circle", { cx: x, cy: y, r: 34, fill: g.glow, class: "grow", style: `--d:${5.9 + i * 0.15}s` }, svg);
+      el("circle", { cx: x, cy: y, r: 3.4, fill: "#fff0cf", class: "fade", style: `--d:${5.9 + i * 0.15}s` }, svg);
+    });
+    ["M190 120 V220 H300", "M490 220 H300", "M300 320 V220"].forEach((p) => pulses.push({ path: p, at: 6.6, dur: 1.2 }));
+    // travelling light, driven by SMIL so it can follow the streets
+    pulses.forEach(({ path, at, dur }) => {
+      const dot = el("g", { opacity: 0, class: "pulse" }, svg);
+      el("circle", { r: 9, fill: g.glow }, dot);
+      el("circle", { r: 3, fill: "#ffdca0" }, dot);
+      el("animateMotion", { path, dur: `${dur}s`, begin: "indefinite", fill: "freeze", "data-at": at }, dot);
+      el("animate", { attributeName: "opacity", values: "0;1;1;0", keyTimes: "0;0.15;0.85;1", dur: `${dur}s`, begin: "indefinite", fill: "freeze", "data-at": at }, dot);
+    });
+  })();
+
+  // ---------- 2. PATHWAYS: one home, people gather ----------
+  (() => {
+    const svg = document.getElementById("s-pathways");
+    const g = defs(svg);
+    stars(svg, 28, 230);
+    const groundY = 300;
+    el("rect", { x: 0, y: groundY, width: 600, height: 100, fill: "#0b1019" }, svg);
+    el("line", { x1: 0, y1: groundY, x2: 600, y2: groundY, stroke: "#1a2130", "stroke-width": 1 }, svg);
+    el("line", { x1: 0, y1: 352, x2: 600, y2: 352, stroke: "#222b3b", "stroke-width": 1.5, "stroke-dasharray": "14 12" }, svg);
+    // main house
+    const hx = 230, hw = 170, hh = 110, top = groundY - hh;
+    el("ellipse", { cx: hx + hw / 2, cy: groundY - 40, rx: 170, ry: 120, fill: g.glow, class: "glow", style: "--d:5s" }, svg);
+    el("path", { d: `M${hx - 12} ${top} L${hx + hw / 2} ${top - 62} L${hx + hw + 12} ${top} Z`, fill: "#121826" }, svg);
+    el("rect", { x: hx, y: top, width: hw, height: hh, fill: "#0f1522", stroke: "#1c2436" }, svg);
+    const wins = [[hx + 20, top + 20], [hx + 110, top + 20], [hx + 20, top + 62]];
+    wins.forEach(([x, y], i) => el("rect", { x, y, width: 40, height: 28, rx: 2, class: "lit", style: `--d:${4.8 + i * 0.6}s` }, svg));
+    el("rect", { x: hx + 112, y: top + 56, width: 34, height: hh - 56, rx: 2, class: "lit", style: "--d:6.6s" }, svg);
+    // people stroll to the door (door x ~ hx+129), unhurried
+    const door = hx + 129;
+    const walkers = [[-260, 0.2], [-210, 0.9], [230, 0.5], [280, 1.5], [-300, 2.1]];
+    walkers.forEach(([from, d], i) => {
+      const p = el("g", { class: "walk", style: `--from:${from}px;--d:${d}s;--t:4.6s` }, svg);
+      const x = door + (i % 2 ? 6 : -6);
+      el("circle", { cx: x, cy: groundY - 27, r: 5, fill: "#dfe4ee" }, p);
+      el("rect", { x: x - 5, y: groundY - 21, width: 10, height: 20, rx: 5, fill: "#dfe4ee" }, p);
+    });
+    // the group multiplies: two people are sent out, one each way
+    const sx = 470, sw = 90, sh = 64, st = groundY - sh;
+    el("ellipse", { cx: sx + sw / 2, cy: groundY - 26, rx: 90, ry: 66, fill: g.glow, class: "glow", style: "--d:12.2s" }, svg);
+    el("path", { d: `M${sx - 8} ${st} L${sx + sw / 2} ${st - 36} L${sx + sw + 8} ${st} Z`, fill: "#121826" }, svg);
+    el("rect", { x: sx, y: st, width: sw, height: sh, fill: "#0f1522", stroke: "#1c2436" }, svg);
+    el("rect", { x: sx + 14, y: st + 14, width: 24, height: 18, rx: 2, class: "lit", style: "--d:12.2s" }, svg);
+    el("rect", { x: sx + 52, y: st + 14, width: 24, height: 18, rx: 2, class: "lit", style: "--d:12.6s" }, svg);
+    el("ellipse", { cx: 85, cy: 274, rx: 90, ry: 66, fill: g.glow, class: "glow", style: "--d:12.4s" }, svg);
+    el("path", { d: "M40 240 L85 206 L130 240 Z", fill: "#121826" }, svg);
+    el("rect", { x: 48, y: 240, width: 74, height: 60, fill: "#0f1522", stroke: "#1c2436" }, svg);
+    el("rect", { x: 60, y: 254, width: 22, height: 16, rx: 2, class: "lit", style: "--d:12.4s" }, svg);
+    el("rect", { x: 92, y: 262, width: 16, height: 38, rx: 2, class: "lit", style: "--d:12.8s" }, svg);
+    const sentOut = [[sx + 45, door - (sx + 45)], [100, door - 100]];
+    sentOut.forEach(([x, from]) => {
+      const p = el("g", { class: "walk", style: `--from:${from}px;--d:8s;--t:4.2s` }, svg);
+      el("circle", { cx: x, cy: groundY - 27, r: 5, fill: "#ffdca0" }, p);
+      el("rect", { x: x - 5, y: groundY - 21, width: 10, height: 20, rx: 5, fill: "#ffdca0" }, p);
+    });
+  })();
+
+  // ---------- 3. INTERSECTION: a crossroads from above ----------
+  (() => {
+    const svg = document.getElementById("s-intersection");
+    const g = defs(svg);
+    stars(svg, 30, 440);
+    const cx = 300, cy = 220, w = 56;
+    el("rect", { x: 0, y: cy - w / 2, width: 600, height: w, fill: "#10151f" }, svg);
+    el("rect", { x: cx - w / 2, y: 0, width: w, height: 440, fill: "#10151f" }, svg);
+    el("line", { x1: 0, y1: cy, x2: 600, y2: cy, stroke: "#27314a", "stroke-width": 1.5, "stroke-dasharray": "12 12" }, svg);
+    el("line", { x1: cx, y1: 0, x2: cx, y2: 440, stroke: "#27314a", "stroke-width": 1.5, "stroke-dasharray": "12 12" }, svg);
+    const homes = [[34, cy - 50], [cx + 50, 30], [566, cy + 50], [cx - 50, 410]];
+    homes.forEach(([x, y], i) => {
+      el("circle", { cx: x, cy: y, r: 44, fill: g.glow, class: "glow", style: `--d:${0.2 + i * 0.25}s` }, svg);
+      house(svg, x, y, 1.5, 0.2 + i * 0.25);
+    });
+    // light travelling from each street end to the centre
+    const ends = [[-250, 0], [0, -200], [250, 0], [0, 200]];
+    ends.forEach(([fx, fy], i) => {
+      [0, 0.45, 0.9].forEach((k) => {
+        const dot = el("g", { class: "travel", style: `--fx:${fx}px;--fy:${fy}px;--d:${1.4 + i * 0.2 + k}s;--t:2.1s` }, svg);
+        el("circle", { cx, cy, r: 9, fill: g.glow }, dot);
+        el("circle", { cx, cy, r: 3.4, fill: "#ffdca0" }, dot);
+      });
+    });
+    el("circle", { cx, cy, r: 96, fill: g.glow, class: "grow", style: "--d:3.6s" }, svg);
+    el("circle", { cx, cy, r: 30, fill: "none", stroke: "#ffc56b", "stroke-opacity": ".45", "stroke-width": 1.5, class: "grow", style: "--d:3.9s" }, svg);
+    el("circle", { cx, cy, r: 6, fill: "#fff3d6", class: "fade", style: "--d:3.8s" }, svg);
+  })();
+
+  // ---------- 4. STREETLIGHTS: lamps light the street ----------
+  (() => {
+    const svg = document.getElementById("s-streetlights");
+    const g = defs(svg);
+    stars(svg, 30, 200);
+    const groundY = 310;
+    el("rect", { x: 0, y: groundY, width: 600, height: 90, fill: "#0b1019" }, svg);
+    el("line", { x1: 0, y1: groundY, x2: 600, y2: groundY, stroke: "#1a2130" }, svg);
+    el("line", { x1: 0, y1: 360, x2: 600, y2: 360, stroke: "#222b3b", "stroke-width": 1.5, "stroke-dasharray": "14 12" }, svg);
+    // the home
+    el("ellipse", { cx: 70, cy: 270, rx: 90, ry: 70, fill: g.glow, class: "glow", style: "--d:.2s" }, svg);
+    el("path", { d: "M14 244 L70 204 L126 244 Z", fill: "#121826" }, svg);
+    el("rect", { x: 22, y: 244, width: 96, height: 66, fill: "#0f1522", stroke: "#1c2436" }, svg);
+    el("rect", { x: 36, y: 258, width: 26, height: 20, rx: 2, class: "lit", style: "--d:.2s" }, svg);
+    el("rect", { x: 78, y: 262, width: 22, height: 48, rx: 2, class: "lit", style: "--d:.4s" }, svg);
+    // lamps
+    const xs = [190, 290, 390, 490];
+    const people = [
+      (x) => [[x - 14, 1], [x + 12, 1]],
+      (x) => [[x - 2, 1]],
+      (x) => [[x - 18, 1], [x, .8], [x + 18, 1]],
+      (x) => [[x + 4, 1]],
+    ];
+    xs.forEach((x, i) => {
+      const d = 1 + i * 0.7;
+      el("path", { d: `M${x - 7} 150 L${x + 7} 150 L${x + 62} ${groundY} L${x - 62} ${groundY} Z`, fill: g.cone, class: "glow", style: `--d:${d}s` }, svg);
+      el("ellipse", { cx: x, cy: groundY + 2, rx: 70, ry: 10, fill: g.glow, class: "glow", style: `--d:${d + .2}s` }, svg);
+      el("rect", { x: x - 2, y: 150, width: 4, height: groundY - 150, fill: "#3a4458" }, svg);
+      el("rect", { x: x - 13, y: 142, width: 26, height: 8, rx: 3, class: "lit", style: `--d:${d}s` }, svg);
+      el("circle", { cx: x, cy: 146, r: 22, fill: g.glow, class: "glow", style: `--d:${d}s` }, svg);
+      people[i](x).forEach(([px, s], k) => {
+        const p = el("g", { class: "fade", style: `--d:${d + .35 + k * .12}s` }, svg);
+        el("circle", { cx: px, cy: groundY - 26 * s, r: 5 * s, fill: "#dfe4ee" }, p);
+        el("rect", { x: px - 5 * s, y: groundY - 20 * s, width: 10 * s, height: 20 * s, rx: 5 * s, fill: "#dfe4ee" }, p);
+      });
+    });
+  })();
+
+  // ---------- play once when scrolled into view; Replay restarts ----------
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const svgs = [...document.querySelectorAll(".stage svg")];
+  const startSmil = (s) => {
+    s.querySelectorAll("animateMotion, animate").forEach((a) => {
+      try { a.endElement(); a.beginElementAt(parseFloat(a.dataset.at || "0")); } catch (err) { console.error(err); }
+    });
+  };
+  const play = (s) => { s.classList.add("play"); startSmil(s); };
+  if (reduce) svgs.forEach((s) => s.classList.add("still"));
+  else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { play(e.target); io.unobserve(e.target); } });
+    }, { threshold: 0.35 });
+    svgs.forEach((s) => io.observe(s));
+  }
+  document.querySelectorAll(".replay").forEach((b) => b.addEventListener("click", () => {
+    const s = document.getElementById(b.dataset.for);
+    s.classList.remove("play", "still");
+    void s.getBoundingClientRect();
+    if (reduce) s.classList.add("still"); else play(s);
+  }));
+})();
+</script>
