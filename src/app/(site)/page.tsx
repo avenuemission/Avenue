@@ -21,12 +21,12 @@ export default function Home() {
           <div aria-hidden="true" className="skyline-scrim hidden md:block" />
         </div>
 
-        <div className="relative z-10 px-6 pt-5 pb-16 text-center md:absolute md:left-[5.5%] md:top-[11%] md:w-[min(42%,34rem)] md:p-0 md:text-left">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold uppercase tracking-tight text-white leading-[1.02] text-balance mb-3 md:mb-5">
+        <div className="relative z-10 px-6 pt-5 pb-16 text-center md:absolute md:left-[5.5%] md:top-[12%] md:w-[min(40%,30rem)] md:p-0 md:text-left">
+          <h1 className="text-[26px] md:text-3xl lg:text-4xl xl:text-[44px] font-bold uppercase tracking-tight text-white leading-[1.05] text-balance mb-3 md:mb-4">
             Unleashing <span className="whitespace-nowrap">God-given</span> potential
           </h1>
           <p
-            className="hero-in text-[#b9c0cf] text-sm md:text-base lg:text-lg leading-relaxed max-w-sm mx-auto md:mx-0 md:max-w-md mb-5 md:mb-7"
+            className="hero-in text-[#b9c0cf] text-sm md:text-[15px] xl:text-base leading-relaxed max-w-sm mx-auto md:mx-0 md:max-w-[26rem] mb-5 md:mb-6"
             style={{ animationDelay: "120ms" }}
           >
             Avenue is a decentralised movement of people following Jesus, convinced that disciple-making

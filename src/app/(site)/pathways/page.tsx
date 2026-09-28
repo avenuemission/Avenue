@@ -26,7 +26,7 @@ export default async function PathwaysPage() {
   const week = weeklyTopic(guides, melbourneDateOf(new Date()));
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
+    <div className="min-h-screen bg-black overflow-x-clip">
       <PageTitle title="Pathways">
         &ldquo;Every day they continued to meet together in the temple courts.
         They broke bread in their homes and ate together with glad and sincere
@@ -81,16 +81,16 @@ export default async function PathwaysPage() {
       </section>
 
       {/* Find a Pathway Section */}
-      <section className="bg-black py-16 md:py-24 overflow-hidden">
+      <section className="bg-black py-16 md:py-24 overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* Left Content */}
-            <Reveal className="space-y-6 px-2">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+            {/* Left Content: level with the top of the map, and stays in view beside the form */}
+            <Reveal className="space-y-5 px-2 lg:sticky lg:top-28">
               <span className="eyebrow">Join a group</span>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white leading-tight">
+              <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-bold uppercase tracking-tight text-white leading-[1.05] text-balance">
                 Find a Pathway Community Near You
               </h2>
-              <p className="text-[var(--muted)] text-sm sm:text-base md:text-lg leading-relaxed max-w-lg">
+              <p className="text-[var(--muted)] text-sm sm:text-base leading-relaxed max-w-lg">
                 Pathway groups are house church communities growing together,
                 empowered by the Spirit of God. We meet in homes, libraries,
                 schools, wherever the LORD has sent us. We eat together, read

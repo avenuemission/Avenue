@@ -196,7 +196,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Map Container */}
       <div className="relative w-full rounded-xl overflow-hidden border border-gray-700">
         <div
@@ -269,15 +269,17 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
       </div>
 
       {/* Connect Form */}
-      <div className="space-y-6">
-        <h3 className="text-xl md:text-2xl font-bold text-white">
-          Join a Pathway Group
-        </h3>
-        <p className="text-blue-400 text-sm md:text-base uppercase tracking-wider font-medium">
-          Fill out the form below to connect with a pathway group near you.
-        </p>
+      <div className="space-y-5">
+        <div className="space-y-1">
+          <h3 className="text-lg md:text-xl font-bold text-white">
+            Join a Pathway Group
+          </h3>
+          <p className="text-[var(--muted)] text-sm">
+            Fill out the form below to connect with a pathway group near you.
+          </p>
+        </div>
 
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+        <form onSubmit={handleFormSubmit} className="space-y-5">
           {/* Honeypot field - hidden from humans, bots will fill it */}
           <input
             type="text"
@@ -300,7 +302,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-transparent border-b-2 border-gray-700 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors"
               required
             />
           </div>
@@ -316,7 +318,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-transparent border-b-2 border-gray-700 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -331,7 +333,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
               }
-              className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-transparent border-b-2 border-gray-700 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors"
               required
             />
           </div>
@@ -346,7 +348,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
               onChange={(e) =>
                 setFormData({ ...formData, group: e.target.value })
               }
-              className="w-full bg-transparent border-b-2 border-gray-700 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
+              className="w-full bg-transparent border-b-2 border-gray-700 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
               required
             >
               <option value="" className="bg-gray-900">
