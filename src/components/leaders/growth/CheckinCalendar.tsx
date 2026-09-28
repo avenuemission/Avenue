@@ -61,7 +61,7 @@ export default function CheckinCalendar({
         >
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>
-        <p className="font-serif text-xl text-[var(--ink)]" aria-live="polite">
+        <p className="font-sans text-xl font-semibold text-[var(--ink)]" aria-live="polite">
           {calendarMonthLabel(view)}
         </p>
         <button

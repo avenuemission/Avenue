@@ -20,7 +20,7 @@ export default function LeaderEmailsPage() {
           Dashboard
         </Link>
         {/* Henry to check wording */}
-        <h1 className="mt-4 font-serif text-4xl text-[var(--ink)]">Your emails</h1>
+        <h1 className="mt-4 font-sans font-bold uppercase tracking-tight text-3xl text-[var(--ink)] md:text-4xl">Your emails</h1>
         {error ? (
           <p role="alert" className="mt-4 text-sm text-amber-400">
             {error}

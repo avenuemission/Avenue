@@ -110,8 +110,8 @@ export default function Navbar() {
           </div>
 
           {/* Countdown Timer, Giving and Login. The Login/Leaders links do not
-              prefetch: those routes pull in supabase-js and the serif font,
-              which public pages should not download. */}
+              prefetch: those routes pull in supabase-js, which public pages
+              should not download. */}
           <div className="hidden sm:flex items-center space-x-3">
             <CountdownTimer variant="navbar" />
             <Link

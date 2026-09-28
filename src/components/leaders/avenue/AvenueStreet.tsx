@@ -51,7 +51,7 @@ export default function AvenueStreet({ stops, selectedId, onSelect, hereAction, 
               className="block min-h-[44px] w-full text-left"
             >
               <span
-                className={`block font-serif text-2xl leading-tight ${
+                className={`block font-sans font-bold uppercase tracking-tight text-xl leading-tight ${
                   stop.status === "ahead" ? "text-[var(--dim)]" : "text-[var(--ink)]"
                 } ${selected ? "underline decoration-[var(--line-2)] underline-offset-8" : ""}`}
               >

@@ -76,7 +76,7 @@ export default function LoginPage() {
         <div className="night-card p-8">
           <div className="mb-8 text-center">
             <Image src="/images/Avenue.png" alt="Avenue" width={180} height={50} className="mx-auto mb-6" />
-            <h1 className="font-serif text-[34px] leading-tight text-[var(--ink)]">{heading}</h1>
+            <h1 className="font-sans font-bold uppercase tracking-tight text-[clamp(24px,7vw,34px)] leading-tight text-[var(--ink)]">{heading}</h1>
             <p className="mt-2 text-sm text-[var(--muted)]">{sub}</p>
           </div>
 

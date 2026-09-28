@@ -64,7 +64,7 @@ export default function PhaseModules({
                   <span className={module.completed ? "text-[var(--lamp)]" : "text-[var(--muted)]"}>
                     <ModuleTypeIcon type={module.type} />
                   </span>
-                  <h4 className="font-serif text-xl text-[var(--ink)]">{module.title}</h4>
+                  <h4 className="font-sans font-bold uppercase tracking-tight text-lg text-[var(--ink)] md:text-xl">{module.title}</h4>
                 </div>
                 <p className="text-sm text-[var(--muted)]">{module.description}</p>
                 {module.duration && <span className="night-label mt-2 inline-block">{module.duration}</span>}

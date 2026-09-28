@@ -20,7 +20,7 @@ export default function RpmsSlider({ gauge, value, onChange }: RpmsSliderProps) 
         <label htmlFor={inputId} className="text-sm font-semibold text-[var(--ink)]">
           {gauge.label}
         </label>
-        <output htmlFor={inputId} className="font-serif text-3xl leading-none tabular-nums" style={{ color: gauge.colour }}>
+        <output htmlFor={inputId} className="font-sans text-3xl font-bold leading-none tabular-nums" style={{ color: gauge.colour }}>
           {value}
         </output>
       </div>
