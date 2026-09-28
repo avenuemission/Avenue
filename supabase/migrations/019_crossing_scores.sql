@@ -1,3 +1,4 @@
+-- APPLIED to the live database 2026-09-28, before the game's deploy.
 -- ============================================================
 -- 019 Cross the Avenue leaderboard (the Vision page game).
 --
