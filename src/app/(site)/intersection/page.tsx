@@ -2,6 +2,8 @@ import Image from "next/image";
 import ImageCarousel from "@/components/site/ImageCarousel";
 import PageTitle from "@/components/ui/PageTitle";
 import Reveal from "@/components/ui/Reveal";
+import SceneSection from "@/components/site/scenes/SceneSection";
+import IntersectionScene from "@/components/site/scenes/IntersectionScene";
 import EventCountdown from "./_components/EventCountdown";
 import EventUpdatesForm from "./_components/EventUpdatesForm";
 import StayConnected from "./_components/StayConnected";
@@ -27,52 +29,14 @@ export default async function IntersectionPage() {
       {/* Image Carousel - Scroll-linked */}
       <ImageCarousel images={shuffled(carousel)} />
 
-      {/* Intersection Diagram and Description Section */}
-      <section className="bg-black pt-16 pb-12">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-
-            {/* Left - Diagram */}
-            <div className="relative flex justify-center lg:justify-start overflow-visible">
-              <div
-                className="
-                  relative
-                  h-[450px] md:h-[550px] lg:h-[600px] xl:h-[650px]   /* ⭐ Medium size */
-                  w-full overflow-visible
-                "
-              >
-                <Image
-                  src="/images/intersection_diagram.png"
-                  alt="Intersection Diagram"
-                  fill
-                  sizes="(min-width: 1024px) 1000px, 100vw"
-                  className="
-                    object-contain
-                    scale-[1.0] md:scale-[1.15] lg:scale-[1.25]      /* ⭐ Less aggressive scaling */
-                    lg:-translate-x-12 lg:translate-y-6              /* ⭐ Softer positioning */
-                  "
-                />
-              </div>
-            </div>
-
-
-            {/* Right - Content */}
-            <Reveal delay={100} className="space-y-6 lg:pl-8">
-              <span className="eyebrow">Where roads meet</span>
-              <p className="text-[var(--muted)] md:text-lg leading-relaxed max-w-md">
-                As pathway groups gather around Jesus, they occasionally come
-                into contact, and during these intersections, we come together to
-                worship God in one spirit. We express our worship through
-                community, music, prayer, and leisure, creating moments that
-                draw us closer to God and to one another. These gatherings take
-                many forms, including weekly Prayer and Praise sessions,
-                combined pathway events, quarterly sermons, Avenue camps, and a
-                variety of other meaningful and fun social activities.
-              </p>
-            </Reveal>
-          </div>
-        </div>
-      </section>
+      {/* Where pathways meet: the night scene */}
+      <SceneSection scene={<IntersectionScene />} eyebrow="Where roads meet" title="Where pathways meet">
+        <p>Each pathway walks its own street, and every street leads back to Jesus.</p>
+        <p>
+          When our paths cross, we gather as one family: weekly Prayer and Praise, combined pathway nights, quarterly
+          sermons, Avenue camps and plenty of fun in between. Many homes, one voice.
+        </p>
+      </SceneSection>
 
       {/* Event Countdown Section */}
       <section className="relative py-16">

@@ -8,6 +8,8 @@ import { shuffled } from "@/lib/domain/shuffle";
 import PageTitle from "@/components/ui/PageTitle";
 import Section from "@/components/ui/Section";
 import Reveal from "@/components/ui/Reveal";
+import SceneSection from "@/components/site/scenes/SceneSection";
+import VisionScene from "@/components/site/scenes/VisionScene";
 
 const valuesData = [
   {
@@ -88,59 +90,35 @@ export default async function VisionPage() {
       {/* ===================== */}
       {/* THE MODEL */}
       {/* ===================== */}
-      <Section eyebrow="The Model" width="wide">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
-          <Reveal className="relative flex justify-center lg:justify-start overflow-visible">
-            <div className="relative h-[420px] md:h-[500px] lg:h-[560px] w-full overflow-visible">
-              <Image
-                src="/images/vision_avenue_orbit.png"
-                alt="Avenue Decentralised Structure Diagram"
-                fill
-                sizes="(min-width: 1024px) 1000px, 100vw"
-                className="object-left object-contain scale-[0.85] translate-y-4 md:scale-[1.1] md:translate-x-4 md:translate-y-10 lg:scale-[1.5] lg:-translate-x-40 lg:translate-y-20"
-              />
-            </div>
-          </Reveal>
-
-          <Reveal delay={100} className="lg:pl-8">
-            <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-tight text-white">
-              Avenue Decentralised Structure
-            </h2>
-            <div className="mt-6 space-y-4 text-[var(--muted)] md:text-lg leading-relaxed max-w-md">
-              <p>
-                Everything is centred around Jesus. Pathway groups are house
-                church communities growing together, empowered by the Spirit of
-                God.
-              </p>
-              <p>
-                Surrounding these church communities, a decentralised structure
-                is created called streetlights, a space for serving those in
-                need and divine-inspired initiatives.
-              </p>
-              <p>
-                Each pathway group is connected through one intersection, a
-                place for worshipping God in one spirit.
-              </p>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              {[
-                { href: "/pathways", label: "Pathways" },
-                { href: "/intersection", label: "Intersection" },
-                { href: "/streetlights", label: "Streetlights" },
-              ].map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 text-sm font-semibold uppercase tracking-wider text-white transition-all duration-300 hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)]"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </Section>
+      <SceneSection
+        scene={<VisionScene />}
+        eyebrow="The model"
+        title="One light, many homes"
+        footer={
+          <div className="mt-8 flex flex-wrap gap-3">
+            {[
+              { href: "/pathways", label: "Pathways" },
+              { href: "/intersection", label: "Intersection" },
+              { href: "/streetlights", label: "Streetlights" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 text-sm font-semibold uppercase tracking-wider text-white transition-all duration-300 hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)]"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        }
+      >
+        <p>Everything begins with Jesus, the light at the centre of it all.</p>
+        <p>
+          Pathways are house churches: small communities meeting in homes, growing together around Him. From every
+          home, streetlights reach out into the neighbourhood. And where pathways cross, they meet at the intersection
+          to worship God in one spirit.
+        </p>
+      </SceneSection>
 
       {/* ===================== */}
       {/* OUR VISION */}

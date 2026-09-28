@@ -2,6 +2,8 @@ import Image from "next/image";
 import ImageCarousel from "@/components/site/ImageCarousel";
 import PageTitle from "@/components/ui/PageTitle";
 import Reveal from "@/components/ui/Reveal";
+import SceneSection from "@/components/site/scenes/SceneSection";
+import StreetlightsScene from "@/components/site/scenes/StreetlightsScene";
 import HomeboundAlbum from "./_components/HomeboundAlbum";
 import MissionInitiatives from "./_components/MissionInitiatives";
 import { getCarouselImages } from "@/lib/server/content";
@@ -24,29 +26,14 @@ export default async function StreetlightsPage() {
       {/* Image Carousel - Scroll-linked */}
       <ImageCarousel images={shuffled(carousel)} />
 
-      {/* Streetlights Description Section */}
-      <section className="bg-black py-16 md:py-24">
-        <div className="max-w-4xl mx-auto px-6 sm:px-10 text-center">
-          <Reveal className="space-y-6 text-[var(--muted)] text-base md:text-lg leading-relaxed">
-            <p>
-              We believe God has intentionally placed each pathway group in a
-              unique location and community, breathing His spirit of service,
-              creativity, and purpose into every one of them. Avenue exists to
-              empower these groups to be visionaries, innovators, and
-              humanitarians, people who respond to God&apos;s call with boldness
-              and compassion.
-            </p>
-            <p>
-              Through Avenue&apos;s support, pathway groups have launched
-              meaningful initiatives such as homeless outreach, songwriting
-              projects, podcast creation, mission trips, and collaborations with
-              local organisations and churches. Each effort reflects a shared
-              desire to bring hope, creativity, and the love of Jesus into their
-              surrounding communities.
-            </p>
-          </Reveal>
-        </div>
-      </section>
+      {/* Light for the street: the night scene */}
+      <SceneSection scene={<StreetlightsScene />} eyebrow="Light for the street" title="Every pathway lights its street">
+        <p>God has placed each pathway in its neighbourhood on purpose. Streetlights are how it shines there.</p>
+        <p>
+          Homeless outreach, songwriting, podcasts, mission trips, partnerships with local churches and
+          organisations. Avenue helps every group turn a God-given idea into light for the people around them.
+        </p>
+      </SceneSection>
 
       {/* Mission Initiatives Section */}
       <section id="mission-initiatives" className="relative py-16 scroll-mt-20">

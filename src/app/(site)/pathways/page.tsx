@@ -5,6 +5,8 @@ import ImageCarousel from "@/components/site/ImageCarousel";
 import WeeklyTopic from "@/components/site/WeeklyTopic";
 import PageTitle from "@/components/ui/PageTitle";
 import Reveal from "@/components/ui/Reveal";
+import SceneSection from "@/components/site/scenes/SceneSection";
+import PathwaysScene from "@/components/site/scenes/PathwaysScene";
 import CountUp from "./_components/CountUp";
 import { getCarouselImages, getPathwayGroups, getSiteStats, getStudyGuides } from "@/lib/server/content";
 import { statValue } from "@/lib/domain/content";
@@ -33,6 +35,18 @@ export default async function PathwaysPage() {
 
       {/* Image Carousel - Scroll-linked */}
       <ImageCarousel images={shuffled(carousel)} />
+
+      {/* How it works: the night scene */}
+      <SceneSection scene={<PathwaysScene />} eyebrow="How it works" title="Church around a table">
+        <p>
+          A pathway is a house church. A few people meet in a home, a library or a school, wherever God has placed
+          them.
+        </p>
+        <p>
+          We eat together, read the Bible together, pray and look out for one another. When a pathway grows, it sends
+          people out to light up the next home, so the avenue keeps getting brighter.
+        </p>
+      </SceneSection>
 
       {/* Statistics Section */}
       <section className="bg-black py-16 md:py-20">

@@ -829,3 +829,73 @@ button.av-lamp {
     text-transform: uppercase;
   }
 }
+
+/* ============================================================ */
+/* NIGHT SCENES: Vision, Pathways, Intersection, Streetlights    */
+/* Ported from docs/design/night-scenes-mockup.html. Everything  */
+/* sits under .scene (SceneStage) so it touches nothing else.    */
+/* SceneStage adds .play once in view, or .still for reduced     */
+/* motion (the finished picture).                                */
+/* ============================================================ */
+
+.scene {
+  --dim: #2a3345; /* unlit windows and lamps */
+}
+.scene svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.scene-copy .eyebrow {
+  color: var(--lamp);
+}
+
+.scene .fade { opacity: 0; }
+.scene.play .fade { animation: scene-fade-in 0.9s ease forwards; animation-delay: var(--d, 0s); }
+.scene .glow { opacity: 0; }
+.scene.play .glow {
+  animation: scene-fade-in 1.4s ease forwards var(--d, 0s),
+    scene-breathe 4.5s ease-in-out infinite calc(var(--d, 0s) + 1.4s);
+}
+.scene .lit { fill: var(--dim); }
+.scene.play .lit { animation: scene-light-up 0.7s ease forwards; animation-delay: var(--d, 0s); }
+.scene .walk { opacity: 0; }
+.scene.play .walk { animation: scene-walk var(--t, 2.4s) ease-in-out forwards; animation-delay: var(--d, 0s); }
+.scene .travel { opacity: 0; }
+.scene.play .travel { animation: scene-travel var(--t, 2s) ease-in-out forwards; animation-delay: var(--d, 0s); }
+.scene .grow { transform: scale(0); transform-box: fill-box; transform-origin: center; }
+.scene.play .grow {
+  animation: scene-grow 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards var(--d, 0s),
+    scene-breathe-scale 5s ease-in-out infinite calc(var(--d, 0s) + 1.6s);
+}
+
+@keyframes scene-fade-in { to { opacity: 1; } }
+@keyframes scene-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.62; } }
+@keyframes scene-light-up { to { fill: var(--lamp); } }
+@keyframes scene-walk {
+  0% { opacity: 0; transform: translateX(var(--from)); }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(0); }
+}
+@keyframes scene-travel {
+  0% { opacity: 0; transform: translate(var(--fx), var(--fy)); }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(0, 0); }
+}
+@keyframes scene-grow { to { transform: scale(1); } }
+@keyframes scene-breathe-scale { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.9); } }
+
+/* End state: reduced motion shows the finished picture, no motion. */
+.scene.still .fade,
+.scene.still .glow { opacity: 1; }
+.scene.still .lit { fill: var(--lamp); }
+.scene.still .grow { transform: scale(1); }
+@media (prefers-reduced-motion: reduce) {
+  .scene * { animation: none !important; }
+  .scene .fade,
+  .scene .glow { opacity: 1; }
+  .scene .lit { fill: var(--lamp); }
+  .scene .grow { transform: scale(1); }
+}
