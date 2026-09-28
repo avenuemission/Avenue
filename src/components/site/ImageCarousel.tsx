@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import Image from "next/image";
+import { carouselOffset } from "@/lib/domain/carousel";
+import { shuffled } from "@/lib/domain/shuffle";
 
 interface ImageCarouselProps {
   /** Public image paths, read on the server (getCarouselImages). */
@@ -9,11 +11,40 @@ interface ImageCarouselProps {
 }
 
 const DESKTOP_MIN_WIDTH = 768; // Tailwind md
+const CARD_WIDTH = 300;
+const CARD_GAP = 16;
 
-// Mobile: an endless auto-scroll. Desktop: scroll-linked, with drag. Both
-// tracks are in the server HTML and CSS shows one, so the section has its
-// full height from the first paint (no layout shift when it hydrates).
+// A fresh random order for every visit (the server order only changes when
+// the page is regenerated), kept stable for the life of the page so React
+// sees the same array on every render. The desktop track uses it: its speed
+// is capped, so a long row shows a different selection on each visit.
+const visitOrders = new Map<string, string[]>();
+const noSubscribe = () => () => {};
+function useVisitOrder(images: string[]): string[] {
+  const key = images.join("|");
+  return useSyncExternalStore(
+    noSubscribe,
+    () => {
+      let order = visitOrders.get(key);
+      if (!order) {
+        order = shuffled(images);
+        visitOrders.set(key, order);
+      }
+      return order;
+    },
+    () => images,
+  );
+}
+
+// Mobile: an endless auto-scroll through every photo. Desktop: scroll-linked
+// (speed capped, see lib/domain/carousel), with drag. Both tracks are in the
+// server HTML and CSS shows one, so the section has its full height from the
+// first paint (no layout shift when it hydrates).
 export default function ImageCarousel({ images }: ImageCarouselProps) {
+  const desktopImages = useVisitOrder(images);
+  // The server renders the page's order; the visit's own order replaces it
+  // once hydrated. The desktop row fades in at that point so the swap is not seen.
+  const desktopReady = desktopImages !== images;
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -32,13 +63,16 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
       const endPoint = -rect.height;
       const totalDistance = startPoint - endPoint;
       const currentPosition = startPoint - rect.top;
-      const progress = Math.max(0, Math.min(1, currentPosition / totalDistance));
-
-      const imageWidth = 300;
-      const gap = 16;
-      const totalWidth = images.length * (imageWidth + gap);
-      const maxScroll = Math.max(0, totalWidth - window.innerWidth);
-      setScrollOffset(progress * maxScroll);
+      setScrollOffset(
+        carouselOffset({
+          count: images.length,
+          cardWidth: CARD_WIDTH,
+          gap: CARD_GAP,
+          viewportWidth: window.innerWidth,
+          scrollDistance: totalDistance,
+          progress: currentPosition / totalDistance,
+        }),
+      );
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -103,16 +137,17 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
         className={`hidden md:flex gap-4 min-h-[220px] ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
         style={{
           transform: `translateX(${-scrollOffset + manualOffset}px)`,
-          transition: isDragging ? "none" : "transform 0.1s ease-out",
+          transition: isDragging ? "opacity 0.35s ease" : "transform 0.1s ease-out, opacity 0.35s ease",
+          opacity: desktopReady ? 1 : 0,
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {images.map((src, index) => (
+        {desktopImages.map((src, index) => (
           <div
-            key={index}
+            key={src}
             className="flex-shrink-0 w-[300px] h-[220px] relative rounded-xl overflow-hidden"
           >
             <Image
