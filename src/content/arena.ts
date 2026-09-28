@@ -1,4 +1,4 @@
-// The Arena content, transcribed from docs/launch-arena-content.md (first
+// The scenarios content (the Arena in code), transcribed from docs/launch-arena-content.md (first
 // draft, 23 Sep). Henry has NOT signed it off yet (handover 3.2): every
 // scripture reference is still to be checked, and curveball 6 needs his
 // pastoral eye. Henry asked on 24 Sep for it switched on so he can review
@@ -8,14 +8,14 @@ import type { Curveball } from "@/lib/domain/arena";
 
 export const ARENA_ENABLED = true;
 
-// Months 1 to 6. Curveballs 3, 6, 9 and 10 are the alternate pool.
+// Scenarios 1 to 6, in play order. Curveballs 3, 6, 9 and 10 are the
+// alternate pool.
 export const DEFAULT_ORDER = [1, 2, 4, 5, 8, 7] as const;
 
 export const CURVEBALLS: Curveball[] = [
   {
     id: 1,
     title: "Someone quietly stops coming",
-    when: "Month 1 or 2",
     situation:
       "One of your first regulars has missed three weeks. No argument, no explanation. They still reply to messages, just briefly.",
     bitesIfNote: "no rhythm was set, or the leader named no one to share the shepherding with.",
@@ -54,7 +54,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 2,
     title: "You are sick the week you are hosting",
-    when: "Month 2",
     situation: "You wake up on the day genuinely unwell. The group is at your place in eight hours.",
     bitesIfNote:
       "no co-leader or apprentice was named in the plan. If the leader listed nobody, options C and D are the only realistic ones and the Arena should say so plainly.",
@@ -93,7 +92,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 3,
     title: "One person dominates every conversation",
-    when: "Alternate pool",
     situation: "One member answers every question, at length. Two quieter people have stopped speaking entirely.",
     bitesIfNote: "the group is already at or above the room's comfortable size.",
     bitesIf: [],
@@ -132,7 +130,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 4,
     title: "Nobody has invited anyone in two months",
-    when: "Month 3",
     situation:
       "The group is warm, consistent and completely closed. Everyone loves it. Nobody has brought a friend.",
     bitesIfNote: "no mission group was named, or no third space was identified.",
@@ -171,7 +168,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 5,
     title: "The group outgrows your living room",
-    when: "Month 4",
     situation:
       "Twelve people in a room that seats eight. Two sat on the floor. Someone joked about needing a bigger house.",
     bitesIfNote:
@@ -200,10 +196,10 @@ export const CURVEBALLS: Curveball[] = [
         anchor: "Luke 14:23, go out and compel them to come in",
       },
       {
-        label: "Split the gathering across two nights, same leader",
+        label: "Split the gathering into two times, same leader",
         verdict: "Bought yourself three months, and doubled your own load.",
         counters: "Pathways +1, leader capacity strained",
-        principle: "Two nights led by one person is not multiplication. It is a slower burnout.",
+        principle: "Two gatherings led by one person is not multiplication. It is a slower burnout.",
         anchor: "Exodus 18, Moses judging alone from morning to evening",
       },
     ],
@@ -211,7 +207,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 6,
     title: "Someone comes in crisis",
-    when: "Alternate pool",
     situation:
       "A member arrives carrying something heavy: a marriage falling apart, a job lost, a diagnosis. It is more than a small group can hold on its own.",
     bitesIfNote: "the leader has no coach relationship recorded and no one to call.",
@@ -250,7 +245,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 7,
     title: "Two people want to start something of their own",
-    when: "Month 6, and the best problem in the list",
     situation: "Two of your people have been talking. They want to start a Pathway in their own street.",
     bitesIfNote:
       "neither has been apprenticed past the early rungs. The Arena should note that plainly: releasing someone you have not trained is not sending, it is hoping.",
@@ -289,7 +283,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 8,
     title: "You are running on empty",
-    when: "Month 5",
     situation:
       "You have led every week, hosted most of them, and had two hard conversations. You are not enjoying it any more and you have not said so to anyone.",
     bitesIfNote:
@@ -329,7 +322,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 9,
     title: "Someone asks to be baptised",
-    when: "Alternate pool, and a good curveball",
     situation:
       "Someone who came in sceptical five months ago asks you what baptism means, and then asks if they can do it.",
     bitesIfNote: "",
@@ -368,7 +360,6 @@ export const CURVEBALLS: Curveball[] = [
   {
     id: 10,
     title: "A hard question splits the room",
-    when: "Alternate pool",
     situation:
       "A genuine theological disagreement surfaces and two people clearly hold different views. The room goes quiet and looks at you.",
     bitesIfNote: "",

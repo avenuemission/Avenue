@@ -27,8 +27,16 @@ export interface CallingData {
 export const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
 
+// The seven planning steps. They alone make up the Launch count and total
+// (hub, emails, church health), so adding a wizard step never drops a
+// leader's count.
 export const LAUNCH_STEP_IDS = ["prayer", "mission", "space", "team", "intentional", "rhythm", "invite"] as const;
 export type LaunchStepId = (typeof LAUNCH_STEP_IDS)[number];
+
+// Every step of the Launch wizard, in order: the planning steps, the
+// read-only Metrics step, the scenarios (saved under "arena") and the plan.
+export const LAUNCH_WIZARD_STEP_IDS = [...LAUNCH_STEP_IDS, "metrics", "arena", "plan"] as const;
+export type LaunchWizardStepId = (typeof LAUNCH_WIZARD_STEP_IDS)[number];
 
 export interface LaunchData {
   prayer?: { when?: string; who?: string; teamPrayer?: string };
@@ -38,6 +46,7 @@ export interface LaunchData {
   intentional?: { commitments?: string[]; needPosition?: string };
   rhythm?: { launchDate?: string; weeklyDay?: Weekday; weeklyTime?: string };
   invite?: { tracking?: string; shepherding?: string };
+  metrics?: { read?: boolean };
   arena?: { picks?: { curveball: number; choice: number }[]; done?: boolean };
   actions?: { done?: string[] };
 }
@@ -153,4 +162,14 @@ export function launchStepComplete(id: LaunchStepId, data: LaunchData): boolean 
 
 export function launchCompleteCount(data: LaunchData): number {
   return LAUNCH_STEP_IDS.filter((id) => launchStepComplete(id, data)).length;
+}
+
+// The Metrics step is done once read, or when the leader has already
+// started or finished the scenarios: a leader who played them before the
+// step existed has seen the metrics there, and keeps a finished Launch.
+export function metricsStepComplete(data: LaunchData): boolean {
+  if (recordOf(data.metrics).read === true) return true;
+  const arena = recordOf(data.arena);
+  const picks = arena.picks;
+  return arena.done === true || (Array.isArray(picks) && picks.length > 0);
 }

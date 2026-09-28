@@ -8,7 +8,7 @@ export type WorksheetKind = (typeof WORKSHEET_KINDS)[number];
 
 const WORKSHEET_SECTIONS = {
   calling: ["layers", "callable", "shared", "apest", "seasonal", "conversation"],
-  launch: ["prayer", "mission", "space", "team", "intentional", "rhythm", "invite", "arena", "actions"],
+  launch: ["prayer", "mission", "space", "team", "intentional", "rhythm", "invite", "metrics", "arena", "actions"],
 } as const satisfies Record<WorksheetKind, readonly string[]>;
 
 const MAX_DEPTH = 5;

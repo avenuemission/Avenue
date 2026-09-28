@@ -53,7 +53,8 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/worksheets?kind=calling|launch
 // Reset Calling or Reset Launch (round 3 spec 2): removes the caller's one
 // row for that kind, which holds every answer in it (APEST results and the
-// AI reflection for Calling, the Arena run and ticked actions for Launch).
+// AI reflection for Calling; the Metrics read flag, the scenarios run and
+// ticked actions for Launch).
 // No other table is touched. Deleting when there is no row is still ok, so
 // a second tap is harmless.
 export async function DELETE(request: NextRequest) {

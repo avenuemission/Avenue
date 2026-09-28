@@ -10,7 +10,11 @@ import {
   isWeekday,
   launchCompleteCount,
   launchStepComplete,
+  LAUNCH_STEP_IDS,
+  LAUNCH_TOTAL,
+  LAUNCH_WIZARD_STEP_IDS,
   layersScore,
+  metricsStepComplete,
   recordOf,
   stringList,
   textOf,
@@ -137,6 +141,57 @@ describe("launchStepComplete", () => {
   it("counts completed steps", () => {
     expect(launchCompleteCount({})).toBe(0);
     expect(launchCompleteCount(fullLaunch)).toBe(7);
+  });
+});
+
+describe("the Launch wizard's step list", () => {
+  it("runs the seven planning steps, then Metrics, then Scenarios, then the plan", () => {
+    expect([...LAUNCH_WIZARD_STEP_IDS]).toEqual([
+      "prayer",
+      "mission",
+      "space",
+      "team",
+      "intentional",
+      "rhythm",
+      "invite",
+      "metrics",
+      "arena",
+      "plan",
+    ]);
+  });
+  it("puts Metrics immediately before the scenarios", () => {
+    expect(LAUNCH_WIZARD_STEP_IDS.indexOf("metrics") + 1).toBe(LAUNCH_WIZARD_STEP_IDS.indexOf("arena"));
+  });
+  it("keeps the seven planning steps as the Launch total, so no leader's count drops", () => {
+    expect([...LAUNCH_STEP_IDS]).toEqual(["prayer", "mission", "space", "team", "intentional", "rhythm", "invite"]);
+    expect(LAUNCH_TOTAL).toBe(7);
+    expect(launchCompleteCount({ ...fullLaunch, metrics: { read: true } })).toBe(7);
+  });
+});
+
+describe("metricsStepComplete", () => {
+  it("is not complete before the leader reads it", () => {
+    expect(metricsStepComplete({})).toBe(false);
+    expect(metricsStepComplete({ metrics: {} })).toBe(false);
+    expect(metricsStepComplete({ metrics: { read: false } })).toBe(false);
+  });
+  it("is complete once marked read", () => {
+    expect(metricsStepComplete({ metrics: { read: true } })).toBe(true);
+  });
+  it("ignores a stored value of the wrong type", () => {
+    expect(metricsStepComplete({ metrics: { read: "yes" as never } })).toBe(false);
+    expect(metricsStepComplete({ metrics: "read" as never })).toBe(false);
+  });
+  it("counts as complete for a leader who finished the scenarios before the step existed", () => {
+    expect(metricsStepComplete({ ...fullLaunch, arena: { picks: [{ curveball: 1, choice: 0 }], done: true } })).toBe(true);
+    expect(metricsStepComplete({ arena: { done: true } })).toBe(true);
+  });
+  it("counts as complete for a leader who has started the scenarios", () => {
+    expect(metricsStepComplete({ arena: { picks: [{ curveball: 1, choice: 2 }], done: false } })).toBe(true);
+  });
+  it("does not count an empty scenarios run (Play it again saves one)", () => {
+    expect(metricsStepComplete({ arena: { picks: [], done: false } })).toBe(false);
+    expect(metricsStepComplete({ arena: { picks: "x" as never } })).toBe(false);
   });
 });
 

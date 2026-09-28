@@ -385,18 +385,19 @@ export default function LaunchPlanPage() {
         <section className="panel night-section p-5">
           <h2 className="night-h2">Principles learned</h2>
           {arenaBroken ? (
-            <p className="mt-2 text-sm text-gray-300">Your Arena run no longer matches the current months.</p>
+            <p className="mt-2 text-sm text-gray-300">Your saved scenarios no longer match the current set.</p>
           ) : arenaEarned && arenaEarned.length > 0 ? (
             <ol className="mt-2 space-y-3">
               {arenaEarned.map((e) => (
                 <li key={e.month} className="border-t border-[var(--border)] pt-3 first:border-t-0 first:pt-0">
-                  <p className="text-sm font-semibold text-white">{e.principle}</p>
+                  <p className="eyebrow">Scenario {e.month}</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{e.principle}</p>
                   <p className="mt-1 text-sm text-[var(--muted)]">{e.anchor}</p>
                 </li>
               ))}
             </ol>
           ) : (
-            <EmptyPanel step={8} />
+            <EmptyPanel step={9} />
           )}
         </section>
       ) : null}

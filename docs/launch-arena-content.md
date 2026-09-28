@@ -1,11 +1,36 @@
-# The Launch Arena: principles and curveballs
+# Launch Scenarios: principles and curveballs
 
 **Status:** First draft for Henry to edit. Nothing here is final.
-**Date:** 2026-09-23
+**Date:** 2026-09-23. Renamed from "the Arena" to "Scenarios" on 2026-09-28, with the
+months removed and a Metrics step added before it.
 
-Six months of rehearsal, played at step 7 of the Launch wizard, before a leader commits.
-Three counters move: **Pathways**, **Intersections**, **Streetlights**. No grade at the
-end, just the principles they learned and where their plan is thinnest.
+Six scenarios, played against the leader's own plan at step 9 of the Launch wizard, before
+a leader commits. Three metrics move: **Pathways**, **Intersections**, **Streetlights**. No
+grade at the end, just the principles they learned and where their plan is thinnest.
+
+In code the scenarios are still called the Arena (`src/content/arena.ts`,
+`src/lib/domain/arena.ts`), and a leader's run is saved under the `arena` section, so no
+saved progress was lost in the rename.
+
+## Step 8: Metrics
+
+A read-only step just before the scenarios. It shows:
+
+- Eyebrow "Metrics", title "How we measure a healthy group".
+- "Avenue tracks the health of every pathway with three simple metrics. They are not a
+  score to chase. They show whether your group is growing the way Jesus grows His church.
+  You'll see them move in the scenarios next."
+- The three metrics and their meanings (one source, `COUNTER_NAMES` and
+  `COUNTER_MEANINGS` in `src/lib/domain/arena.ts`, shared with the scenarios' score key):
+  - **Pathways**: People who feel they belong and invite others
+  - **Intersections**: People who come to faith and are apprenticed
+  - **Streetlights**: Disciples who step out to lead or serve
+- One button, "Continue to scenarios", which saves `{ read: true }` under the `metrics`
+  section and moves on.
+
+The step counts as done once read, or when the leader has already started or finished the
+scenarios (so a leader who finished Launch before the step existed stays finished). It is
+not one of the seven planning steps, so Launch counts and totals are unchanged.
 
 ⚠️ **Henry, please check every scripture reference.** They are drawn from memory and
 should be verified before any of this ships. The Ferguson anchors are from Hero Maker and
@@ -19,11 +44,11 @@ Each curveball has a situation, the plan gaps that make it bite harder, and four
 Each choice carries:
 
 - **Verdict**: one line, said plainly
-- **Counters**: how Pathways, Intersections and Streetlights move
+- **Counters**: how the three metrics (Pathways, Intersections, Streetlights) move
 - **Principle**: the named lesson, which is the whole point
 - **Anchor**: where it comes from
 
-Counters move in small honest numbers. A new group might finish six months on four
+Metrics move in small honest numbers. A new group might finish the six scenarios on four
 Pathways, one Intersection, zero or one Streetlight.
 
 **No choice is a trap.** Every option should be something a real leader might reasonably
@@ -33,7 +58,7 @@ pick. The weaker ones cost something and still teach.
 
 ## The default six
 
-Months 1 to 6 run curveballs 1, 2, 4, 5, 8, 7 in that order. The arc is deliberate: the
+Scenarios 1 to 6 run curveballs 1, 2, 4, 5, 8, 7 in that order. The arc is deliberate: the
 group forms, the leader is tested, the mission stalls, the room fills, the leader empties,
 and finally someone else wants to go. Curveballs 3, 6, 9 and 10 are the alternate pool for
 a replay.
@@ -42,7 +67,7 @@ a replay.
 
 ## 1. Someone quietly stops coming
 
-**Month 1 or 2.** One of your first regulars has missed three weeks. No argument, no
+**Scenario 1.** One of your first regulars has missed three weeks. No argument, no
 explanation. They still reply to messages, just briefly.
 
 **Bites harder if:** no rhythm was set, or the leader named no one to share the shepherding
@@ -59,11 +84,11 @@ with.
 
 ## 2. You are sick the week you are hosting
 
-**Month 2.** You wake up on the day genuinely unwell. The group is at your place in eight
+**Scenario 2.** You wake up on the day genuinely unwell. The group is at your place in eight
 hours.
 
 **Bites harder if:** no co-leader or apprentice was named in the plan. If the leader listed
-nobody, options C and D are the only realistic ones and the Arena should say so plainly.
+nobody, options C and D are the only realistic ones and the scenario should say so plainly.
 
 | Choice | Verdict | Counters | Principle | Anchor |
 |---|---|---|---|---|
@@ -92,7 +117,7 @@ stopped speaking entirely.
 
 ## 4. Nobody has invited anyone in two months
 
-**Month 3.** The group is warm, consistent and completely closed. Everyone loves it. Nobody
+**Scenario 3.** The group is warm, consistent and completely closed. Everyone loves it. Nobody
 has brought a friend.
 
 **Bites harder if:** no mission group was named, or no third space was identified.
@@ -108,7 +133,7 @@ has brought a friend.
 
 ## 5. The group outgrows your living room
 
-**Month 4.** Twelve people in a room that seats eight. Two sat on the floor. Someone joked
+**Scenario 4.** Twelve people in a room that seats eight. Two sat on the floor. Someone joked
 about needing a bigger house.
 
 **Bites harder if:** hosting in a 1st space home, and no apprentice has been named. This is
@@ -119,7 +144,7 @@ the moment the plan's thin spots show.
 | Multiply into two groups, with your apprentice leading one | Hard, and right. Two tables where there was one. | Pathways +1, Streetlights +1 | Multiplication always feels like loss before it feels like growth. | 2 Timothy 2:2, entrust it to those who will teach others |
 | Find a bigger room and stay together | Everyone stayed, and the room got quieter. Big rooms make guests of people. | Pathways -1 | Adding is easier than multiplying. It is also where most groups stop. | Hero Maker, Multiplication Thinking |
 | Cap the group and start a waiting list | Protected what you had. Told six people there was no room for them. | Pathways -1 | A closed table is a comfortable table. It is not a Pathway. | Luke 14:23, go out and compel them to come in |
-| Split the gathering across two nights, same leader | Bought yourself three months, and doubled your own load. | Pathways +1, leader capacity strained | Two nights led by one person is not multiplication. It is a slower burnout. | Exodus 18, Moses judging alone from morning to evening |
+| Split the gathering into two times, same leader | Bought yourself three months, and doubled your own load. | Pathways +1, leader capacity strained | Two gatherings led by one person is not multiplication. It is a slower burnout. | Exodus 18, Moses judging alone from morning to evening |
 
 ---
 
@@ -144,10 +169,10 @@ suggest the group abandons anyone.
 
 ## 7. Two people want to start something of their own
 
-**Month 6, and the best problem in the list.** Two of your people have been talking. They
+**Scenario 6, and the best problem in the list.** Two of your people have been talking. They
 want to start a Pathway in their own street.
 
-**Bites harder if:** neither has been apprenticed past the early rungs. The Arena should
+**Bites harder if:** neither has been apprenticed past the early rungs. The scenario should
 note that plainly: releasing someone you have not trained is not sending, it is hoping.
 
 | Choice | Verdict | Counters | Principle | Anchor |
@@ -161,10 +186,10 @@ note that plainly: releasing someone you have not trained is not sending, it is 
 
 ## 8. You are running on empty
 
-**Month 5.** You have led every week, hosted most of them, and had two hard conversations.
+**Scenario 5.** You have led every week, hosted most of them, and had two hard conversations.
 You are not enjoying it any more and you have not said so to anyone.
 
-**Bites harder if:** no coach relationship, no apprentice, and this is the month the Arena
+**Bites harder if:** no coach relationship, no apprentice, and this is the scenario that
 should reference their own RPMS check-in if they have one.
 
 | Choice | Verdict | Counters | Principle | Anchor |
@@ -210,9 +235,9 @@ No grade. Two things:
 
 1. **The principles you learned**, listed back in the order they were earned, with the
    choice that taught each one.
-2. **Where your plan is thinnest**, named plainly, drawn from the gaps the Arena pressed
-   on. For example: "You went six months without naming an apprentice. Three of your
-   hardest months would have been easier with one."
+2. **Where your plan is thinnest**, named plainly, drawn from the gaps the scenarios
+   pressed on. For example: "You have not named an apprentice. It made 3 of your scenarios
+   harder."
 
 Both carry into the Launch Plan one-pager.
 
@@ -223,8 +248,8 @@ Both carry into the Launch Plan one-pager.
 - ❓ Are the four choices per curveball genuinely the four a real Avenue leader would
   consider, or are any of them straw men?
 - ❓ Curveball 6, the crisis, needs the most pastoral care. Is the framing right?
-- ❓ Are the counter movements the right size, or should a single good month move Pathways
+- ❓ Are the counter movements the right size, or should a single good choice move Pathways
   by more?
 - ❓ Should Intersections only move on curveball 9, or are there other honest routes to a
-  decision of faith in six months?
+  decision of faith across the six scenarios?
 - ❓ Every scripture reference needs checking before this ships.

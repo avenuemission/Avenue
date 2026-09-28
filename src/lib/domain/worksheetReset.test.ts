@@ -38,7 +38,7 @@ describe("reset dialog copy", () => {
       title: "Reset Launch?",
       wiped: [
         "Your answers in all seven Launch steps",
-        "Your Arena run",
+        "Your scenarios and the Metrics step",
         "Your Launch Plan, including the actions you ticked",
       ],
       kept: "People on My People are kept.",

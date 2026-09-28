@@ -13,7 +13,8 @@ describe("Arena content transcription", () => {
   });
   it("fills every field and every counters cell parses", () => {
     for (const c of CURVEBALLS) {
-      expect(c.title && c.when && c.situation).toBeTruthy();
+      expect(c.title && c.situation).toBeTruthy();
+      expect("when" in c).toBe(false);
       for (const ch of c.choices) {
         expect(ch.label && ch.verdict && ch.counters && ch.principle && ch.anchor).toBeTruthy();
         expect(() => parseCounters(ch.counters)).not.toThrow();
@@ -33,6 +34,11 @@ describe("Arena content transcription", () => {
     expect(byId.get(9)!.choices[2].anchor).toBe("Acts 8, the Ethiopian asks what prevents me from being baptised");
     expect(byId.get(10)!.choices[3].principle).toBe("Avoiding the question is not unity, it is just quiet.");
     expect(byId.get(9)!.bitesIfNote).toBe("");
+  });
+  it("splits the full room into two times, not two nights", () => {
+    const choice = CURVEBALLS.flatMap((c) => c.choices).find((ch) => ch.label.startsWith("Split the gathering"))!;
+    expect(choice.label).toBe("Split the gathering into two times, same leader");
+    expect(choice.principle).toBe("Two gatherings led by one person is not multiplication. It is a slower burnout.");
   });
   it("contains no em dash", () => expect(JSON.stringify(CURVEBALLS)).not.toContain(String.fromCharCode(0x2014)));
 });

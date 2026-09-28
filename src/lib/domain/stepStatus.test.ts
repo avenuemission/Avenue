@@ -8,6 +8,7 @@ import {
   launchWizardStepStatus,
   moduleStatus,
 } from "./stepStatus";
+import { LAUNCH_WIZARD_STEP_IDS } from "./journey";
 
 describe("hasAnswer", () => {
   it("finds no answer in empty values", () => {
@@ -68,6 +69,17 @@ describe("launchWizardStepStatus", () => {
   it("counts the Arena as done while it is switched off, as the wizard does today", () => {
     expect(launchWizardStepStatus("arena", {}, false)).toBe("done");
   });
+  it("lights Metrics once read, or for a leader who already started or finished the scenarios", () => {
+    expect(launchWizardStepStatus("metrics", {}, true)).toBe("off");
+    expect(launchWizardStepStatus("metrics", { metrics: { read: true } }, true)).toBe("done");
+    expect(launchWizardStepStatus("metrics", { arena: { picks: [], done: true } }, true)).toBe("done");
+    expect(
+      launchWizardStepStatus("metrics", { arena: { picks: [{ curveball: 1, choice: 0 }], done: false } }, true)
+    ).toBe("done");
+  });
+  it("gives every wizard step a status", () => {
+    for (const id of LAUNCH_WIZARD_STEP_IDS) expect(() => launchWizardStepStatus(id, {}, true)).not.toThrow();
+  });
   it("never lights the plan step and hands the seven steps to launchStepStatus", () => {
     expect(launchWizardStepStatus("plan", { prayer: { when: "Mornings" } }, true)).toBe("off");
     expect(launchWizardStepStatus("prayer", { prayer: { when: "Mornings" } }, true)).toBe("done");
@@ -92,7 +104,7 @@ describe("moduleStatus", () => {
   });
 });
 
-describe("arenaMonthStatus", () => {
+describe("arenaMonthStatus (one dot per scenario)", () => {
   const months = (state: { month: number; finished: boolean }) =>
     [0, 1, 2, 3, 4, 5].map((i) => arenaMonthStatus(i, state));
   it("shows every month off before the first pick", () => {

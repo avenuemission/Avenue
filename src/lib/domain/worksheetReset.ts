@@ -41,7 +41,7 @@ export const RESET_COPY: Record<WorksheetKind, ResetCopy> = {
       // Henry to check wording
       "Your answers in all seven Launch steps",
       // Henry to check wording
-      "Your Arena run",
+      "Your scenarios and the Metrics step",
       // Henry to check wording
       "Your Launch Plan, including the actions you ticked",
     ],

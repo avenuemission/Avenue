@@ -1,7 +1,7 @@
 // The journey as an avenue at night (spec 2026-09-24 avenue-night, 2.1 and
 // 4.1). Pure. Which stops are walked, where the leader stands, the one line
 // of status, the next action at the stop they are at, and the greeting.
-import { CALLING_TOTAL, LAUNCH_TOTAL, type CallingSectionId, type LaunchStepId } from "@/lib/domain/journey";
+import { CALLING_TOTAL, LAUNCH_TOTAL, type CallingSectionId, type LaunchWizardStepId } from "@/lib/domain/journey";
 
 export const STOP_IDS = ["phase1", "phase2", "phase3", "phase4", "phase5"] as const;
 export type StopId = (typeof STOP_IDS)[number];
@@ -176,7 +176,7 @@ export const CALLING_LAMP_LABELS: Record<CallingSectionId, string> = {
   conversation: "Conversation",
 };
 
-export const LAUNCH_LAMP_LABELS: Record<LaunchStepId | "arena" | "plan", string> = {
+export const LAUNCH_LAMP_LABELS: Record<LaunchWizardStepId, string> = {
   prayer: "Pray first",
   mission: "Mission group",
   space: "Space",
@@ -184,6 +184,7 @@ export const LAUNCH_LAMP_LABELS: Record<LaunchStepId | "arena" | "plan", string>
   intentional: "Live it",
   rhythm: "Launch date",
   invite: "Invite",
-  arena: "The Arena",
+  metrics: "Metrics",
+  arena: "Scenarios",
   plan: "Your plan",
 };

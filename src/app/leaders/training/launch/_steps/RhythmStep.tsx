@@ -64,10 +64,10 @@ export default function RhythmStep({ value, save, finish }: StepProps<Rhythm>) {
 
       <div>
         <label htmlFor="launch-weekly-day" className="block text-sm font-semibold text-white">
-          Weekly night
+          Meeting day
         </label>
         <select id="launch-weekly-day" value={weeklyDay} onChange={(e) => onDay(e.target.value)} className={INPUT}>
-          <option value="">Choose a night</option>
+          <option value="">Choose a day</option>
           {WEEKDAYS.map((d) => (
             <option key={d} value={d}>
               {capitalise(d)}
@@ -111,7 +111,7 @@ export default function RhythmStep({ value, save, finish }: StepProps<Rhythm>) {
         label="Set my launch date"
         onClick={finish}
         disabled={!complete}
-        hint="Pick a date, a night and a time to continue."
+        hint="Pick a date, a day and a time to continue."
       />
     </div>
   );

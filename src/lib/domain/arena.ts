@@ -1,18 +1,24 @@
-// The Arena: a six-month rehearsal that reads the leader's own Launch plan
-// and presses on its gaps (spec 5.1). Pure and deterministic. The content
-// lives in src/app/leaders/training/launch/arenaContent.ts, transcribed
-// from docs/launch-arena-content.md. No grade anywhere.
+// The scenarios (called the Arena in code and in the saved "arena"
+// section): six curveballs that read the leader's own Launch plan and press
+// on its gaps (spec 5.1). Pure and deterministic. The content lives in
+// src/content/arena.ts, transcribed from docs/launch-arena-content.md. No
+// grade anywhere.
 import type { LaunchData } from "@/lib/domain/journey";
 import type { Space } from "@/lib/domain/people";
 
 export const COUNTER_KEYS = ["pathways", "intersections", "streetlights"] as const;
 export type CounterKey = (typeof COUNTER_KEYS)[number];
 
-// The Arena's scoring in plain words (round 2 spec 4): one sentence before
-// Month 1, and a one-line meaning under each counter.
-// Henry to check wording
-export const ARENA_SCORE_INTRO =
-  "Every choice you make moves three counters, the same three things Avenue watches in real life.";
+// The three metrics, named and explained once. The Metrics step and the
+// scenarios' score key both read these, so they can never disagree.
+export const COUNTER_NAMES: Record<CounterKey, string> = {
+  pathways: "Pathways",
+  intersections: "Intersections",
+  streetlights: "Streetlights",
+};
+
+// The score key's one sentence before the first scenario.
+export const ARENA_SCORE_INTRO = "Every choice you make moves the three metrics from the last step.";
 
 export const COUNTER_MEANINGS: Record<CounterKey, string> = {
   // Henry to check wording
@@ -86,7 +92,7 @@ export const GAP_TEXT: Record<GapId, { bites: string; thin: string; action: stri
   noRhythm: {
     bites: "Your plan sets no weekly rhythm, so drift is harder to notice.",
     thin: "You have no weekly rhythm set.",
-    action: "Pick the night and time you will meet every week.",
+    action: "Pick the day and time you will meet every week.",
   },
   noApprentice: {
     bites: "Your plan names no apprentice, so there is no one to hand this to.",
@@ -143,7 +149,6 @@ interface ArenaChoice {
 export interface Curveball {
   id: number;
   title: string;
-  when: string;
   situation: string;
   bitesIfNote: string;
   bitesIf: GapId[];
@@ -221,6 +226,6 @@ export function thinSpots(curveballs: Curveball[], order: readonly number[], gap
 export function thinSentence(spot: ThinSpot): string {
   const base = GAP_TEXT[spot.gap].thin;
   if (spot.monthsHarder === 0) return base;
-  if (spot.monthsHarder === 1) return `${base} It made one of your months harder.`;
-  return `${base} It made ${spot.monthsHarder} of your months harder.`;
+  if (spot.monthsHarder === 1) return `${base} It made one of your scenarios harder.`;
+  return `${base} It made ${spot.monthsHarder} of your scenarios harder.`;
 }

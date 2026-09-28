@@ -5,6 +5,7 @@ import {
   callingSectionComplete,
   launchStepComplete,
   LAUNCH_STEP_IDS,
+  metricsStepComplete,
   type CallingData,
   type CallingSectionId,
   type LaunchData,
@@ -49,11 +50,13 @@ function isLaunchStepId(id: string): id is LaunchStepId {
   return (LAUNCH_STEP_IDS as readonly string[]).includes(id);
 }
 
-// The Launch wizard's nine lamps: the seven planning steps, the Arena and
-// the plan. The Arena counts as done while it is switched off, exactly as
-// the wizard's completion does today. The plan lamp is never lit.
+// The Launch wizard's ten lamps: the seven planning steps, Metrics, the
+// scenarios (saved under "arena") and the plan. Metrics is read-only, so it
+// is off or done, never in progress. The scenarios count as done while they
+// are switched off. The plan lamp is never lit.
 export function launchWizardStepStatus(id: string, data: LaunchData, arenaEnabled: boolean): DotStatus {
   if (isLaunchStepId(id)) return launchStepStatus(id, data);
+  if (id === "metrics") return statusOf(metricsStepComplete(data), false);
   if (id === "arena") return statusOf(!arenaEnabled || data.arena?.done === true, hasAnswer(data.arena?.picks));
   if (id === "plan") return "off";
   throw new Error(`Unknown Launch step: ${id}`);
@@ -65,8 +68,8 @@ export function moduleStatus(module: { completed: boolean; episodes?: { watched:
   return statusOf(module.completed, (module.episodes ?? []).some((e) => e.watched));
 }
 
-// An Arena month: played months are done. The month in play is in progress
-// only mid-run (at least one month played, not finished).
+// One scenario's dot: played scenarios are done. The scenario in play is
+// in progress only mid-run (at least one played, not finished).
 export function arenaMonthStatus(i: number, state: { month: number; finished: boolean }): DotStatus {
   if (i < state.month) return "done";
   if (i === state.month && state.month > 0 && !state.finished) return "progress";

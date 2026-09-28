@@ -5,6 +5,8 @@ import {
   bitesFor,
   COUNTER_KEYS,
   COUNTER_MEANINGS,
+  COUNTER_NAMES,
+  GAP_TEXT,
   detectGaps,
   parseCounters,
   playArena,
@@ -18,7 +20,6 @@ const choice = (label: string, counters: string) => ({ label, verdict: `${label}
 const cb = (id: number, bitesIf: Curveball["bitesIf"], counters: string[]): Curveball => ({
   id,
   title: `Curveball ${id}`,
-  when: "Month",
   situation: "Something happens.",
   bitesIfNote: "",
   bitesIf,
@@ -140,12 +141,22 @@ describe("bitesFor and thinSpots", () => {
   });
   it("writes the thin line plainly", () => {
     expect(thinSentence({ gap: "noApprentice", monthsHarder: 0 })).toBe("You have not named an apprentice.");
-    expect(thinSentence({ gap: "noApprentice", monthsHarder: 1 })).toBe("You have not named an apprentice. It made one of your months harder.");
-    expect(thinSentence({ gap: "noApprentice", monthsHarder: 3 })).toBe("You have not named an apprentice. It made 3 of your months harder.");
+    expect(thinSentence({ gap: "noApprentice", monthsHarder: 1 })).toBe("You have not named an apprentice. It made one of your scenarios harder.");
+    expect(thinSentence({ gap: "noApprentice", monthsHarder: 3 })).toBe("You have not named an apprentice. It made 3 of your scenarios harder.");
   });
 });
 
-describe("how the Arena keeps score", () => {
+describe("the three metrics", () => {
+  it("names each metric once, in counter order, for the Metrics step and the score key", () => {
+    expect(Object.keys(COUNTER_NAMES)).toEqual([...COUNTER_KEYS]);
+    expect(COUNTER_NAMES).toEqual({ pathways: "Pathways", intersections: "Intersections", streetlights: "Streetlights" });
+  });
+  it("says what to do when no weekly rhythm is set in days, not nights", () => {
+    expect(GAP_TEXT.noRhythm.action).toBe("Pick the day and time you will meet every week.");
+  });
+});
+
+describe("how the scenarios keep score", () => {
   it("gives each counter the spec's plain meaning, in counter order, with no em dash", () => {
     expect(Object.keys(COUNTER_MEANINGS)).toEqual([...COUNTER_KEYS]);
     expect(COUNTER_MEANINGS).toEqual({
@@ -153,9 +164,8 @@ describe("how the Arena keeps score", () => {
       intersections: "People who come to faith and are apprenticed",
       streetlights: "Disciples who step out to lead or serve",
     });
-    expect(ARENA_SCORE_INTRO).toBe(
-      "Every choice you make moves three counters, the same three things Avenue watches in real life."
-    );
+    expect(ARENA_SCORE_INTRO).toBe("Every choice you make moves the three metrics from the last step.");
+    expect(ARENA_SCORE_INTRO).not.toContain("watches in real life");
     expect(JSON.stringify(COUNTER_MEANINGS) + ARENA_SCORE_INTRO).not.toContain(String.fromCharCode(0x2014));
   });
 });

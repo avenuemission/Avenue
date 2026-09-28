@@ -21,7 +21,7 @@ Every document in this repo, what it is for, and which ones describe the code to
 | Doc | What it is |
 |---|---|
 | [calling-content.md](calling-content.md) | The Calling phase text. Mirrors `src/content/calling.ts` |
-| [launch-arena-content.md](launch-arena-content.md) | The Launch Arena draft. Transcribed into `src/content/arena.ts` |
+| [launch-arena-content.md](launch-arena-content.md) | The Launch Scenarios draft (the Arena in code) and the Metrics step. Transcribed into `src/content/arena.ts` |
 
 ## History: do not treat as current
 

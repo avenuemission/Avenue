@@ -7,12 +7,11 @@ import {
   filled,
   isIsoDate,
   launchCompleteCount,
-  launchStepComplete,
-  LAUNCH_STEP_IDS,
   LAUNCH_TOTAL,
   type CallingData,
   type LaunchData,
   type LaunchStepId,
+  type LaunchWizardStepId,
 } from "@/lib/domain/journey";
 import { LAUNCH_LAMP_LABELS } from "@/lib/domain/avenue";
 import { launchWizardStepStatus } from "@/lib/domain/stepStatus";
@@ -30,12 +29,14 @@ import TeamStep from "@/app/leaders/training/launch/_steps/TeamStep";
 import IntentionalStep from "@/app/leaders/training/launch/_steps/IntentionalStep";
 import RhythmStep from "@/app/leaders/training/launch/_steps/RhythmStep";
 import InviteStep from "@/app/leaders/training/launch/_steps/InviteStep";
+import MetricsStep from "@/app/leaders/training/launch/_steps/MetricsStep";
 import ArenaStep from "@/app/leaders/training/launch/_steps/ArenaStep";
 import { ARENA_ENABLED } from "@/content/arena";
 import { arenaPlanFrom } from "@/lib/domain/arena";
 import { useNetworkView } from "@/hooks/useNetworkView";
 
-const LAUNCH_STEPS = [
+// In LAUNCH_WIZARD_STEP_IDS order (journey.ts); the indexes below follow it.
+const LAUNCH_STEPS: readonly { id: LaunchWizardStepId; title: string; minutes: number }[] = [
   { id: "prayer", title: "Pray first", minutes: 4 },
   { id: "mission", title: "Your mission group", minutes: 4 },
   { id: "space", title: "Your space", minutes: 5 },
@@ -43,13 +44,12 @@ const LAUNCH_STEPS = [
   { id: "intentional", title: "Live intentionally", minutes: 4 },
   { id: "rhythm", title: "Rhythm and launch date", minutes: 3 },
   { id: "invite", title: "Invite and care", minutes: 5 },
-  { id: "arena", title: "The Arena", minutes: 12 },
+  { id: "metrics", title: "Metrics", minutes: 2 },
+  { id: "arena", title: "Scenarios", minutes: 12 },
   { id: "plan", title: "Your Launch Plan", minutes: 2 },
-] as const;
-
-function isLaunchStepId(id: string): id is LaunchStepId {
-  return (LAUNCH_STEP_IDS as readonly string[]).includes(id);
-}
+];
+const ARENA_INDEX = LAUNCH_STEPS.findIndex((s) => s.id === "arena");
+const PLAN_INDEX = LAUNCH_STEPS.findIndex((s) => s.id === "plan");
 
 function ErrorPanel({ message }: { message: string }) {
   return (
@@ -71,7 +71,8 @@ function ErrorPanel({ message }: { message: string }) {
 }
 
 // Phase 3: the Launch wizard. Seven planning steps built from the phase 3
-// modules (Nehemiah 1 and 2), then the Arena and the printable plan. Saved
+// modules (Nehemiah 1 and 2), then Metrics, the scenarios (the Arena in
+// code) and the printable plan. Saved
 // to the leader's private "launch" worksheet; the Calling worksheet is read
 // only, to carry the people group and hosting space forward.
 export default function LaunchPage() {
@@ -80,7 +81,7 @@ export default function LaunchPage() {
   const launch = useWorksheet<LaunchData>("launch", ready);
   const calling = useWorksheet<CallingData>("calling", ready);
   const { people, peopleLoaded, peopleError, upsertPerson } = useMyPeople(ready);
-  // The Arena's "no apprentice" gap: people this leader sent out who are on
+  // The scenarios' "no apprentice" gap: people this leader sent out who are on
   // at least the first apprenticeship rung. Null (gap not claimed) until the
   // network loads, or when it fails.
   const network = useNetworkView(user, ready, ready);
@@ -90,19 +91,18 @@ export default function LaunchPage() {
       : network.networkPeople.filter((p) => p.sentOutBy === network.networkViewerId && p.apprenticeStep >= 1).length;
   const data = launch.data;
 
+  const stepStatus = Object.fromEntries(
+    LAUNCH_STEPS.map((s) => [s.id, launchWizardStepStatus(s.id, data, ARENA_ENABLED)])
+  );
+  // A step is complete when its lamp is lit: the planning steps by their
+  // own rule, Metrics once read (or the scenarios already played), the
+  // scenarios once finished (or switched off). The plan is never complete.
   const steps: WizardStepMeta[] = LAUNCH_STEPS.map((s) => ({
     id: s.id,
     title: s.title,
     minutes: s.minutes,
-    complete: isLaunchStepId(s.id)
-      ? launchStepComplete(s.id, data)
-      : s.id === "arena"
-        ? !ARENA_ENABLED || data.arena?.done === true
-        : false,
+    complete: stepStatus[s.id] === "done",
   }));
-  const stepStatus = Object.fromEntries(
-    LAUNCH_STEPS.map((s) => [s.id, launchWizardStepStatus(s.id, data, ARENA_ENABLED)])
-  );
 
   const loaded = launch.loaded && calling.loaded;
   const [stepParam] = useState(() =>
@@ -225,16 +225,22 @@ export default function LaunchPage() {
         <InviteStep
           value={data.invite}
           save={(v) => launch.saveSection("invite", v)}
-          finish={async () => {
-            await launch.flushSection("invite");
-            // With the Arena off, step 8 is skipped straight to the plan.
-            goTo(ARENA_ENABLED ? 7 : 8);
-          }}
+          finish={finishFor("invite", current)}
           people={people}
           peopleLoaded={peopleLoaded}
           peopleError={peopleError}
           onPersonChange={upsertPerson}
-          arenaEnabled={ARENA_ENABLED}
+        />
+      );
+      break;
+    case "metrics":
+      activity = (
+        <MetricsStep
+          finish={async () => {
+            launch.saveSection("metrics", { read: true });
+            await launch.flushSection("metrics");
+            goTo(ARENA_INDEX);
+          }}
         />
       );
       break;
@@ -246,17 +252,17 @@ export default function LaunchPage() {
           save={(v) => launch.saveSection("arena", v)}
           onShowPlan={async () => {
             await launch.flushSection("arena");
-            goTo(8);
+            goTo(PLAN_INDEX);
           }}
         />
       ) : (
         <div className="space-y-6">
           <div className="panel p-4">
             <p className="text-sm leading-relaxed text-gray-300">
-              The Arena: a six-month rehearsal of your plan, coming soon
+              Scenarios: a rehearsal of your plan, coming soon
             </p>
           </div>
-          <OutcomeButton label="Show my launch plan" onClick={() => goTo(8)} />
+          <OutcomeButton label="Show my launch plan" onClick={() => goTo(PLAN_INDEX)} />
         </div>
       );
       break;

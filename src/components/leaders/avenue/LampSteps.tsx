@@ -15,7 +15,7 @@ export interface LampStepsProps {
   currentIndex: number | null;
   onSelect?: (index: number) => void; // omit for a display-only row
   label: string; // accessible name for the whole row
-  dense?: boolean; // six narrow lamps for the Arena months
+  dense?: boolean; // six narrow lamps for the scenarios
 }
 
 // A row of step dots (round 3 spec 4), one per step, wrapping on phones:

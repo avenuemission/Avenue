@@ -45,6 +45,13 @@ describe("validateWorksheetPatch", () => {
       value: { picks: [], done: false },
     });
   });
+  it("accepts the Metrics step's read flag as a launch section", () => {
+    expect(validateWorksheetPatch({ kind: "launch", section: "metrics", value: { read: true } })).toEqual({
+      kind: "launch",
+      section: "metrics",
+      value: { read: true },
+    });
+  });
   it("accepts a null value", () => {
     expect(validateWorksheetPatch({ kind: "launch", section: "team", value: null })).toEqual({ kind: "launch", section: "team", value: null });
   });
