@@ -4,3 +4,9 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  # Netlify's secret scan flags the Google Maps browser key (NEXT_PUBLIC_, locked
+  # to our domain, meant to be public) inside Next's Turbopack build cache and
+  # fails the deploy. Skip only that cache folder; the site output is still scanned.
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache/**"
