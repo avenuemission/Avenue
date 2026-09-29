@@ -82,8 +82,8 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
 
     // Add markers for each pathway group
     pathwayGroups.forEach((group) => {
-      // Blue for running groups, purple for coming soon
-      const iconColor = group.running ? "#3b82f6" : "#8b5cf6";
+      // Blue for running groups, dim amber (an unlit lamp) for coming soon
+      const iconColor = group.running ? "#3b82f6" : "#b8894a";
       
       const marker = new window.google.maps.Marker({
         position: { lat: group.coordinates[0], lng: group.coordinates[1] },
@@ -214,7 +214,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
               {pathwayGroups.map((group) => (
                 <li key={group.id} className="text-sm">
                   <span className="text-white font-medium">{group.name}</span>
-                  {!group.running && <span className="text-purple-400 font-semibold"> (coming soon)</span>}
+                  {!group.running && <span className="text-[var(--lamp)]/75 font-semibold"> (coming soon)</span>}
                   <span className="block text-gray-400">{group.time}</span>
                 </li>
               ))}
@@ -222,7 +222,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
             <button
               type="button"
               onClick={() => setShowMap(true)}
-              className="mt-4 self-start bg-blue-700 text-white px-8 py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm"
+              className="btn-night mt-4 self-start px-8 py-3 text-sm"
             >
               Show map
             </button>
@@ -237,7 +237,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
 
         {/* Selected Group Info Panel */}
         {selectedGroup && (
-          <div className={`absolute bottom-4 left-4 z-20 bg-gray-900/95 border rounded-xl p-4 max-w-xs ${selectedGroup.running ? 'border-gray-700' : 'border-purple-500'}`}>
+          <div className={`absolute bottom-4 left-4 z-20 bg-gray-900/95 border rounded-xl p-4 max-w-xs ${selectedGroup.running ? 'border-gray-700' : 'border-[var(--lamp)]/50'}`}>
             <button
               onClick={() => setSelectedGroup(null)}
               className="absolute top-2 right-2 text-gray-400 hover:text-white"
@@ -248,7 +248,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
               {selectedGroup.name}
             </h3>
             {!selectedGroup.running && (
-              <p className="text-purple-400 font-semibold text-sm mb-2">
+              <p className="text-[var(--lamp)]/75 font-semibold text-sm mb-2">
                 Coming soon!
               </p>
             )}
@@ -364,7 +364,7 @@ export default function PathwayMap({ groups: pathwayGroups }: { groups: PathwayG
 
           <button
             type="submit"
-            className="bg-blue-700 text-white px-12 py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm"
+            className="btn-lamp px-12 py-3 text-sm"
           >
             Connect
           </button>

@@ -152,7 +152,7 @@ export default async function PathwaysPage() {
                 <Link
                   href="/login"
                   prefetch={false}
-                  className="inline-block bg-[var(--accent)] text-white px-10 py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
+                  className="btn-lamp px-10 py-3 text-sm"
                 >
                   Become a Pathway Leader
                 </Link>

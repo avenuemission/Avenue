@@ -39,16 +39,16 @@ export default function CountdownTimer({ variant = "navbar", target = nextPrayer
 
   return (
     <div className="text-center">
-      <div className="text-2xl font-bold text-purple-500">
+      <div className="text-2xl font-bold text-[var(--lamp)] tabular-nums">
         {pad(timeLeft.days)} DAYS
       </div>
-      <div className="text-2xl font-bold text-purple-500">
+      <div className="text-2xl font-bold text-[var(--lamp)] tabular-nums">
         {pad(timeLeft.hours)} HOURS
       </div>
-      <div className="text-2xl font-bold text-purple-500">
+      <div className="text-2xl font-bold text-[var(--lamp)] tabular-nums">
         {pad(timeLeft.minutes)} MINS
       </div>
-      <div className="text-2xl font-bold text-purple-500">
+      <div className="text-2xl font-bold text-[var(--lamp)] tabular-nums">
         {pad(timeLeft.seconds)} SECONDS
       </div>
     </div>

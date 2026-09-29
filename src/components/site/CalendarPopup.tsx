@@ -141,7 +141,7 @@ export default function CalendarPopup({ isOpen, onClose }: CalendarPopupProps) {
             href={SOCIAL_LINKS.googleCalendar}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full bg-blue-700 text-white text-center py-3 rounded-full font-medium hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm"
+            className="btn-lamp block w-full text-center py-3 text-sm"
           >
             See All Events
           </a>

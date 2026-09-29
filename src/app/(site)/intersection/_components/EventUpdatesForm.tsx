@@ -68,7 +68,7 @@ export default function EventUpdatesForm() {
       </div>
       <button
         type="submit"
-        className="bg-[var(--accent)] text-white px-12 py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
+        className="btn-lamp px-12 py-3 text-sm"
       >
         Submit
       </button>

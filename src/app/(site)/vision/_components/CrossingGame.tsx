@@ -389,7 +389,7 @@ export default function CrossingGame() {
                     <button
                       type="submit"
                       disabled={submitting || initials.length !== 3}
-                      className="min-h-[44px] rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                      className="min-h-[44px] rounded-lg bg-[var(--lamp)] px-4 text-sm font-semibold text-[#1a1206] disabled:opacity-50"
                     >
                       {submitting ? "Saving" : "Save"}
                     </button>

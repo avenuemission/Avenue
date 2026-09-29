@@ -2,6 +2,7 @@ import Image from "next/image";
 import ImageCarousel from "@/components/site/ImageCarousel";
 import PageTitle from "@/components/ui/PageTitle";
 import Reveal from "@/components/ui/Reveal";
+import RowLinkContent from "@/components/ui/RowLinkContent";
 import SceneSection from "@/components/site/scenes/SceneSection";
 import StreetlightsScene from "@/components/site/scenes/StreetlightsScene";
 import HomeboundAlbum from "./_components/HomeboundAlbum";
@@ -83,57 +84,34 @@ export default async function StreetlightsPage() {
             </h2>
           </Reveal>
 
-          <div className="flex flex-wrap justify-center gap-6 mb-12">
+          <div className="grid sm:grid-cols-2 gap-3 max-w-[560px] mx-auto mb-12">
             <Reveal delay={0}>
-            <HomeboundAlbum />
+              <HomeboundAlbum />
             </Reveal>
             <Reveal delay={80}>
-            {/* Pathways Podcast Button */}
-            <a
-              href={CREATIVE_INITIATIVES.pathwaysPodcast.spotifyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[var(--accent)] hover:brightness-110 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px] flex flex-col items-center justify-center"
-            >
-              <span className="block text-xl uppercase tracking-wider">
-                Pathways
-              </span>
-              <span className="block text-sm uppercase tracking-wider mt-1">
-                Podcast
-              </span>
-            </a>
-
+              <a
+                href={CREATIVE_INITIATIVES.pathwaysPodcast.spotifyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="row-link"
+              >
+                <RowLinkContent title="Pathways" subtitle="Podcast" />
+              </a>
             </Reveal>
             <Reveal delay={160}>
-            {/* Saturday Club Button */}
-            <a
-              href={CREATIVE_INITIATIVES.saturdayClub.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[var(--accent)] hover:brightness-110 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px] flex flex-col items-center justify-center"
-            >
-              <span className="block text-xl uppercase tracking-wider">
-                The Saturday
-              </span>
-              <span className="block text-sm uppercase tracking-wider mt-1">
-                Club
-              </span>
-            </a>
-
+              <a
+                href={CREATIVE_INITIATIVES.saturdayClub.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="row-link"
+              >
+                <RowLinkContent title="The Saturday" subtitle="Club" />
+              </a>
             </Reveal>
             <Reveal delay={240}>
-            {/* APEST Quiz Button */}
-            <a
-              href="/apest-quiz"
-              className="bg-[var(--accent)] hover:brightness-110 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px] flex flex-col items-center justify-center"
-            >
-              <span className="block text-xl uppercase tracking-wider">
-                APEST
-              </span>
-              <span className="block text-sm uppercase tracking-wider mt-1">
-                Quiz
-              </span>
-            </a>
+              <a href="/apest-quiz" className="row-link">
+                <RowLinkContent title="APEST" subtitle="Quiz" />
+              </a>
             </Reveal>
           </div>
 
@@ -170,7 +148,7 @@ export default async function StreetlightsPage() {
               href="https://egiving.org.au/Avenue?filter=tithe"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-[var(--accent)] hover:brightness-110 text-white px-12 py-4 rounded-full font-medium transition-all uppercase tracking-wider text-lg"
+              className="btn-lamp px-12 py-4 text-lg"
             >
               Tithe
             </a>
@@ -178,7 +156,7 @@ export default async function StreetlightsPage() {
               href="https://egiving.org.au/Avenue?filter=local"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-strong)] text-white px-12 py-4 rounded-full font-medium transition-all uppercase tracking-wider text-lg"
+              className="btn-night inline-block px-12 py-4 text-lg"
             >
               Local Offering
             </a>

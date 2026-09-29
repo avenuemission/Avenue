@@ -14,7 +14,7 @@ const socialButtons = [
 ];
 
 const buttonClass =
-  "flex items-center justify-center gap-3 bg-[var(--accent)] text-white px-10 py-8 rounded-full font-medium transition-all duration-300 hover:brightness-110 min-w-[180px]";
+  "btn-night flex items-center justify-center gap-3 px-10 py-8 min-w-[180px]";
 
 // The social links, plus a Google Calendar button that opens the calendar
 // popup.

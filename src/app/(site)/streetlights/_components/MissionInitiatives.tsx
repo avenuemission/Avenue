@@ -6,6 +6,7 @@ import Link from "next/link";
 import { X, Calendar, Heart, Clock } from "lucide-react";
 import Portal from "@/components/ui/Portal";
 import Reveal from "@/components/ui/Reveal";
+import RowLinkContent from "@/components/ui/RowLinkContent";
 import { useCountdown } from "@/hooks/useCountdown";
 import { melbourneInstant } from "@/lib/domain/dates/melbourne";
 import { MISSION_INITIATIVES } from "@/content/site";
@@ -85,19 +86,18 @@ export default function MissionInitiatives() {
 
   return (
     <>
-      <div className="flex flex-wrap justify-center gap-6">
+      <div className="grid sm:grid-cols-2 gap-3 max-w-[560px] mx-auto">
         {MISSION_INITIATIVES.map((initiative, index) => (
           <Reveal key={initiative.id} delay={index * 80}>
             <button
+              type="button"
               onClick={() => setSelectedMission(initiative as MissionInitiative)}
-              className="bg-[var(--accent)] hover:brightness-110 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px] flex flex-col items-center justify-center"
+              className="row-link"
             >
-              <span className="block text-xl uppercase tracking-wider text-center">
-                {initiative.title.split(" ").slice(0, -1).join(" ")}
-              </span>
-              <span className="block text-sm uppercase tracking-wider mt-1">
-                {initiative.title.split(" ").slice(-1)[0]}
-              </span>
+              <RowLinkContent
+                title={initiative.title.split(" ").slice(0, -1).join(" ")}
+                subtitle={initiative.title.split(" ").slice(-1)[0]}
+              />
             </button>
           </Reveal>
         ))}
@@ -160,7 +160,7 @@ export default function MissionInitiatives() {
                 {selectedMission.id === "technological-stewardship" && (
                   <Link
                     href="/technological-stewardship"
-                    className="inline-flex items-center gap-2 bg-[var(--accent)] hover:brightness-110 text-white px-6 py-3 rounded-full text-sm font-medium transition-all mb-6"
+                    className="btn-lamp inline-flex items-center gap-2 px-6 py-3 text-sm mb-6"
                   >
                     Take the Survey
                   </Link>
@@ -227,7 +227,7 @@ export default function MissionInitiatives() {
                             onClick={() => setSupportForm({ ...supportForm, supportType: "time" })}
                             className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border transition-colors ${
                               supportForm.supportType === "time"
-                                ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                                ? "bg-[var(--accent-soft)] border-[var(--accent)] text-white"
                                 : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"
                             }`}
                           >
@@ -239,7 +239,7 @@ export default function MissionInitiatives() {
                             onClick={() => setSupportForm({ ...supportForm, supportType: "resources" })}
                             className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border transition-colors ${
                               supportForm.supportType === "resources"
-                                ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                                ? "bg-[var(--accent-soft)] border-[var(--accent)] text-white"
                                 : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600"
                             }`}
                           >
@@ -264,7 +264,7 @@ export default function MissionInitiatives() {
 
                       <button
                         type="submit"
-                        className="w-full bg-[var(--accent)] text-white py-3 rounded-full font-medium hover:brightness-110 transition-all uppercase tracking-wider text-sm"
+                        className="btn-lamp w-full py-3 text-sm"
                       >
                         Submit
                       </button>

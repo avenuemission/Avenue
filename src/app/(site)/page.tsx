@@ -34,7 +34,7 @@ export default function Home() {
           </p>
           <Link
             href="/vision"
-            className="hero-in inline-block bg-[var(--accent)] text-white px-8 py-3 rounded-full font-medium tracking-wider hover:brightness-110 transition-all"
+            className="hero-in btn-lamp px-8 py-3"
             style={{ animationDelay: "240ms" }}
           >
             EXPLORE

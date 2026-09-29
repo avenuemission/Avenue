@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Portal from "@/components/ui/Portal";
+import RowLinkContent from "@/components/ui/RowLinkContent";
 import { CREATIVE_INITIATIVES } from "@/content/site";
 
 interface Song {
@@ -28,16 +29,8 @@ export default function HomeboundAlbum() {
 
   return (
     <>
-      <button
-        onClick={handleAlbumClick}
-        className="bg-[var(--accent)] hover:brightness-110 text-white px-10 py-8 rounded-full font-medium transition-all duration-300 min-w-[200px]"
-      >
-        <span className="block text-xl uppercase tracking-wider">
-          Homebound
-        </span>
-        <span className="block text-sm uppercase tracking-wider mt-1">
-          Album
-        </span>
+      <button type="button" onClick={handleAlbumClick} className="row-link">
+        <RowLinkContent title="Homebound" subtitle="Album" />
       </button>
 
       {/* Album Modal with Song Selection */}
@@ -89,7 +82,7 @@ export default function HomeboundAlbum() {
                       disabled={!song.youtubeUrl}
                       className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                         selectedSong?.title === song.title
-                          ? "bg-[var(--accent)] text-white"
+                          ? "bg-[var(--accent-soft)] text-white ring-1 ring-[var(--accent)]"
                           : song.youtubeUrl
                           ? "bg-gray-800 text-white hover:bg-gray-700"
                           : "bg-gray-800/50 text-gray-500 cursor-not-allowed"
