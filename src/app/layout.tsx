@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Avenue - On Earth As In Heaven",
+  title: "Avenue - Unleashing God-given potential",
   description:
     "Avenue is a decentralised movement of people following Jesus, convinced that disciple-making doesn’t require more church buildings, just the willingness to open the spaces we already have",
   // Icons come from the app-directory files: icon.png (browsers/Android),
