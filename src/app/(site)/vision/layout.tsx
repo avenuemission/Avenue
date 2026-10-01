@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/domain/pageMeta";
 
-export const metadata: Metadata = {
-  title: "Vision - Avenue Mission",
-  description: "Discover Avenue's vision, mission, values, and beliefs. We are a decentralised movement of people following Jesus, growing disciples through house church communities.",
-};
+export const metadata: Metadata = pageMetadata("/vision");
 
 export default function VisionLayout({
   children,

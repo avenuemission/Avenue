@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import SceneStage from "@/components/site/scenes/SceneStage";
 import SkylineScene from "@/components/site/scenes/SkylineScene";
+import { pageMetadata } from "@/lib/domain/pageMeta";
+
+export const metadata: Metadata = pageMetadata("/");
 
 export const revalidate = 300;
 

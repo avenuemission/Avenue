@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/domain/pageMeta";
 
-export const metadata: Metadata = {
-  title: "Intersection - Avenue Mission",
-  description: "Intersection is where Avenue pathway groups come together for worship, prayer, and community events. Join us for Prayer & Praise and other gatherings.",
-};
+export const metadata: Metadata = pageMetadata("/intersection");
 
 export default function IntersectionLayout({
   children,
