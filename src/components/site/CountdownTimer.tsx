@@ -2,13 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCountdown } from "@/hooks/useCountdown";
-import { nextMelbourneWeekly } from "@/lib/domain/dates/melbourne";
-
-const WEDNESDAY = 3;
-
-// The navbar counts down to the next Prayer & Praise: Wednesday, 7 pm in
-// Melbourne, moving on to the next week as each one starts.
-const nextPrayerAndPraise = (now: Date) => nextMelbourneWeekly(now, WEDNESDAY, 19);
+import { nextPrayerAndPraise } from "@/lib/domain/siteFacts";
 
 interface CountdownTimerProps {
   variant?: "navbar" | "event";
@@ -19,6 +13,8 @@ interface CountdownTimerProps {
 
 const pad = (num: number) => num.toString().padStart(2, "0");
 
+// By default it counts down to the next Prayer & Praise (Wednesday, 7 pm in
+// Melbourne), moving on to the next week as each one starts.
 export default function CountdownTimer({ variant = "navbar", target = nextPrayerAndPraise, placeholder = null }: CountdownTimerProps) {
   const timeLeft = useCountdown(target);
   if (!timeLeft) return placeholder;

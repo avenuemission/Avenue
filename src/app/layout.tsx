@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/site/Navbar";
+import JsonLd from "@/components/ui/JsonLd";
+import { AVENUE_FACTS } from "@/content/site";
+import { siteStructuredData } from "@/lib/domain/structuredData";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +20,11 @@ const geistMono = Geist_Mono({
   preload: false,
 });
 
+// The defaults. Each public page sets its own description and canonical
+// (lib/domain/pageMeta), so there is no canonical here: it would be
+// inherited by every page that does not set one.
 export const metadata: Metadata = {
+  metadataBase: new URL(AVENUE_FACTS.url),
   title: "Avenue - Unleashing God-given potential",
   description:
     "Avenue is a decentralised movement of people following Jesus, convinced that disciple-making doesn’t require more church buildings, just the willingness to open the spaces we already have",
@@ -31,47 +38,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": "https://www.avenuemission.com/#organization",
-        "name": "Avenue Mission",
-        "url": "https://www.avenuemission.com",
-        "logo": "https://www.avenuemission.com/images/Avenue.png",
-        "description": "Avenue is a decentralised movement of people following Jesus, convinced that disciple-making doesn't require more church buildings, just the willingness to open the spaces we already have"
-      },
-      {
-        "@type": "WebSite",
-        "@id": "https://www.avenuemission.com/#website",
-        "url": "https://www.avenuemission.com",
-        "name": "Avenue Mission",
-        "publisher": { "@id": "https://www.avenuemission.com/#organization" }
-      },
-      {
-        "@type": "SiteNavigationElement",
-        "name": "Vision",
-        "url": "https://www.avenuemission.com/vision"
-      },
-      {
-        "@type": "SiteNavigationElement",
-        "name": "Pathways",
-        "url": "https://www.avenuemission.com/pathways"
-      },
-      {
-        "@type": "SiteNavigationElement",
-        "name": "Intersection",
-        "url": "https://www.avenuemission.com/intersection"
-      },
-      {
-        "@type": "SiteNavigationElement",
-        "name": "Streetlights",
-        "url": "https://www.avenuemission.com/streetlights"
-      }
-    ]
-  };
-
   return (
     <html lang="en">
       <head>
@@ -85,10 +51,7 @@ export default function RootLayout({
             alt=""
           />
         </noscript>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
+        <JsonLd data={siteStructuredData()} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}

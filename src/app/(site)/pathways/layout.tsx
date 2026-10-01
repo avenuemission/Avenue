@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/domain/pageMeta";
 
-export const metadata: Metadata = {
-  title: "Pathways - Avenue Mission",
-  description: "Join or start a Pathway group. Pathway groups are house church communities growing together, empowered by the Spirit of God. Find a group near you in Melbourne.",
-};
+export const metadata: Metadata = pageMetadata("/pathways");
 
 export default function PathwaysLayout({
   children,

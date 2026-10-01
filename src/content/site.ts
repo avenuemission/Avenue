@@ -101,3 +101,31 @@ export const MISSION_INITIATIVES = [
     image: "/images/red_frogs.png",
   },
 ];
+
+// The facts about Avenue that search engines and AI assistants read: the
+// footer, the JSON-LD, the FAQ and /llms.txt all come from here, so they
+// can never disagree. Prayer & Praise times are Melbourne wall-clock hours.
+export const AVENUE_FACTS = {
+  name: "Avenue Mission",
+  url: "https://www.avenuemission.com",
+  email: "info@avenuemission.com",
+  area: "Melbourne, Victoria",
+  summary: "House churches across Melbourne, supported by the Seventh-day Adventist Church.",
+  parentOrganization: { name: "Seventh-day Adventist Church", url: "https://www.adventist.org" },
+  venue: {
+    name: "Mont Albert Church",
+    street: "43 York St",
+    locality: "Surrey Hills",
+    region: "VIC",
+    postcode: "3127",
+    country: "AU",
+  },
+  prayerAndPraise: {
+    name: "Prayer & Praise",
+    day: "Wednesday",
+    weekday: 3, // 0 Sunday to 6 Saturday
+    startHour: 19,
+    endHour: 21,
+    timeZone: "Australia/Melbourne",
+  },
+} as const;
