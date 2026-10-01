@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-// Counts from 0 up to `end` over `duration` ms once mounted.
+// Counts from 0 up to `end` over `duration` ms once mounted. The final number
+// is also in the HTML as visually hidden text, so screen readers and
+// crawlers read the real figure, not the 0 the animation starts from.
 export default function CountUp({ end, duration = 2000 }: { end: number; duration?: number }) {
   const [count, setCount] = useState(0);
 
@@ -21,5 +23,10 @@ export default function CountUp({ end, duration = 2000 }: { end: number; duratio
     return () => cancelAnimationFrame(animationFrame);
   }, [end, duration]);
 
-  return count;
+  return (
+    <>
+      <span aria-hidden="true">{count}</span>
+      <span className="sr-only">{end}</span>
+    </>
+  );
 }
