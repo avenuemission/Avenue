@@ -1,6 +1,6 @@
 # Email lamplight
 
-Date: 1 Oct 2026. Status: approved (mockup https://claude.ai/artifact/8XpM6hpQxhxKGxYMHtvUBq, option A "Site match").
+Date: 1 Oct 2026. Status: approved (mockup https://claude.ai/artifact/8XpM6hpQxhxKGxYMHtvUBq, option B "Site match + street" (Henry switched from A on 1 Oct)).
 
 ## Goal
 
@@ -18,7 +18,7 @@ Make every Avenue email (leader emails, public form replies, APEST results, admi
 | Wordmark | Bold AVENUE, amber chevron | Thin AVENUE, white chevron (site header) |
 | Font | System sans | Geist via a Google Fonts link where the inbox allows (Apple Mail, iOS); Helvetica or Arial elsewhere |
 
-No picture header (option B was declined). Wording, schedule and recipients unchanged. Plain-text versions unchanged.
+Header: the Streetlights night street as a 1200 x 300 PNG (public/images/email/street-header.png, shown 600 x 150, alt="" as it is decorative) over a #070a12 cell, so a blocked image leaves a dark band and the email still reads. Wording, schedule and recipients unchanged. Plain-text versions unchanged.
 
 ## Testing
 

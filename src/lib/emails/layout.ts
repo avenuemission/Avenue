@@ -2,9 +2,11 @@
 // The branded frame every leader email shares (spec 3.2). Pure.
 // Mail clients handle <style> blocks and web fonts unevenly (Gmail strips
 // some, Outlook renders with Word), so this is nested tables with inline
-// styles only, and the Avenue wordmark as text: no remote image has to load
-// for the email to look right. The look follows the site (spec 2026-10-01
-// email-lamplight): bold uppercase headings, blue labels, one amber button.
+// styles only, and the Avenue wordmark as text. The look follows the site
+// (spec 2026-10-01 email-lamplight): a night-street picture across the top,
+// bold uppercase headings, blue labels, one amber button. The picture is
+// decorative: when an inbox blocks images the header cell keeps its night
+// colour and the email still reads in full.
 // Geist loads where the inbox allows web fonts (Apple Mail, iOS); Gmail and
 // Outlook fall back to Helvetica or Arial, which keep the same shape.
 import type { EmailKind } from "./prefs";
@@ -51,6 +53,7 @@ export const COLOURS = {
   label: "#4f7cff",
   button: "#ffc56b",
   buttonText: "#1a1206",
+  header: "#070a12",
 } as const;
 
 export const SANS = "'Geist', 'Helvetica Neue', Helvetica, Arial, sans-serif";
@@ -115,6 +118,12 @@ function assertWebLinks(content: Pick<EmailContent, "blocks" | "cta">): void {
   for (const href of hrefs) {
     if (!isHttpUrl(href)) throw new Error(`renderEmail: refusing a link that is not http or https: ${href}`);
   }
+}
+
+// The Streetlights night scene (public/images/email/street-header.png, 1200 x
+// 300, shown at 600 x 150). Absolute URL: inboxes load it from the live site.
+function headerImg(): string {
+  return `<img src="${esc(absoluteUrl("/images/email/street-header.png"))}" width="600" height="150" alt="" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;border-radius:16px 16px 0 0;">`;
 }
 
 // The site logo as text: thin, letter-spaced uppercase AVENUE, then a thin
@@ -198,11 +207,16 @@ ${FONT_LINK}
 <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;">
 <tr><td style="padding:0 0 24px 4px;">${WORDMARK_HTML}</td></tr>
-<tr><td bgcolor="${COLOURS.card}" style="background-color:${COLOURS.card};border:1px solid ${COLOURS.line};border-radius:16px;padding:32px 28px;">
+<tr><td bgcolor="${COLOURS.card}" style="background-color:${COLOURS.card};border:1px solid ${COLOURS.line};border-radius:16px;overflow:hidden;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+<tr><td bgcolor="${COLOURS.header}" style="background-color:${COLOURS.header};border-radius:16px 16px 0 0;line-height:0;font-size:0;">${headerImg()}</td></tr>
+<tr><td style="padding:28px 28px 32px 28px;">
 <p style="margin:0 0 10px 0;${LABEL}">${esc(content.eyebrow)}</p>
 <h1 style="margin:0 0 22px 0;font-family:${SANS};font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-0.3px;text-transform:uppercase;color:${COLOURS.ink};">${esc(content.heading)}</h1>
 ${content.blocks.map(blockHtml).join("\n")}
 ${cta}
+</td></tr>
+</table>
 </td></tr>
 <tr><td style="padding:24px 8px 0 8px;font-family:${SANS};font-size:12px;line-height:1.8;color:${COLOURS.muted};">
 ${footerHtml}

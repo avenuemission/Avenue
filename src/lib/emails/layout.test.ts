@@ -72,7 +72,7 @@ describe("esc", () => {
 });
 
 describe("renderEmail", () => {
-  it("is table-based, inline-styled, 600 px wide, night ground, site type, blue labels, amber button, text wordmark", () => {
+  it("is table-based, inline-styled, 600 px wide, night ground, site type, street header, blue labels, amber button, text wordmark", () => {
     const { html } = renderEmail(content());
     expect(html).toContain('role="presentation"');
     expect(html).toContain("max-width:600px");
@@ -87,7 +87,10 @@ describe("renderEmail", () => {
     expect(html).toContain("&rsaquo;");
     expect(html).toContain("Helvetica");
     expect(html).not.toContain(">Avenue<");
-    expect(html).not.toContain("<img");
+    // One picture: the decorative street header, from the live site, over a night-coloured cell.
+    expect(html.match(/<img /g)).toHaveLength(1);
+    expect(html).toContain(`<img src="https://www.avenuemission.com/images/email/street-header.png" width="600" height="150" alt=""`);
+    expect(html).toContain("background-color:#070a12;");
     expect(html).not.toContain("<style");
     expect(html).toContain("A short preview line.");
     expect(html).toContain("Good morning, Sam.");
