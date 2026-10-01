@@ -1054,6 +1054,18 @@ button.av-lamp {
   height: calc(var(--scene-w) * 0.5625);
   left: clamp(calc(100cqw - var(--scene-w)), calc(50cqw - 0.6 * var(--scene-w)), 0px);
 }
+/* Phones: the bottom of the scene fades into the night ground under the
+   text, so there is no hard edge where the picture ends. */
+.skyline-frame::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(5, 7, 12, 0), var(--night));
+  pointer-events: none;
+}
 .skyline-scrim {
   position: absolute;
   inset: 0;
@@ -1071,5 +1083,8 @@ button.av-lamp {
     top: 0;
     width: 100%;
     height: 100%;
+  }
+  .skyline-frame::after {
+    display: none;
   }
 }
