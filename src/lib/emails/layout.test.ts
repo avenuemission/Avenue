@@ -72,13 +72,15 @@ describe("esc", () => {
 });
 
 describe("renderEmail", () => {
-  it("is table-based, inline-styled, 600 px wide, night ground, Georgia, blue button, lamp accent, text wordmark", () => {
+  it("is table-based, inline-styled, 600 px wide, night ground, site type, blue labels, amber button, text wordmark", () => {
     const { html } = renderEmail(content());
     expect(html).toContain('role="presentation"');
     expect(html).toContain("max-width:600px");
     expect(html).toContain("#05070c");
-    expect(html).toContain("Georgia");
-    expect(html).toContain("#4f7cff");
+    expect(html).not.toContain("Georgia");
+    expect(html).toContain("'Geist', 'Helvetica Neue', Helvetica, Arial, sans-serif");
+    expect(html).toMatch(/<h1 style="[^"]*font-weight:800;[^"]*text-transform:uppercase;/);
+    expect(html).toContain("color:#4f7cff;");
     expect(html).toContain("#ffc56b");
     expect(html).toContain(">AVENUE<");
     expect(html).toContain("letter-spacing:6px");
@@ -98,11 +100,12 @@ describe("renderEmail", () => {
     for (const rule of ["display:none", "mso-hide:all", "max-height:0", "overflow:hidden"]) {
       expect(preheader).toContain(rule);
     }
-    expect(html).toMatch(/<td bgcolor="#4f7cff" style="padding:14px 28px;[^"]*">/);
+    expect(html).toMatch(/<td bgcolor="#ffc56b" style="padding:14px 28px;[^"]*">/);
     const button = html.slice(html.indexOf('<a href="https://www.avenuemission.com/leaders"'));
     const linkStyle = button.slice(0, button.indexOf(">"));
     expect(linkStyle).toContain("display:inline-block");
     expect(linkStyle).not.toContain("padding");
+    expect(linkStyle).toContain("color:#1a1206;");
   });
 
   it("escapes content in the HTML and keeps it plain in the text", () => {

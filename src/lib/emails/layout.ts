@@ -2,8 +2,11 @@
 // The branded frame every leader email shares (spec 3.2). Pure.
 // Mail clients handle <style> blocks and web fonts unevenly (Gmail strips
 // some, Outlook renders with Word), so this is nested tables with inline
-// styles only, Georgia for headings, and the Avenue wordmark as text: no
-// remote image has to load for the email to look right.
+// styles only, and the Avenue wordmark as text: no remote image has to load
+// for the email to look right. The look follows the site (spec 2026-10-01
+// email-lamplight): bold uppercase headings, blue labels, one amber button.
+// Geist loads where the inbox allows web fonts (Apple Mail, iOS); Gmail and
+// Outlook fall back to Helvetica or Arial, which keep the same shape.
 import type { EmailKind } from "./prefs";
 
 export interface RenderedEmail {
@@ -39,16 +42,20 @@ export interface EmailContent {
 
 export const COLOURS = {
   ground: "#05070c",
-  card: "#0b1020",
-  line: "#1c2436",
-  ink: "#f4f1ea",
-  muted: "#a3a9b8",
+  card: "#0c0f16",
+  line: "#1b2230",
+  ink: "#eef1f7",
+  body: "#d6dbe6",
+  muted: "#8b94a7",
   lamp: "#ffc56b",
-  button: "#4f7cff",
+  label: "#4f7cff",
+  button: "#ffc56b",
+  buttonText: "#1a1206",
 } as const;
 
-const SERIF = "Georgia, 'Times New Roman', serif";
-const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+export const SANS = "'Geist', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+export const FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;700;800&display=swap">';
+const LABEL = `font-family:${SANS};font-size:12px;line-height:1.4;font-weight:bold;letter-spacing:2.5px;text-transform:uppercase;color:${COLOURS.label};`;
 
 export function siteUrl(): string {
   const raw = process.env.AVENUE_SITE_URL?.trim();
@@ -110,19 +117,19 @@ function assertWebLinks(content: Pick<EmailContent, "blocks" | "cta">): void {
   }
 }
 
-// The site logo as text: letter-spaced uppercase AVENUE in a plain sans,
-// then a thin chevron. No image, so it shows before images are allowed.
-const WORDMARK_FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-export const WORDMARK_HTML = `<span style="font-family:${WORDMARK_FONT};font-size:18px;line-height:1;font-weight:bold;letter-spacing:6px;text-transform:uppercase;color:${COLOURS.ink};">AVENUE</span><span style="font-family:${WORDMARK_FONT};font-size:22px;line-height:1;font-weight:300;color:${COLOURS.lamp};padding-left:4px;">&rsaquo;</span>`;
+// The site logo as text: thin, letter-spaced uppercase AVENUE, then a thin
+// white chevron, like the site header. No image, so it shows before images
+// are allowed.
+export const WORDMARK_HTML = `<span style="font-family:${SANS};font-size:18px;line-height:1;font-weight:300;letter-spacing:6px;text-transform:uppercase;color:${COLOURS.ink};">AVENUE</span><span style="font-family:${SANS};font-size:24px;line-height:1;font-weight:300;color:${COLOURS.ink};padding-left:4px;">&rsaquo;</span>`;
 
-const TEXT = `font-family:${SANS};font-size:16px;line-height:1.6;color:${COLOURS.ink};`;
+const TEXT = `font-family:${SANS};font-size:16px;line-height:1.6;color:${COLOURS.body};`;
 
 function blockHtml(block: Block): string {
   switch (block.type) {
     case "p":
       return `<p style="margin:0 0 16px 0;${TEXT}">${esc(block.text)}</p>`;
     case "h":
-      return `<h2 style="margin:28px 0 10px 0;font-family:${SERIF};font-size:20px;line-height:1.3;font-weight:normal;color:${COLOURS.lamp};">${esc(block.text)}</h2>`;
+      return `<h2 style="margin:28px 0 10px 0;${LABEL}">${esc(block.text)}</h2>`;
     case "list":
       return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 16px 0;">${block.items
         .map(
@@ -138,7 +145,7 @@ function blockHtml(block: Block): string {
         )
         .join("")}</table>`;
     case "link":
-      return `<p style="margin:0 0 16px 0;${TEXT}"><a href="${esc(block.href)}" style="color:${COLOURS.lamp};text-decoration:underline;">${esc(block.label)}</a></p>`;
+      return `<p style="margin:0 0 16px 0;${TEXT}"><a href="${esc(block.href)}" style="color:${COLOURS.label};text-decoration:underline;">${esc(block.label)}</a></p>`;
   }
 }
 
@@ -172,7 +179,7 @@ export interface FrameFooter {
 // Henry to check wording
 function renderHtml(content: FrameContent, footerHtml: string): string {
   const cta = content.cta
-    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:12px 0 4px 0;"><tr><td bgcolor="${COLOURS.button}" style="padding:14px 28px;border-radius:999px;background-color:${COLOURS.button};"><a href="${esc(content.cta.href)}" style="display:inline-block;font-family:${SANS};font-size:16px;font-weight:bold;line-height:20px;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(content.cta.label)}</a></td></tr></table>`
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:12px 0 4px 0;"><tr><td bgcolor="${COLOURS.button}" style="padding:14px 28px;border-radius:999px;background-color:${COLOURS.button};"><a href="${esc(content.cta.href)}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:bold;line-height:20px;letter-spacing:1px;text-transform:uppercase;color:${COLOURS.buttonText};text-decoration:none;border-radius:999px;">${esc(content.cta.label)}</a></td></tr></table>`
     : "";
   return `<!DOCTYPE html>
 <html lang="en">
@@ -181,6 +188,7 @@ function renderHtml(content: FrameContent, footerHtml: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark">
 <meta name="supported-color-schemes" content="dark">
+${FONT_LINK}
 <title>${esc(content.subject)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:${COLOURS.ground};">
@@ -191,8 +199,8 @@ function renderHtml(content: FrameContent, footerHtml: string): string {
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;">
 <tr><td style="padding:0 0 24px 4px;">${WORDMARK_HTML}</td></tr>
 <tr><td bgcolor="${COLOURS.card}" style="background-color:${COLOURS.card};border:1px solid ${COLOURS.line};border-radius:16px;padding:32px 28px;">
-<p style="margin:0 0 8px 0;font-family:${SANS};font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${COLOURS.lamp};">${esc(content.eyebrow)}</p>
-<h1 style="margin:0 0 20px 0;font-family:${SERIF};font-size:28px;line-height:1.25;font-weight:normal;color:${COLOURS.ink};">${esc(content.heading)}</h1>
+<p style="margin:0 0 10px 0;${LABEL}">${esc(content.eyebrow)}</p>
+<h1 style="margin:0 0 22px 0;font-family:${SANS};font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-0.3px;text-transform:uppercase;color:${COLOURS.ink};">${esc(content.heading)}</h1>
 ${content.blocks.map(blockHtml).join("\n")}
 ${cta}
 </td></tr>
