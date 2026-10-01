@@ -9,11 +9,14 @@ export const revalidate = 300;
  * on the horizon (docs/design/landing-skyline-mockup.html, draft 5). Desktop:
  * the scene fills the hero with the text top left over a dark scrim. Phones:
  * the scene on top, cropped around the cross, and the text centred below.
+ * Either way the hero is exactly one screen (less the navbar), so the button
+ * is always in view without scrolling: on phones the scene takes whatever
+ * height the text leaves.
  */
 export default function Home() {
   return (
     <div className="bg-[var(--night)] overflow-hidden">
-      <section className="relative md:h-[calc(100svh-4rem)] md:min-h-[560px]">
+      <section className="relative flex flex-col h-[calc(100svh-4rem)] min-h-[480px] md:block md:min-h-[560px]">
         <div className="skyline-frame">
           <SceneStage trigger="load" className="scene-skyline">
             <SkylineScene />
@@ -21,7 +24,7 @@ export default function Home() {
           <div aria-hidden="true" className="skyline-scrim hidden md:block" />
         </div>
 
-        <div className="relative z-10 px-6 pt-5 pb-16 text-center md:absolute md:left-[5.5%] md:top-[12%] md:w-[min(40%,30rem)] md:p-0 md:text-left">
+        <div className="relative z-10 shrink-0 px-6 pt-4 pb-7 text-center md:absolute md:left-[5.5%] md:top-[12%] md:w-[min(40%,30rem)] md:p-0 md:text-left">
           <h1 className="text-[26px] md:text-3xl lg:text-4xl xl:text-[44px] font-bold uppercase tracking-tight text-white leading-[1.05] text-balance mb-3 md:mb-4">
             Unleashing <span className="whitespace-nowrap">God-given</span> potential
           </h1>
