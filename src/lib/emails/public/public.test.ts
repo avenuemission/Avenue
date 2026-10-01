@@ -43,7 +43,7 @@ describe("renderPublicEmail", () => {
   it("uses the branded frame with a plain site footer and no unsubscribe links", () => {
     expect(email.subject).toBe("Hello");
     expect(email.html).toContain("AVENUE");
-    expect(email.html).toContain("#0b1020");
+    expect(email.html).toContain("#0c0f16");
     expect(email.html).toContain('href="https://www.avenuemission.com"');
     expect(email.html).not.toMatch(/unsubscribe/i);
     expect(email.html).not.toContain("Manage emails");

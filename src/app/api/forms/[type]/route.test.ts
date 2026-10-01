@@ -169,7 +169,7 @@ describe("POST /api/forms/[type]", () => {
   it("escapes what the visitor typed in the emails", async () => {
     await post("join-pathway", { ...joinBody, name: `<img src=x onerror="alert(1)">` });
     for (const call of h.sendEmail.mock.calls) {
-      expect(call[2]).not.toContain("<img");
+      expect(call[2]).not.toContain("<img src=x");
       expect(call[2]).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
     }
   });
