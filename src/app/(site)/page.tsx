@@ -20,7 +20,7 @@ export const revalidate = 300;
 export default function Home() {
   return (
     <div className="bg-[var(--night)] overflow-hidden">
-      <section className="relative flex flex-col h-[calc(100svh-4rem)] min-h-[480px] md:block md:min-h-[560px]">
+      <section className="relative flex flex-col h-[calc(100svh-4rem)] min-h-[380px] md:block md:min-h-[560px]">
         <div className="skyline-frame">
           <SceneStage trigger="load" className="scene-skyline">
             <SkylineScene />

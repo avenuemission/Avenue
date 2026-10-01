@@ -1029,28 +1029,30 @@ button.av-lamp {
 /* Phones: a window on the scene cropped around the cross (the mockup's
    viewBox x 450 to 990 from y 60, ending where the scene ends at 675
    rather than on empty night below it). Desktop: the scene fills the hero. */
-/* Phones: the frame takes the height the text leaves (flex: 1 in the hero),
-   and the scene is sized by height, cropped around the cross at x = 720 of
-   1200 (60%), full height so the towers keep their tops. */
+/* Phones: the frame takes the height the text leaves (flex: 1 in the hero).
+   The scene keeps its 16:9 shape and is never squashed: it is as tall as the
+   frame, or as wide as it when the frame is short and wide, so the sky and
+   the tower tops always show and only the sides or the roads at the bottom
+   are cropped. It is centred on the cross (x = 720 of 1200, 60%) but never
+   pulled so far that an edge shows. Sizes use the frame as a container. */
 .skyline-frame {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  container-type: size;
 }
 .skyline-frame .scene {
   position: absolute;
   inset: 0;
 }
 .skyline-frame .scene svg {
+  --scene-w: max(100cqw, 177.7778cqh); /* 1200 / 675 */
   position: absolute;
   top: 0;
-  left: 50%;
-  height: 100%;
-  width: auto;
-  min-width: 100%;
-  aspect-ratio: 1200 / 675;
-  transform: translateX(-60%); /* the cross (720 / 1200) sits in the middle */
+  width: var(--scene-w);
+  height: calc(var(--scene-w) * 0.5625);
+  left: clamp(calc(100cqw - var(--scene-w)), calc(50cqw - 0.6 * var(--scene-w)), 0px);
 }
 .skyline-scrim {
   position: absolute;
@@ -1069,8 +1071,5 @@ button.av-lamp {
     top: 0;
     width: 100%;
     height: 100%;
-    min-width: 0;
-    aspect-ratio: auto;
-    transform: none;
   }
 }
