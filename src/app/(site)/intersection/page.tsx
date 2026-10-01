@@ -9,6 +9,8 @@ import EventUpdatesForm from "./_components/EventUpdatesForm";
 import StayConnected from "./_components/StayConnected";
 import { getCarouselImages, getIntersectionEvents } from "@/lib/server/content";
 import { shuffled } from "@/lib/domain/shuffle";
+import { prayerAndPraiseEvent } from "@/lib/domain/structuredData";
+import JsonLd from "@/components/ui/JsonLd";
 
 export const revalidate = 300;
 
@@ -19,6 +21,8 @@ export default async function IntersectionPage() {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
+      {/* Prayer & Praise for search engines: the next one, and the weekly schedule. */}
+      <JsonLd data={prayerAndPraiseEvent(new Date())} />
       <PageTitle title="Intersection">
         &ldquo;May the God of endurance and encouragement grant you to live in
         such harmony with one another, in accord with Christ Jesus, that
