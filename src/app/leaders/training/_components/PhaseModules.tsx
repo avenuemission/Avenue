@@ -1,8 +1,9 @@
+import Link from "next/link";
 import EpisodeCarousel from "@/components/leaders/training/EpisodeCarousel";
 import Glow from "@/components/leaders/avenue/Glow";
 import StepDot from "@/components/leaders/avenue/StepDot";
 import { DOT_SR_TEXT, moduleStatus } from "@/lib/domain/stepStatus";
-import { CheckCircle2, Video, FileText, Lightbulb } from "lucide-react";
+import { CheckCircle2, Video, FileText, Lightbulb, BookOpen, ChevronRight } from "lucide-react";
 import { Module, Phase } from "@/content/training/phases";
 
 // Module Type Icons
@@ -81,6 +82,27 @@ export default function PhaseModules({
           </li>
         ))}
       </ul>
+
+      {/* Reading, not a tickable module: it never changes the Foundations count. */}
+      <h3 className="night-h2 mb-4 mt-10">Reading</h3>
+      <Link
+        href="/leaders/training/mission-guide"
+        className="night-card group flex items-center gap-4 p-5 transition-colors hover:border-[var(--lamp)]"
+      >
+        <BookOpen className="h-5 w-5 flex-shrink-0 text-[var(--lamp)]" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-sans text-lg font-bold uppercase tracking-tight text-[var(--ink)] md:text-xl">
+            Avenue Mission Guide
+          </span>
+          <span className="mt-1 block text-sm text-[var(--muted)]">
+            Our mission, DNA, metrics of success, leadership guidelines and board structure.
+          </span>
+        </span>
+        <ChevronRight
+          className="h-5 w-5 flex-shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-white"
+          aria-hidden="true"
+        />
+      </Link>
     </div>
   );
 }
