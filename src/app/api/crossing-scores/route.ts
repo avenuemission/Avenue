@@ -3,10 +3,16 @@ import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { allow, RATE } from "@/lib/server/rateLimit";
 import { clientIp } from "@/lib/server/clientIp";
 import { jsonError, serverError, tooMany } from "@/lib/server/http";
-import { LEADERBOARD_SIZE, parseScoreSubmission, type LeaderboardEntry } from "@/lib/domain/crossing/scores";
+import { bestPerInitials, parseScoreSubmission, type LeaderboardEntry } from "@/lib/domain/crossing/scores";
 
 // The Cross the Avenue leaderboard on /vision. Public: anyone can read the
 // top 10 and post a score. The score rules live in lib/domain/crossing.
+// Every score is kept (the admin Game scores tab lists them all); the board
+// shows each set of initials once, at its best.
+
+// Enough best-first rows to find 10 different initials even when a few
+// players have hundreds of games each.
+const SCAN_ROWS = 1000;
 
 async function topScores(): Promise<{ top: LeaderboardEntry[] } | { error: unknown }> {
   const { data, error } = await getSupabaseAdmin()
@@ -14,9 +20,9 @@ async function topScores(): Promise<{ top: LeaderboardEntry[] } | { error: unkno
     .select("initials, score, created_at")
     .order("score", { ascending: false })
     .order("created_at", { ascending: true })
-    .limit(LEADERBOARD_SIZE);
+    .limit(SCAN_ROWS);
   if (error) return { error };
-  return { top: (data ?? []) as LeaderboardEntry[] };
+  return { top: bestPerInitials((data ?? []) as LeaderboardEntry[]) };
 }
 
 // GET /api/crossing-scores: the top 10, highest first

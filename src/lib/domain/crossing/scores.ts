@@ -73,3 +73,19 @@ export function qualifies(score: number, board: readonly { score: number }[]): b
   if (board.length < LEADERBOARD_SIZE) return true;
   return score > board[board.length - 1].score;
 }
+
+// The leaderboard shows each set of initials once, at its best score, so one
+// player can't fill the board. `rows` must already be sorted best first
+// (score high to low, then earliest first), so the first row seen for a set
+// of initials is its best, and an earlier score wins a tie.
+export function bestPerInitials<T extends { initials: string }>(rows: readonly T[], size: number = LEADERBOARD_SIZE): T[] {
+  const seen = new Set<string>();
+  const board: T[] = [];
+  for (const row of rows) {
+    if (seen.has(row.initials)) continue;
+    seen.add(row.initials);
+    board.push(row);
+    if (board.length === size) break;
+  }
+  return board;
+}

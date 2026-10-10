@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LEADERBOARD_SIZE, initialsAllowed, maxPossibleScore, normaliseInitials, parseScoreSubmission, qualifies } from "./scores";
+import { LEADERBOARD_SIZE, bestPerInitials, initialsAllowed, maxPossibleScore, normaliseInitials, parseScoreSubmission, qualifies } from "./scores";
 
 const good = { initials: "jem", score: 20, durationMs: 30_000 };
 
@@ -70,5 +70,29 @@ describe("qualifies", () => {
   it("a full board needs a score above its last place", () => {
     expect(qualifies(56, full)).toBe(true);
     expect(qualifies(55, full)).toBe(false);
+  });
+});
+
+describe("bestPerInitials", () => {
+  const row = (initials: string, score: number, at: string) => ({ initials, score, created_at: at });
+
+  it("shows each set of initials once, at its best score", () => {
+    const rows = [row("HJM", 90, "1"), row("HJM", 80, "2"), row("ABC", 70, "3"), row("HJM", 60, "4"), row("XYZ", 50, "5")];
+    expect(bestPerInitials(rows)).toEqual([row("HJM", 90, "1"), row("ABC", 70, "3"), row("XYZ", 50, "5")]);
+  });
+
+  it("keeps the earlier score when one player ties their own best", () => {
+    expect(bestPerInitials([row("HJM", 40, "early"), row("HJM", 40, "late")])).toEqual([row("HJM", 40, "early")]);
+  });
+
+  it("fills the board with different players even when one has every top score", () => {
+    const rows = [
+      ...Array.from({ length: 30 }, (_, i) => row("HJM", 500 - i, `a${i}`)),
+      ...Array.from({ length: 12 }, (_, i) => row(`P${String.fromCharCode(65 + i)}Q`, 100 - i, `b${i}`)),
+    ];
+    const board = bestPerInitials(rows);
+    expect(board).toHaveLength(LEADERBOARD_SIZE);
+    expect(new Set(board.map((r) => r.initials)).size).toBe(LEADERBOARD_SIZE);
+    expect(board[0]).toEqual(row("HJM", 500, "a0"));
   });
 });

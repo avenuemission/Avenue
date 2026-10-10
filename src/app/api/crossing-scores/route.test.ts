@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 
 describe("GET /api/crossing-scores", () => {
-  it("reads the top 10, highest first and earliest first on a tie, without ids", async () => {
+  it("reads best-first rows, highest first and earliest first on a tie, without ids", async () => {
     const res = await GET();
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ top: TOP });
@@ -49,8 +49,20 @@ describe("GET /api/crossing-scores", () => {
       ["crossing_scores", "select", "initials, score, created_at"],
       ["crossing_scores", "order", "score", { ascending: false }],
       ["crossing_scores", "order", "created_at", { ascending: true }],
-      ["crossing_scores", "limit", 10],
+      ["crossing_scores", "limit", 1000],
     ]);
+  });
+
+  it("shows each set of initials once, at its best score", async () => {
+    const rows = [
+      { initials: "JEM", score: 40, created_at: "2026-09-28T01:00:00Z" },
+      { initials: "JEM", score: 35, created_at: "2026-09-28T01:30:00Z" },
+      { initials: "HMC", score: 31, created_at: "2026-09-28T02:00:00Z" },
+      { initials: "JEM", score: 20, created_at: "2026-09-28T03:00:00Z" },
+    ];
+    h.getSupabaseAdmin.mockReturnValue(fakeSupabase({ "crossing_scores.select": { data: rows } }).db);
+    const res = await GET();
+    expect(await res.json()).toEqual({ top: [rows[0], rows[2]] });
   });
 
   it("fails loud with a generic 500 when the read fails", async () => {
