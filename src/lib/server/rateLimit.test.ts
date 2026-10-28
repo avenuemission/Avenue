@@ -24,6 +24,7 @@ describe("RATE", () => {
       workshopSubmit: { name: "ws-submit", windowSeconds: 600, max: 200 },
       adminFail: { name: "admin-fail", windowSeconds: 900, max: 5 },
       crossingScore: { name: "crossing", windowSeconds: 600, max: 60 },
+      onramp: { name: "onramp", windowSeconds: 600, max: 300 },
     });
   });
 });

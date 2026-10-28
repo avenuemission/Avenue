@@ -19,6 +19,7 @@ export const RATE: {
   workshopSubmit: RateRule;
   adminFail: RateRule;
   crossingScore: RateRule;
+  onramp: RateRule;
 } = {
   form: { name: "form", windowSeconds: 600, max: 30 },
   formRecipient: { name: "form-to", windowSeconds: 3600, max: 3 },
@@ -30,6 +31,9 @@ export const RATE: {
   // Only a score that makes the top 10 is sent, so a room of players stays
   // well under this.
   crossingScore: { name: "crossing", windowSeconds: 600, max: 60 },
+  // Sized for a room: the On-Ramp QR is scanned from a screen at church,
+  // where everyone shares the venue's one IP.
+  onramp: { name: "onramp", windowSeconds: 600, max: 300 },
 };
 
 // Swappable so route tests never touch the database. Production code gets

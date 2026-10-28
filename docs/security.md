@@ -59,6 +59,7 @@ All limits live in `RATE` in `src/lib/server/rateLimit.ts`. Change them there, n
 | `workshopSubmit` | 200 per 10 min | IP | `/api/workshops/submit` |
 | `adminFail` | 5 per 15 min (6 in practice, see above) | IP | Wrong admin passcodes (`requireAdmin`) |
 | `crossingScore` | 60 per 10 min | IP | `POST /api/crossing-scores` (the Vision page game only sends a score that makes the top 10) |
+| `onramp` | 300 per 10 min | IP | `POST /api/onramp` (sized for a church room scanning one QR code) |
 
 - Per-IP limits are sized for a room, not a person: at church or an in-room workshop everyone shares the venue's one IP.
 - The IP comes from Netlify's `x-nf-client-connection-ip` header, which a visitor cannot fake (`lib/server/clientIp.ts`).
