@@ -32,6 +32,7 @@ const TABLES = [
   ["survey_responses", "id"],
   ["rate_limits", "key"],
   ["crossing_scores", "id"],
+  ["onramp_signups", "id"],
 ];
 const PAGE = 1000;
 

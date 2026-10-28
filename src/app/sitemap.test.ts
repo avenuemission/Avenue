@@ -12,6 +12,7 @@ describe("sitemap", () => {
       { url: "https://www.avenuemission.com/streetlights", changeFrequency: "monthly", priority: 0.8 },
       { url: "https://www.avenuemission.com/faq", changeFrequency: "monthly", priority: 0.7 },
       { url: "https://www.avenuemission.com/apest-quiz", changeFrequency: "monthly", priority: 0.6 },
+      { url: "https://www.avenuemission.com/onramp", changeFrequency: "weekly", priority: 0.6 },
       { url: "https://www.avenuemission.com/technological-stewardship", changeFrequency: "monthly", priority: 0.5 },
     ]);
   });

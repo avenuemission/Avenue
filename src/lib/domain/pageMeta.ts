@@ -47,6 +47,12 @@ export const PUBLIC_PAGES = {
     description:
       "Find your APEST profile (apostle, prophet, evangelist, shepherd, teacher) with Avenue Mission, a house church movement in Melbourne, and serve more effectively in community.",
   },
+  "/onramp": {
+    name: "Avenue On-Ramp",
+    title: "Avenue On-Ramp - Avenue Mission",
+    description:
+      "Avenue On-Ramp: your first step into leading. A leadership training day in Melbourne on Sunday 15 November 2026, 9am to 4:30pm. No experience needed. Sign up and pick your workshops.",
+  },
   "/technological-stewardship": {
     name: "Technological Stewardship",
     title: "Technological Stewardship - Avenue Mission",
