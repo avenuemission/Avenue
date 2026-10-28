@@ -1,9 +1,9 @@
 // Avenue On-Ramp: the leadership training day at /onramp. Every word the
 // page and the confirmation email show about the event lives here.
 //
-// To set the venue, change VENUE below (for example "Mont Albert Church,
-// 23 Example St"). Nothing else needs to change.
-const VENUE = "Venue TBC";
+// To change the venue, change VENUE below. The page, the confirmation
+// screen and the email all read it; nothing else needs to change.
+const VENUE = "Mont Albert SDA Church";
 
 export const ONRAMP = {
   title: "Avenue On-Ramp",

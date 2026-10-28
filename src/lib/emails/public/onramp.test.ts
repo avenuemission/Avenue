@@ -7,7 +7,7 @@ describe("onrampConfirmationEmail", () => {
     expect(mail.subject).toBe("You're in: Avenue On-Ramp, Sunday 15 November 2026");
     expect(mail.text).toContain("You're in, Ann!");
     expect(mail.text).toContain("Sunday 15 November 2026, 9am–4:30pm");
-    expect(mail.text).toContain("Venue TBC");
+    expect(mail.text).toContain("Where: Mont Albert SDA Church");
     expect(mail.text).toContain("Worship leading (Matt)");
     expect(mail.text).toContain("Running creative evangelistic spaces (Ash)");
     expect(mail.text).toContain("YOUR WORKSHOPS");
