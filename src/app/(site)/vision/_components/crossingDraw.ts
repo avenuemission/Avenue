@@ -22,6 +22,9 @@ const C = {
   taillight: "#ff5a4a",
   player: "#eef1f7",
   playerShade: "#aeb6c6",
+  hat: "#d63c34",
+  hatShade: "#a32a24",
+  fur: "#f7f8fb",
 };
 
 // Car colours: [body, lower edge]. A vehicle's `paint` picks one.
@@ -200,4 +203,42 @@ export function drawScene(ctx: CanvasRenderingContext2D, view: View, scene: Scen
   const eye = size * 0.14;
   ctx.fillRect(px + size * 0.22, py + size * squash * 0.24, eye, eye * squash);
   ctx.fillRect(px + size * 0.64, py + size * squash * 0.24, eye, eye * squash);
+
+  drawSantaHat(ctx, px, py, size, squash);
+}
+
+// A Santa hat on the player: a red cone flopping to the right, a white fur
+// brim across the top of the head and a pompom on the tip. It squashes with
+// the player when they are hit.
+function drawSantaHat(ctx: CanvasRenderingContext2D, px: number, py: number, size: number, squash: number) {
+  const h = size * 0.62 * squash;
+  const brim = size * 0.17 * squash;
+  const base = py + brim * 0.35;
+  const tipX = px + size * 1.02;
+  const tipY = base - h * 0.62;
+
+  // The cone: from the brim up to a peak, then flopping over to the right.
+  ctx.fillStyle = C.hat;
+  ctx.beginPath();
+  ctx.moveTo(px + size * 0.06, base);
+  ctx.quadraticCurveTo(px + size * 0.3, base - h * 1.05, px + size * 0.72, base - h * 0.92);
+  ctx.quadraticCurveTo(px + size * 0.96, base - h * 0.84, tipX, tipY);
+  ctx.quadraticCurveTo(px + size * 0.82, base - h * 0.48, px + size * 0.94, base);
+  ctx.closePath();
+  ctx.fill();
+  // A darker fold down the right side, for a little depth.
+  ctx.fillStyle = C.hatShade;
+  ctx.beginPath();
+  ctx.moveTo(px + size * 0.7, base);
+  ctx.quadraticCurveTo(px + size * 0.8, base - h * 0.5, tipX, tipY);
+  ctx.quadraticCurveTo(px + size * 0.82, base - h * 0.48, px + size * 0.94, base);
+  ctx.closePath();
+  ctx.fill();
+
+  // Fur brim and pompom.
+  box(ctx, px - size * 0.04, base - brim * 0.5, size * 1.08, brim, brim / 2, C.fur);
+  ctx.fillStyle = C.fur;
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, size * 0.11 * Math.max(squash, 0.7), 0, Math.PI * 2);
+  ctx.fill();
 }
