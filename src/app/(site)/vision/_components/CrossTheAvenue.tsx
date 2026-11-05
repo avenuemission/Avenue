@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Play } from "lucide-react";
+import { wearsSantaHat } from "@/lib/domain/crossing/hat";
 
 // The Vision page's closing novelty. Until Play is pressed this is a still
 // street drawn in markup, so the page downloads no game code and runs no
@@ -28,6 +29,7 @@ const CARS: [number, number, number, string][] = [
 ];
 
 function Street({ busy = false, onPlay }: { busy?: boolean; onPlay?: () => void }) {
+  const hat = wearsSantaHat(new Date());
   const lane = 100 / LANES.length;
   return (
     <div className="relative aspect-[4/5] sm:aspect-[8/5] w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--night)]">
@@ -68,13 +70,15 @@ function Street({ busy = false, onPlay }: { busy?: boolean; onPlay?: () => void 
           className="absolute aspect-square rounded-md bg-[#eef1f7] shadow-[inset_0_-6px_0_#aeb6c6]"
           style={{ bottom: `${lane * 0.2}%`, height: `${lane * 0.6}%`, left: "46.5%" }}
         >
-          {/* The same Santa hat the game draws (crossingDraw.ts). */}
+          {/* The same Santa hat the game draws (crossingDraw.ts), until the end of 2026. */}
+          {hat && (
           <svg viewBox="0 0 100 70" className="absolute bottom-[78%] left-[-6%] w-[118%] overflow-visible">
             <path d="M8 62 Q30 -4 70 4 Q94 10 104 26 Q82 34 94 62 Z" fill="#d63c34" />
             <path d="M68 62 Q80 30 104 26 Q82 34 94 62 Z" fill="#a32a24" />
             <rect x="-2" y="52" width="104" height="17" rx="8.5" fill="#f7f8fb" />
             <circle cx="104" cy="26" r="11" fill="#f7f8fb" />
           </svg>
+          )}
         </span>
       </div>
 

@@ -17,6 +17,7 @@ import {
   type World,
 } from "@/lib/domain/crossing/world";
 import { normaliseInitials, qualifies, type LeaderboardEntry } from "@/lib/domain/crossing/scores";
+import { wearsSantaHat } from "@/lib/domain/crossing/hat";
 import { drawScene } from "./crossingDraw";
 
 // Cross the Avenue: loaded only after a visitor presses Play on /vision.
@@ -90,6 +91,7 @@ export default function CrossingGame() {
   const [lit, setLit] = useState(0);
   const [hit, setHit] = useState<Hit | null>(null);
   const [best, setBest] = useState(readBest);
+  const [hat] = useState(() => wearsSantaHat(new Date()));
   const [duration, setDuration] = useState(0);
   const [board, setBoard] = useState<LeaderboardEntry[] | null>(null);
   const [boardError, setBoardError] = useState(false);
@@ -238,12 +240,13 @@ export default function CrossingGame() {
         y,
         lift: reduceMotion ? 0 : Math.sin(t * Math.PI),
         dead: statusRef.current === "over",
+        hat,
       });
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [die]);
+  }, [die, hat]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;

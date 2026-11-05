@@ -55,6 +55,8 @@ export interface Scene {
   y: number;
   lift: number;
   dead: boolean;
+  // The Christmas 2026 Santa hat (lib/domain/crossing/hat.ts).
+  hat: boolean;
 }
 
 function box(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
@@ -204,7 +206,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, view: View, scene: Scen
   ctx.fillRect(px + size * 0.22, py + size * squash * 0.24, eye, eye * squash);
   ctx.fillRect(px + size * 0.64, py + size * squash * 0.24, eye, eye * squash);
 
-  drawSantaHat(ctx, px, py, size, squash);
+  if (scene.hat) drawSantaHat(ctx, px, py, size, squash);
 }
 
 // A Santa hat on the player: a red cone flopping to the right, a white fur
