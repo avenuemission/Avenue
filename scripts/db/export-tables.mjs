@@ -33,6 +33,8 @@ const TABLES = [
   ["rate_limits", "key"],
   ["crossing_scores", "id"],
   ["onramp_signups", "id"],
+  ["training_video_questions", "youtube_id"],
+  ["training_module_prompts", "module"],
 ];
 const PAGE = 1000;
 

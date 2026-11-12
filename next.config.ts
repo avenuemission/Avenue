@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { securityHeaders } from "./src/lib/server/securityHeaders";
+import { NETWORK_ENABLED } from "./src/content/features";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
@@ -14,6 +15,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
+  },
+  // The Discipleship Network is hidden for now (src/content/features.ts).
+  async redirects() {
+    return NETWORK_ENABLED ? [] : [{ source: "/leaders/network", destination: "/leaders", permanent: false }];
   },
   async headers() {
     return [

@@ -29,6 +29,9 @@ export interface WizardShellProps {
   onSelect: (index: number) => void;
   saving: boolean; // savingSection !== null
   saveError: string | null;
+  // Shown under the phase opening, above the steps' card (Calling's
+  // Ephesians 4 Discovery Bible Reading).
+  intro?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -56,7 +59,7 @@ export function OutcomeButton(props: { label: string; onClick: () => void; disab
 // to jump), one quiet time line, the save state, and the step itself on a
 // raised night card.
 export default function WizardShell(props: WizardShellProps) {
-  const { phaseId, user, name, title, steps, lampLabels, stepStatus, current, onSelect, saving, saveError, children } =
+  const { phaseId, user, name, title, steps, lampLabels, stepStatus, current, onSelect, saving, saveError, intro, children } =
     props;
   const verse = VERSES[phaseId];
   const stop = STOP_IDS.indexOf(phaseId) + 1;
@@ -98,6 +101,8 @@ export default function WizardShell(props: WizardShellProps) {
             />
           </PhaseOpening>
         </div>
+
+        {intro ? <div className="no-print mt-6">{intro}</div> : null}
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <p className="night-label">{timeLabel(steps)}</p>

@@ -46,10 +46,11 @@ function isStopId(value: string | null): value is StopId {
 
 export default function TrainingPage() {
   const router = useRouter();
-  // Full access only. Any answer but a confirmed full access (including a
-  // failed check) goes back to the dashboard, as before.
+  // Every leader, pending or full, may walk the training journey (pending
+  // leaders are On-Ramp sign-ups and access requests). A failed check, or
+  // not being a leader at all, goes back to the dashboard.
   const { user, fullAccess, accessFailure } = useLeaderSession();
-  const hasAccess = fullAccess === true;
+  const hasAccess = fullAccess !== null;
   const accessChecked = fullAccess !== null || accessFailure !== null;
   // null means "not chosen": the hub then opens the stop the leader is at.
   const [expandedPhase, setExpandedPhase] = useState<StopId | null>(() => {
@@ -60,6 +61,8 @@ export default function TrainingPage() {
   // The stop opened when none was chosen: the "here" stop, set once (F3).
   const [defaultPhase, setDefaultPhase] = useState<StopId | null>(null);
   const [videoModal, setVideoModal] = useState<{ youtubeId: string; title: string } | null>(null);
+  // The video just closed, so its tick pulses as a reminder to tick it.
+  const [lastWatched, setLastWatched] = useState<string | null>(null);
   const [greetingTime] = useState(() => new Date());
 
   const {
@@ -120,6 +123,7 @@ export default function TrainingPage() {
   };
 
   const closeVideo = () => {
+    setLastWatched(videoModal?.youtubeId ?? null);
     setVideoModal(null);
   };
 
@@ -366,6 +370,7 @@ export default function TrainingPage() {
                       toggleModuleComplete={toggleModuleComplete}
                       toggleEpisodeWatched={toggleEpisodeWatched}
                       openVideo={openVideo}
+                      nudgeYoutubeId={lastWatched}
                     />
                   )}
                 </div>

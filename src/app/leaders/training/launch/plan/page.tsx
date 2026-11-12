@@ -47,7 +47,7 @@ function EmptyPanel({ step }: { step: number }) {
 // Phase 3's printable one-pager (spec 5.2). Private: never visible to a
 // leader's sender or the admins. No readiness score anywhere (Ruling L2).
 export default function LaunchPlanPage() {
-  const { user, ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate({ pending: true });
   const { data, loaded, error, saveSection, reset } = useWorksheet<LaunchData>("launch", ready);
   const { people, peopleLoaded, peopleError } = useMyPeople(ready);
   const network = useNetworkView(user, ready, ready);

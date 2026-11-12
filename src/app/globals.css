@@ -1088,3 +1088,17 @@ button.av-lamp {
     display: none;
   }
 }
+
+/* A training video's tick, gently pulsing after its player closes, so the
+   leader remembers to tick it. Still for reduced motion. */
+@keyframes av-tick-nudge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 197, 107, 0.7); }
+  50% { box-shadow: 0 0 0 7px rgba(255, 197, 107, 0); }
+}
+.av-tick-nudge {
+  border-color: var(--lamp);
+  animation: av-tick-nudge 1.4s ease-out 4;
+}
+@media (prefers-reduced-motion: reduce) {
+  .av-tick-nudge { animation: none; }
+}

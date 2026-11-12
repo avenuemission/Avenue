@@ -16,6 +16,8 @@ interface EpisodeCarouselProps {
   episodes: CarouselEpisode[];
   onPlay: (youtubeId: string, title: string) => void;
   onToggleWatched: (episodeId: string) => void;
+  // Pulse this video's tick (its player was just closed and it isn't ticked).
+  nudgeYoutubeId?: string | null;
 }
 
 // YouTube serves thumbnails straight off img.youtube.com with no API key, so
@@ -50,6 +52,7 @@ export default function EpisodeCarousel({
   episodes,
   onPlay,
   onToggleWatched,
+  nudgeYoutubeId = null,
 }: EpisodeCarouselProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -159,7 +162,7 @@ export default function EpisodeCarousel({
                       ep.watched
                         ? "bg-[var(--lamp)] border-[var(--lamp)]"
                         : "bg-black/60 border-white/60 hover:border-white"
-                    }`}
+                    } ${!ep.watched && ep.youtubeId === nudgeYoutubeId ? "av-tick-nudge" : ""}`}
                   >
                     {ep.watched && <Check className="w-3.5 h-3.5 text-black" />}
                   </span>

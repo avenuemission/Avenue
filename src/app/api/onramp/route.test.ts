@@ -52,6 +52,13 @@ describe("POST /api/onramp", () => {
       { onConflict: "email" },
     ]);
     expect(h.allow).toHaveBeenCalledWith(expect.objectContaining({ name: "onramp" }), IP);
+    // Portal access: a pending leader, never overwriting an existing one.
+    expect(fake.calls).toContainEqual([
+      "leaders",
+      "upsert",
+      { id: expect.any(String), email: "ann@example.invalid", name: "Ann Lee", full_access: false },
+      { onConflict: "email", ignoreDuplicates: true },
+    ]);
     expect(h.sendEmail).toHaveBeenCalledWith(
       "ann@example.invalid",
       expect.stringContaining("You're in"),
@@ -95,6 +102,14 @@ describe("POST /api/onramp", () => {
     h.allow.mockResolvedValueOnce(false);
     expect((await post(good)).status).toBe(429);
     expect(fake.calls).toEqual([]);
+  });
+
+  it("fails loud when portal access can't be given, and emails nothing", async () => {
+    h.getSupabaseAdmin.mockReturnValue(
+      fakeSupabase({ "onramp_signups.upsert.single": NEW, "leaders.upsert": { error: { message: "check violation" } } }).db
+    );
+    expect((await post(good)).status).toBe(500);
+    expect(h.sendEmail).not.toHaveBeenCalled();
   });
 
   it("still succeeds when email is not set up or the send fails, and says so", async () => {

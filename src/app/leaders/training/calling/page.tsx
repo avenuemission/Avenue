@@ -17,6 +17,9 @@ import Moment from "@/components/leaders/avenue/Moment";
 import { useLeaderGate } from "@/hooks/useLeaderGate";
 import { useWorksheet } from "@/hooks/useWorksheet";
 import { useMyPeople } from "@/hooks/useMyPeople";
+import { useTrainingContent } from "@/hooks/useTrainingContent";
+import { CALLING_PROMPT_KEY, callingSectionPromptKey } from "@/lib/domain/trainingContent";
+import DiscussionCard from "@/components/leaders/training/DiscussionCard";
 import { firstIncompleteIndex, stepFromParam, type WizardStepMeta } from "@/lib/domain/wizard";
 import { CALLING_SECTIONS } from "@/content/calling";
 import SectionVideo from "@/app/leaders/training/calling/_steps/SectionVideo";
@@ -32,12 +35,13 @@ import ConversationStep from "@/app/leaders/training/calling/_steps/Conversation
 // "calling" worksheet.
 export default function CallingPage() {
   const router = useRouter();
-  const { user, ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate({ pending: true });
   const { data, loaded, error, saveSection, flushSection, savingSection, saveError } = useWorksheet<CallingData>(
     "calling",
     ready
   );
   const { people, peopleLoaded, peopleError, upsertPerson } = useMyPeople(ready);
+  const content = useTrainingContent(ready);
 
   const steps: WizardStepMeta[] = CALLING_SECTIONS.map((s) => ({
     id: s.id,
@@ -173,6 +177,7 @@ export default function CallingPage() {
         onSelect={goTo}
         saving={savingSection !== null}
         saveError={saveError}
+        intro={<DiscussionCard prompt={content.prompt(CALLING_PROMPT_KEY)} />}
       >
         <div className="space-y-6">
           <h2 className="text-[var(--ink)]">
@@ -181,6 +186,11 @@ export default function CallingPage() {
           <SectionVideo section={section} />
           {/* key resets local step state (selection, typed text) when the section changes */}
           <div key={section.id}>{activity}</div>
+          {/* A discussion card for sections 1 to 5; the Conversation has none. */}
+          {(() => {
+            const key = callingSectionPromptKey(current);
+            return key ? <DiscussionCard prompt={content.prompt(key)} /> : null;
+          })()}
         </div>
       </WizardShell>
       <Moment

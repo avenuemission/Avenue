@@ -77,7 +77,7 @@ function ErrorPanel({ message }: { message: string }) {
 // only, to carry the people group and hosting space forward.
 export default function LaunchPage() {
   const router = useRouter();
-  const { user, ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate({ pending: true });
   const launch = useWorksheet<LaunchData>("launch", ready);
   const calling = useWorksheet<CallingData>("calling", ready);
   const { people, peopleLoaded, peopleError, upsertPerson } = useMyPeople(ready);

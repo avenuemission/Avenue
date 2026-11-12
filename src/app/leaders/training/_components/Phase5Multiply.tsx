@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { NETWORK_ENABLED } from "@/content/features";
 import { Users, ChevronDown, CheckCircle2, Circle, UserPlus } from "lucide-react";
 import { APPRENTICE_STEPS, apprenticeStepLabel, rungAfterTap } from "@/lib/domain/apprentice";
 import { multiplySummary } from "@/lib/domain/phaseSummaries";
@@ -178,6 +179,8 @@ export default function Phase5Multiply({
 
   return (
     <div className="space-y-10">
+      {NETWORK_ENABLED ? (
+        <>
       {/* Your people: the core of the phase, a list on the night ground */}
       <div>
         <span className="eyebrow">Your people</span>
@@ -305,6 +308,15 @@ export default function Phase5Multiply({
           See the family tree
         </Link>
       </div>
+        </>
+      ) : (
+        <div className="night-card p-5">
+          <span className="eyebrow">Your people</span>
+          <p className="mt-2 text-sm text-[var(--ink-2)]">
+            Coming soon: a place to track the people you&rsquo;re apprenticing and see your family tree.
+          </p>
+        </div>
+      )}
 
       {/* The teaching, behind an expander */}
       <div className="border-b border-[var(--line)]">
