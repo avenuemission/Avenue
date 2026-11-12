@@ -18,7 +18,7 @@ import { useLeaderGate } from "@/hooks/useLeaderGate";
 import { useWorksheet } from "@/hooks/useWorksheet";
 import { useMyPeople } from "@/hooks/useMyPeople";
 import { useTrainingContent } from "@/hooks/useTrainingContent";
-import { CALLING_PROMPT_KEY, callingSectionPromptKey } from "@/lib/domain/trainingContent";
+import { callingSectionPromptKey } from "@/lib/domain/trainingContent";
 import DiscussionCard from "@/components/leaders/training/DiscussionCard";
 import { firstIncompleteIndex, stepFromParam, type WizardStepMeta } from "@/lib/domain/wizard";
 import { CALLING_SECTIONS } from "@/content/calling";
@@ -177,7 +177,6 @@ export default function CallingPage() {
         onSelect={goTo}
         saving={savingSection !== null}
         saveError={saveError}
-        intro={<DiscussionCard prompt={content.prompt(CALLING_PROMPT_KEY)} />}
       >
         <div className="space-y-6">
           <h2 className="text-[var(--ink)]">

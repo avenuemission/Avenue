@@ -39,7 +39,7 @@ export default async function PathwaysPage() {
       {/* How it works: the night scene */}
       <SceneSection scene={<PathwaysScene />} eyebrow="How it works" title="Church around a table">
         <p>
-          A pathway is a house church. A few people meet in a home, a library or a school, wherever God has placed
+          A pathway is a microchurch. A few people meet in a home, a library or a school, wherever God has placed
           them.
         </p>
         <p>
@@ -91,7 +91,7 @@ export default async function PathwaysPage() {
                 Find a Pathway Community Near You
               </h2>
               <p className="text-[var(--muted)] text-sm sm:text-base leading-relaxed max-w-lg">
-                Pathway groups are house church communities growing together,
+                Pathway groups are microchurch communities growing together,
                 empowered by the Spirit of God. We meet in homes, libraries,
                 schools, wherever the LORD has sent us. We eat together, read
                 the bible together, discuss and encourage others through

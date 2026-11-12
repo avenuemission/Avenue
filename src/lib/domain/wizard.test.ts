@@ -10,7 +10,7 @@ const done = steps.map((s) => ({ ...s, complete: true }));
 
 describe("firstIncompleteIndex", () => {
   it("finds the first incomplete step", () => expect(firstIncompleteIndex(steps)).toBe(1));
-  it("opens the last step when everything is complete", () => expect(firstIncompleteIndex(done)).toBe(2));
+  it("opens the first step when everything is complete", () => expect(firstIncompleteIndex(done)).toBe(0));
   it("opens the first step for an empty list", () => expect(firstIncompleteIndex([])).toBe(0));
 });
 

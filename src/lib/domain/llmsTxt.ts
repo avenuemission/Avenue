@@ -14,7 +14,7 @@ export function llmsText(): string {
     "",
     `> ${summary}`,
     "",
-    `${name} is a decentralised movement of people following Jesus in ${area}, Australia. Pathways are house churches: small communities meeting in homes, libraries and schools. Where pathways meet is called Intersection.`,
+    `${name} is a decentralised movement of people following Jesus in ${area}, Australia. Pathways are microchurches: small communities meeting in homes, libraries and schools. Where pathways meet is called Intersection.`,
     "",
     `## ${prayerAndPraise.name}`,
     "",

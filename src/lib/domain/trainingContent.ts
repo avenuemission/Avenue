@@ -31,9 +31,7 @@ export const FOUNDATIONS_PROMPT_KEYS: Record<string, string> = {
   p1m3: "streetlights",
 };
 
-// The Ephesians 4 Discovery Bible Reading for the whole Calling stop, and
-// one discussion card per Calling section 1 to 5 (section 6 has none).
-export const CALLING_PROMPT_KEY = "calling";
+// One discussion card per Calling section 1 to 5 (section 6 has none).
 export function callingSectionPromptKey(sectionIndex: number): string | null {
   return sectionIndex >= 0 && sectionIndex < 5 ? `calling-${sectionIndex + 1}` : null;
 }

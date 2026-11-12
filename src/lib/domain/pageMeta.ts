@@ -10,19 +10,19 @@ export const PUBLIC_PAGES = {
     name: "Home",
     title: "Avenue - Unleashing God-given potential",
     description:
-      "Avenue Mission is a decentralised movement of people following Jesus in Melbourne, Victoria: house churches in the spaces we already have, supported by the Seventh-day Adventist Church.",
+      "Avenue Mission is a decentralised movement of people following Jesus in Melbourne, Victoria: microchurches in the spaces we already have, supported by the Seventh-day Adventist Church.",
   },
   "/vision": {
     name: "Vision",
     title: "Vision - Avenue Mission",
     description:
-      "Discover Avenue's vision, mission, values and beliefs. We are a decentralised movement of people following Jesus, growing disciples through house churches across Melbourne.",
+      "Discover Avenue's vision, mission, values and beliefs. We are a decentralised movement of people following Jesus, growing disciples through microchurches across Melbourne.",
   },
   "/pathways": {
     name: "Pathways",
     title: "Pathways - Avenue Mission",
     description:
-      "Join or start a Pathway group. Pathway groups are house church communities growing together, empowered by the Spirit of God. Find a group near you in Melbourne.",
+      "Join or start a Pathway group. Pathway groups are microchurch communities growing together, empowered by the Spirit of God. Find a group near you in Melbourne.",
   },
   "/intersection": {
     name: "Intersection",
@@ -39,13 +39,13 @@ export const PUBLIC_PAGES = {
     name: "FAQ",
     title: "FAQ - Avenue Mission",
     description:
-      "Questions about Avenue Mission, a house church movement in Melbourne: Prayer & Praise times and venue, joining or leading a Pathway, and how to get in touch.",
+      "Questions about Avenue Mission, a microchurch movement in Melbourne: Prayer & Praise times and venue, joining or leading a Pathway, and how to get in touch.",
   },
   "/apest-quiz": {
     name: "APEST Quiz",
     title: "APEST Quiz - Avenue Mission",
     description:
-      "Find your APEST profile (apostle, prophet, evangelist, shepherd, teacher) with Avenue Mission, a house church movement in Melbourne, and serve more effectively in community.",
+      "Find your APEST profile (apostle, prophet, evangelist, shepherd, teacher) with Avenue Mission, a microchurch movement in Melbourne, and serve more effectively in community.",
   },
   "/onramp": {
     name: "Avenue On-Ramp",

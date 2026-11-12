@@ -22,7 +22,7 @@ export const FAQS: Faq[] = [
   {
     question: "What is a Pathway?",
     answer:
-      "A pathway is a house church. A few people meet in a home, a library or a school, wherever God has placed them.",
+      "A pathway is a microchurch. A few people meet in a home, a library or a school, wherever God has placed them.",
   },
   {
     question: "What happens at a Pathway?",

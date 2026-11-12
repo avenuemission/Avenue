@@ -179,8 +179,6 @@ export default function Phase5Multiply({
 
   return (
     <div className="space-y-10">
-      {NETWORK_ENABLED ? (
-        <>
       {/* Your people: the core of the phase, a list on the night ground */}
       <div>
         <span className="eyebrow">Your people</span>
@@ -300,23 +298,17 @@ export default function Phase5Multiply({
         {networkLoaded && !networkError ? (
           <p className="text-sm text-[var(--ink)]">{multiplySummary(networkDepth)}</p>
         ) : null}
-        <Link
-          href="/leaders/network"
-          className="mt-1 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-[var(--accent)]"
-        >
-          <Users className="h-4 w-4" aria-hidden="true" />
-          See the family tree
-        </Link>
+        {/* The family tree page is switched off for now (content/features.ts). */}
+        {NETWORK_ENABLED ? (
+          <Link
+            href="/leaders/network"
+            className="mt-1 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-[var(--accent)]"
+          >
+            <Users className="h-4 w-4" aria-hidden="true" />
+            See the family tree
+          </Link>
+        ) : null}
       </div>
-        </>
-      ) : (
-        <div className="night-card p-5">
-          <span className="eyebrow">Your people</span>
-          <p className="mt-2 text-sm text-[var(--ink-2)]">
-            Coming soon: a place to track the people you&rsquo;re apprenticing and see your family tree.
-          </p>
-        </div>
-      )}
 
       {/* The teaching, behind an expander */}
       <div className="border-b border-[var(--line)]">
