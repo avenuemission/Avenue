@@ -11,8 +11,8 @@ export const GUIDE_CHAPTERS: GuideChapter[] = [
   { id: "preamble", label: "Preamble" },
   { id: "dna", label: "DNA" },
   { id: "metrics", label: "Metrics" },
-  { id: "intersection", label: "Intersection" },
   { id: "pathways", label: "Pathways" },
+  { id: "intersection", label: "Intersection" },
   { id: "streetlights", label: "Streetlights" },
   { id: "leadership", label: "Leadership" },
   { id: "board", label: "Board" },
@@ -32,33 +32,22 @@ export const VALUES: { name: string; rest: string; meaning: string }[] = [
   { name: "Inclusivity", rest: "is our culture", meaning: "We're intentional about building bridges with people." },
 ];
 
-export const PERSONAS: { name: string; text: string }[] = [
-  {
-    name: "Aaron",
-    text: "20 and single, is in second-year uni studying science. He's still financially dependent on his parents and unsure what he wants career-wise. He's introverted, prioritises fitness, likes contemporary music, has a few surface-level friends and is looking for community and belonging.",
-  },
-  {
-    name: "Amy",
-    text: "17, is in Year 12 at a local private school with parents pushing her to do well. She's smart, creative, plays piano and sings, and prefers casual over formal. She has a group of five friends but isn't sure they'll last after graduation.",
-  },
-];
-
 export type Expression = "intersection" | "pathways" | "streetlights";
 
 export const DNA: { id: Expression; name: string; direction: string; text: string; where: string }[] = [
-  {
-    id: "intersection",
-    name: "Intersection",
-    direction: "Upward · with God",
-    text: "We gather to worship in response to what God has done, offering our lives more fully to him.",
-    where: "Wednesday night Prayer and Praise, plus occasional larger worship nights",
-  },
   {
     id: "pathways",
     name: "Pathways",
     direction: "Inward · with each other",
     text: "We grow with Jesus by walking with him and others in Pathway groups. The primary place people live and grow at Avenue.",
     where: "Homes, cafés, restaurants and public spaces across Melbourne",
+  },
+  {
+    id: "intersection",
+    name: "Intersection",
+    direction: "Upward · with God",
+    text: "We gather to worship in response to what God has done, offering our lives more fully to him.",
+    where: "Wednesday night Prayer and Praise, plus occasional larger worship nights",
   },
   {
     id: "streetlights",

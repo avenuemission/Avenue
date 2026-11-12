@@ -7,6 +7,9 @@ import ResetWorksheet from "@/components/leaders/journey/ResetWorksheet";
 import { CALLING_LAMP_LABELS } from "@/lib/domain/avenue";
 import { CALLING_SECTION_IDS, CALLING_TOTAL, type CallingData } from "@/lib/domain/journey";
 import { callingSectionStatus } from "@/lib/domain/stepStatus";
+import { useTrainingContent } from "@/hooks/useTrainingContent";
+import { CALLING_PROMPT_KEY } from "@/lib/domain/trainingContent";
+import DiscussionCard from "@/components/leaders/training/DiscussionCard";
 
 export interface CallingCardProps {
   data: Partial<CallingData>;
@@ -28,6 +31,8 @@ export default function CallingCard({ data, loaded, error, onReset }: CallingCar
   }));
   const completed = lamps.filter((l) => l.status === "done").length;
   const firstOpen = lamps.findIndex((l) => l.status !== "done");
+
+  const content = useTrainingContent(true);
 
   return (
     <div className="space-y-6">
@@ -51,6 +56,7 @@ export default function CallingCard({ data, loaded, error, onReset }: CallingCar
           label={`Calling: ${completed} of ${CALLING_TOTAL} sections complete`}
         />
       ) : null}
+      <DiscussionCard prompt={content.prompt(CALLING_PROMPT_KEY)} />
       <div className="flex flex-col gap-3 sm:flex-row">
         <Link
           href="/leaders/training/calling"

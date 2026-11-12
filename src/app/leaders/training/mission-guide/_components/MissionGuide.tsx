@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
+import GuideNav from "./GuideNav";
 import {
   APEST,
   APPRENTICE_STEPS,
@@ -17,7 +18,6 @@ import {
   MISSION_QUESTIONS,
   MISSION_WORD,
   PATHWAY_RHYTHMS,
-  PERSONAS,
   PRAYER_AND_PRAISE,
   UP_IN_OUT,
   VALUES,
@@ -256,25 +256,9 @@ export default function MissionGuide() {
       </div>
     </div>
 
-    <div className="mx-auto max-w-[680px]">
-      {/* Chapters */}
-      <nav aria-label="Chapters" className="mt-12 mb-4">
-        <p className="night-label">In this guide</p>
-        <ol className="mt-3 flex flex-wrap gap-2">
-          {GUIDE_CHAPTERS.map((c, i) => (
-            <li key={c.id}>
-              <a
-                href={`#${c.id}`}
-                className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[var(--line)] px-4 text-sm text-[var(--ink-2)] hover:border-[var(--lamp)] hover:text-white"
-              >
-                <span className="text-[var(--dim)] tabular-nums">{i + 1}</span>
-                {c.label}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-
+    <div className="lg:grid lg:grid-cols-[180px_minmax(0,680px)] lg:justify-center lg:gap-12">
+      <GuideNav chapters={GUIDE_CHAPTERS} />
+      <div className="mx-auto max-w-[680px] lg:mx-0">
       <Chapter id="preamble" label="The Preamble" title="Who we are">
         <Sub>The Avenue name: we&apos;re not the destination</Sub>
         <p>
@@ -321,31 +305,13 @@ export default function MissionGuide() {
             v.meaning,
           ])}
         />
-
-        <Sub>Who we&apos;re trying to reach: Aaron and Amy</Sub>
-        <p>
-          We&apos;re focused on teens and young adults who are distant from God. Our prototypes are Avenue Aaron and
-          Amy. Our reach isn&apos;t limited to them, but every ministry we run should help an Aaron or Amy go deeper
-          with Jesus.
-        </p>
-        <Bullets
-          items={PERSONAS.map((p) => (
-            <Fragment key={p.name}>
-              <strong className="text-[var(--ink)]">{p.name}</strong>, {p.text}
-            </Fragment>
-          ))}
-        />
-        <p>
-          Both have experienced religion before. They&apos;re open to faith but it&apos;s not a priority. It&apos;s
-          not that they don&apos;t believe in God. They just don&apos;t see the need. Life is mostly comfortable, and
-          they look for happiness in hobbies, stability and achievement.
-        </p>
       </Chapter>
 
       <Chapter id="dna" label="The DNA" title="Three expressions, one road">
         <Lead>
-          Avenue is built on three expressions that line up with the avenue picture: we meet God at the
-          intersection, walk the pathway together, and light up the street for everyone around us.
+          Avenue is built on three expressions that line up with the avenue picture: we walk the pathway together, meet
+          God with other disciples at the intersection, and become streetlights in a world that needs more of the light
+          of Jesus.
         </Lead>
         <div className="grid gap-3 md:grid-cols-3">
           {DNA.map((d) => (
@@ -407,60 +373,7 @@ export default function MissionGuide() {
         </Callout>
       </Chapter>
 
-      <Chapter id="intersection" label="Section 1 · Worship" title="Intersection">
-        <Lead>
-          Intersection is any time the Avenue community gathers to worship, and our heartbeat is{" "}
-          <strong>Wednesday night Prayer and Praise</strong>. We&apos;re not building a big Sunday-style production.
-          We&apos;re building a weekly space where people meet God, get honest in prayer, and get sent back out to
-          their Pathways and their streets.
-        </Lead>
-
-        <Sub>Why Wednesday night is the rhythm</Sub>
-        <p>
-          We used to run large quarterly Intersection services. They took a lot of planning, and they mostly drew
-          people looking for something to attend rather than a community to belong to. That&apos;s not the fruit
-          we&apos;re after.
-        </p>
-        <p>
-          So we&apos;ve shifted our energy. Instead of a few big moments a year, we gather every week for worship
-          that&apos;s simple, honest and Spirit-led. Most of our life together still happens in Pathways. Wednesday
-          is where those Pathways cross paths and remember they&apos;re part of one bigger mission.
-        </p>
-
-        <Sub>What happens at Prayer and Praise</Sub>
-        <p>Every Wednesday looks a bit different, but the heart stays the same:</p>
-        <Bullets items={named(PRAYER_AND_PRAISE)} />
-
-        <Sub>How it&apos;s led</Sub>
-        <p>
-          The <strong className="text-[var(--ink)]">Intersection Director</strong> oversees Prayer and Praise and a
-          team of <strong className="text-[var(--ink)]">worship leaders</strong> who share the load on a rotating
-          roster. Each worship leader owns the week they&apos;re allocated: the theme, the worship set, the
-          reflection and the prayer moments. This keeps it sustainable, gives more people a chance to lead, and
-          means Prayer and Praise is itself a place where leaders are apprenticed.
-        </p>
-        <p>
-          Everyone else comes as a host, not a guest. Notice who&apos;s new or on the edge, introduce them to
-          someone, and stick around after for the conversations that matter.
-        </p>
-
-        <Sub>Bigger worship moments</Sub>
-        <p>
-          We&apos;ll still run larger worship events from time to time, like a baptism celebration or a network-wide
-          night. When we do, they get proper planning:
-        </p>
-        <Bullets items={named(BIG_MOMENTS)} />
-
-        <Point>
-          Intersection isn&apos;t the destination either. Its job is to bring people to Jesus and send them deeper
-          into a Pathway, where discipleship actually happens. The win we&apos;re looking for here:{" "}
-          <strong className="text-[var(--ink)]">
-            a person is baptised or makes a decision of faith and is then apprenticed to lead in a Pathway.
-          </strong>
-        </Point>
-      </Chapter>
-
-      <Chapter id="pathways" label="Section 2 · Community" title="Pathways">
+      <Chapter id="pathways" label="Section 1 · Community" title="Pathways">
         <Lead>
           Pathways are the engine room of Avenue: missional micro-churches that follow Jesus together, worship him,
           join him on mission, and multiply. The church isn&apos;t a building or an event. It&apos;s people around a
@@ -550,6 +463,59 @@ export default function MissionGuide() {
         </Point>
       </Chapter>
 
+      <Chapter id="intersection" label="Section 2 · Worship" title="Intersection">
+        <Lead>
+          Intersection is any time the Avenue community gathers to worship, and our heartbeat is{" "}
+          <strong>Wednesday night Prayer and Praise</strong>. We&apos;re not building a big weekend-service-style production.
+          We&apos;re building a weekly space where people meet God, get honest in prayer, and get sent back out to
+          their Pathways and their streets.
+        </Lead>
+
+        <Sub>Why Wednesday night is the rhythm</Sub>
+        <p>
+          We used to run large quarterly Intersection services. They took a lot of planning, and they mostly drew
+          people looking for something to attend rather than a community to belong to. That&apos;s not the fruit
+          we&apos;re after.
+        </p>
+        <p>
+          So we&apos;ve shifted our energy. Instead of a few big moments a year, we gather every week for worship
+          that&apos;s simple, honest and Spirit-led. Most of our life together still happens in Pathways. Wednesday
+          is where those Pathways cross paths and remember they&apos;re part of one bigger mission.
+        </p>
+
+        <Sub>What happens at Prayer and Praise</Sub>
+        <p>Every Wednesday looks a bit different, but the heart stays the same:</p>
+        <Bullets items={named(PRAYER_AND_PRAISE)} />
+
+        <Sub>How it&apos;s led</Sub>
+        <p>
+          The <strong className="text-[var(--ink)]">Intersection Director</strong> oversees Prayer and Praise and a
+          team of <strong className="text-[var(--ink)]">worship leaders</strong> who share the load on a rotating
+          roster. Each worship leader owns the week they&apos;re allocated: the theme, the worship set, the
+          reflection and the prayer moments. This keeps it sustainable, gives more people a chance to lead, and
+          means Prayer and Praise is itself a place where leaders are apprenticed.
+        </p>
+        <p>
+          Everyone else comes as a host, not a guest. Notice who&apos;s new or on the edge, introduce them to
+          someone, and stick around after for the conversations that matter.
+        </p>
+
+        <Sub>Bigger worship moments</Sub>
+        <p>
+          We&apos;ll still run larger worship events from time to time, like a baptism celebration or a network-wide
+          night. When we do, they get proper planning:
+        </p>
+        <Bullets items={named(BIG_MOMENTS)} />
+
+        <Point>
+          Intersection isn&apos;t the destination either. Its job is to bring people to Jesus and send them deeper
+          into a Pathway, where discipleship actually happens. The win we&apos;re looking for here:{" "}
+          <strong className="text-[var(--ink)]">
+            a person is baptised or makes a decision of faith and is then apprenticed to lead in a Pathway.
+          </strong>
+        </Point>
+      </Chapter>
+
       <Chapter id="streetlights" label="Section 3 · Mission" title="Streetlights">
         <Lead>
           Jesus called his church to be the light of the world (Matthew 5:14). Streetlights is how we keep our
@@ -633,17 +599,6 @@ export default function MissionGuide() {
         <Sub>What we ask of every board member</Sub>
         <Bullets items={BOARD_ASKS} />
 
-        <Sub>The six roles</Sub>
-        <Table
-          head={["Role", "Focus", "Reports to", "Leads"]}
-          rows={BOARD_ROLES.map((r) => [
-            <strong key="r" className="text-[var(--ink)]">{r.role}</strong>,
-            r.focus,
-            r.reportsTo,
-            r.leads,
-          ])}
-        />
-
         <Sub>Key responsibilities</Sub>
         <div className="border-t border-[var(--line)]">
           {BOARD_ROLES.map((r) => (
@@ -673,6 +628,7 @@ export default function MissionGuide() {
           Back to training
         </Link>
       </footer>
+      </div>
     </div>
     </>
   );

@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import EpisodeCarousel from "@/components/leaders/training/EpisodeCarousel";
 import Glow from "@/components/leaders/avenue/Glow";
@@ -5,6 +8,10 @@ import StepDot from "@/components/leaders/avenue/StepDot";
 import { DOT_SR_TEXT, moduleStatus } from "@/lib/domain/stepStatus";
 import { CheckCircle2, Video, FileText, Lightbulb, BookOpen, ChevronRight } from "lucide-react";
 import { Module, Phase } from "@/content/training/phases";
+import { useTrainingContent } from "@/hooks/useTrainingContent";
+import { FOUNDATIONS_PROMPT_KEYS, type VideoQuestion } from "@/lib/domain/trainingContent";
+import DiscussionCard from "@/components/leaders/training/DiscussionCard";
+import VideoQuestionDialog from "@/components/leaders/training/VideoQuestionDialog";
 
 // Module Type Icons
 const ModuleTypeIcon = ({ type }: { type: Module["type"] }) => {
@@ -25,6 +32,15 @@ interface PhaseModulesProps {
   toggleModuleComplete: (phaseId: string, moduleId: string) => void;
   toggleEpisodeWatched: (phaseId: string, moduleId: string, episodeId: string) => void;
   openVideo: (youtubeId: string, title: string) => void;
+  // The video whose player was just closed, so its tick can nudge.
+  nudgeYoutubeId?: string | null;
+}
+
+interface Asking {
+  moduleId: string;
+  episodeId: string;
+  title: string;
+  question: VideoQuestion;
 }
 
 // The modules list used by Foundations, as a clean list on the night ground
@@ -36,9 +52,34 @@ export default function PhaseModules({
   toggleModuleComplete,
   toggleEpisodeWatched,
   openVideo,
+  nudgeYoutubeId = null,
 }: PhaseModulesProps) {
+  const content = useTrainingContent(true);
+  const [asking, setAsking] = useState<Asking | null>(null);
+
+  // Ticking an unticked video asks its question first (Done ticks it);
+  // unticking, or a video with no question, toggles straight away.
+  const toggleEpisode = (module: Module, episodeId: string) => {
+    const episode = module.episodes?.find((e) => e.id === episodeId);
+    const question = episode && !episode.watched ? content.question(episode.youtubeId) : null;
+    if (episode && question) setAsking({ moduleId: module.id, episodeId, title: episode.title, question });
+    else toggleEpisodeWatched(phase.id, module.id, episodeId);
+  };
+
   return (
     <div>
+      {asking && (
+        <VideoQuestionDialog
+          key={asking.episodeId}
+          videoTitle={asking.title}
+          question={asking.question}
+          onDone={() => {
+            toggleEpisodeWatched(phase.id, asking.moduleId, asking.episodeId);
+            setAsking(null);
+          }}
+          onClose={() => setAsking(null)}
+        />
+      )}
       <h3 className="night-h2 mb-4">Training modules</h3>
       <ul className="border-t border-[var(--line)]">
         {phase.modules.map((module) => (
@@ -76,8 +117,12 @@ export default function PhaseModules({
               <EpisodeCarousel
                 episodes={module.episodes}
                 onPlay={openVideo}
-                onToggleWatched={(episodeId) => toggleEpisodeWatched(phase.id, module.id, episodeId)}
+                onToggleWatched={(episodeId) => toggleEpisode(module, episodeId)}
+                nudgeYoutubeId={nudgeYoutubeId}
               />
+            )}
+            {FOUNDATIONS_PROMPT_KEYS[module.id] && (
+              <DiscussionCard prompt={content.prompt(FOUNDATIONS_PROMPT_KEYS[module.id])} className="mt-4" />
             )}
           </li>
         ))}

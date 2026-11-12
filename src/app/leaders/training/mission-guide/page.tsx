@@ -14,7 +14,7 @@ import MissionGuide, { TRAINING_HREF } from "./_components/MissionGuide";
 // Foundations count.
 export default function MissionGuidePage() {
   const router = useRouter();
-  const { user, ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate({ pending: true });
 
   if (gateError) {
     return (

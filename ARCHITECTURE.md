@@ -139,10 +139,11 @@ ESLint enforces these (`eslint.config.mjs`), by alias and by resolved path, so a
 
 ## Data model summary
 
-20 tables in `public`. Full detail and a diagram: [docs/database.md](docs/database.md).
+22 tables in `public`. Full detail and a diagram: [docs/database.md](docs/database.md).
 
 | Group | Tables |
 |---|---|
+| Training content | `training_video_questions`, `training_module_prompts` |
 | Site content | `pathway_groups`, `intersection_events`, `intersection_event_dates`, `study_guides`, `site_stats` |
 | Public input | `form_submissions`, `crossing_scores` (the Vision page game), `onramp_signups` (the On-Ramp sign-up page) |
 | Leaders | `leaders` (the gate), `leader_profiles`, `leader_training_progress`, `leader_checkins`, `leader_people`, `leader_worksheets` |

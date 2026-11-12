@@ -59,7 +59,7 @@ function EmptyNext({ line, label, step }: { line: string; label: string; step: n
 // leader's sender or the admins. Journal answers stay on screen only,
 // behind a toggle, and are never inside the printed output (Ruling C3).
 export default function CallingProfilePage() {
-  const { user, ready, error: gateError } = useLeaderGate();
+  const { user, ready, error: gateError } = useLeaderGate({ pending: true });
   const { data, loaded, error, reset } = useWorksheet<CallingData>("calling", ready);
   const { people, peopleLoaded, peopleError } = useMyPeople(ready);
   const [showJournal, setShowJournal] = useState(false);

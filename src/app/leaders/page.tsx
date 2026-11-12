@@ -10,6 +10,7 @@ import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/domain/avenue";
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 import NextStepCard from "@/components/leaders/journey/NextStepCard";
+import { NETWORK_ENABLED } from "@/content/features";
 import {
   GraduationCap,
   BookOpen,
@@ -116,8 +117,9 @@ export default function LeadersPage() {
     );
   }
 
-  // Cards that require full_access
-  const restrictedCards = ["training", "study", "resources"];
+  // Cards that require full_access. Leader Training is open to pending
+  // leaders too (On-Ramp sign-ups start there).
+  const restrictedCards = ["study", "resources"];
 
   // The main tools first, then the secondary ones, in one hairline list.
   const tools = [
@@ -126,7 +128,7 @@ export default function LeadersPage() {
     { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
     { id: "resources", title: "Resources", icon: FolderOpen, href: "/leaders/resources" },
     { id: "admin", title: "Admin", icon: Lock, href: "/leaders/admin" },
-  ];
+  ].filter((card) => NETWORK_ENABLED || card.id !== "network");
 
   const isRestricted = (cardId: string) => !hasFullAccess && restrictedCards.includes(cardId);
 
@@ -202,7 +204,7 @@ export default function LeadersPage() {
                 {isRestricted(card.id) ? (
                   <div
                     className="flex min-h-[56px] items-center gap-4 py-3 opacity-60"
-                    title="Your access opens after your first call with a pastor"
+                    title="Opens after your first call with a leader"
                   >
                     <card.icon className="h-5 w-5 flex-shrink-0 text-[var(--dim)]" />
                     <span className="flex-1 text-[var(--muted)]">{card.title}</span>
@@ -222,7 +224,9 @@ export default function LeadersPage() {
 
         {/* Pending Access Message */}
         {accessChecked && !hasFullAccess && (
-          <p className="mt-6 text-sm italic text-[var(--muted)]">Your access opens after your first call with a pastor.</p>
+          <p className="mt-6 text-sm italic text-[var(--muted)]">
+            Start with Leader Training. More tools open after your first call with a leader.
+          </p>
         )}
 
         {/* Quick Links: folded away so the page leads with the tools */}

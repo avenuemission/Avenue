@@ -3,6 +3,7 @@ import Link from "next/link";
 import ImageCarousel from "@/components/site/ImageCarousel";
 import DisclosureGroup from "./_components/DisclosureGroup";
 import CrossTheAvenue from "./_components/CrossTheAvenue";
+import WatchVideos from "./_components/WatchVideos";
 import { getCarouselImages } from "@/lib/server/content";
 import { shuffled } from "@/lib/domain/shuffle";
 import PageTitle from "@/components/ui/PageTitle";
@@ -86,6 +87,13 @@ export default async function VisionPage() {
 
       {/* Pooled carousel from all three areas, shuffled */}
       <ImageCarousel images={shuffled(carousel)} />
+
+      {/* ===================== */}
+      {/* WATCH: two short videos */}
+      {/* ===================== */}
+      <Section eyebrow="Watch" title="Meet Avenue" width="wide">
+        <WatchVideos />
+      </Section>
 
       {/* ===================== */}
       {/* THE MODEL */}
