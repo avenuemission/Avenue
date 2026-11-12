@@ -112,7 +112,7 @@ There is no migration runner. Each file in `supabase/migrations/` is pasted into
 | `019_crossing_scores` | `crossing_scores` table for the Vision page game. New table only, safe before the code is live | ✅ |
 | `020_onramp_signups` | `onramp_signups` table for the On-Ramp sign-up page. New table only, safe before the code is live | ✅ |
 | `021_onramp_leader_access` | Every On-Ramp sign-up becomes a pending leader (skips existing leaders) | ✅ |
-| `022_training_questions` | `training_video_questions` and `training_module_prompts`, seeded | ❌ Before this deploy |
+| `022_training_questions` | `training_video_questions` and `training_module_prompts`, seeded | ✅ |
 
 ### How to apply one
 

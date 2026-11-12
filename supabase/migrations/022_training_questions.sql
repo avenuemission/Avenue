@@ -1,3 +1,4 @@
+-- APPLIED to the live database 2026-11-12 (14 questions, 10 cards).
 -- ============================================================
 -- 022 Leader Training questions and discussion cards.
 --
