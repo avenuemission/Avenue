@@ -7,11 +7,12 @@ export interface WizardStepMeta {
   complete: boolean;
 }
 
-// Resume point: the first incomplete step, or the last step when all are done.
+// Resume point: the first incomplete step, or step 1 when all are done.
 export function firstIncompleteIndex(steps: WizardStepMeta[]): number {
+  // When everything is done, start again at step 1 (for review), not the
+  // last step: opening Conversation every time felt like being sent back.
   const i = steps.findIndex((s) => !s.complete);
-  if (i >= 0) return i;
-  return Math.max(0, steps.length - 1);
+  return i >= 0 ? i : 0;
 }
 
 export function totalMinutes(steps: WizardStepMeta[]): number {

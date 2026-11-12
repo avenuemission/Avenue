@@ -110,7 +110,7 @@ export const AVENUE_FACTS = {
   url: "https://www.avenuemission.com",
   email: "info@avenuemission.com",
   area: "Melbourne, Victoria",
-  summary: "House churches across Melbourne, supported by the Seventh-day Adventist Church.",
+  summary: "Microchurches across Melbourne, supported by the Seventh-day Adventist Church.",
   parentOrganization: { name: "Seventh-day Adventist Church", url: "https://www.adventist.org" },
   venue: {
     name: "Mont Albert Church",
