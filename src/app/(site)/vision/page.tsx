@@ -114,7 +114,7 @@ export default async function VisionPage() {
       >
         <p>Everything begins with Jesus, the light at the centre of it all.</p>
         <p>
-          Pathways are house churches: small communities meeting in homes, growing together around Him. From every
+          Pathways are microchurches: small communities meeting in homes, growing together around Him. From every
           home, streetlights reach out into the neighbourhood. And where pathways cross, they meet at the intersection
           to worship God in one spirit.
         </p>
