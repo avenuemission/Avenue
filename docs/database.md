@@ -38,6 +38,7 @@ What is in the Supabase Postgres database, how the tables relate, who can touch 
 | `onramp_signups` | Avenue On-Ramp training day sign-ups (`/onramp`): name, email, 1 or 2 workshops. One row per email | `id`; `email` unique |
 | `training_video_questions` | One multiple-choice question per Foundations video (pop-up on tick). Edit in the Table Editor | `youtube_id` |
 | `training_module_prompts` | Discussion and Discovery Bible Reading cards for Foundations modules and Calling | `module` |
+| `huddle_stories` | Numbers only, one row per Pathway Huddle: people new this year per Metrics of Success category, for the dashboard's "Stories, not seats" card | `id` |
 
 ## Relationships
 
@@ -113,6 +114,7 @@ There is no migration runner. Each file in `supabase/migrations/` is pasted into
 | `020_onramp_signups` | `onramp_signups` table for the On-Ramp sign-up page. New table only, safe before the code is live | ✅ |
 | `021_onramp_leader_access` | Every On-Ramp sign-up becomes a pending leader (skips existing leaders) | ✅ |
 | `022_training_questions` | `training_video_questions` and `training_module_prompts`, seeded | ✅ |
+| `023_huddle_stories` | `huddle_stories` table, seeded from the 2026 Metrics of Success doc | ✅ |
 
 ### How to apply one
 

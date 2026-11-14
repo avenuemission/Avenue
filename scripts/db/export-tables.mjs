@@ -35,6 +35,7 @@ const TABLES = [
   ["onramp_signups", "id"],
   ["training_video_questions", "youtube_id"],
   ["training_module_prompts", "module"],
+  ["huddle_stories", "id"],
 ];
 const PAGE = 1000;
 

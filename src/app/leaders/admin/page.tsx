@@ -19,6 +19,7 @@ import {
   BarChart3,
   HeartPulse,
   Gamepad2,
+  Sparkles,
 } from "lucide-react";
 import SubmissionsTab from "./_tabs/SubmissionsTab";
 import LeadersTab from "./_tabs/LeadersTab";
@@ -29,6 +30,7 @@ import StatsTab from "./_tabs/StatsTab";
 import ChurchHealthTab from "./_tabs/ChurchHealthTab";
 import EmailPreviewTab from "./_tabs/EmailPreviewTab";
 import GameScoresTab from "./_tabs/GameScoresTab";
+import HuddleStoriesTab from "./_tabs/HuddleStoriesTab";
 
 const TABS = [
   { id: "submissions", label: "Form Submissions", icon: FileText },
@@ -37,6 +39,7 @@ const TABS = [
   { id: "events", label: "Intersection Events", icon: Calendar },
   { id: "guides", label: "Study Guides", icon: BookOpen },
   { id: "stats", label: "Site Stats", icon: BarChart3 },
+  { id: "stories", label: "Huddle Stories", icon: Sparkles },
   { id: "health", label: "Church Health", icon: HeartPulse },
   { id: "emails", label: "Email Previews", icon: Mail },
   { id: "game", label: "Game Scores", icon: Gamepad2 },
@@ -204,6 +207,7 @@ export default function AdminPage() {
         {activeTab === "events" && <EventsTab adminKey={storedKey} />}
         {activeTab === "guides" && <GuidesTab adminKey={storedKey} />}
         {activeTab === "stats" && <StatsTab adminKey={storedKey} />}
+        {activeTab === "stories" && <HuddleStoriesTab adminKey={storedKey} />}
         {activeTab === "health" && <ChurchHealthTab adminKey={storedKey} />}
         {activeTab === "emails" && <EmailPreviewTab adminKey={storedKey} />}
         {activeTab === "game" && <GameScoresTab adminKey={storedKey} />}

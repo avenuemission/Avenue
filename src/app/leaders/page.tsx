@@ -10,6 +10,7 @@ import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/domain/avenue";
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 import NextStepCard from "@/components/leaders/journey/NextStepCard";
+import HuddleStoriesCard from "@/components/leaders/HuddleStoriesCard";
 import { NETWORK_ENABLED } from "@/content/features";
 import { MISSION_GUIDE_HREF } from "@/content/training/missionGuide";
 import {
@@ -163,6 +164,9 @@ export default function LeadersPage() {
           </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">Access resources, training, and tools for Avenue leaders</p>
         </div>
+
+        {/* This year's Metrics of Success, as numbers */}
+        <HuddleStoriesCard />
 
         {/* Someone says they sent you out */}
         {pendingSender && (
