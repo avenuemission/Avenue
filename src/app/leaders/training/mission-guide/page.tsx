@@ -6,7 +6,8 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import { logout } from "@/lib/client/auth";
 import { useLeaderGate } from "@/hooks/useLeaderGate";
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
-import MissionGuide, { TRAINING_HREF } from "./_components/MissionGuide";
+import { useState } from "react";
+import MissionGuide, { guideBackLink } from "./_components/MissionGuide";
 
 // The Avenue Mission Guide: a reading module linked from the Foundations
 // training modules list. Full access only, like the rest of the journey.
@@ -14,6 +15,9 @@ import MissionGuide, { TRAINING_HREF } from "./_components/MissionGuide";
 // Foundations count.
 export default function MissionGuidePage() {
   const router = useRouter();
+  const [back] = useState(() =>
+    guideBackLink(typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("from"))
+  );
   const { user, ready, error: gateError } = useLeaderGate({ pending: true });
 
   if (gateError) {
@@ -67,14 +71,14 @@ export default function MissionGuidePage() {
 
       <main className="relative z-10 mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <Link
-          href={TRAINING_HREF}
+          href={back.href}
           className="inline-flex min-h-[44px] items-center gap-2 text-sm text-[var(--muted)] hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to training
+          {back.label}
         </Link>
 
-        <MissionGuide />
+        <MissionGuide back={back} />
       </main>
     </div>
   );
