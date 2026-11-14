@@ -29,7 +29,15 @@ import {
 // wraps it in the full-access gate and the journey header. The lists live
 // in content/training/missionGuide.ts.
 
-export const TRAINING_HREF = "/leaders/training?phase=phase1";
+const TRAINING_HREF = "/leaders/training?phase=phase1";
+
+// The guide opens from Foundations (back to training) and from the
+// dashboard's tools (?from=dashboard, back to the dashboard).
+export function guideBackLink(from: string | null): { href: string; label: string } {
+  return from === "dashboard"
+    ? { href: "/leaders", label: "Back to dashboard" }
+    : { href: TRAINING_HREF, label: "Back to training" };
+}
 
 // ---------- small building blocks ----------
 
@@ -227,7 +235,7 @@ function MultiplicationLoop() {
 
 // ---------- the guide ----------
 
-export default function MissionGuide() {
+export default function MissionGuide({ back }: { back: { href: string; label: string } }) {
   return (
     <>
     {/* Cover */}
@@ -621,11 +629,11 @@ export default function MissionGuide() {
       <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line)] pt-6">
         <p className="text-xs text-[var(--dim)]">Avenue Mission Guide · Leadership training</p>
         <Link
-          href={TRAINING_HREF}
+          href={back.href}
           className="inline-flex min-h-[44px] items-center gap-2 text-sm text-[var(--muted)] hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to training
+          {back.label}
         </Link>
       </footer>
       </div>

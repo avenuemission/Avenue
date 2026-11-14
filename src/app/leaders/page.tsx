@@ -10,11 +10,13 @@ import { useLeaderSession } from "@/hooks/useLeaderSession";
 import { apprenticesOnRung as countApprenticesOnRung, greetingFor } from "@/lib/domain/avenue";
 import HeaderAvatar from "@/components/leaders/avenue/HeaderAvatar";
 import NextStepCard from "@/components/leaders/journey/NextStepCard";
+import HuddleStoriesCard from "@/components/leaders/HuddleStoriesCard";
 import { NETWORK_ENABLED } from "@/content/features";
+import { MISSION_GUIDE_HREF } from "@/content/training/missionGuide";
 import {
   GraduationCap,
   BookOpen,
-  FolderOpen,
+  Compass,
   LogOut,
   ExternalLink,
   Calendar,
@@ -117,16 +119,16 @@ export default function LeadersPage() {
     );
   }
 
-  // Cards that require full_access. Leader Training is open to pending
-  // leaders too (On-Ramp sign-ups start there).
-  const restrictedCards = ["study", "resources"];
+  // Cards that require full_access. Leader Training and the Mission Guide
+  // are open to pending leaders too (On-Ramp sign-ups start there).
+  const restrictedCards = ["study"];
 
   // The main tools first, then the secondary ones, in one hairline list.
   const tools = [
     { id: "training", title: "Leader Training", icon: GraduationCap, href: "/leaders/training" },
     { id: "network", title: "Discipleship Network", icon: Network, href: "/leaders/network" },
     { id: "study", title: "Weekly Pathways Topics", icon: BookOpen, href: "/leaders/study-guides" },
-    { id: "resources", title: "Resources", icon: FolderOpen, href: "/leaders/resources" },
+    { id: "guide", title: "Avenue Mission Guide", icon: Compass, href: `${MISSION_GUIDE_HREF}?from=dashboard` },
     { id: "admin", title: "Admin", icon: Lock, href: "/leaders/admin" },
   ].filter((card) => NETWORK_ENABLED || card.id !== "network");
 
@@ -162,6 +164,9 @@ export default function LeadersPage() {
           </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">Access resources, training, and tools for Avenue leaders</p>
         </div>
+
+        {/* This year's Metrics of Success, as numbers */}
+        <HuddleStoriesCard />
 
         {/* Someone says they sent you out */}
         {pendingSender && (

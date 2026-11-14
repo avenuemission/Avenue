@@ -2,6 +2,10 @@
 // /leaders/training/mission-guide. The page holds the running prose; this
 // file holds every repeated item, so a wording change is one line here.
 
+// Where the guide lives. It is linked from Foundations and from the
+// dashboard's tools.
+export const MISSION_GUIDE_HREF = "/leaders/training/mission-guide";
+
 export interface GuideChapter {
   id: string;
   label: string;

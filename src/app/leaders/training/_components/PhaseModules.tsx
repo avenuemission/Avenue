@@ -8,6 +8,7 @@ import StepDot from "@/components/leaders/avenue/StepDot";
 import { DOT_SR_TEXT, moduleStatus } from "@/lib/domain/stepStatus";
 import { CheckCircle2, Video, FileText, Lightbulb, BookOpen, ChevronRight } from "lucide-react";
 import { Module, Phase } from "@/content/training/phases";
+import { MISSION_GUIDE_HREF } from "@/content/training/missionGuide";
 import { useTrainingContent } from "@/hooks/useTrainingContent";
 import { FOUNDATIONS_PROMPT_KEYS, type VideoQuestion } from "@/lib/domain/trainingContent";
 import DiscussionCard from "@/components/leaders/training/DiscussionCard";
@@ -131,7 +132,7 @@ export default function PhaseModules({
       {/* Reading, not a tickable module: it never changes the Foundations count. */}
       <h3 className="night-h2 mb-4 mt-10">Reading</h3>
       <Link
-        href="/leaders/training/mission-guide"
+        href={MISSION_GUIDE_HREF}
         className="night-card group flex items-center gap-4 p-5 transition-colors hover:border-[var(--lamp)]"
       >
         <BookOpen className="h-5 w-5 flex-shrink-0 text-[var(--lamp)]" aria-hidden="true" />
