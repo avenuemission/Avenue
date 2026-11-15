@@ -48,7 +48,7 @@ Names never change: code, `.env.example` and Netlify all use these exact names.
 | Schedule | `@hourly`: minute 0 of every UTC hour |
 | Runs on | The published production deploy only. Not deploy previews, not locally |
 | Time limit | Netlify stops it at 30 seconds. It sends at most 20 emails and claims nothing new after 20 seconds |
-| Dry run | On unless `LEADER_EMAILS_DRY_RUN` is exactly `false`. A dry run renders and reports, never sends or writes |
+| Dry run | On unless `LEADER_EMAILS_DRY_RUN` is exactly `false` **and** `LEADER_EMAILS_ENABLED` is `true` in `src/content/features.ts` (switched off since November 2026). A dry run renders and reports, never sends or writes |
 | Logs | Netlify > Logs > Functions > `leader-emails`. Each run prints `[leader-emails] report {...}` |
 | Pre-push check | `npm run check:function` bundles it like Netlify does and checks it loads |
 

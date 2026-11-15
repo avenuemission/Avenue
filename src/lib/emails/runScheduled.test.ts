@@ -8,11 +8,17 @@ afterEach(() => {
 
 describe("runScheduled", () => {
   it("stays in dry run unless LEADER_EMAILS_DRY_RUN is exactly false", () => {
-    expect(isDryRun({})).toBe(true);
-    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "FALSE" })).toBe(true);
-    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "0" })).toBe(true);
-    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "true" })).toBe(true);
-    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "false" })).toBe(false);
+    expect(isDryRun({}, true)).toBe(true);
+    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "FALSE" }, true)).toBe(true);
+    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "0" }, true)).toBe(true);
+    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "true" }, true)).toBe(true);
+    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "false" }, true)).toBe(false);
+  });
+
+  it("stays in dry run while the leader emails are switched off, whatever Netlify says", () => {
+    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "false" }, false)).toBe(true);
+    // The switch as shipped: off.
+    expect(isDryRun({ LEADER_EMAILS_DRY_RUN: "false" })).toBe(true);
   });
 
   it("gives each send 8 s, then fails it as outcome unknown", async () => {
@@ -41,7 +47,7 @@ describe("runScheduled", () => {
         LEADER_EMAILS_DRY_RUN: "false",
         NEXT_PUBLIC_SUPABASE_URL: "https://example.invalid",
         SUPABASE_SERVICE_ROLE_KEY: "sb_secret_test",
-      })
+      }, true)
     ).rejects.toThrow("GMAIL_USER and GMAIL_APP_PASSWORD must be set");
   });
 });

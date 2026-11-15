@@ -10,6 +10,7 @@ import { isEmailConfigured, sendEmail } from "@/lib/server/mail/transport";
 import { runLeaderEmails, SendOutcomeUnknownError, type RunReport } from "./engine";
 import { createEngineDb } from "./engineDb";
 import { loadSnapshot } from "./loadSnapshot";
+import { LEADER_EMAILS_ENABLED } from "@/content/features";
 
 const MAX_SENDS_PER_RUN = 20;
 const SEND_DELAY_MS = 1000;
@@ -34,12 +35,18 @@ export function withTimeout<T>(work: Promise<T>, ms: number, what: string): Prom
 
 type Env = Record<string, string | undefined>;
 
-export function isDryRun(env: Env = process.env): boolean {
-  return env.LEADER_EMAILS_DRY_RUN !== "false";
+// A real send needs both the switch in content/features.ts on and
+// LEADER_EMAILS_DRY_RUN exactly "false" in Netlify.
+export function isDryRun(env: Env = process.env, enabled: boolean = LEADER_EMAILS_ENABLED): boolean {
+  return !enabled || env.LEADER_EMAILS_DRY_RUN !== "false";
 }
 
-export async function runScheduled(now: Date = new Date(), env: Env = process.env): Promise<RunReport> {
-  const dryRun = isDryRun(env);
+export async function runScheduled(
+  now: Date = new Date(),
+  env: Env = process.env,
+  enabled: boolean = LEADER_EMAILS_ENABLED
+): Promise<RunReport> {
+  const dryRun = isDryRun(env, enabled);
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
