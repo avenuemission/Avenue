@@ -84,11 +84,15 @@ describe("renderEmail", () => {
     expect(html).toContain("#ffc56b");
     expect(html).toContain(">AVENUE<");
     expect(html).toContain("letter-spacing:6px");
-    expect(html).toContain("&rsaquo;");
+    // The logo picture carries the chevron, so the wordmark text does not repeat it.
+    expect(html).not.toContain("&rsaquo;");
     expect(html).toContain("Helvetica");
     expect(html).not.toContain(">Avenue<");
-    // One picture: the decorative street header, from the live site, over a night-coloured cell.
-    expect(html.match(/<img /g)).toHaveLength(1);
+    // Two pictures from the live site: the logo beside the wordmark, then the
+    // decorative street header over a night-coloured cell.
+    expect(html.match(/<img /g)).toHaveLength(2);
+    expect(html).toContain(`<img src="https://www.avenuemission.com/images/email/logo.png" width="40" height="40" alt="Avenue"`);
+    expect(html.indexOf("logo.png")).toBeLessThan(html.indexOf(">AVENUE<"));
     expect(html).toContain(`<img src="https://www.avenuemission.com/images/email/street-header.png" width="600" height="150" alt=""`);
     expect(html).toContain("background-color:#070a12;");
     expect(html).not.toContain("<style");

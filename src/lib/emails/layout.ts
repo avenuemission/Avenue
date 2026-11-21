@@ -129,7 +129,18 @@ function headerImg(): string {
 // The site logo as text: thin, letter-spaced uppercase AVENUE, then a thin
 // white chevron, like the site header. No image, so it shows before images
 // are allowed.
-export const WORDMARK_HTML = `<span style="font-family:${SANS};font-size:18px;line-height:1;font-weight:300;letter-spacing:6px;text-transform:uppercase;color:${COLOURS.ink};">AVENUE</span><span style="font-family:${SANS};font-size:24px;line-height:1;font-weight:300;color:${COLOURS.ink};padding-left:4px;">&rsaquo;</span>`;
+const WORDMARK_TEXT = `<span style="font-family:${SANS};font-size:18px;line-height:1;font-weight:300;letter-spacing:6px;text-transform:uppercase;color:${COLOURS.ink};">AVENUE</span>`;
+export const WORDMARK_HTML = `${WORDMARK_TEXT}<span style="font-family:${SANS};font-size:24px;line-height:1;font-weight:300;color:${COLOURS.ink};padding-left:4px;">&rsaquo;</span>`;
+
+// The Avenue logo (public/images/email/logo.png, the site's app icon: a white
+// chevron on black, 180 x 180, shown at 40 x 40) beside the AVENUE wordmark,
+// without the wordmark's own chevron so the mark is not shown twice. The black
+// square has a thin border so it still reads on the near-black ground. If
+// images are blocked, the wordmark text is still there.
+function brandHtml(): string {
+  const logo = `<img src="${esc(absoluteUrl("/images/email/logo.png"))}" width="40" height="40" alt="Avenue" style="display:block;width:40px;height:40px;border:1px solid ${COLOURS.line};border-radius:10px;outline:none;text-decoration:none;">`;
+  return `<table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td valign="middle" style="line-height:0;font-size:0;">${logo}</td><td valign="middle" style="padding-left:14px;">${WORDMARK_TEXT}</td></tr></table>`;
+}
 
 const TEXT = `font-family:${SANS};font-size:16px;line-height:1.6;color:${COLOURS.body};`;
 
@@ -206,7 +217,7 @@ ${FONT_LINK}
 <tr><td align="center" style="padding:32px 16px;">
 <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;">
-<tr><td style="padding:0 0 24px 4px;">${WORDMARK_HTML}</td></tr>
+<tr><td style="padding:0 0 24px 4px;">${brandHtml()}</td></tr>
 <tr><td bgcolor="${COLOURS.card}" style="background-color:${COLOURS.card};border:1px solid ${COLOURS.line};border-radius:16px;overflow:hidden;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
 <tr><td bgcolor="${COLOURS.header}" style="background-color:${COLOURS.header};border-radius:16px 16px 0 0;line-height:0;font-size:0;">${headerImg()}</td></tr>
