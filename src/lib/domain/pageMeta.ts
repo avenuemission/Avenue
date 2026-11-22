@@ -10,7 +10,7 @@ export const PUBLIC_PAGES = {
     name: "Home",
     title: "Avenue - Unleashing God-given potential",
     description:
-      "Avenue Mission is a decentralised movement of people following Jesus in Melbourne, Victoria: microchurches in the spaces we already have, supported by the Seventh-day Adventist Church.",
+      "Avenue Mission is a decentralised movement of people following Jesus in Melbourne, Victoria: microchurches in the spaces we already have, part of the Victorian Conference of the Seventh-day Adventist Church.",
   },
   "/vision": {
     name: "Vision",

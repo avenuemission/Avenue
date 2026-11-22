@@ -180,7 +180,7 @@ export default async function VisionPage() {
                 Beliefs
               </h2>
               <p className="mt-4 mx-auto max-w-2xl text-lg text-gray-300 leading-relaxed">
-                We are a church supported by the Seventh-Day Adventist Church.
+                We are a church that is part of the Victorian Conference of the Seventh-day Adventist Church.
                 Here is a snapshot of what we believe:
               </p>
             </Reveal>
