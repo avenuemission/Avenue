@@ -17,7 +17,7 @@ export const FAQS: Faq[] = [
   },
   {
     question: "Is Avenue connected to the Seventh-day Adventist Church?",
-    answer: "Yes. Avenue is a church supported by the Seventh-day Adventist Church.",
+    answer: "Yes. Avenue is a church that is part of the Victorian Conference of the Seventh-day Adventist Church.",
   },
   {
     question: "What is a Pathway?",
